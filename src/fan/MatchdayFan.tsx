@@ -333,7 +333,7 @@ export function MatchdayFan() {
             {st.route === 'shop' && <Shop {...{ st, set, award }} />}
             {st.route === 'food' && <Food {...{ st, set, award, timers }} />}
             {st.route === 'photos' && <Photos {...{ st, award, set }} />}
-            {st.route === 'reactions' && <Reactions {...{ st, set }} />}
+            {st.route === 'reactions' && <Reactions />}
             {st.route === 'reads' && <Reads {...{ st, set }} />}
             {st.route === 'seat' && <Seat {...{ st, set, go }} />}
             {st.route === 'profile' && <Profile {...{ st, filled, set, go }} />}
@@ -387,6 +387,7 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
   const liveish = live || ht;
   const label = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const sections = [
+    { t: 'Fan reactions', tag: 'LIVE', d: 'Reels & posts pulled from Instagram, TikTok, YouTube, X and Threads by #MCIRMA.', icon: 'sensors', go: go('reactions') },
     { t: 'Predictions', tag: pre ? '2 OPEN' : 'LOCKED', d: 'Call the score and first scorer. 120 XP if you nail both.', icon: 'scoreboard', go: go('pred') },
     { t: 'Polls', tag: 'LIVE', d: 'Two questions open. 40 XP a vote, results update live.', icon: 'bar_chart', go: go('polls') },
     { t: 'Reads', tag: '4 NEW', d: 'Tactical read, the Rodri number, and the away view.', icon: 'article', go: go('reads') },
@@ -396,7 +397,6 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
     ...(!pre ? [
       { t: 'Order food', tag: 'TO SEAT', d: 'Delivered to 112–J. Skip the half-time queue entirely.', icon: 'restaurant', go: go('food') },
       { t: 'Photo pool', tag: '1,204', d: 'Everyone’s photos in one place. Add yours for 25 XP.', icon: 'photo_library', go: go('photos') },
-      { t: 'Fan reactions', tag: '3 REELS', d: 'Thirty-second videos from the stands. Tap to play.', icon: 'play_circle', go: go('reactions') },
     ] : []),
   ];
   const formH = ['W', 'W', 'D', 'W', 'L'].map((r) => ({ r, bg: r === 'W' ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.26)', fg: r === 'W' ? '#0C3A5E' : '#fff' }));
@@ -830,24 +830,100 @@ function Photos({ st, award, set }: any) {
   );
 }
 
-function Reactions({ st, set }: any) {
-  const reelDefs = [{ id: 'r1', title: 'Away end, ten minutes before kick-off', who: '@sofia_rm · 412 likes', slot: 'reel-1', ph: 'Away end reel' }, { id: 'r2', title: 'Block 112 when the first one went in', who: '@marcus92 · 1,204 likes', slot: 'reel-2', ph: 'Celebration reel' }, { id: 'r3', title: 'Full-time on the concourse', who: '@gaz · 388 likes', slot: 'reel-3', ph: 'Concourse reel' }];
+const PLAT: Record<string, { bg: string; fg: string; short: string }> = {
+  Instagram: { bg: '#C13584', fg: '#fff', short: 'IG' },
+  TikTok: { bg: '#111214', fg: '#fff', short: 'TikTok' },
+  YouTube: { bg: '#FF0000', fg: '#fff', short: 'YouTube' },
+  X: { bg: '#000000', fg: '#fff', short: 'X' },
+  Threads: { bg: '#101012', fg: '#fff', short: 'Threads' },
+};
+const REELS = [
+  { id: 'r1', plat: 'Instagram', handle: '@bluemoon.media', cap: 'Anthem at the Etihad — chills 🔵 #MCIRMA', likes: 2400, slot: 'reel-1', dur: '0:24' },
+  { id: 'r2', plat: 'TikTok', handle: '@cityzone', cap: 'Haaland warm-up routine, up close #MCIRMA', likes: 8100, slot: 'reel-2', dur: '0:31' },
+  { id: 'r3', plat: 'YouTube', handle: 'CityXtra', cap: 'LIVE: the walk-in from Gate 4', likes: 1200, slot: 'reel-3', dur: '2:10' },
+  { id: 'r4', plat: 'Instagram', handle: '@ftbl.frames', cap: 'Tunnel cam before kick-off 🎥 #MCIRMA', likes: 5700, slot: 'photo-3', dur: '0:18' },
+];
+const POSTS = [
+  { id: 'p1', plat: 'X', handle: '@CityMatchday', text: 'The noise for the anthem tonight. Never heard the Etihad like that. #MCIRMA', likes: 3100, rt: 842, t: '2m' },
+  { id: 'p2', plat: 'Threads', handle: '@bluemoonrising', text: 'If Rodri runs this midfield we’re going to Munich. Simple as that.', likes: 1900, rt: 210, t: '5m' },
+  { id: 'p3', plat: 'X', handle: '@ftbltalk', text: 'City press, Madrid counter. First goal decides the tie — buckle up.', likes: 2600, rt: 540, t: '8m' },
+];
+const kfmt = (n: number) => (n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'k' : String(n));
+const PLATS = ['All', 'Instagram', 'TikTok', 'YouTube', 'X', 'Threads'];
+const VIDEO = ['Instagram', 'TikTok', 'YouTube'];
+
+function Badge2({ plat }: { plat: string }) {
+  const p = PLAT[plat];
+  return <span style={{ ...s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.06em;padding:4px 6px;border-radius:5px"), background: p.bg, color: p.fg }}>{p.short}</span>;
+}
+
+function Reactions() {
+  const [filt, setFilt] = useState('All');
+  const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [playing, setPlaying] = useState<string | null>(null);
+  const reels = REELS.filter((r) => (filt === 'All' || filt === r.plat) && (filt === 'All' || VIDEO.includes(filt)));
+  const posts = POSTS.filter((p) => (filt === 'All' || filt === p.plat) && (filt === 'All' || !VIDEO.includes(filt)));
+  const like = (id: string) => setLiked((l) => ({ ...l, [id]: !l[id] }));
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
-      <div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Fan reactions</div>
-      <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>Thirty-second reels from the stands. Tap to play.</div>
-      <div style={s('display:flex;flex-direction:column;gap:12px;margin-top:16px')}>
-        {reelDefs.map((r, i) => { const playing = st.reels[r.id] === 'play'; const liked = !!st.reels[r.id + 'l']; return (
-          <div key={r.id} style={s('background:var(--sand)')}>
-            <button onClick={() => set((sp: FSt) => ({ reels: { ...sp.reels, [r.id]: sp.reels[r.id] === 'play' ? '' : 'play' } }))} style={s('display:block;width:100%;position:relative;height:200px')}>
-              <Slot id={r.slot} label={r.ph} />
-              <span style={s('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none')}><span style={s('width:52px;height:52px;border-radius:50%;background:rgba(16,14,10,.72);display:flex;align-items:center;justify-content:center')}>{playing ? <span style={s('display:flex;gap:4px')}><span style={s('width:5px;height:17px;background:var(--ground)')} /><span style={s('width:5px;height:17px;background:var(--ground)')} /></span> : <span style={s('width:0;height:0;border-left:15px solid #F2EDE3;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px')} />}</span></span>
-              <span style={s("position:absolute;left:10px;bottom:10px;font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--on-panel);background:rgba(16,14,10,.72);padding:5px 6px")}>{playing ? 'PLAYING · 0:30' : 'TAP TO PLAY'}</span>
-            </button>
-            <div style={s('display:flex;align-items:center;gap:10px;padding:12px 13px')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.25 'Kippax','Archivo';color:var(--ink)")}>{r.title}</span><span style={s("display:block;font:500 11.5px/1.3 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{r.who}</span></span><button onClick={() => set((sp: FSt) => ({ reels: { ...sp.reels, [r.id + 'l']: !sp.reels[r.id + 'l'] } }))} style={{ ...s("display:flex;align-items:center;gap:6px;font:800 11px/1 'Kippax','Archivo';padding:10px 11px"), color: liked ? '#fff' : 'var(--ink)', background: liked ? '#6CABDD' : 'var(--ground)' }}><Ms size={14} color={liked ? '#fff' : '#6CABDD'}>favorite</Ms>{(412 + i * 300) + (liked ? 1 : 0)}</button></div>
-          </div>
+      <div style={s('display:flex;align-items:center;gap:9px')}>
+        <div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Fan reactions</div>
+        <span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:5px 7px;border-radius:100px")}>#MCIRMA</span>
+      </div>
+      <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>Reels, clips and posts pulled from across social by hashtag — Instagram, TikTok, YouTube, X and Threads, in one place.</div>
+
+      {/* platform filter */}
+      <div style={s('display:flex;gap:7px;margin-top:14px;overflow-x:auto')}>
+        {PLATS.map((p) => { const on = filt === p; return (
+          <button key={p} onClick={() => setFilt(p)} style={{ ...s("flex:none;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:9px 12px;border-radius:100px"), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{p}</button>
         ); })}
       </div>
+
+      {/* REELS / video + pictures */}
+      {reels.length > 0 && (
+        <div style={s('margin-top:18px')}>
+          <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>REELS & CLIPS</div>
+          <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px')}>
+            {reels.map((r) => { const pl = playing === r.id; return (
+              <div key={r.id} style={s('background:var(--sand);overflow:hidden')}>
+                <button onClick={() => setPlaying(pl ? null : r.id)} style={s('display:block;width:100%;position:relative;height:212px')}>
+                  <Slot id={r.slot} label="Reel" />
+                  <span style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,24,56,.18),rgba(0,24,56,0) 34%,rgba(0,24,56,.55))')} />
+                  <span style={s('position:absolute;left:8px;top:8px')}><Badge2 plat={r.plat} /></span>
+                  <span style={s('position:absolute;right:8px;bottom:8px;font:800 8.5px/1 \'Kippax\',\'Archivo\';color:#fff;background:rgba(0,24,56,.6);padding:4px 5px')}>{pl ? '▮▮ 0:12' : r.dur}</span>
+                  <span style={s('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none')}><span style={s('width:46px;height:46px;border-radius:50%;background:rgba(0,24,56,.62);display:flex;align-items:center;justify-content:center')}>{pl ? <span style={s('display:flex;gap:4px')}><span style={s('width:4px;height:15px;background:#fff')} /><span style={s('width:4px;height:15px;background:#fff')} /></span> : <span style={s('width:0;height:0;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px')} />}</span></span>
+                </button>
+                <div style={s('padding:10px 11px 11px')}>
+                  <div style={s("font:700 11px/1.25 'Kippax','Archivo';color:var(--ink)")}>{r.handle}</div>
+                  <div style={s("font:500 11px/1.35 'Kippax','Archivo';color:var(--body);margin-top:4px")}>{r.cap}</div>
+                  <button onClick={() => like(r.id)} style={{ ...s("display:flex;align-items:center;gap:5px;margin-top:9px;font:800 10.5px/1 'Kippax','Archivo'"), color: liked[r.id] ? '#6CABDD' : 'var(--label)' }}><Ms size={13} color={liked[r.id] ? '#6CABDD' : 'var(--label)'}>favorite</Ms>{kfmt(r.likes + (liked[r.id] ? 1 : 0))}</button>
+                </div>
+              </div>
+            ); })}
+          </div>
+        </div>
+      )}
+
+      {/* POSTS / text from X + Threads */}
+      {posts.length > 0 && (
+        <div style={s('margin-top:22px')}>
+          <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>POSTS</div>
+          <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:11px')}>
+            {posts.map((p) => (
+              <div key={p.id} style={s('background:var(--sand);padding:13px 14px')}>
+                <div style={s('display:flex;align-items:center;gap:8px')}><Badge2 plat={p.plat} /><span style={s("font:700 12px/1 'Kippax','Archivo';color:var(--ink)")}>{p.handle}</span><span style={s("font:500 10.5px/1 'Kippax','Archivo';color:var(--label);margin-left:auto")}>{p.t}</span></div>
+                <div style={s("font:500 13.5px/1.45 'Kippax','Archivo';color:var(--ink);margin-top:9px")}>{p.text}</div>
+                <div style={s('display:flex;align-items:center;gap:16px;margin-top:11px')}>
+                  <button onClick={() => like(p.id)} style={{ ...s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Kippax','Archivo'"), color: liked[p.id] ? '#6CABDD' : 'var(--label)' }}><Ms size={14} color={liked[p.id] ? '#6CABDD' : 'var(--label)'}>favorite</Ms>{kfmt(p.likes + (liked[p.id] ? 1 : 0))}</button>
+                  <span style={s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Kippax','Archivo';color:var(--label)")}><Ms size={14} color="var(--label)">repeat</Ms>{p.rt}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={s("font:500 10.5px/1.5 'Kippax','Archivo';color:var(--label);margin-top:18px")}>Curated &amp; moderated from #MCIRMA before it appears here — approved clips play in-app via each platform’s embed.</div>
     </div>
   );
 }
