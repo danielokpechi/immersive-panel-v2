@@ -21,7 +21,7 @@ const CREST: Record<string, string> = { city: media.cityBadge, madrid: media.mad
 const Badge = ({ club, size = 38, bare = false }: { club: 'city' | 'madrid'; size?: number; bare?: boolean }) => (
   bare
     ? <img src={CREST[club]} alt="" style={{ width: size, height: size, objectFit: 'contain', flex: 'none' }} />
-    : <span style={{ width: size, height: size, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flex: 'none', boxShadow: '0 1px 3px rgba(16,14,10,.18)' }}>
+    : <span style={{ width: size, height: size, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flex: 'none', boxShadow: '0 1px 3px rgba(0,24,56,.18)' }}>
         <img src={CREST[club]} alt="" style={{ width: Math.round(size * 0.76), height: Math.round(size * 0.76), objectFit: 'contain' }} />
       </span>
 );
@@ -48,11 +48,11 @@ const POOL = [
   { user: 'RAJ', text: 'Their keeper has been the best player on the pitch', t: 'n', tag: 'AT HOME' },
   { user: 'LUCY_C', text: 'Twenty more minutes like that and we are in Munich', t: 'h', tag: 'BLOCK 112' },
 ];
-const TEAM: Record<string, { bg: string; fg: string }> = { h: { bg: '#6CABDD', fg: '#fff' }, s: { bg: '#0C3A5E', fg: '#fff' }, n: { bg: '#C3B69A', fg: '#100E0A' } };
+const TEAM: Record<string, { bg: string; fg: string }> = { h: { bg: '#6CABDD', fg: '#fff' }, s: { bg: '#0C3A5E', fg: '#fff' }, n: { bg: '#C3B69A', fg: '#001838' } };
 const EV: Record<string, { icon: string; color: string }> = {
   GOAL: { icon: 'sports_soccer', color: '#6CABDD' }, YELLOW: { icon: '', color: '#F4C400' }, 'RED CARD': { icon: '', color: '#D6202A' },
-  'VAR CHECK': { icon: 'videocam', color: '#6CABDD' }, 'NO PENALTY': { icon: 'gavel', color: '#F4F0E6' }, PENALTY: { icon: 'gavel', color: '#6CABDD' },
-  SUBSTITUTION: { icon: 'swap_vert', color: '#F4F0E6' }, 'DRINKS BREAK': { icon: 'local_drink', color: '#9A9381' }, CHANCE: { icon: 'crisis_alert', color: '#9A9381' },
+  'VAR CHECK': { icon: 'videocam', color: '#6CABDD' }, 'NO PENALTY': { icon: 'gavel', color: '#EAF1F8' }, PENALTY: { icon: 'gavel', color: '#6CABDD' },
+  SUBSTITUTION: { icon: 'swap_vert', color: '#EAF1F8' }, 'DRINKS BREAK': { icon: 'local_drink', color: '#8AA0B6' }, CHANCE: { icon: 'crisis_alert', color: '#8AA0B6' },
 };
 const ARTICLES = [
   { kicker: 'TACTICAL READ', title: 'Why City keep the line high, and what it costs them', meta: 'Sam Whitfield · 6 min read', slot: 'read-1', body: ['City have not dropped their defensive line below the halfway mark in a home European tie since November. It is a deliberate bet: squeeze the game into forty metres, win the ball back inside six seconds, and make the opposition defend a full half.', 'Madrid are the one side left in the competition built to punish it. Six of their goals in this campaign have come from counters starting inside their own half, and every one of them went through the left channel.', 'The compromise both managers are making tonight is the same, from opposite directions: City accept two clear chances against to create six, Madrid accept sixty minutes without the ball to get those two.', 'Watch the first fifteen minutes. If City press and Madrid clear long twice in a row, the game will be played in one half all night.'] },
@@ -230,7 +230,7 @@ export function MatchdayFan() {
   const embed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === '1';
   const wrapStyle = embed ? s('height:100%;background:var(--ground)') : s('min-height:100vh;background:var(--desk);display:flex;justify-content:center;padding:28px 16px 40px');
   const colStyle = embed ? s('height:100%') : s('display:flex;flex-direction:column;gap:12px');
-  const phoneStyle = embed ? s('position:relative;width:100%;height:100vh;background:var(--ground);overflow:hidden') : s('position:relative;width:393px;height:844px;background:var(--ground);border-radius:44px;overflow:hidden;box-shadow:0 2px 2px rgba(16,14,10,.06),0 26px 56px -18px rgba(16,14,10,.4),0 0 0 9px #100E0A,0 0 0 10px #2b2822');
+  const phoneStyle = embed ? s('position:relative;width:100%;height:100vh;background:var(--ground);overflow:hidden') : s('position:relative;width:393px;height:844px;background:var(--ground);border-radius:44px;overflow:hidden;box-shadow:0 2px 2px rgba(0,24,56,.06),0 26px 56px -18px rgba(0,24,56,.4),0 0 0 9px #001838,0 0 0 10px #0A2A4A');
 
   return (
     <div style={wrapStyle}>
@@ -239,22 +239,22 @@ export function MatchdayFan() {
         {!embed && (<>
         {/* operator strip (demo) */}
         <div style={{ ...s('display:flex;align-items:center;gap:8px;width:393px;padding:9px 10px'), background: 'var(--panel)' }}>
-          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#A39A85;padding-left:4px")}>OPERATOR</span>
+          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>OPERATOR</span>
           <div style={s('display:flex;gap:4px;margin-left:auto')}>
-            {opBtn('PRE', () => applyState('pre'), 'rgba(242,237,227,.12)', 'var(--on-panel)')}
-            {opBtn('LIVE', () => applyState('live'), 'rgba(242,237,227,.12)', 'var(--on-panel)')}
-            {opBtn('HT', () => applyState('ht'), 'rgba(242,237,227,.12)', 'var(--on-panel)')}
-            {opBtn('FT', () => applyState('ft'), 'rgba(242,237,227,.12)', 'var(--on-panel)')}
+            {opBtn('PRE', () => applyState('pre'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
+            {opBtn('LIVE', () => applyState('live'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
+            {opBtn('HT', () => applyState('ht'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
+            {opBtn('FT', () => applyState('ft'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('CARD', () => applyEventCmd('card'), '#F4C400', 'var(--ink)')}
             {opBtn('GOAL', () => applyEventCmd('goal'), '#6CABDD', '#fff')}
           </div>
         </div>
         <div style={{ ...s('display:flex;align-items:center;gap:8px;width:393px;padding:9px 10px'), background: 'var(--chrome)' }}>
-          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#9A9381;padding-left:4px")}>EVENTS</span>
+          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>EVENTS</span>
           <div style={s('display:flex;gap:4px;margin-left:auto')}>
-            {opBtn('VAR', () => applyEventCmd('var'), 'rgba(242,237,227,.12)', '#F2EDE3')}
-            {opBtn('SUB', () => applyEventCmd('sub'), 'rgba(242,237,227,.12)', '#F2EDE3')}
-            {opBtn('DRINKS', () => applyEventCmd('drinks'), 'rgba(242,237,227,.12)', '#F2EDE3')}
+            {opBtn('VAR', () => applyEventCmd('var'), 'rgba(234,241,248,.12)', '#EAF1F8')}
+            {opBtn('SUB', () => applyEventCmd('sub'), 'rgba(234,241,248,.12)', '#EAF1F8')}
+            {opBtn('DRINKS', () => applyEventCmd('drinks'), 'rgba(234,241,248,.12)', '#EAF1F8')}
             {opBtn('RED', () => applyEventCmd('red'), '#D6202A', '#fff')}
           </div>
         </div>
@@ -265,7 +265,7 @@ export function MatchdayFan() {
           {/* status bar */}
           <div style={s("position:absolute;top:0;left:0;right:0;height:46px;z-index:50;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 4px;font:700 12.5px/1 'Kippax','Archivo';color:var(--on-panel);background:var(--panel)")}>
             <span>20:44</span>
-            <div style={s('display:flex;align-items:center;gap:5px')}><span style={s('width:15px;height:8px;border:1.4px solid #F2EDE3;border-radius:2px;display:inline-block')} /><span style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.06em")}>5G</span></div>
+            <div style={s('display:flex;align-items:center;gap:5px')}><span style={s('width:15px;height:8px;border:1.4px solid #EAF1F8;border-radius:2px;display:inline-block')} /><span style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.06em")}>5G</span></div>
           </div>
 
           <div style={s('position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:46px;padding-bottom:56px')}>
@@ -279,10 +279,10 @@ export function MatchdayFan() {
                       {isCard && <span style={{ ...s('width:13px;height:18px;border-radius:2px;display:inline-block'), background: color }} />}
                       {hasIcon && <Ms size={17} color={color}>{EV[e.kind].icon}</Ms>}
                       <span style={{ ...s("font:800 15px/1 'KippaxCondensed','Archivo Black';letter-spacing:.14em"), color }}>{e.kind}</span>
-                      <span style={s("font:700 11px/1 'Kippax','Archivo';letter-spacing:.1em;color:#A39A85")}>{e.minute}′ · {e.team}</span>
+                      <span style={s("font:700 11px/1 'Kippax','Archivo';letter-spacing:.1em;color:#8AA0B6")}>{e.minute}′ · {e.team}</span>
                     </div>
                     <div style={s("font:800 40px/.86 'KippaxCondensed','Archivo Black';letter-spacing:.008em;color:var(--on-panel);margin-top:9px")}>{e.who}</div>
-                    <div style={s("font:500 11.5px/1.3 'Kippax','Archivo';color:#A39A85;margin-top:7px")}>{e.note}</div>
+                    <div style={s("font:500 11.5px/1.3 'Kippax','Archivo';color:#8AA0B6;margin-top:7px")}>{e.note}</div>
                   </div>
                   {e.kind === 'GOAL' && <div style={s("display:flex;align-items:center;padding:0 18px 0 6px;font:800 50px/.8 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.hs}–{st.as}</div>}
                 </div>
@@ -292,7 +292,7 @@ export function MatchdayFan() {
             {/* score bug + header */}
             <div style={s('position:sticky;top:0;z-index:40;background:var(--panel)')}>
               <div style={s('display:flex;align-items:stretch;height:44px')}>
-                {isSub && <button onClick={go('home')} className="fh" style={s("display:flex;align-items:center;gap:6px;padding:0 10px 0 15px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.14em;color:#A39A85")}><Ms size={15} color="inherit">arrow_back</Ms>HOME</button>}
+                {isSub && <button onClick={go('home')} className="fh" style={s("display:flex;align-items:center;gap:6px;padding:0 10px 0 15px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.14em;color:#8AA0B6")}><Ms size={15} color="inherit">arrow_back</Ms>HOME</button>}
                 <div style={s('display:flex;align-items:center;flex:1;min-width:0;padding-left:14px')}>
                   <Badge club="city" size={22} bare />
                   <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>MCI</span>
@@ -306,20 +306,20 @@ export function MatchdayFan() {
                   {live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:bgBlink 1.6s steps(1,end) infinite')} />}
                   <span style={s("font:800 12px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);font-variant-numeric:tabular-nums")}>{statusLabel}</span>
                 </div>
-                <button onClick={() => set((x) => ({ theme: x.theme === 'auto' ? 'light' : x.theme === 'light' ? 'dark' : 'auto' }))} className="fh2" style={s('display:flex;align-items:center;padding:0 9px;background:var(--chrome)')}><Ms size={17} color="#A39A85">{st.theme === 'dark' ? 'dark_mode' : st.theme === 'light' ? 'light_mode' : 'brightness_auto'}</Ms></button>
+                <button onClick={() => set((x) => ({ theme: x.theme === 'auto' ? 'light' : x.theme === 'light' ? 'dark' : 'auto' }))} className="fh2" style={s('display:flex;align-items:center;padding:0 9px;background:var(--chrome)')}><Ms size={17} color="#8AA0B6">{st.theme === 'dark' ? 'dark_mode' : st.theme === 'light' ? 'light_mode' : 'brightness_auto'}</Ms></button>
                 <button onClick={go('profile')} className="fh2" style={s('display:flex;align-items:center;padding:0 12px 0 9px;background:var(--chrome)')}><span style={s("width:26px;height:26px;border-radius:50%;background:#6CABDD;display:flex;align-items:center;justify-content:center;font:800 9.5px/1 'Kippax','Archivo';color:#fff")}>AJ</span></button>
               </div>
               {isHome && (
                 <div style={s('display:flex;overflow:hidden;height:26px;background:var(--chrome);align-items:center')}>
                   <div style={s('display:flex;white-space:nowrap;animation:bgTicker 34s linear infinite')}>
-                    {[0, 1].map((k) => <span key={k} style={s("font:700 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#C4BCA6")}>{`  CHAMPIONS LEAGUE SEMI-FINALS  ·  INT 2 – 2 BAY  FT (BAY WIN 4–3 AGG)  ·  AGGREGATE HERE: MCI ${st.hs + 2} – ${st.as + 2} RMA  ·  FINAL: 31 MAY, MUNICH  ·  ATTENDANCE 52,900  ·  REFEREE: F. LETEXIER  ·`}</span>)}
+                    {[0, 1].map((k) => <span key={k} style={s("font:700 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#9DB2C7")}>{`  CHAMPIONS LEAGUE SEMI-FINALS  ·  INT 2 – 2 BAY  FT (BAY WIN 4–3 AGG)  ·  AGGREGATE HERE: MCI ${st.hs + 2} – ${st.as + 2} RMA  ·  FINAL: 31 MAY, MUNICH  ·  ATTENDANCE 52,900  ·  REFEREE: F. LETEXIER  ·`}</span>)}
                   </div>
                 </div>
               )}
               {isSub && (
                 <div style={s('display:flex;align-items:center;gap:8px;height:34px;padding:0 15px;background:var(--chrome)')}>
                   <span style={s("font:800 17px/1 'KippaxCondensed','Archivo Black';letter-spacing:.06em;color:var(--on-panel)")}>{titles[st.route]}</span>
-                  <span style={s("font:700 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:#A39A85;margin-left:auto")}>{metas[st.route]}</span>
+                  <span style={s("font:700 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6;margin-left:auto")}>{metas[st.route]}</span>
                 </div>
               )}
             </div>
@@ -342,14 +342,14 @@ export function MatchdayFan() {
           {/* FLASH SALE — pops on a goal, dismissible */}
           {st.flash && (
             <div style={s('position:absolute;top:122px;left:10px;right:10px;z-index:48;animation:bgRise .32s cubic-bezier(.18,.9,.2,1) both')}>
-              <div style={s('display:flex;align-items:center;gap:11px;padding:11px 11px 11px 13px;background:var(--panel);border-radius:14px;box-shadow:0 14px 34px -8px rgba(16,14,10,.55)')}>
-                <span style={s('width:36px;height:36px;flex:none;border-radius:10px;background:#6CABDD;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">local_offer</Ms></span>
+              <div style={s('display:flex;align-items:center;gap:11px;padding:11px 11px 11px 13px;background:var(--panel);border-radius:2px;box-shadow:0 14px 34px -8px rgba(0,24,56,.55)')}>
+                <span style={s('width:36px;height:36px;flex:none;border-radius:2px;background:#6CABDD;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">local_offer</Ms></span>
                 <button onClick={() => set({ route: 'shop', flash: null })} style={s('flex:1;min-width:0;text-align:left')}>
                   <div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#6CABDD")}>FLASH DROP · LIMITED</div>
                   <div style={s("font:700 13px/1.25 'Kippax','Archivo';color:var(--on-panel);margin-top:5px")}>{st.flash.title}</div>
-                  <div style={s("font:500 10.5px/1.3 'Kippax','Archivo';color:#A39A85;margin-top:3px")}>{st.flash.sub}</div>
+                  <div style={s("font:500 10.5px/1.3 'Kippax','Archivo';color:#8AA0B6;margin-top:3px")}>{st.flash.sub}</div>
                 </button>
-                <button onClick={() => set({ flash: null })} style={s('width:28px;height:28px;flex:none;border-radius:50%;background:rgba(242,237,227,.12);display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#A39A85">close</Ms></button>
+                <button onClick={() => set({ flash: null })} style={s('width:28px;height:28px;flex:none;border-radius:50%;background:rgba(234,241,248,.12);display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#8AA0B6">close</Ms></button>
               </div>
             </div>
           )}
@@ -402,9 +402,9 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
   const formH = ['W', 'W', 'D', 'W', 'L'].map((r) => ({ r, bg: r === 'W' ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.26)', fg: r === 'W' ? '#0C3A5E' : '#fff' }));
   const formA = ['W', 'W', 'W', 'D', 'W'].map((r) => ({ r, bg: r === 'W' ? '#FEBE10' : 'rgba(255,255,255,.22)', fg: r === 'W' ? '#00296B' : '#fff' }));
   const ladder = [
-    { name: '£5 food credit', cost: '500 XP', tag: 'CLAIMED', bg: 'rgba(242,237,227,.08)', fg: '#F2EDE3', subFg: '#A39A85', tagFg: '#6CABDD', op: 1 },
-    { name: 'Seat upgrade', cost: '2,000 XP', tag: 'NEXT UP', bg: '#F2EDE3', fg: '#100E0A', subFg: '#5F5949', tagFg: '#100E0A', op: 1 },
-    { name: 'Home shirt', cost: '5,000 XP', tag: 'LOCKED', bg: 'rgba(242,237,227,.08)', fg: '#F2EDE3', subFg: '#A9A18E', tagFg: '#A9A18E', op: 0.6 },
+    { name: '£5 food credit', cost: '500 XP', tag: 'CLAIMED', bg: 'rgba(234,241,248,.08)', fg: '#EAF1F8', subFg: '#8AA0B6', tagFg: '#6CABDD', op: 1 },
+    { name: 'Seat upgrade', cost: '2,000 XP', tag: 'NEXT UP', bg: '#EAF1F8', fg: '#001838', subFg: '#5F5949', tagFg: '#001838', op: 1 },
+    { name: 'Home shirt', cost: '5,000 XP', tag: 'LOCKED', bg: 'rgba(234,241,248,.08)', fg: '#EAF1F8', subFg: '#A9A18E', tagFg: '#A9A18E', op: 0.6 },
   ];
   const questDefs = [
     { k: 'predict', title: 'Lock in a prediction', how: 'Correct score + first scorer', xp: '120 XP', go: go('pred') },
@@ -438,18 +438,18 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
           </div>
           <div style={s('display:flex;align-items:center;background:var(--panel);padding:14px 16px')}>
             <div style={s('flex:1')}>
-              <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#A39A85")}>KICK-OFF IN</div>
+              <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>KICK-OFF IN</div>
               <div style={s('display:flex;align-items:flex-end;gap:2px;margin-top:8px;color:var(--on-panel)')}>
-                <span style={s("font:800 42px/.82 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums")}>{pad(Math.floor(cd / 3600))}</span><span style={s("font:700 12px/1 'Kippax','Archivo';color:#A39A85;padding:0 7px 5px 2px")}>H</span>
-                <span style={s("font:800 42px/.82 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums")}>{pad(Math.floor(cd / 60) % 60)}</span><span style={s("font:700 12px/1 'Kippax','Archivo';color:#A39A85;padding:0 7px 5px 2px")}>M</span>
-                <span style={s("font:800 42px/.82 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums;color:#A39A85")}>{pad(cd % 60)}</span><span style={s("font:700 12px/1 'Kippax','Archivo';color:#A39A85;padding:0 0 5px 2px")}>S</span>
+                <span style={s("font:800 42px/.82 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums")}>{pad(Math.floor(cd / 3600))}</span><span style={s("font:700 12px/1 'Kippax','Archivo';color:#8AA0B6;padding:0 7px 5px 2px")}>H</span>
+                <span style={s("font:800 42px/.82 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums")}>{pad(Math.floor(cd / 60) % 60)}</span><span style={s("font:700 12px/1 'Kippax','Archivo';color:#8AA0B6;padding:0 7px 5px 2px")}>M</span>
+                <span style={s("font:800 42px/.82 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums;color:#8AA0B6")}>{pad(cd % 60)}</span><span style={s("font:700 12px/1 'Kippax','Archivo';color:#8AA0B6;padding:0 0 5px 2px")}>S</span>
               </div>
             </div>
-            <div style={s("text-align:right;font:600 10.5px/1.55 'Kippax','Archivo';letter-spacing:.06em;color:#A39A85")}>TUE 20:00<br />ETIHAD STADIUM<br />SEMI-FINAL, 2ND LEG</div>
+            <div style={s("text-align:right;font:600 10.5px/1.55 'Kippax','Archivo';letter-spacing:.06em;color:#8AA0B6")}>TUE 20:00<br />ETIHAD STADIUM<br />SEMI-FINAL, 2ND LEG</div>
           </div>
           <div style={s('padding:22px 16px 0')}>
             {label('THE FIRST LEG')}
-            <button onClick={go('reads')} className="fs" style={s('display:flex;align-items:stretch;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(16,14,10,.07)')}>
+            <button onClick={go('reads')} className="fs" style={s('display:flex;align-items:stretch;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
               <span style={s('flex:1;min-width:0;padding:14px 14px 15px')}>
                 <span style={s('display:flex;align-items:flex-end;gap:10px')}><span style={s("font:800 34px/.8 'KippaxCondensed','Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>2 – 1</span><span style={s("font:600 10.5px/1.35 'Kippax','Archivo';color:var(--label);padding-bottom:2px")}>30 APR · BERNABÉU<br />City lead on aggregate</span></span>
                 <span style={s("display:block;font:500 12px/1.45 'Kippax','Archivo';color:var(--body);margin-top:10px")}>Haaland 2, Vinícius 1. Six minutes of highlights and the tactical read.</span>
@@ -482,21 +482,21 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
         <section style={s('animation:bgFade .3s ease both')}>
           <div style={s('background:var(--panel);padding:18px 16px 20px')}>
             <div style={s('display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px')}>
-              <div><div style={s('display:flex;align-items:center;gap:7px')}><span style={s('width:5px;height:16px;background:#6CABDD;transform:skewX(-8deg)')} /><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>MAN CITY</span></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#A39A85;margin-top:8px")}>{st.hs > 1 ? 'Haaland 23’ · Foden 71’' : st.hs ? 'Haaland 23’' : '—'}</div></div>
-              <div key={'s' + st.hs + st.as} style={s('display:flex;align-items:center;justify-content:center;gap:9px;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both')}><span style={s("font:800 58px/.8 'KippaxCondensed','Archivo Black';color:#F2EDE3;font-variant-numeric:tabular-nums")}>{st.hs}</span><span style={s('width:8px;height:2px;background:#6E6857')} /><span style={s("font:800 58px/.8 'KippaxCondensed','Archivo Black';color:#F2EDE3;font-variant-numeric:tabular-nums")}>{st.as}</span></div>
-              <div style={s('text-align:right')}><div style={s('display:flex;align-items:center;gap:7px;justify-content:flex-end')}><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>REAL MADRID</span><span style={s('width:5px;height:16px;background:#00529F;transform:skewX(-8deg)')} /></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#A39A85;margin-top:8px")}>{st.as ? (ht ? 'Vinícius 45’' : 'Vinícius 58’') : '—'}</div></div>
+              <div><div style={s('display:flex;align-items:center;gap:7px')}><span style={s('width:5px;height:16px;background:#6CABDD;transform:skewX(-8deg)')} /><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>MAN CITY</span></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#8AA0B6;margin-top:8px")}>{st.hs > 1 ? 'Haaland 23’ · Foden 71’' : st.hs ? 'Haaland 23’' : '—'}</div></div>
+              <div key={'s' + st.hs + st.as} style={s('display:flex;align-items:center;justify-content:center;gap:9px;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both')}><span style={s("font:800 58px/.8 'KippaxCondensed','Archivo Black';color:#EAF1F8;font-variant-numeric:tabular-nums")}>{st.hs}</span><span style={s('width:8px;height:2px;background:#6E6857')} /><span style={s("font:800 58px/.8 'KippaxCondensed','Archivo Black';color:#EAF1F8;font-variant-numeric:tabular-nums")}>{st.as}</span></div>
+              <div style={s('text-align:right')}><div style={s('display:flex;align-items:center;gap:7px;justify-content:flex-end')}><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>REAL MADRID</span><span style={s('width:5px;height:16px;background:#00529F;transform:skewX(-8deg)')} /></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#8AA0B6;margin-top:8px")}>{st.as ? (ht ? 'Vinícius 45’' : 'Vinícius 58’') : '—'}</div></div>
             </div>
             <div style={s('display:flex;align-items:center;gap:10px;margin-top:18px')}>
-              <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#A39A85;font-variant-numeric:tabular-nums")}>{live ? "38'" : "45'+2"}</span>
-              <div style={s('flex:1;height:5px;background:rgba(242,237,227,.16);position:relative')}><span style={{ ...s('position:absolute;left:0;top:0;bottom:0;background:#D6202A;transition:width 1s linear'), width: Math.min((live ? 38 : 45) / 90 * 100, 100) + '%' }} /><span style={s('position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:var(--ground)')} /></div>
-              <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#A39A85")}>90′</span>
+              <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6;font-variant-numeric:tabular-nums")}>{live ? "38'" : "45'+2"}</span>
+              <div style={s('flex:1;height:5px;background:rgba(234,241,248,.16);position:relative')}><span style={{ ...s('position:absolute;left:0;top:0;bottom:0;background:#D6202A;transition:width 1s linear'), width: Math.min((live ? 38 : 45) / 90 * 100, 100) + '%' }} /><span style={s('position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:var(--ground)')} /></div>
+              <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6")}>90′</span>
             </div>
           </div>
           <div style={s('padding:0 16px')}>
             {(timeline as any[]).map((e, i) => (
               <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}>
                 <span style={s("font:800 12px/1 'Kippax','Archivo';color:var(--ink);width:26px;font-variant-numeric:tabular-nums")}>{e.min}′</span>
-                {e.isCard && <span style={{ ...s('width:11px;height:15px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(16,14,10,.3)'), background: e.cardColor }} />}
+                {e.isCard && <span style={{ ...s('width:11px;height:15px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(0,24,56,.3)'), background: e.cardColor }} />}
                 {e.hasIcon && <Ms size={16} color={e.iconColor}>{e.icon}</Ms>}
                 <span style={{ ...s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;padding:5px 6px;text-align:center"), color: e.fg, background: e.bg }}>{e.kind}</span>
                 <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{e.who}</span>{e.detail && <span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{e.detail}</span>}</span>
@@ -521,13 +521,13 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
       {ft && (
         <section style={s('animation:bgFade .3s ease both')}>
           <div style={s('background:var(--panel);padding:20px 16px 22px')}>
-            <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.16em;color:#fff;background:#D6202A;padding:5px 7px")}>FULL-TIME</span><span style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#A39A85")}>CITY ADVANCE 4–3 ON AGGREGATE</span></div>
+            <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.16em;color:#fff;background:#D6202A;padding:5px 7px")}>FULL-TIME</span><span style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6")}>CITY ADVANCE 4–3 ON AGGREGATE</span></div>
             <div style={s('display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:18px')}>
               <Badge club="city" size={46} />
               <div style={s("font:800 66px/.8 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums;text-align:center")}>2 – 1</div>
               <Badge club="madrid" size={46} />
             </div>
-            <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:14px;font:500 11px/1.5 'Kippax','Archivo';color:#A39A85")}><span>Haaland 23’<br />Foden 71’</span><span style={s('text-align:right')}>Vinícius 58’</span></div>
+            <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:14px;font:500 11px/1.5 'Kippax','Archivo';color:#8AA0B6")}><span>Haaland 23’<br />Foden 71’</span><span style={s('text-align:right')}>Vinícius 58’</span></div>
           </div>
           <div style={s('padding:20px 16px 0')}>
             {label('MATCH STATS')}
@@ -557,7 +557,7 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
       {/* FAN CHAT PREVIEW */}
       <section style={s('margin:20px 16px 0;animation:bgRise .4s .08s ease both')}>
         <div style={s('display:flex;align-items:center;gap:8px')}>{label('FAN CHAT')}<span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{298 + (st.n % 40)} TALKING NOW</span></div>
-        <button onClick={go('chat')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(16,14,10,.07)')}>
+        <button onClick={go('chat')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
           <div style={s('height:150px;overflow:hidden;position:relative;padding:0 12px')}>
             <div style={{ ...s('position:absolute;left:12px;right:12px;bottom:11px;display:flex;flex-direction:column;gap:8px;transition:transform .5s cubic-bezier(.2,.85,.2,1)'), transform: `translateY(${st.rollY}px)` }}>
               {previewMsgs.map((m, i) => (
@@ -569,26 +569,26 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
             </div>
             <div style={s('position:absolute;inset:0 0 auto;height:46px;background:linear-gradient(var(--sand),transparent);pointer-events:none')} />
           </div>
-          <div style={s('display:flex;align-items:center;gap:10px;padding:12px 13px;background:var(--panel)')}><span style={s("font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:var(--on-panel)")}>JOIN THE CONVERSATION</span><Ms size={17} color="#A39A85" style={s('margin-left:auto')}>arrow_forward</Ms></div>
+          <div style={s('display:flex;align-items:center;gap:10px;padding:12px 13px;background:var(--panel)')}><span style={s("font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:var(--on-panel)")}>JOIN THE CONVERSATION</span><Ms size={17} color="#8AA0B6" style={s('margin-left:auto')}>arrow_forward</Ms></div>
         </button>
       </section>
 
       {/* REWARDS */}
       {!pre && (
-        <section style={s('margin:20px 16px 0;background:var(--panel);padding:16px;border-radius:18px;box-shadow:0 8px 24px rgba(16,14,10,.16);animation:bgRise .4s .04s ease both')}>
-          <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#A39A85")}>MATCHDAY REWARDS</span><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:5px 7px")}>TIER 2</span></div>
-          <div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:12px')}><span style={s("font:800 44px/.8 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.xp.toLocaleString()}</span><span style={s("font:600 11.5px/1 'Kippax','Archivo';color:#A39A85;padding-bottom:5px")}>/ 2,000 XP</span></div>
+        <section style={s('margin:20px 16px 0;background:var(--panel);padding:16px;border-radius:2px;box-shadow:0 8px 24px rgba(0,24,56,.16);animation:bgRise .4s .04s ease both')}>
+          <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>MATCHDAY REWARDS</span><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:5px 7px")}>TIER 2</span></div>
+          <div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:12px')}><span style={s("font:800 44px/.8 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.xp.toLocaleString()}</span><span style={s("font:600 11.5px/1 'Kippax','Archivo';color:#8AA0B6;padding-bottom:5px")}>/ 2,000 XP</span></div>
           <div style={s("font:600 14px/1.35 'Kippax','Archivo';color:var(--on-panel);margin-top:7px")}>{Math.max(2000 - st.xp, 0).toLocaleString()} XP from a seat upgrade for the final.</div>
-          <div style={s('display:flex;gap:2px;height:10px;margin-top:13px')}>{Array.from({ length: 20 }, (_, i) => <span key={i} style={{ flex: 1, background: i < filled ? '#F2EDE3' : 'rgba(242,237,227,.16)', transition: 'background .4s ease' }} />)}</div>
+          <div style={s('display:flex;gap:2px;height:10px;margin-top:13px')}>{Array.from({ length: 20 }, (_, i) => <span key={i} style={{ flex: 1, background: i < filled ? '#EAF1F8' : 'rgba(234,241,248,.16)', transition: 'background .4s ease' }} />)}</div>
           <div style={s('display:flex;gap:5px;margin-top:12px')}>{ladder.map((l, i) => <div key={i} style={{ ...s('flex:1;padding:10px'), background: l.bg, opacity: l.op }}><div style={{ ...s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.12em"), color: l.tagFg }}>{l.tag}</div><div style={{ ...s("font:700 12.5px/1.25 'Kippax','Archivo';margin-top:6px"), color: l.fg }}>{l.name}</div><div style={{ ...s("font:500 10.5px/1 'Kippax','Archivo';margin-top:4px"), color: l.subFg }}>{l.cost}</div></div>)}</div>
-          <div style={s('margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(242,237,227,.16)')}>
-            <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#A39A85")}>HOW TO EARN IT — TONIGHT’S QUESTS</span><span style={s("font:700 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#6CABDD")}>{questsDone}/4 DONE</span></div>
+          <div style={s('margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(234,241,248,.16)')}>
+            <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>HOW TO EARN IT — TONIGHT’S QUESTS</span><span style={s("font:700 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#6CABDD")}>{questsDone}/4 DONE</span></div>
             <div style={s('margin-top:10px;display:flex;flex-direction:column;gap:6px')}>
               {questDefs.map((q) => { const done = !!st.quests[q.k]; return (
-                <button key={q.k} onClick={q.go} className="fq" style={s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 12px;background:rgba(242,237,227,.07)')}>
-                  <span style={{ ...s('width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center'), background: done ? '#6CABDD' : 'rgba(242,237,227,.16)' }}><Ms size={14} color="#fff">{done ? 'check' : ''}</Ms></span>
-                  <span style={s('flex:1;min-width:0')}><span style={{ ...s("display:block;font:700 12.5px/1.2 'Kippax','Archivo';color:var(--on-panel)"), textDecoration: done ? 'line-through' : 'none' }}>{q.title}</span><span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:#A39A85;margin-top:3px")}>{done ? 'Done — XP added' : q.how}</span></span>
-                  <span style={{ ...s("font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em"), color: done ? '#6CABDD' : '#F2EDE3' }}>{done ? 'PAID' : q.xp}</span>
+                <button key={q.k} onClick={q.go} className="fq" style={s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 12px;background:rgba(234,241,248,.07)')}>
+                  <span style={{ ...s('width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center'), background: done ? '#6CABDD' : 'rgba(234,241,248,.16)' }}><Ms size={14} color="#fff">{done ? 'check' : ''}</Ms></span>
+                  <span style={s('flex:1;min-width:0')}><span style={{ ...s("display:block;font:700 12.5px/1.2 'Kippax','Archivo';color:var(--on-panel)"), textDecoration: done ? 'line-through' : 'none' }}>{q.title}</span><span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:#8AA0B6;margin-top:3px")}>{done ? 'Done — XP added' : q.how}</span></span>
+                  <span style={{ ...s("font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em"), color: done ? '#6CABDD' : '#EAF1F8' }}>{done ? 'PAID' : q.xp}</span>
                 </button>
               ); })}
             </div>
@@ -599,7 +599,7 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
       {/* MATCH INTEL PREVIEW */}
       <section style={s('margin:20px 16px 0;animation:bgRise .4s .12s ease both')}>
         {label('MATCH INTEL')}
-        <button onClick={go('intel')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:16px;box-shadow:0 4px 16px rgba(16,14,10,.07)')}>
+        <button onClick={go('intel')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:2px;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
           <div style={s("font:800 26px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>The briefing,<br />already written</div>
           <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>Win probability, the shot map, head-to-head and form — prepared before kick-off.</div>
           <div style={s('display:flex;gap:2px;margin-top:14px')}>
@@ -616,8 +616,8 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
         {label('ALSO TONIGHT')}
         <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:11px')}>
           {sections.map((x) => (
-            <button key={x.t} onClick={x.go} className="frow" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 13px;background:var(--sand);border-radius:14px;box-shadow:0 2px 10px rgba(16,14,10,.05)')}>
-              <span style={s('width:48px;height:48px;flex:none;border-radius:12px;background:var(--ground);display:flex;align-items:center;justify-content:center')}><Ms size={25} color="var(--ink)">{x.icon}</Ms></span>
+            <button key={x.t} onClick={x.go} className="frow" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 13px;background:var(--sand);border-radius:2px;box-shadow:0 2px 10px rgba(0,24,56,.05)')}>
+              <span style={s('width:48px;height:48px;flex:none;border-radius:2px;background:var(--ground);display:flex;align-items:center;justify-content:center')}><Ms size={25} color="var(--ink)">{x.icon}</Ms></span>
               <span style={s('flex:1;min-width:0')}>
                 <span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 19px/1 'KippaxCondensed','Archivo Black';letter-spacing:.03em;color:var(--ink)")}>{x.t}</span><span style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--on-panel);background:#5F5949;padding:4px 5px;border-radius:5px")}>{x.tag}</span></span>
                 <span style={s("display:block;font:500 12.5px/1.4 'Kippax','Archivo';color:var(--body);margin-top:3px")}>{x.d}</span>
@@ -656,7 +656,7 @@ function Chat({ st, shown, set, post, chatRef }: any) {
                 <div style={{ ...s('display:flex;align-items:baseline;gap:7px;padding:0 3px 4px'), justifyContent: me ? 'flex-end' : 'flex-start' }}><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label)")}>{me ? 'YOU' : m.user}</span></div>
                 <div style={{ ...s('padding:10px 12px'), background: me ? 'var(--panel)' : 'var(--sand)', borderRadius: me ? '14px 14px 3px 14px' : '3px 14px 14px 14px' }}>
                   <div style={{ ...s("font:500 14px/1.4 'Kippax','Archivo'"), color: me ? 'var(--on-panel)' : 'var(--ink)' }}>{m.text}</div>
-                  <div style={s('display:flex;align-items:center;gap:9px;margin-top:7px')}><span style={{ ...s("font:600 9.5px/1 'Kippax','Archivo';font-variant-numeric:tabular-nums"), color: me ? '#A39A85' : 'var(--label)' }}>{m.time}</span><button onClick={() => set((sp: FSt) => ({ likes: { ...sp.likes, [m.id]: !sp.likes[m.id] } }))} style={{ ...s("display:flex;align-items:center;gap:4px;font:700 9.5px/1 'Kippax','Archivo'"), color: liked ? '#6CABDD' : (me ? '#A39A85' : 'var(--label)') }}><Ms size={13} color={liked ? '#6CABDD' : '#A39A85'}>favorite</Ms>{(m.likes || 0) + (liked ? 1 : 0)}</button></div>
+                  <div style={s('display:flex;align-items:center;gap:9px;margin-top:7px')}><span style={{ ...s("font:600 9.5px/1 'Kippax','Archivo';font-variant-numeric:tabular-nums"), color: me ? '#8AA0B6' : 'var(--label)' }}>{m.time}</span><button onClick={() => set((sp: FSt) => ({ likes: { ...sp.likes, [m.id]: !sp.likes[m.id] } }))} style={{ ...s("display:flex;align-items:center;gap:4px;font:700 9.5px/1 'Kippax','Archivo'"), color: liked ? '#6CABDD' : (me ? '#8AA0B6' : 'var(--label)') }}><Ms size={13} color={liked ? '#6CABDD' : '#8AA0B6'}>favorite</Ms>{(m.likes || 0) + (liked ? 1 : 0)}</button></div>
                 </div>
               </div>
             </div>
@@ -667,7 +667,7 @@ function Chat({ st, shown, set, post, chatRef }: any) {
         <div style={s('display:flex;gap:6px;padding:9px 12px 0;overflow-x:auto')}>{['Come on City!', 'That’s never a foul', 'Anyone in 112?', 'Get it forward'].map((q) => <button key={q} onClick={() => post(q)} className="fs" style={s("flex:none;font:700 11px/1 'Kippax','Archivo';color:var(--ink);background:var(--sand);padding:9px 11px;border-radius:100px;white-space:nowrap")}>{q}</button>)}</div>
         <div style={s('display:flex;gap:8px;align-items:center;padding:9px 12px 14px')}>
           <div style={s('flex:1;display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.draft} onChange={(e: any) => set({ draft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') post(st.draft); }} placeholder="Say something to the terrace…" style={s("flex:1;min-width:0;font:500 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")} /><span style={s("font:700 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--label)")}>+2 XP</span></div>
-          <button onClick={() => post(st.draft)} style={{ ...s('width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%'), background: st.draft.trim() ? '#6CABDD' : '#100E0A' }}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
+          <button onClick={() => post(st.draft)} style={{ ...s('width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%'), background: st.draft.trim() ? '#6CABDD' : '#001838' }}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
         </div>
       </div>
     </div>
@@ -684,7 +684,7 @@ function Intel({ pre, live, ht, openIris }: any) {
     <div style={s('animation:bgFade .25s ease both')}>
       <div style={s('background:var(--panel);padding:16px 16px 20px')}>
         <div style={s("font:800 36px/.9 'KippaxCondensed','Archivo Black';color:var(--on-panel)")}>Match intel</div>
-        <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:#A39A85;margin-top:9px;max-width:300px")}>Written from this season’s data and refreshed at half-time and full-time. Read it — or ask IRIS for any part of it.</div>
+        <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:9px;max-width:300px")}>Written from this season’s data and refreshed at half-time and full-time. Read it — or ask IRIS for any part of it.</div>
         <div style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--label);margin-top:12px")}>UPDATED {stamp}</div>
       </div>
       <div style={s('padding:18px 16px 0')}>{L('WIN PROBABILITY')}<div style={s('display:flex;gap:2px;margin-top:11px')}><div style={s('flex:46;background:#6CABDD;padding:13px 11px')}><div style={s("font:800 32px/.86 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums")}>46%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;margin-top:8px")}>MAN CITY</div></div><div style={s('flex:27;background:var(--sand2);padding:13px 9px')}><div style={s("font:800 25px/.86 'KippaxCondensed','Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--body);margin-top:8px")}>DRAW</div></div><div style={s('flex:27;background:#00529F;padding:13px 9px')}><div style={s("font:800 25px/.86 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#FEBE10;margin-top:8px")}>MADRID</div></div></div></div>
@@ -724,7 +724,7 @@ function Predictions({ st, set, award }: any) {
                 </div>
               </div>
             ))}
-            <span style={{ ...s("font:800 24px/1 'KippaxCondensed','Archivo Black';color:#8E8674;padding-top:18px"), order: 2 }}>–</span>
+            <span style={{ ...s("font:800 24px/1 'KippaxCondensed','Archivo Black';color:#7E93A8;padding-top:18px"), order: 2 }}>–</span>
           </div>
           <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label);margin-top:20px")}>FIRST SCORER</div>
           <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:10px')}>{scorerNames.map((n) => { const on = st.pred.s === n; return <button key={n} onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, s: n } }))} style={{ ...s("font:700 11.5px/1 'Kippax','Archivo';padding:10px 12px"), color: on ? 'var(--on-panel)' : 'var(--ink)', background: on ? 'var(--panel)' : 'var(--ground)' }}>{n}</button>; })}</div>
@@ -734,8 +734,8 @@ function Predictions({ st, set, award }: any) {
       {st.pred.done && (
         <div style={s('margin-top:18px;background:var(--panel);padding:18px')}>
           <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#6CABDD")}>LOCKED IN · 120 XP AWARDED</div>
-          <div style={s('display:flex;align-items:flex-end;gap:10px;margin-top:12px')}><span style={s("font:800 52px/.82 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.pred.h} – {st.pred.a}</span><span style={s("font:600 12px/1.3 'Kippax','Archivo';color:#A39A85;padding-bottom:6px")}>First scorer<br /><strong style={{ fontWeight: 800, color: 'var(--on-panel)' }}>{st.pred.s}</strong></span></div>
-          <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:#A39A85;margin-top:14px")}>You’re in with 12,480 other fans. Results settle at full-time and pay into your XP automatically.</div>
+          <div style={s('display:flex;align-items:flex-end;gap:10px;margin-top:12px')}><span style={s("font:800 52px/.82 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.pred.h} – {st.pred.a}</span><span style={s("font:600 12px/1.3 'Kippax','Archivo';color:#8AA0B6;padding-bottom:6px")}>First scorer<br /><strong style={{ fontWeight: 800, color: 'var(--on-panel)' }}>{st.pred.s}</strong></span></div>
+          <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:14px")}>You’re in with 12,480 other fans. Results settle at full-time and pay into your XP automatically.</div>
           <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, done: false } }))} className="fs" style={s("margin-top:14px;font:800 11px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:11px 13px")}>CHANGE IT</button>
         </div>
       )}
@@ -747,7 +747,7 @@ function Predictions({ st, set, award }: any) {
 function Polls({ st, ft, set, award }: any) {
   const pollDefs = [
     { id: 'starter', tag: 'LIVE', tagBg: '#D6202A', q: 'Who starts up front tonight?', base: { Haaland: 62, Álvarez: 23, 'Foden false 9': 15 }, votes: 4120 },
-    { id: 'motm', tag: 'OPEN', tagBg: '#100E0A', q: ft ? 'Who was your man of the match?' : 'Who decides this tie?', base: ft ? { Foden: 44, Rodri: 31, Haaland: 25 } : { Haaland: 41, Vinícius: 34, Rodri: 25 }, votes: 2870 },
+    { id: 'motm', tag: 'OPEN', tagBg: '#001838', q: ft ? 'Who was your man of the match?' : 'Who decides this tie?', base: ft ? { Foden: 44, Rodri: 31, Haaland: 25 } : { Haaland: 41, Vinícius: 34, Rodri: 25 }, votes: 2870 },
   ];
   return (
     <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
@@ -785,11 +785,11 @@ function Shop({ st, set, award }: any) {
         <div style={s('display:flex;align-items:baseline;gap:10px;margin-top:8px')}><span style={s("font:800 20px/1 'Kippax','Archivo';color:var(--ink)")}>£95.00</span><span style={s("font:500 12.5px/1 'Kippax','Archivo';color:var(--label)")}>Match-day print included</span></div>
         <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label);margin-top:16px")}>SIZE</div>
         <div style={s('display:flex;gap:6px;margin-top:9px')}>{sizes.map((l) => { const on = st.size === l; return <button key={l} onClick={() => set({ size: l })} style={{ ...s("flex:1;font:800 12px/1 'Kippax','Archivo';padding:13px 0"), color: on ? 'var(--on-panel)' : 'var(--ink)', background: on ? 'var(--panel)' : 'var(--sand)' }}>{l}</button>; })}</div>
-        <button onClick={() => { if (!shirtIn) { set((sp: FSt) => ({ basket: [...sp.basket, { name: 'Match shirt', price: 95 }], ordered: false })); award(10, 'SHIRT ADDED'); } }} style={{ ...s("display:block;width:100%;margin-top:14px;padding:15px;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel)"), background: shirtIn ? '#6CABDD' : '#100E0A' }}>{shirtIn ? 'SHIRT IN BASKET · SIZE ' + st.size : 'ADD SHIRT · SIZE ' + st.size}</button>
+        <button onClick={() => { if (!shirtIn) { set((sp: FSt) => ({ basket: [...sp.basket, { name: 'Match shirt', price: 95 }], ordered: false })); award(10, 'SHIRT ADDED'); } }} style={{ ...s("display:block;width:100%;margin-top:14px;padding:15px;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel)"), background: shirtIn ? '#6CABDD' : '#001838' }}>{shirtIn ? 'SHIRT IN BASKET · SIZE ' + st.size : 'ADD SHIRT · SIZE ' + st.size}</button>
       </div>
       <div style={s('padding:22px 16px 0')}><div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>ALSO IN THE DROP</div><div style={s('margin-top:8px')}>{merch.map((m) => <div key={m.name} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('width:46px;height:46px;flex:none;background:repeating-linear-gradient(115deg,#D3C6AA 0 7px,#E4DACA 7px 14px);box-shadow:inset 0 0 0 1.5px #C3B69A')} /><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:500 12px/1.3 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{money(m.price)}</span></span><button onClick={() => { set((sp: FSt) => ({ basket: [...sp.basket, { name: m.name, price: m.price }], ordered: false })); award(10, 'ADDED TO BASKET'); }} className="fp" style={s("font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:11px 12px")}>ADD</button></div>)}</div></div>
       {st.basket.length > 0 && (
-        <div style={s('position:sticky;bottom:0;margin-top:18px;padding:13px 16px 16px;background:var(--panel);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:#A39A85")}>{st.basket.length} ITEMS</div><div style={s("font:800 17px/1 'Kippax','Archivo';color:var(--on-panel);margin-top:6px")}>{money(total)}</div></div><button onClick={() => { if (!st.ordered) { set({ ordered: true }); award(30, 'ORDER CONFIRMED'); } }} style={s("font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.08em;background:#6CABDD;padding:14px 16px;color:#fff")}>{st.ordered ? 'ORDER CONFIRMED ✓' : 'CHECKOUT'}</button></div>
+        <div style={s('position:sticky;bottom:0;margin-top:18px;padding:13px 16px 16px;background:var(--panel);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6")}>{st.basket.length} ITEMS</div><div style={s("font:800 17px/1 'Kippax','Archivo';color:var(--on-panel);margin-top:6px")}>{money(total)}</div></div><button onClick={() => { if (!st.ordered) { set({ ordered: true }); award(30, 'ORDER CONFIRMED'); } }} style={s("font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.08em;background:#6CABDD;padding:14px 16px;color:#fff")}>{st.ordered ? 'ORDER CONFIRMED ✓' : 'CHECKOUT'}</button></div>
       )}
     </div>
   );
@@ -810,7 +810,7 @@ function Food({ st, set, award, timers }: any) {
       <div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:6px 7px")}>DELIVER TO 112–J</span><span style={s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--label)")}>KIOSK 14 · 40M AWAY</span></div>
       <div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink);margin-top:12px")}>To your seat</div>
       {st.foodPlaced && (
-        <div style={s('margin-top:14px;background:var(--panel);padding:16px')}><div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#6CABDD")}>ORDER PLACED · RUNNER ON THE WAY</div><div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:11px')}><span style={s("font:800 46px/.8 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.foodEta}</span><span style={s("font:600 11.5px/1 'Kippax','Archivo';color:#A39A85;padding-bottom:5px")}>MIN AWAY</span></div><div style={s('height:6px;background:rgba(242,237,227,.18);margin-top:12px')}><span style={{ display: 'block', height: 6, width: ((6 - st.foodEta) / 6 * 100) + '%', background: '#6CABDD', transition: 'width 1s linear' }} /></div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:#A39A85;margin-top:12px")}>{summary || 'Order placed'} · paid with match wallet</div></div>
+        <div style={s('margin-top:14px;background:var(--panel);padding:16px')}><div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#6CABDD")}>ORDER PLACED · RUNNER ON THE WAY</div><div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:11px')}><span style={s("font:800 46px/.8 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.foodEta}</span><span style={s("font:600 11.5px/1 'Kippax','Archivo';color:#8AA0B6;padding-bottom:5px")}>MIN AWAY</span></div><div style={s('height:6px;background:rgba(234,241,248,.18);margin-top:12px')}><span style={{ display: 'block', height: 6, width: ((6 - st.foodEta) / 6 * 100) + '%', background: '#6CABDD', transition: 'width 1s linear' }} /></div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:12px")}>{summary || 'Order placed'} · paid with match wallet</div></div>
       )}
       <div style={s('margin-top:16px')}>{menuDefs.map((m) => <div key={m.id} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Kippax','Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:500 12px/1.3 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{m.note} · {money(m.price)}</span></span><span style={s('display:flex;align-items:center;gap:8px')}><button onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: Math.max((sp.food[m.id] || 0) - 1, 0) } }))} className="fs" style={s("width:30px;height:30px;background:var(--sand);font:800 14px/1 'Kippax','Archivo';color:var(--ink)")}>−</button><span style={s("font:800 15px/1 'Kippax','Archivo';color:var(--ink);width:16px;text-align:center;font-variant-numeric:tabular-nums")}>{st.food[m.id] || 0}</span><button onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: (sp.food[m.id] || 0) + 1 } }))} className="fp" style={s("width:30px;height:30px;background:var(--panel);font:800 14px/1 'Kippax','Archivo';color:var(--on-panel)")}>+</button></span></div>)}</div>
       {count > 0 && (
@@ -956,10 +956,10 @@ function Seat({ st, set, go }: any) {
   const facts = [{ k: 'ENTRANCE', v: 'Gate 4, then stairs C' }, { k: 'NEAREST KIOSK', v: 'Kiosk 14 — 40m, turn right' }, { k: 'TOILETS', v: 'Concourse south, 25m' }, { k: 'QUICKEST EXIT', v: 'Gate 4 to Ashton New Road' }];
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
-      <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Block 112 · row J</div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>South stand, lower tier. Seat 14.</div></div><button onClick={() => set((sp: FSt) => ({ routeOn: !sp.routeOn }))} style={{ ...s("font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:12px 13px;flex:none"), color: st.routeOn ? '#fff' : '#100E0A', background: st.routeOn ? '#6CABDD' : '#E4DACA' }}>{st.routeOn ? 'HIDE ROUTE' : 'SHOW ROUTE'}</button></div>
+      <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Block 112 · row J</div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>South stand, lower tier. Seat 14.</div></div><button onClick={() => set((sp: FSt) => ({ routeOn: !sp.routeOn }))} style={{ ...s("font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:12px 13px;flex:none"), color: st.routeOn ? '#fff' : '#001838', background: st.routeOn ? '#6CABDD' : '#E4DACA' }}>{st.routeOn ? 'HIDE ROUTE' : 'SHOW ROUTE'}</button></div>
       <div style={s('position:relative;margin-top:16px;height:280px;background:#17150F;padding:20px;display:flex;align-items:center;justify-content:center')}>
         <div style={s('position:relative;width:100%;height:100%;border:1.5px solid rgba(226,216,196,.4)')}><div style={s('position:absolute;left:0;right:0;top:50%;height:1.5px;background:rgba(226,216,196,.4)')} /><div style={s('position:absolute;left:50%;top:50%;width:60px;height:60px;border:1.5px solid rgba(226,216,196,.4);border-radius:50%;transform:translate(-50%,-50%)')} /></div>
-        <div style={s('position:absolute;inset:6px;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);gap:3px;pointer-events:none')}>{blockDefs.map(([area, label]) => <span key={label} style={{ ...s("display:flex;align-items:center;justify-content:center;font:800 7.5px/1 'Kippax','Archivo';letter-spacing:.04em"), gridArea: area, background: label === '112' ? '#6CABDD' : 'rgba(226,216,196,.14)', color: label === '112' ? '#fff' : '#A39A85' }}>{label}</span>)}</div>
+        <div style={s('position:absolute;inset:6px;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);gap:3px;pointer-events:none')}>{blockDefs.map(([area, label]) => <span key={label} style={{ ...s("display:flex;align-items:center;justify-content:center;font:800 7.5px/1 'Kippax','Archivo';letter-spacing:.04em"), gridArea: area, background: label === '112' ? '#6CABDD' : 'rgba(226,216,196,.14)', color: label === '112' ? '#fff' : '#8AA0B6' }}>{label}</span>)}</div>
         {st.routeOn && (<><div style={s('position:absolute;left:22%;top:78%;width:52%;height:3px;background:repeating-linear-gradient(90deg,#6CABDD 0 7px,transparent 7px 12px)')} /><div style={s('position:absolute;left:74%;top:52%;width:3px;height:28%;background:repeating-linear-gradient(0deg,#6CABDD 0 7px,transparent 7px 12px)')} /></>)}
       </div>
       <div style={s('margin-top:14px')}>{facts.map((f) => <div key={f.k} style={s('display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--label);width:96px")}>{f.k}</span><span style={s("flex:1;font:600 13.5px/1.3 'Kippax','Archivo';color:var(--ink)")}>{f.v}</span></div>)}</div>
@@ -982,8 +982,8 @@ function Profile({ st, filled, set, go }: any) {
   return (
     <div style={s('animation:bgFade .25s ease both')}>
       <div style={s('background:var(--panel);padding:18px 16px 20px')}>
-        <div style={s('display:flex;align-items:center;gap:13px')}><span style={s("width:56px;height:56px;flex:none;border-radius:50%;background:#6CABDD;display:flex;align-items:center;justify-content:center;font:800 20px/1 'KippaxCondensed','Archivo Black';color:#fff")}>AJ</span><div style={s('flex:1;min-width:0')}><div style={s("font:800 26px/.94 'KippaxCondensed','Archivo Black';color:var(--on-panel)")}>Alex Jarrett</div><div style={s("font:600 11.5px/1 'Kippax','Archivo';color:#A39A85;margin-top:7px")}>@alexj · member since 2016</div></div><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:6px 7px")}>TIER 2</span></div>
-        <div style={s('display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(242,237,227,.16)')}><Ms size={16} color="#6CABDD">event_seat</Ms><span style={s("font:600 12px/1.4 'Kippax','Archivo';color:var(--on-panel)")}>Season ticket · Block 112, Row J, Seat 14</span></div>
+        <div style={s('display:flex;align-items:center;gap:13px')}><span style={s("width:56px;height:56px;flex:none;border-radius:50%;background:#6CABDD;display:flex;align-items:center;justify-content:center;font:800 20px/1 'KippaxCondensed','Archivo Black';color:#fff")}>AJ</span><div style={s('flex:1;min-width:0')}><div style={s("font:800 26px/.94 'KippaxCondensed','Archivo Black';color:var(--on-panel)")}>Alex Jarrett</div><div style={s("font:600 11.5px/1 'Kippax','Archivo';color:#8AA0B6;margin-top:7px")}>@alexj · member since 2016</div></div><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:6px 7px")}>TIER 2</span></div>
+        <div style={s('display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(234,241,248,.16)')}><Ms size={16} color="#6CABDD">event_seat</Ms><span style={s("font:600 12px/1.4 'Kippax','Archivo';color:var(--on-panel)")}>Season ticket · Block 112, Row J, Seat 14</span></div>
       </div>
       <div style={s('padding:18px 16px 0')}>
         <div style={s('display:flex;align-items:baseline;justify-content:space-between')}>{L('MATCHDAY XP')}<span style={s("font:600 11px/1 'Kippax','Archivo';color:var(--label)")}>{Math.max(2000 - st.xp, 0).toLocaleString()} to a seat upgrade</span></div>
@@ -1024,17 +1024,17 @@ function Iris({ st, pre, live, ht, set, ask, irisRef, go }: any) {
   const fallback = 'That one isn’t in tonight’s briefing yet. I refresh at half-time and full-time — until then, the shot map and the win-probability model on the Match Intel page cover most of it.';
   const askFree = (q: string) => { const words = q.toLowerCase().split(/\W+/).filter((w) => w.length > 3); const hit = QA.find(([qq]) => words.some((w) => qq.toLowerCase().indexOf(w) > -1)); if (hit) ask(hit[0], hit[1], hit[2], hit[3]); else ask(q, fallback); };
   return (
-    <div style={s('position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(16,14,10,.45)')}>
+    <div style={s('position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,24,56,.45)')}>
       <button onClick={() => set({ iris: false })} style={s('position:absolute;inset:0;cursor:default')} />
       <div style={s('position:relative;height:82%;display:flex;flex-direction:column;background:var(--ground);animation:bgSheet .32s cubic-bezier(.18,.9,.2,1) both')}>
-        <div style={s('display:flex;align-items:center;gap:10px;padding:13px 15px;background:var(--panel)')}><span style={s('width:7px;height:7px;background:#6CABDD;animation:bgDot 1.6s ease-in-out infinite')} /><div style={s('min-width:0')}><div style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>IRIS</div><div style={s("font:700 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#A39A85;margin-top:5px")}>ANSWERS FROM TONIGHT’S BRIEFING</div></div><button onClick={go('intel')} className="fs" style={s("margin-left:auto;font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--ink);background:var(--sand);padding:7px 8px")}>FULL INTEL</button><button onClick={() => set({ iris: false })} className="fh" style={s("font:800 14px/1 'Kippax','Archivo';color:#A39A85;padding:4px 2px 4px 6px")}><Ms size={18} color="inherit">close</Ms></button></div>
+        <div style={s('display:flex;align-items:center;gap:10px;padding:13px 15px;background:var(--panel)')}><span style={s('width:7px;height:7px;background:#6CABDD;animation:bgDot 1.6s ease-in-out infinite')} /><div style={s('min-width:0')}><div style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>IRIS</div><div style={s("font:700 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#8AA0B6;margin-top:5px")}>ANSWERS FROM TONIGHT’S BRIEFING</div></div><button onClick={go('intel')} className="fs" style={s("margin-left:auto;font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--ink);background:var(--sand);padding:7px 8px")}>FULL INTEL</button><button onClick={() => set({ iris: false })} className="fh" style={s("font:800 14px/1 'Kippax','Archivo';color:#8AA0B6;padding:4px 2px 4px 6px")}><Ms size={18} color="inherit">close</Ms></button></div>
         <div ref={irisRef} style={s('flex:1;overflow-y:auto;padding:15px 15px 8px;display:flex;flex-direction:column;gap:11px')}>
           {st.thread.map((m: any, i: number) => { const me = m.me; return (
             <div key={i} style={{ ...s('display:flex;animation:bgBubble .3s ease both'), justifyContent: me ? 'flex-end' : 'flex-start' }}>
               <div style={{ ...s('max-width:84%;padding:12px 13px'), background: me ? 'var(--panel)' : 'var(--sand)', borderRadius: me ? '14px 14px 3px 14px' : '3px 14px 14px 14px' }}>
-                <div style={{ ...s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.14em"), color: me ? '#A39A85' : 'var(--label)' }}>{me ? 'YOU' : 'IRIS'}</div>
+                <div style={{ ...s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.14em"), color: me ? '#8AA0B6' : 'var(--label)' }}>{me ? 'YOU' : 'IRIS'}</div>
                 <div style={{ ...s("font:500 13.5px/1.5 'Kippax','Archivo';margin-top:6px"), color: me ? 'var(--on-panel)' : 'var(--ink)' }}>{m.text}</div>
-                {m.stat && <div style={s('display:flex;align-items:baseline;gap:8px;margin-top:10px;padding-top:9px;border-top:1.5px solid rgba(16,14,10,.14)')}><span style={s("font:800 25px/.9 'KippaxCondensed','Archivo Black';color:#6CABDD;font-variant-numeric:tabular-nums")}>{m.stat}</span><span style={s("font:700 8.5px/1.3 'Kippax','Archivo';letter-spacing:.12em;color:var(--label)")}>{m.statLabel}</span></div>}
+                {m.stat && <div style={s('display:flex;align-items:baseline;gap:8px;margin-top:10px;padding-top:9px;border-top:1.5px solid rgba(0,24,56,.14)')}><span style={s("font:800 25px/.9 'KippaxCondensed','Archivo Black';color:#6CABDD;font-variant-numeric:tabular-nums")}>{m.stat}</span><span style={s("font:700 8.5px/1.3 'Kippax','Archivo';letter-spacing:.12em;color:var(--label)")}>{m.statLabel}</span></div>}
               </div>
             </div>
           ); })}
@@ -1049,8 +1049,8 @@ function Iris({ st, pre, live, ht, set, ask, irisRef, go }: any) {
 
 const FAN_CSS = `
 :root{--ground:#F1F5FA;--sand:#E4ECF4;--sand2:#C3D4E4;--sand3:#D8E2EE;--ink:#001838;--body:#33475C;--label:#5E7488;--panel:#001838;--panel-hover:#0A2A4A;--chrome:#011529;--on-panel:#EAF1F8;--hair:rgba(0,24,56,.12);--desk:#C3D4E4}
-:root[data-theme="dark"]{--ground:#100E0B;--sand:#1C1A14;--sand2:#312C23;--sand3:#252219;--ink:#F4F0E6;--body:#C6BEAE;--label:#9A9381;--panel:#272319;--panel-hover:#332E23;--chrome:#1A1712;--on-panel:#F4F0E6;--hair:rgba(244,240,230,.10);--desk:#080807}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ground:#100E0B;--sand:#1C1A14;--sand2:#312C23;--sand3:#252219;--ink:#F4F0E6;--body:#C6BEAE;--label:#9A9381;--panel:#272319;--panel-hover:#332E23;--chrome:#1A1712;--on-panel:#F4F0E6;--hair:rgba(244,240,230,.10);--desk:#080807}}
+:root[data-theme="dark"]{--ground:#100E0B;--sand:#1C1A14;--sand2:#312C23;--sand3:#252219;--ink:#EAF1F8;--body:#C6BEAE;--label:#8AA0B6;--panel:#272319;--panel-hover:#332E23;--chrome:#1A1712;--on-panel:#EAF1F8;--hair:rgba(244,240,230,.10);--desk:#080807}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ground:#100E0B;--sand:#1C1A14;--sand2:#312C23;--sand3:#252219;--ink:#EAF1F8;--body:#C6BEAE;--label:#8AA0B6;--panel:#272319;--panel-hover:#332E23;--chrome:#1A1712;--on-panel:#EAF1F8;--hair:rgba(244,240,230,.10);--desk:#080807}}
 .ms{font-family:'Material Symbols Rounded';font-weight:400;line-height:1;display:inline-block;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased}
 @keyframes bgRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes bgFade{from{opacity:0}to{opacity:1}}
@@ -1066,7 +1066,7 @@ const FAN_CSS = `
 .fp:hover{background:var(--panel-hover) !important}
 .fh:hover{color:var(--on-panel) !important}
 .fh2:hover{background:var(--panel-hover) !important}
-.fq:hover{background:rgba(242,237,227,.14) !important}
+.fq:hover{background:rgba(234,241,248,.14) !important}
 .fw:hover{background:#fff !important}
 .frow:hover{opacity:.72}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
