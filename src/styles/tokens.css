@@ -1,0 +1,102 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   V2 design tokens — the approved warm ivory & ink language. Presentational
+   components read these, so the incoming new UI can restyle by swapping
+   tokens/components without touching the core engine.
+═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --brand: #6cabdd;
+  --brand-rgb: 108, 171, 221;
+  --ink: #201c17;
+  --xp: #b0842b;
+  --xp-rgb: 176, 132, 43;
+  --live: #c0473c;
+  --live-rgb: 192, 71, 60;
+  --success: #4e8a5f;
+  --success-rgb: 78, 138, 95;
+
+  --bg: #f3eee4;
+  --surface-1: #ffffff;
+  --surface-2: #faf5eb;
+  --surface-3: rgba(32, 28, 23, 0.035);
+  --hairline: rgba(32, 28, 23, 0.08);
+  --border: rgba(32, 28, 23, 0.1);
+
+  --text: #201c17;
+  --text-2: rgba(32, 28, 23, 0.6);
+  --text-3: rgba(32, 28, 23, 0.42);
+  --text-4: rgba(32, 28, 23, 0.26);
+
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 20px;
+  --r-xl: 26px;
+
+  --sh-1: 0 1px 2px rgba(32, 28, 23, 0.05);
+  --sh-2: 0 14px 34px rgba(32, 28, 23, 0.08);
+  --sh-pop: 0 22px 54px rgba(32, 28, 23, 0.14);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --dur-1: 140ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+
+  --font: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: inherit;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+input,
+textarea,
+select {
+  font-family: inherit;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: inherit;
+}
+::selection {
+  background: rgba(var(--brand-rgb), 0.24);
+}
+
+/* press feedback everywhere (Apple/Emil) */
+.press {
+  transition: transform var(--dur-1) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
