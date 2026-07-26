@@ -69,6 +69,7 @@ interface FSt {
   chat: { id: string; user: string; text: string; t: string; tag: string; me?: boolean; time: string; likes: number; ev?: { kind: string; color: string; detail?: string; minute?: number } }[];
   draft: string; room: string; likes: Record<string, boolean>; votes: Record<string, string>;
   flash: { title: string; sub: string } | null;
+  flashOut: boolean; irisOut: boolean;
   pred: { h: number; a: number; s: string; done: boolean };
   size: string; basket: { name: string; price: number }[]; ordered: boolean;
   food: Record<string, number>; foodPlaced: boolean; foodEta: number;
@@ -87,11 +88,14 @@ export function MatchdayFan() {
     chat: POOL.slice(0, 7).map((m, i) => ({ ...m, id: 's' + i, time: '20:' + pad(11 + i * 3), likes: 1 + (i % 4) })),
     draft: '', room: 'ALL FANS', likes: {}, votes: {}, pred: { h: 2, a: 1, s: 'Haaland', done: false },
     size: 'M', basket: [], ordered: false, food: {}, foodPlaced: false, foodEta: 6,
-    photos: 9, reels: {}, read: null, flash: null, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: 'light', quests: {}, toast: null, toastXp: '',
+    photos: 9, reels: {}, read: null, flash: null, flashOut: false, irisOut: false, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: 'light', quests: {}, toast: null, toastXp: '',
   }));
   const set = (patch: Partial<FSt> | ((s: FSt) => Partial<FSt>)) => setSt((sPrev) => ({ ...sPrev, ...(typeof patch === 'function' ? patch(sPrev) : patch) }));
   const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number }>({});
   const { id = 'demo' } = useParams();
+  // #2/#3 — play an exit animation, then unmount (symmetric enter/exit).
+  const closeIris = () => { set({ irisOut: true }); window.setTimeout(() => set({ iris: false, irisOut: false }), 260); };
+  const closeFlash = () => { set((sp) => (sp.flash ? { flashOut: true } : {})); window.setTimeout(() => set({ flash: null, flashOut: false }), 200); };
 
   // chat arrival + clock
   useEffect(() => {
@@ -140,8 +144,8 @@ export function MatchdayFan() {
     // A goal triggers a dismissible flash drop in the shop.
     if (kind === 'GOAL') {
       window.clearTimeout(timers.current.flash);
-      set({ flash: { title: '20% off the Haaland home shirt', sub: 'Goal drop · collect at Gate 4 on the way out' } });
-      timers.current.flash = window.setTimeout(() => set({ flash: null }), 15000);
+      set({ flash: { title: '20% off the Haaland home shirt', sub: 'Goal drop · collect at Gate 4 on the way out' }, flashOut: false });
+      timers.current.flash = window.setTimeout(() => closeFlash(), 15000);
     }
   };
   const varCheck = () => {
@@ -341,15 +345,15 @@ export function MatchdayFan() {
 
           {/* FLASH SALE — pops on a goal, dismissible */}
           {st.flash && (
-            <div style={s('position:absolute;top:122px;left:10px;right:10px;z-index:48;animation:bgRise .32s cubic-bezier(.18,.9,.2,1) both')}>
+            <div style={{ ...s('position:absolute;top:122px;left:10px;right:10px;z-index:48'), animation: st.flashOut ? 'bgFlashOut .18s cubic-bezier(.23,1,.32,1) both' : 'bgRise .32s cubic-bezier(.18,.9,.2,1) both' }}>
               <div style={s('display:flex;align-items:center;gap:11px;padding:11px 11px 11px 13px;background:var(--panel);border-radius:2px;box-shadow:0 14px 34px -8px rgba(0,24,56,.55)')}>
                 <span style={s('width:36px;height:36px;flex:none;border-radius:2px;background:#6CABDD;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">local_offer</Ms></span>
-                <button onClick={() => set({ route: 'shop', flash: null })} style={s('flex:1;min-width:0;text-align:left')}>
+                <button onClick={() => { set({ route: 'shop' }); closeFlash(); }} style={s('flex:1;min-width:0;text-align:left')}>
                   <div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#6CABDD")}>FLASH DROP · LIMITED</div>
                   <div style={s("font:700 13px/1.25 'Kippax','Archivo';color:var(--on-panel);margin-top:5px")}>{st.flash.title}</div>
                   <div style={s("font:500 10.5px/1.3 'Kippax','Archivo';color:#8AA0B6;margin-top:3px")}>{st.flash.sub}</div>
                 </button>
-                <button onClick={() => set({ flash: null })} style={s('width:28px;height:28px;flex:none;border-radius:50%;background:rgba(234,241,248,.12);display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#8AA0B6">close</Ms></button>
+                <button onClick={() => closeFlash()} style={s('width:28px;height:28px;flex:none;border-radius:50%;background:rgba(234,241,248,.12);display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#8AA0B6">close</Ms></button>
               </div>
             </div>
           )}
@@ -361,7 +365,7 @@ export function MatchdayFan() {
               <span style={s("font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.16em;color:var(--on-panel)")}>ASK IRIS</span>
             </button>
           )}
-          {st.iris && <Iris {...{ st, pre, live, ht, set, ask, irisRef, go }} />}
+          {st.iris && <Iris {...{ st, pre, live, ht, set, ask, irisRef, go, closeIris }} />}
 
           {st.toast && (
             <div style={s('position:absolute;left:0;right:0;bottom:64px;z-index:55;display:flex;justify-content:center;pointer-events:none')}>
@@ -884,8 +888,8 @@ function Reactions() {
         <div style={s('margin-top:18px')}>
           <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>REELS & CLIPS</div>
           <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px')}>
-            {reels.map((r) => { const pl = playing === r.id; return (
-              <div key={r.id} style={s('background:var(--sand);overflow:hidden')}>
+            {reels.map((r, i) => { const pl = playing === r.id; return (
+              <div key={r.id} style={{ ...s('background:var(--sand);overflow:hidden'), animation: 'bgRise .28s cubic-bezier(.18,.9,.2,1) both', animationDelay: `${i * 40}ms` }}>
                 <button onClick={() => setPlaying(pl ? null : r.id)} style={s('display:block;width:100%;position:relative;height:212px')}>
                   <Slot id={r.slot} label="Reel" />
                   <span style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,24,56,.18),rgba(0,24,56,0) 34%,rgba(0,24,56,.55))')} />
@@ -896,7 +900,7 @@ function Reactions() {
                 <div style={s('padding:10px 11px 11px')}>
                   <div style={s("font:700 11px/1.25 'Kippax','Archivo';color:var(--ink)")}>{r.handle}</div>
                   <div style={s("font:500 11px/1.35 'Kippax','Archivo';color:var(--body);margin-top:4px")}>{r.cap}</div>
-                  <button onClick={() => like(r.id)} style={{ ...s("display:flex;align-items:center;gap:5px;margin-top:9px;font:800 10.5px/1 'Kippax','Archivo'"), color: liked[r.id] ? '#6CABDD' : 'var(--label)' }}><Ms size={13} color={liked[r.id] ? '#6CABDD' : 'var(--label)'}>favorite</Ms>{kfmt(r.likes + (liked[r.id] ? 1 : 0))}</button>
+                  <button onClick={() => like(r.id)} style={{ ...s("display:flex;align-items:center;gap:5px;margin-top:9px;font:800 10.5px/1 'Kippax','Archivo'"), color: liked[r.id] ? '#6CABDD' : 'var(--label)' }}><span style={{ display: 'flex', animation: liked[r.id] ? 'bgPop .22s cubic-bezier(.23,1,.32,1)' : undefined }}><Ms size={13} color={liked[r.id] ? '#6CABDD' : 'var(--label)'}>favorite</Ms></span>{kfmt(r.likes + (liked[r.id] ? 1 : 0))}</button>
                 </div>
               </div>
             ); })}
@@ -909,12 +913,12 @@ function Reactions() {
         <div style={s('margin-top:22px')}>
           <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>POSTS</div>
           <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:11px')}>
-            {posts.map((p) => (
-              <div key={p.id} style={s('background:var(--sand);padding:13px 14px')}>
+            {posts.map((p, i) => (
+              <div key={p.id} style={{ ...s('background:var(--sand);padding:13px 14px'), animation: 'bgRise .28s cubic-bezier(.18,.9,.2,1) both', animationDelay: `${i * 40}ms` }}>
                 <div style={s('display:flex;align-items:center;gap:8px')}><Badge2 plat={p.plat} /><span style={s("font:700 12px/1 'Kippax','Archivo';color:var(--ink)")}>{p.handle}</span><span style={s("font:500 10.5px/1 'Kippax','Archivo';color:var(--label);margin-left:auto")}>{p.t}</span></div>
                 <div style={s("font:500 13.5px/1.45 'Kippax','Archivo';color:var(--ink);margin-top:9px")}>{p.text}</div>
                 <div style={s('display:flex;align-items:center;gap:16px;margin-top:11px')}>
-                  <button onClick={() => like(p.id)} style={{ ...s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Kippax','Archivo'"), color: liked[p.id] ? '#6CABDD' : 'var(--label)' }}><Ms size={14} color={liked[p.id] ? '#6CABDD' : 'var(--label)'}>favorite</Ms>{kfmt(p.likes + (liked[p.id] ? 1 : 0))}</button>
+                  <button onClick={() => like(p.id)} style={{ ...s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Kippax','Archivo'"), color: liked[p.id] ? '#6CABDD' : 'var(--label)' }}><span style={{ display: 'flex', animation: liked[p.id] ? 'bgPop .22s cubic-bezier(.23,1,.32,1)' : undefined }}><Ms size={14} color={liked[p.id] ? '#6CABDD' : 'var(--label)'}>favorite</Ms></span>{kfmt(p.likes + (liked[p.id] ? 1 : 0))}</button>
                   <span style={s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Kippax','Archivo';color:var(--label)")}><Ms size={14} color="var(--label)">repeat</Ms>{p.rt}</span>
                 </div>
               </div>
@@ -999,7 +1003,7 @@ function Profile({ st, filled, set, go }: any) {
   );
 }
 
-function Iris({ st, pre, live, ht, set, ask, irisRef, go }: any) {
+function Iris({ st, pre, live, ht, set, ask, irisRef, go, closeIris }: any) {
   const QA: [string, string, string?, string?][] = pre ? [
     ['Who decides this?', 'Erling Haaland against a Madrid back line that has conceded first only twice all competition. He has 12 in the competition and scores 0.82 goals per 90 at home.', '12', 'GOALS IN THIS COMPETITION'],
     ['Why is City favourite?', 'Home leg, unbeaten in eight here, and 1.87 xG per game against Madrid’s 1.64. The model still only gives City 46% — Madrid score late.', '46%', 'MODELLED WIN CHANCE'],
@@ -1024,10 +1028,10 @@ function Iris({ st, pre, live, ht, set, ask, irisRef, go }: any) {
   const fallback = 'That one isn’t in tonight’s briefing yet. I refresh at half-time and full-time — until then, the shot map and the win-probability model on the Match Intel page cover most of it.';
   const askFree = (q: string) => { const words = q.toLowerCase().split(/\W+/).filter((w) => w.length > 3); const hit = QA.find(([qq]) => words.some((w) => qq.toLowerCase().indexOf(w) > -1)); if (hit) ask(hit[0], hit[1], hit[2], hit[3]); else ask(q, fallback); };
   return (
-    <div style={s('position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,24,56,.45)')}>
-      <button onClick={() => set({ iris: false })} style={s('position:absolute;inset:0;cursor:default')} />
-      <div style={s('position:relative;height:82%;display:flex;flex-direction:column;background:var(--ground);animation:bgSheet .32s cubic-bezier(.18,.9,.2,1) both')}>
-        <div style={s('display:flex;align-items:center;gap:10px;padding:13px 15px;background:var(--panel)')}><span style={s('width:7px;height:7px;background:#6CABDD;animation:bgDot 1.6s ease-in-out infinite')} /><div style={s('min-width:0')}><div style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>IRIS</div><div style={s("font:700 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#8AA0B6;margin-top:5px")}>ANSWERS FROM TONIGHT’S BRIEFING</div></div><button onClick={go('intel')} className="fs" style={s("margin-left:auto;font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--ink);background:var(--sand);padding:7px 8px")}>FULL INTEL</button><button onClick={() => set({ iris: false })} className="fh" style={s("font:800 14px/1 'Kippax','Archivo';color:#8AA0B6;padding:4px 2px 4px 6px")}><Ms size={18} color="inherit">close</Ms></button></div>
+    <div style={{ ...s('position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,24,56,.45)'), animation: st.irisOut ? 'bgFadeOut .26s ease both' : undefined }}>
+      <button onClick={() => closeIris()} style={s('position:absolute;inset:0;cursor:default')} />
+      <div style={{ ...s('position:relative;height:82%;display:flex;flex-direction:column;background:var(--ground)'), animation: st.irisOut ? 'bgSheetOut .26s cubic-bezier(.32,.72,0,1) both' : 'bgSheet .32s cubic-bezier(.18,.9,.2,1) both' }}>
+        <div style={s('display:flex;align-items:center;gap:10px;padding:13px 15px;background:var(--panel)')}><span style={s('width:7px;height:7px;background:#6CABDD;animation:bgDot 1.6s ease-in-out infinite')} /><div style={s('min-width:0')}><div style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>IRIS</div><div style={s("font:700 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#8AA0B6;margin-top:5px")}>ANSWERS FROM TONIGHT’S BRIEFING</div></div><button onClick={go('intel')} className="fs" style={s("margin-left:auto;font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--ink);background:var(--sand);padding:7px 8px")}>FULL INTEL</button><button onClick={() => closeIris()} className="fh" style={s("font:800 14px/1 'Kippax','Archivo';color:#8AA0B6;padding:4px 2px 4px 6px")}><Ms size={18} color="inherit">close</Ms></button></div>
         <div ref={irisRef} style={s('flex:1;overflow-y:auto;padding:15px 15px 8px;display:flex;flex-direction:column;gap:11px')}>
           {st.thread.map((m: any, i: number) => { const me = m.me; return (
             <div key={i} style={{ ...s('display:flex;animation:bgBubble .3s ease both'), justifyContent: me ? 'flex-end' : 'flex-start' }}>
@@ -1062,6 +1066,10 @@ const FAN_CSS = `
 @keyframes bgDot{0%,80%,100%{opacity:.25}40%{opacity:1}}
 @keyframes bgBubble{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes bgToast{0%{opacity:0;transform:translateY(12px)}12%{opacity:1;transform:none}84%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}
+@keyframes bgSheetOut{from{transform:none}to{transform:translateY(100%)}}
+@keyframes bgFadeOut{from{opacity:1}to{opacity:0}}
+@keyframes bgFlashOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-8px)}}
+@keyframes bgPop{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
 .fs:hover{background:var(--sand3) !important}
 .fp:hover{background:var(--panel-hover) !important}
 .fh:hover{color:var(--on-panel) !important}
