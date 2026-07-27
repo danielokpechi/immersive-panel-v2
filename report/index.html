@@ -1,0 +1,215 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Immersive Panel — v1 → v2 Redesign Report</title>
+<meta name="description" content="Screen-by-screen redesign report for the Manchester City Immersive Panel, grounded in 14 fan-research sessions."/>
+<style>
+:root{--navy:#001838;--sky:#6CABDD;--cyan:#1E9BD7;--ink:#0B1C2C;--body:#34495C;--label:#5E7488;
+--ground:#F3F6F9;--card:#FFFFFF;--line:rgba(0,24,56,.10);--old:#C0473C;--old-bg:#FBEDEB;--new:#1F7A4D;
+--new-bg:#E9F5EE;--sky-bg:#EAF2FA;--shadow:0 1px 2px rgba(0,24,56,.05),0 12px 30px rgba(0,24,56,.06);}
+@media (prefers-color-scheme:dark){:root{--navy:#0A2543;--ink:#EAF1F8;--body:#B7C6D6;--label:#8AA0B6;
+--ground:#0A0F16;--card:#111A26;--line:rgba(255,255,255,.10);--old:#E0776C;--old-bg:#2A1613;--new:#66C58C;
+--new-bg:#12241A;--sky-bg:#12283F;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px rgba(0,0,0,.4);}}
+:root[data-theme=dark]{--navy:#0A2543;--ink:#EAF1F8;--body:#B7C6D6;--label:#8AA0B6;--ground:#0A0F16;--card:#111A26;--line:rgba(255,255,255,.10);--old:#E0776C;--old-bg:#2A1613;--new:#66C58C;--new-bg:#12241A;--sky-bg:#12283F;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px rgba(0,0,0,.4);}
+:root[data-theme=light]{--navy:#001838;--ink:#0B1C2C;--body:#34495C;--label:#5E7488;--ground:#F3F6F9;--card:#FFFFFF;--line:rgba(0,24,56,.10);--old:#C0473C;--old-bg:#FBEDEB;--new:#1F7A4D;--new-bg:#E9F5EE;--sky-bg:#EAF2FA;--shadow:0 1px 2px rgba(0,24,56,.05),0 12px 30px rgba(0,24,56,.06);}
+*{box-sizing:border-box;margin:0;padding:0}html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--ground);color:var(--body);line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+h1,h2,h3,h4{color:var(--ink);line-height:1.12;letter-spacing:-.02em;text-wrap:balance}
+strong{color:var(--ink);font-weight:700}
+.cover{background:var(--navy);color:#EAF1F8;padding:62px 0 50px;position:relative;overflow:hidden}
+.cover:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(108,171,223,.10) 0 2px,transparent 2px 26px);opacity:.5}
+.cover .wrap{position:relative}
+.kicker{font-size:12px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--sky)}
+.cover h1{color:#fff;font-size:clamp(30px,5vw,52px);font-weight:900;margin:14px 0 10px;letter-spacing:-.03em}
+.cover p.sub{color:#AFC6DD;font-size:clamp(15px,2vw,18px);max-width:60ch}
+.cover .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:26px}
+.cover .meta div{border-left:3px solid var(--sky);padding-left:12px}
+.cover .meta b{display:block;color:#fff;font-size:22px;font-weight:800}
+.cover .meta span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8FAAC6}
+section{padding:46px 0}section+section{border-top:1px solid var(--line)}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--sky);margin-bottom:8px}
+h2.big{font-size:clamp(23px,3.4vw,34px);font-weight:900;margin-bottom:6px}
+.lede{font-size:16.5px;max-width:74ch;margin-top:10px}
+/* previews */
+#previews{background:linear-gradient(180deg,var(--sky-bg),var(--ground))}
+.trygrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}
+.trycard{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.tryhead{display:flex;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tryhead .badge{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:3px}
+.tryhead .b-old{color:var(--old);background:var(--old-bg)}.tryhead .b-new{color:var(--new);background:var(--new-bg)}
+.tryhead h3{font-size:16px;margin-right:auto}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font:inherit;font-size:12px;font-weight:700;padding:6px 11px;background:var(--card);color:var(--label);border:0;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-selected=true]{background:var(--navy);color:#fff}
+.framewrap{position:relative;background:#0b1220;aspect-ratio:16/11}
+.framewrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tryfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 15px;border-top:1px solid var(--line);font-size:12.5px;color:var(--label)}
+.openbtn{font:inherit;font-size:12.5px;font-weight:700;color:#fff;background:var(--navy);border-radius:5px;padding:7px 12px;text-decoration:none;white-space:nowrap}
+.hint{font-size:13px;color:var(--label);margin-top:14px}
+/* bottom line */
+.bottomline{background:var(--navy);color:#E7EFF7;border-radius:4px;padding:26px 28px;margin-top:22px;box-shadow:var(--shadow)}
+.bottomline h3{color:#fff;font-size:14px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px}
+.bottomline p{color:#CBDAEA;font-size:16px}.bottomline p+p{margin-top:10px}
+.findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:22px}
+.finding{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px;box-shadow:var(--shadow)}
+.finding .n{font-size:11px;font-weight:800;letter-spacing:.1em;color:#fff;background:var(--old);padding:3px 7px;border-radius:3px}
+.finding .n.ann{background:var(--label)}.finding h4{margin:11px 0 5px;font-size:15.5px}.finding p{font-size:13.5px}
+.finding .cnt{color:var(--old);font-weight:800}
+.moves{margin-top:20px;display:grid;gap:10px}
+.move{display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--sky);border-radius:4px;padding:15px 16px;box-shadow:var(--shadow);counter-increment:m}
+.moves{counter-reset:m}
+.move:before{content:counter(m);width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px}
+.move b{color:var(--ink)}.move .r{display:block;margin-top:3px;font-size:13.5px}
+.move .done{display:inline-block;margin-top:8px;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--new);background:var(--new-bg);padding:3px 8px;border-radius:3px}
+.block{margin-top:30px}.block>h3{font-size:19px;font-weight:800;margin-bottom:3px}
+.block>.why{font-size:14.5px;max-width:78ch;margin-bottom:14px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.col{display:flex;flex-direction:column}
+.tag{align-self:flex-start;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:3px;margin-bottom:8px}
+.tag-old{color:var(--old);background:var(--old-bg)}.tag-new{color:var(--new);background:var(--new-bg)}
+figure.shot{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:var(--shadow);height:100%}
+figure.shot img{display:block;width:100%;height:auto;border-bottom:1px solid var(--line);cursor:zoom-in;transition:filter .15s}
+figure.shot img:hover{filter:brightness(1.03)}
+figcaption{font-size:12.5px;color:var(--label);padding:9px 12px 11px}
+figcaption:after{content:" · click to enlarge";color:var(--sky);font-weight:600}
+.single{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:6px}
+.rc{background:var(--sky-bg);border-radius:4px;padding:12px 15px;margin:0 0 14px;font-size:13.5px}
+.rc b{color:var(--ink)}.rc .q{font-style:italic}
+table.chg{width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px;background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:var(--shadow)}
+table.chg th,table.chg td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+table.chg th{background:var(--navy);color:#fff;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800}
+table.chg tr:last-child td{border-bottom:0}table.chg td:first-child{font-weight:700;color:var(--ink);white-space:nowrap}
+.scroller{overflow-x:auto}
+.foot{padding:34px 0 60px;color:var(--label);font-size:12.5px}.foot b{color:var(--ink)}
+/* lightbox */
+#lb{position:fixed;inset:0;background:rgba(5,12,22,.92);display:none;align-items:center;justify-content:center;z-index:999;cursor:zoom-out;padding:20px}
+#lb.open{display:flex}
+#lb img{max-width:96vw;max-height:88vh;border-radius:6px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+#lb .cap{position:fixed;bottom:18px;left:0;right:0;text-align:center;color:#cfe0f0;font-size:13px;padding:0 20px}
+#lb .x{position:fixed;top:16px;right:20px;color:#fff;font-size:30px;font-weight:300;line-height:1;cursor:pointer}
+@media (max-width:760px){.pair,.trygrid{grid-template-columns:1fr}}
+@media print{#previews,#lb,.seg,figcaption:after{display:none!important}
+ .cover{padding:30px 0}body{background:#fff}section{padding:22px 0}figure.shot img{cursor:default}}
+</style></head>
+<body>
+<header class="cover"><div class="wrap">
+ <div class="kicker">Manchester City · Immersive Panel · Design review</div>
+ <h1>From prototype to matchday-ready</h1>
+ <p class="sub">A screen-by-screen account of the ground-up rebuild — operator studio and fan app — and why each change was made, grounded in 14 fan-research sessions.</p>
+ <div class="meta">
+   <div><b>2 builds</b><span>v1 &amp; v2, both live</span></div>
+   <div><b>10 surfaces</b><span>studio + fan, end to end</span></div>
+   <div><b>14 sessions</b><span>the research behind it</span></div>
+   <div><b>1 fixture</b><span>City v Real Madrid · UCL SF</span></div>
+ </div>
+</div></header>
+<section id="previews"><div class="wrap">
+ <div class="eyebrow">Try it yourself</div>
+ <h2 class="big">Open both builds and compare, right here</h2>
+ <p class="lede">The old build (v1) and the ground-up rebuild (v2) are both live below. Switch each one between the <strong>operator studio</strong> and the <strong>fan app</strong>, click around, or pop either out full-screen. The rest of this document is the guided walk-through.</p>
+ <div class="trygrid">
+   <div class="trycard">
+     <div class="tryhead"><span class="badge b-old">v1 · before</span><h3>Original build</h3>
+       <div class="seg" data-target="f-old">
+         <button aria-selected="true" data-url="https://danielokpechi.github.io/immersive-panel/#/studio">Studio</button>
+         <button aria-selected="false" data-url="https://danielokpechi.github.io/immersive-panel/#/p/pnl_mcfc">Fan app</button>
+       </div>
+     </div>
+     <div class="framewrap"><iframe id="f-old" title="Immersive Panel v1" src="https://danielokpechi.github.io/immersive-panel/#/studio" loading="lazy"></iframe></div>
+     <div class="tryfoot"><span>Generic BoltOS console</span><a class="openbtn" id="o-old" href="https://danielokpechi.github.io/immersive-panel/#/studio" target="_blank" rel="noopener">Open full-screen ↗</a></div>
+   </div>
+   <div class="trycard">
+     <div class="tryhead"><span class="badge b-new">v2 · after</span><h3>Rebuild</h3>
+       <div class="seg" data-target="f-new">
+         <button aria-selected="true" data-url="https://danielokpechi.github.io/immersive-panel-v2/studio">Studio</button>
+         <button aria-selected="false" data-url="https://danielokpechi.github.io/immersive-panel-v2/p/mcfc-flagship">Fan app</button>
+       </div>
+     </div>
+     <div class="framewrap"><iframe id="f-new" title="Immersive Panel v2" src="https://danielokpechi.github.io/immersive-panel-v2/studio" loading="lazy"></iframe></div>
+     <div class="tryfoot"><span>Man City matchday desk</span><a class="openbtn" id="o-new" href="https://danielokpechi.github.io/immersive-panel-v2/studio" target="_blank" rel="noopener">Open full-screen ↗</a></div>
+   </div>
+ </div>
+ <p class="hint">Tip — the fan app is a phone experience, so it shows a phone in the frame. For the best feel, use “Open full-screen”. Every screenshot below is clickable too: click any image to enlarge it.</p>
+</div></section><section id="research"><div class="wrap">
+ <div class="eyebrow">The evidence base</div>
+ <h2 class="big">What 14 fans told us</h2>
+ <p class="lede">Every change traces back to <strong>Fan Research: What We Learned</strong> — 14 moderated sessions with fans, multi-sport fans and non-fans. The bottom line was uncomfortable: the idea had a real audience, but its strongest moment wasn't the one it was built for, and the retention engine was invisible to everyone.</p>
+ <div class="findings"><div class="finding"><span class="n">Blocker</span><h4>XP &amp; rewards are invisible</h4><p>Not one participant understood XP unprompted — the retention engine produced zero motivation. <span class="cnt">14/14</span></p></div><div class="finding"><span class="n">Blocker</span><h4>The cold screen doesn't land</h4><p>With no context it reads as a live-score app, a blog, or a betting feature. <span class="cnt">11/14</span></p></div><div class="finding"><span class="n">Blocker</span><h4>Team identity is illegible</h4><p>No flags, colours or names — it assumes you know both sides. <span class="cnt">3/3 non-fans</span></p></div><div class="finding"><span class="n ann">Annoyance</span><h4>First-screen overload</h4><p>One fan counted 11 nav options; whole features get missed. <span class="cnt">9/14</span></p></div><div class="finding"><span class="n ann">Annoyance</span><h4>"Prediction" reads as betting</h4><p>A trust-friction point before the feature is even used. <span class="cnt">4/14</span></p></div><div class="finding"><span class="n ann">Annoyance</span><h4>Layout lacks hierarchy</h4><p>Fan photos surfaced before scores; the changing layout never explains itself. <span class="cnt">5–8/14</span></p></div></div>
+ <h3 style="margin-top:30px;font-size:17px">The five moves we were told to make first</h3>
+ <div class="moves"><div class="move"><div><b>Make the reward visible before the quest.</b><span class="r">Show what XP earns you — jersey, seat upgrade, food credit — on every quest card, with a progress bar.</span><span class="done">Shipped in v2</span></div></div><div class="move"><div><b>Give the entry screen a frame.</b><span class="r">One situating line so people know what it is and what to do first.</span><span class="done">Shipped in v2</span></div></div><div class="move"><div><b>Cut the first screen to score, chat and one section.</b><span class="r">Push shop, food, floor plan and quests into a curated hub. Lead with the two things that pull.</span><span class="done">Shipped in v2</span></div></div><div class="move"><div><b>Add highlights, even as a redirect.</b><span class="r">Goal clips and recaps at half-time and post-match — the most-wanted missing feature.</span><span class="done">Shipped in v2</span></div></div><div class="move"><div><b>Reposition IRIS as match intel, not chat.</b><span class="r">Pre-generated insight cards during play; promote it post-match.</span><span class="done">Shipped in v2</span></div></div></div>
+</div></section><section id="studio"><div class="wrap"><div class="eyebrow">Part 1 · The operator studio</div><h2 class="big">Panel Studio — from a generic SaaS console to a club matchday desk</h2><p class="lede">The studio is where the club authors and drives a panel. v1 was a capable but generic dark-purple dashboard. v2 is a Manchester City workspace: real competitions, real templates, and a control room that drives the actual fan device live.</p><div class="block"><h3>1 · Dashboard</h3>
+ <p class="why">v1 lists nine invented demo panels on a purple gradient with a stock "BoltOS" identity. v2 is a <strong>club workspace</strong> — City crest, an admin identity, and six real competition panels (league, cups, women's, tour) with live/draft status, venue tags and square-cornered City cards.</p>
+ <div class="pair"><div class="col old"><span class="tag tag-old">Before · v1</span><figure class="shot old"><img loading="lazy" src="images/shot-00.jpg" alt="v1 dashboard — generic BoltOS console, demo panels" data-full="images/shot-00.jpg" data-cap="v1 dashboard — generic BoltOS console, demo panels"/><figcaption>v1 dashboard — generic BoltOS console, demo panels</figcaption></figure></div><div class="col new"><span class="tag tag-new">After · v2</span><figure class="shot new"><img loading="lazy" src="images/shot-19.jpg" alt="v2 dashboard — Man City workspace, real competitions" data-full="images/shot-19.jpg" data-cap="v2 dashboard — Man City workspace, real competitions"/><figcaption>v2 dashboard — Man City workspace, real competitions</figcaption></figure></div></div>
+ <div class="single" style="margin-top:14px"><figure class="shot old"><img loading="lazy" src="images/shot-02.jpg" alt="v1 — mixed sports demo grid" data-full="images/shot-02.jpg" data-cap="v1 — mixed sports demo grid"/><figcaption>v1 — mixed sports demo grid</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-20.jpg" alt="v2 — City set: UCL, PL, WSL, FA Cup, tour" data-full="images/shot-20.jpg" data-cap="v2 — City set: UCL, PL, WSL, FA Cup, tour"/><figcaption>v2 — City set: UCL, PL, WSL, FA Cup, tour</figcaption></figure></div></div><div class="block"><h3>2 · Create-panel wizard</h3>
+ <p class="why">Both walk five steps, but the spine changed. v1 asks Experience → Sport → Team → <em>Modules</em> → Brand, where modules are global on/off toggles. v2 asks Experience → Competition → <strong>Template</strong> → <strong>Blocks &amp; states</strong> → Brand — start from a real City template, then <strong>compose each match state separately</strong>. That serves the finding that "the changing layout is the core bet, and it needs explaining": the layout per state is now an authored decision.</p>
+ <div class="pair"><div class="col old"><span class="tag tag-old">Before · v1</span><figure class="shot old"><img loading="lazy" src="images/shot-03.jpg" alt="v1 wizard — choose an abstract experience" data-full="images/shot-03.jpg" data-cap="v1 wizard — choose an abstract experience"/><figcaption>v1 wizard — choose an abstract experience</figcaption></figure></div><div class="col new"><span class="tag tag-new">After · v2</span><figure class="shot new"><img loading="lazy" src="images/shot-22.jpg" alt="v2 wizard — experience with live preview + config" data-full="images/shot-22.jpg" data-cap="v2 wizard — experience with live preview + config"/><figcaption>v2 wizard — experience with live preview + config</figcaption></figure></div></div>
+ <div class="single" style="margin-top:14px"><figure class="shot old"><img loading="lazy" src="images/shot-04.jpg" alt="v1 — generic sport picker" data-full="images/shot-04.jpg" data-cap="v1 — generic sport picker"/><figcaption>v1 — generic sport picker</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-23.jpg" alt="v2 — real competitions, each with its own states" data-full="images/shot-23.jpg" data-cap="v2 — real competitions, each with its own states"/><figcaption>v2 — real competitions, each with its own states</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-24.jpg" alt="v2 — start from a City template" data-full="images/shot-24.jpg" data-cap="v2 — start from a City template"/><figcaption>v2 — start from a City template</figcaption></figure></div>
+ <div class="single" style="margin-top:14px"><figure class="shot old"><img loading="lazy" src="images/shot-06.jpg" alt="v1 — one global toggle list" data-full="images/shot-06.jpg" data-cap="v1 — one global toggle list"/><figcaption>v1 — one global toggle list</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-25.jpg" alt="v2 — compose each state from a block library" data-full="images/shot-25.jpg" data-cap="v2 — compose each state from a block library"/><figcaption>v2 — compose each state from a block library</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-26.jpg" alt="v2 — name &amp;amp; palette, City colours preset" data-full="images/shot-26.jpg" data-cap="v2 — name &amp;amp; palette, City colours preset"/><figcaption>v2 — name &amp; palette, City colours preset</figcaption></figure></div></div><div class="block"><h3>3 · Panel builder</h3>
+ <p class="why">v1's editor is a name/brand form plus a flat grid of global module switches. v2's builder keeps the live preview but adds <strong>per-session module stacks</strong> — Warm-up, Build-up, First half, Half-time, Second half, Full-time each get their own ordered blocks — plus image-pack and palette control.</p>
+ <div class="pair"><div class="col old"><span class="tag tag-old">Before · v1</span><figure class="shot old"><img loading="lazy" src="images/shot-08.jpg" alt="v1 builder — global module toggles" data-full="images/shot-08.jpg" data-cap="v1 builder — global module toggles"/><figcaption>v1 builder — global module toggles</figcaption></figure></div><div class="col new"><span class="tag tag-new">After · v2</span><figure class="shot new"><img loading="lazy" src="images/shot-27.jpg" alt="v2 builder — per-session stacks, live preview" data-full="images/shot-27.jpg" data-cap="v2 builder — per-session stacks, live preview"/><figcaption>v2 builder — per-session stacks, live preview</figcaption></figure></div></div></div><div class="block"><h3>4 · Stats</h3>
+ <p class="why">Same metrics, re-grounded. v1 sits on the purple theme with emoji labels; v2 reads as a club analytics view — City navy, "last event vs previous home fixture", per-module engagement ranked.</p>
+ <div class="pair"><div class="col old"><span class="tag tag-old">Before · v1</span><figure class="shot old"><img loading="lazy" src="images/shot-09.jpg" alt="v1 stats — emoji rows on purple" data-full="images/shot-09.jpg" data-cap="v1 stats — emoji rows on purple"/><figcaption>v1 stats — emoji rows on purple</figcaption></figure></div><div class="col new"><span class="tag tag-new">After · v2</span><figure class="shot new"><img loading="lazy" src="images/shot-28.jpg" alt="v2 stats — City-branded, ranked engagement" data-full="images/shot-28.jpg" data-cap="v2 stats — City-branded, ranked engagement"/><figcaption>v2 stats — City-branded, ranked engagement</figcaption></figure></div></div></div><div class="block"><h3>5 · Control room</h3>
+ <p class="why">The biggest functional leap. v1's console previews a mock phone. v2's control room drives the <strong>real fan client</strong> over a realtime channel: a true "live monitor" mirrors what fans see, sessions jump every device at once, and triggers (Goal, VAR, sub, card, MOTM, push poll, reaction, flash sale) "fire instantly to 5,298 devices".</p>
+ <div class="pair"><div class="col old"><span class="tag tag-old">Before · v1</span><figure class="shot old"><img loading="lazy" src="images/shot-10.jpg" alt="v1 control — drives a mock preview" data-full="images/shot-10.jpg" data-cap="v1 control — drives a mock preview"/><figcaption>v1 control — drives a mock preview</figcaption></figure></div><div class="col new"><span class="tag tag-new">After · v2</span><figure class="shot new"><img loading="lazy" src="images/shot-29.jpg" alt="v2 control room — Live Sync driving the true fan view" data-full="images/shot-29.jpg" data-cap="v2 control room — Live Sync driving the true fan view"/><figcaption>v2 control room — Live Sync driving the true fan view</figcaption></figure></div></div>
+ <div class="single" style="margin-top:14px"><figure class="shot new"><img loading="lazy" src="images/shot-30.jpg" alt="v2 — trigger events broadcast live to every device" data-full="images/shot-30.jpg" data-cap="v2 — trigger events broadcast live to every device"/><figcaption>v2 — trigger events broadcast live to every device</figcaption></figure></div></div></div></section><section id="fan"><div class="wrap"><div class="eyebrow">Part 2 · The fan app</div><h2 class="big">Matchday Companion — rebuilt around what fans actually reached for</h2><p class="lede">The fan side is where the research bit hardest. v1 was a dark, generic "Immersive Panel". v2 is a Man City matchday companion — navy, square-cornered, crest-led — that leads with the two things fans went to unprompted (the score and the chat) and finally makes the reward layer visible.</p><div class="block"><h3>The cold open — the first thing a fan sees</h3>
+ <div class="rc"><b>Research · Blocker (11/14):</b> "The cold read fails… reads as a live-score app, a blog, or a betting feature." <span class="q">"It looks like a blog for football matches."</span> And <b>3/3 non-fans:</b> team identity illegible.</div>
+ <p class="why">v1 opens on a generic header, a "Start Matchday" button and a Reads/Shop carousel — and a Quests block that literally reads <em>"Quests unlock on matchday · Start Matchday to begin earning XP"</em>. v2 opens on a <strong>City-vs-Madrid score bug with both crests and recent form</strong>, the first-leg recap with a <strong>Watch highlights</strong> button, and a one-line frame: <em>"Tonight's companion: follow the game, talk to other City fans, and earn towards a seat upgrade while you watch. Nothing to install."</em></p>
+ <div class="pair"><div class="col old"><span class="tag tag-old">Before · v1</span><figure class="shot old"><img loading="lazy" src="images/shot-11.jpg" alt="v1 cold open — generic, XP hidden behind &#x27;Start Matchday&#x27;" data-full="images/shot-11.jpg" data-cap="v1 cold open — generic, XP hidden behind &#x27;Start Matchday&#x27;"/><figcaption>v1 cold open — generic, XP hidden behind 'Start Matchday'</figcaption></figure></div><div class="col new"><span class="tag tag-new">After · v2</span><figure class="shot new"><img loading="lazy" src="images/shot-32.jpg" alt="v2 cold open — crests, form, highlights, a situating line" data-full="images/shot-32.jpg" data-cap="v2 cold open — crests, form, highlights, a situating line"/><figcaption>v2 cold open — crests, form, highlights, a situating line</figcaption></figure></div></div></div><div class="block"><h3>The home screen — from 11 options to one curated scroll</h3>
+ <div class="rc"><b>Research · Annoyance (9/14):</b> "First-screen overload — one fan counted 11 nav options; features get missed." <b>Move #3:</b> lead with the score and the chat; push everything else into a hub.</div>
+ <p class="why">v1 stacks modules and a bottom navbar all competing at once. v2 is a single ranked scroll: <strong>score → fan-chat preview ("308 talking now") → Match Intel → an "Also tonight" hub</strong> where every remaining module is one clear tap with a plain-English line and a badge.</p>
+ <div class="single"><figure class="shot new"><img loading="lazy" src="images/shot-33.jpg" alt="v2 home — chat preview + fixtures under the score" data-full="images/shot-33.jpg" data-cap="v2 home — chat preview + fixtures under the score"/><figcaption>v2 home — chat preview + fixtures under the score</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-35.jpg" alt="v2 home — Match Intel, then the &#x27;Also tonight&#x27; hub begins" data-full="images/shot-35.jpg" data-cap="v2 home — Match Intel, then the &#x27;Also tonight&#x27; hub begins"/><figcaption>v2 home — Match Intel, then the 'Also tonight' hub begins</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-47.jpg" alt="v2 &#x27;Also tonight&#x27; — every module: one tap, one line, one badge" data-full="images/shot-47.jpg" data-cap="v2 &#x27;Also tonight&#x27; — every module: one tap, one line, one badge"/><figcaption>v2 'Also tonight' — every module: one tap, one line, one badge</figcaption></figure></div></div><div class="block"><h3>Making the reward visible — the single biggest fix</h3>
+ <div class="rc"><b>Research · Blocker (14/14):</b> "XP &amp; rewards invisible — kills the entire quest layer." <span class="q">"I don't know why I have 325 XP or why I should be bothered."</span> <b>Move #1:</b> show what XP earns you, on every quest card, with a progress bar.</div>
+ <p class="why">In v1, XP only appears if you dig into the profile. In v2 the reward is everywhere the quest is: each quest shows its exact XP (prediction · <strong>120 XP</strong>, poll · <strong>40 XP</strong>, photo · <strong>25 XP</strong>), the live home carries a <strong>Matchday Rewards · Tier 2</strong> strip, and the profile turns XP into a concrete goal — <strong>"1,240 / 2,000 XP · 760 to a seat upgrade"</strong>, plus a claimed "£5 food credit at 500 XP".</p>
+ <div class="single"><figure class="shot new"><img loading="lazy" src="images/shot-41.jpg" alt="v2 — every quest states the reward and the XP" data-full="images/shot-41.jpg" data-cap="v2 — every quest states the reward and the XP"/><figcaption>v2 — every quest states the reward and the XP</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-62.jpg" alt="v2 profile — XP framed as a seat upgrade, with a progress bar" data-full="images/shot-62.jpg" data-cap="v2 profile — XP framed as a seat upgrade, with a progress bar"/><figcaption>v2 profile — XP framed as a seat upgrade, with a progress bar</figcaption></figure></div>
+ <div class="single" style="margin-top:14px"><figure class="shot old"><img loading="lazy" src="images/shot-17.jpg" alt="v1 — XP exists, but only deep inside the profile" data-full="images/shot-17.jpg" data-cap="v1 — XP exists, but only deep inside the profile"/><figcaption>v1 — XP exists, but only deep inside the profile</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-39.jpg" alt="v2 live home — a Matchday Rewards / Tier strip in view" data-full="images/shot-39.jpg" data-cap="v2 live home — a Matchday Rewards / Tier strip in view"/><figcaption>v2 live home — a Matchday Rewards / Tier strip in view</figcaption></figure></div></div><div class="block"><h3>Fan chat — the universal pull, kept clean</h3>
+ <div class="rc"><b>Research (12/14):</b> "Fan chat is the universal pull — the only feature fans and non-fans alike went to unprompted." <b>Concern (John):</b> predictions bleed into the chat feed and clutter it.</div>
+ <p class="why">v2 makes chat the anchor: it previews on the home, opens to a single unified terrace thread with quick-reply chips, and <strong>keeps the score bug pinned above it</strong> so the can't-watch-live viewer never loses the game. Predictions and polls are their own hub cards now, resolving the clutter point.</p>
+ <div class="pair"><div class="col old"><span class="tag tag-old">Before · v1</span><figure class="shot old"><img loading="lazy" src="images/shot-15.jpg" alt="v1 chat — a standalone room from a corner button" data-full="images/shot-15.jpg" data-cap="v1 chat — a standalone room from a corner button"/><figcaption>v1 chat — a standalone room from a corner button</figcaption></figure></div><div class="col new"><span class="tag tag-new">After · v2</span><figure class="shot new"><img loading="lazy" src="images/shot-40.jpg" alt="v2 chat — one terrace thread, score pinned, quick replies" data-full="images/shot-40.jpg" data-cap="v2 chat — one terrace thread, score pinned, quick replies"/><figcaption>v2 chat — one terrace thread, score pinned, quick replies</figcaption></figure></div></div></div><div class="block"><h3>IRIS — from mid-match chatbot to prepared match intel</h3>
+ <div class="rc"><b>Research (9/14):</b> "IRIS is misread and misplaced. A chatbot during a loud live match reads as wrong. Three people independently reframed it as an insight engine, best post-match." <b>Move #5.</b></div>
+ <p class="why">v1's IRIS is a full-screen "What do you want to know?" chatbot — the mid-match blank box fans rejected. v2 leads with <strong>Match Intel: "The briefing, already written"</strong> — win probability, form &amp; xG, and pre-written "watch for" cards. IRIS is still there, but as a grounded briefing you can <em>ask into</em>, not an empty prompt.</p>
+ <div class="single"><figure class="shot old"><img loading="lazy" src="images/shot-18.jpg" alt="v1 IRIS — a blank chatbot, wrong for a loud live match" data-full="images/shot-18.jpg" data-cap="v1 IRIS — a blank chatbot, wrong for a loud live match"/><figcaption>v1 IRIS — a blank chatbot, wrong for a loud live match</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-43.jpg" alt="v2 Match Intel — pre-written form, xG and &#x27;watch for&#x27; cards" data-full="images/shot-43.jpg" data-cap="v2 Match Intel — pre-written form, xG and &#x27;watch for&#x27; cards"/><figcaption>v2 Match Intel — pre-written form, xG and 'watch for' cards</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-44.jpg" alt="v2 IRIS — a briefing you ask into, not a blank box" data-full="images/shot-44.jpg" data-cap="v2 IRIS — a briefing you ask into, not a blank box"/><figcaption>v2 IRIS — a briefing you ask into, not a blank box</figcaption></figure></div></div><div class="block"><h3>Highlights, predictions &amp; the buried favourites</h3>
+ <div class="rc"><b>Research:</b> highlights were the most-wanted missing feature (8/14); "prediction" read as betting (4/14); the <b>floor plan was a buried favourite</b>, and food "belongs near the floor plan".</div>
+ <p class="why">v1 had no video and surfaced the floor plan last. v2 adds <strong>Watch highlights</strong> and a Reads desk; reframes predictions as <em>"Call the score and first scorer · 120 XP"</em> (a game with a reward, not a bet); and promotes the floor plan to <strong>"Your seat"</strong> — a stand map with your block, walk-in route, nearest kiosk and exit — with <strong>Order food "to seat"</strong> right beside it.</p>
+ <div class="single"><figure class="shot new"><img loading="lazy" src="images/shot-49.jpg" alt="v2 &#x27;Your seat&#x27; — floor plan surfaced, route + order-to-seat" data-full="images/shot-49.jpg" data-cap="v2 &#x27;Your seat&#x27; — floor plan surfaced, route + order-to-seat"/><figcaption>v2 'Your seat' — floor plan surfaced, route + order-to-seat</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-53.jpg" alt="v2 Fan Reactions — a reel wall (IG / TikTok / YouTube)" data-full="images/shot-53.jpg" data-cap="v2 Fan Reactions — a reel wall (IG / TikTok / YouTube)"/><figcaption>v2 Fan Reactions — a reel wall (IG / TikTok / YouTube)</figcaption></figure><figure class="shot new"><img loading="lazy" src="images/shot-56.jpg" alt="v2 Reads — tactical desk, the can&#x27;t-watch use case" data-full="images/shot-56.jpg" data-cap="v2 Reads — tactical desk, the can&#x27;t-watch use case"/><figcaption>v2 Reads — tactical desk, the can't-watch use case</figcaption></figure></div></div><div class="block"><h3>The score as an event, and a profile you can leave</h3>
+ <div class="rc"><b>Research (UI):</b> "no micro-interactions — the score updating should feel like an event, not a quiet number change." Plus: a stuck profile page with no back button.</div>
+ <p class="why">A goal in v2 fires a full-width <strong>"GOAL — Foden 1–0"</strong> banner, a flash-drop offer and a live timeline — the score is now an event, reinforced by new micro-animations. And every sub-screen, the profile included, carries a persistent <strong>Home</strong> back button plus theme and alert controls.</p>
+ <div class="pair"><div class="col old"><span class="tag tag-old">Before · v1</span><figure class="shot old"><img loading="lazy" src="images/shot-12.jpg" alt="v1 pre-match home — a quiet countdown" data-full="images/shot-12.jpg" data-cap="v1 pre-match home — a quiet countdown"/><figcaption>v1 pre-match home — a quiet countdown</figcaption></figure></div><div class="col new"><span class="tag tag-new">After · v2</span><figure class="shot new"><img loading="lazy" src="images/shot-37.jpg" alt="v2 live — the goal arrives as an event, with a flash drop" data-full="images/shot-37.jpg" data-cap="v2 live — the goal arrives as an event, with a flash drop"/><figcaption>v2 live — the goal arrives as an event, with a flash drop</figcaption></figure></div></div>
+ <div class="single" style="margin-top:14px"><figure class="shot new"><img loading="lazy" src="images/shot-61.jpg" alt="v2 profile — Home back button, appearance &amp;amp; alerts" data-full="images/shot-61.jpg" data-cap="v2 profile — Home back button, appearance &amp;amp; alerts"/><figcaption>v2 profile — Home back button, appearance &amp; alerts</figcaption></figure></div></div></div></section><section id="table"><div class="wrap">
+ <div class="eyebrow">At a glance</div>
+ <h2 class="big">Every change, and the finding behind it</h2>
+ <div class="scroller"><table class="chg"><thead><tr><th>Area</th><th>v1 — before</th><th>v2 — after</th><th>Research finding it answers</th></tr></thead><tbody><tr><td>Brand identity</td><td>Generic dark-purple 'BoltOS', demo sports</td><td>Man City navy, real crest, square corners</td><td>Team identity illegible (3/3 non-fans)</td></tr><tr><td>Cold open</td><td>'Start Matchday' + blog/shop carousel</td><td>Score bug + crests + form + a one-line frame</td><td>Cold read fails (11/14)</td></tr><tr><td>XP / rewards</td><td>Hidden until you open the profile</td><td>Reward + XP on every quest; 'X to a seat upgrade'</td><td>Invisible XP (14/14 — top blocker)</td></tr><tr><td>Home layout</td><td>~11 competing nav options</td><td>Score → chat → intel → curated 'Also tonight' hub</td><td>First-screen overload (9/14)</td></tr><tr><td>Fan chat</td><td>Standalone room, predictions bleed in</td><td>Anchor thread, score pinned, predictions moved out</td><td>Universal pull (12/14); clutter (John)</td></tr><tr><td>IRIS</td><td>Full-screen mid-match chatbot</td><td>Prepared Match Intel you ask into</td><td>Misread &amp; misplaced (9/14)</td></tr><tr><td>Highlights</td><td>None (no video at all)</td><td>Watch-highlights + Reads desk</td><td>Most-wanted missing feature (8/14)</td></tr><tr><td>Predictions</td><td>Reads as betting</td><td>'Call the score · 120 XP' — a game with a reward</td><td>'Prediction' reads as betting (4/14)</td></tr><tr><td>Floor plan / seat</td><td>Buried at the bottom</td><td>'Your seat' promoted: map, route, order-to-seat</td><td>Buried favourite; food belongs near it</td></tr><tr><td>Score updates</td><td>A quiet number change</td><td>Full-width goal event + flash drop + animations</td><td>Score should feel like an event</td></tr><tr><td>Profile</td><td>Dead-end, no back button</td><td>Persistent Home back + theme + alerts</td><td>Stuck profile page</td></tr><tr><td>Studio authoring</td><td>Global module toggles</td><td>Per-state block composition from City templates</td><td>'Changing layout is the core bet'</td></tr><tr><td>Control room</td><td>Drives a mock preview</td><td>Drives the real fan device live (5,298 devices)</td><td>Operator-driven, score-as-event</td></tr></tbody></table></div>
+ <div class="bottomline" style="margin-top:26px">
+  <h3>The through-line</h3>
+  <p>v1 proved the concept had an audience. v2 answers the research point by point: it makes the reward visible, frames the cold open, leads with the score and the chat, adds the highlights fans asked for, and turns IRIS into the post-match intel three people reframed it as — all in the club's own identity, driven live from the control room.</p>
+  <p style="color:#8FAAC6;font-size:13.5px">Both builds are live · v1 <b style="color:#fff">danielokpechi.github.io/immersive-panel</b> · v2 <b style="color:#fff">danielokpechi.github.io/immersive-panel-v2</b></p>
+ </div>
+</div></section>
+<footer class="foot"><div class="wrap">
+ <b>Immersive Panel — v1 → v2 redesign report.</b> Screens captured live from both deployments. Rationale drawn from <b>Fan Research: What We Learned</b> (14 moderated sessions). Man City crest &amp; club marks used for a prototype.
+</div></footer>
+<div id="lb"><span class="x">&times;</span><img alt=""/><div class="cap"></div></div>
+<script>
+(function(){
+ // segmented control -> swap iframe + open link
+ document.querySelectorAll('.seg').forEach(function(seg){
+   var id=seg.getAttribute('data-target');var frame=document.getElementById(id);
+   var open=document.getElementById(id==='f-old'?'o-old':'o-new');
+   seg.querySelectorAll('button').forEach(function(btn){
+     btn.addEventListener('click',function(){
+       seg.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-selected','false');});
+       btn.setAttribute('aria-selected','true');
+       var u=btn.getAttribute('data-url');frame.src=u;if(open)open.href=u;
+     });
+   });
+ });
+ // lightbox
+ var lb=document.getElementById('lb'),lbImg=lb.querySelector('img'),lbCap=lb.querySelector('.cap');
+ document.querySelectorAll('figure.shot img').forEach(function(im){
+   im.addEventListener('click',function(){lbImg.src=im.getAttribute('data-full');lbCap.textContent=im.getAttribute('data-cap')||'';lb.classList.add('open');});
+ });
+ function close(){lb.classList.remove('open');lbImg.src='';}
+ lb.addEventListener('click',close);
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script>
+</body></html>
