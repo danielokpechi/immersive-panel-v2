@@ -1,6 +1,4 @@
-// Maps the v4 design's <image-slot> drop-target ids to the real reused City
-// media, so the fan view is board-ready (the handoff ships empty drop targets
-// because crests/photos are rights-protected — we fill them with our assets).
+// Maps the fan view's image-slot ids to the City media assets.
 import { media, reelPhotos } from '../domain/media';
 
 const MAP: Record<string, string> = {

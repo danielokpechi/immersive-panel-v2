@@ -2,8 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { PanelStudio } from './admin/PanelStudio';
 import { MatchdayFan } from './fan/MatchdayFan';
 
-// The admin (Panel Studio) is a self-contained 5-screen app matching the
-// handoff; each route just sets its start screen.
+// The admin (Panel Studio) is a self-contained 5-screen app; each route
+// just sets its start screen.
 export default function App() {
   return (
     <Routes>

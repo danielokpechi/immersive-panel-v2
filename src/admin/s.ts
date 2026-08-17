@@ -1,6 +1,6 @@
-// Tiny CSS-string → React style-object helper. Lets us port the design
-// handoff's exact inline styles verbatim (pixel-accurate) instead of hand-
-// converting every declaration to camelCase.
+// Tiny CSS-string → React style-object helper. Lets us author inline styles
+// as plain CSS strings instead of hand-converting every declaration to
+// camelCase.
 import type { CSSProperties } from 'react';
 
 const cache = new Map<string, CSSProperties>();

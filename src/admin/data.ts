@@ -1,5 +1,4 @@
-// Admin seed data — ported verbatim from the Panel Studio Admin handoff so
-// the studio matches the design exactly (Manchester City, one club many panels).
+// Admin seed data for Panel Studio (Manchester City — one club, many panels).
 
 export interface AdminModule { id: string; name: string; icon: string; blurb: string }
 export const MODULES: AdminModule[] = [

@@ -1,4 +1,4 @@
-// Central map of the reused media (slugified from the V1 image folder).
+// Central map of the media assets.
 // Referenced everywhere so a rebrand only swaps this one file.
 const base = import.meta.env.BASE_URL; // respects vite `base`
 

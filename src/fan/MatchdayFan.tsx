@@ -1,9 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════════
-// MatchdayFan — faithful React port of the "Matchday Companion v4" handoff.
-// A mobile web panel (Man City v Real Madrid, CL semi 2nd leg) across four
-// operator-driven states (PRE/LIVE/HT/FT) and eleven screens, themed light+
-// dark via CSS variables, broadcast aesthetic (Anton, score bug, lower
-// thirds). Image slots are filled with the reused City media.
+// MatchdayFan — the mobile web fan panel.
+// Man City v Real Madrid (CL semi, 2nd leg) across four operator-driven
+// states (PRE/LIVE/HT/FT) and eleven screens, themed light + dark via CSS
+// variables, with a broadcast aesthetic (score bug, lower thirds).
 // ═══════════════════════════════════════════════════════════════════════
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
@@ -31,7 +30,7 @@ function Slot({ id, label }: { id: string; label: string }) {
   return <span style={s("position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:var(--label)")}>{label}</span>;
 }
 
-// data ported from the handoff
+// seeded match chatter
 const POOL = [
   { user: 'MARCUS_92', text: 'Etihad is loud tonight. Genuinely loud.', t: 'h', tag: 'BLOCK 108' },
   { user: 'DECLAN_K', text: 'Rodri back in the middle changes everything', t: 's', tag: 'SOUTH STAND' },

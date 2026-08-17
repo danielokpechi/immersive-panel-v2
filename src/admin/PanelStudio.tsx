@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════════════════
-// PanelStudio — faithful React port of the "Panel Studio Admin" handoff.
+// PanelStudio — the club-side operator app.
 // Five surfaces (Dashboard · Create wizard · Builder · Stats · Control Room)
-// in one self-contained state machine, matching the high-fidelity design.
-// The Control Room's monitor renders the real fan client and its triggers/
-// sessions broadcast over the ControlBus (see LiveMonitor).
+// in one self-contained state machine. The Control Room's monitor renders the
+// real fan client and its triggers/sessions broadcast over the ControlBus
+// (see LiveMonitor).
 // ═══════════════════════════════════════════════════════════════════════
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
