@@ -222,8 +222,14 @@ export function MatchdayFan() {
   };
   // Follow the control room: apply commands from the panel's channel. Ref keeps
   // the listener bound to fresh closures without re-subscribing every render.
-  const busRef = useRef<(m: { cmd: string; ms?: string; kind?: string }) => void>(() => {});
-  busRef.current = (m) => { if (!m) return; if (m.cmd === 'state' && m.ms) applyState(m.ms); else if (m.cmd === 'event' && m.kind) applyEventCmd(m.kind); };
+  const busRef = useRef<(m: { cmd: string; ms?: string; kind?: string; route?: string }) => void>(() => {});
+  busRef.current = (m) => {
+    if (!m) return;
+    if (m.cmd === 'state' && m.ms) applyState(m.ms);
+    else if (m.cmd === 'event' && m.kind) applyEventCmd(m.kind);
+    // Operator prompt: send fans straight to a screen (Community, Spot Kick…).
+    else if (m.cmd === 'nav' && m.route) { if (m.route === 'spotkick') startSpotkick(); else set({ route: m.route, iris: false, read: null }); }
+  };
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
     const ch = new BroadcastChannel('panel:' + id);

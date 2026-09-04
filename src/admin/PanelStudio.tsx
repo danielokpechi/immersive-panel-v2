@@ -25,7 +25,7 @@ const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStar
 const fanUrl = (id: string) => `${import.meta.env.BASE_URL}p/${id.toLowerCase()}`;
 const openFan = (id: string) => window.open(fanUrl(id), '_blank', 'noopener');
 // Map the studio's phases + triggers to the fan client's operator commands.
-const phaseToMs = (ph: string) => (ph === 'Live' ? 'live' : ph === 'Break' ? 'ht' : ph === 'Post' ? 'ft' : 'pre');
+const phaseToMs = (ph: string) => (ph === 'Live' ? 'live' : ph === 'Break' ? 'ht' : ph === 'Post' ? 'ft' : ph === 'Idle' ? 'inactive' : 'pre');
 const trigToKind: Record<string, string> = { goal: 'goal', var: 'var', sub: 'sub', yellow: 'card', react: 'goal' };
 
 type Draft = { experience: string; sport: string; preset: number; mods: string[]; name: string; desc: string; primary: string; accent: string; sessions: AdminSession[]; editIdx: number };
@@ -603,7 +603,7 @@ function Control({ st, setState, say, broadcast }: Props) {
     const t = window.setTimeout(() => ch.postMessage({ cmd: 'state', ms: phaseToMs((sess[st.liveIdx] || {}).phase) }), 900);
     return () => { window.clearTimeout(t); ch.close(); chanRef.current = null; };
   }, [p.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  const send = (msg: { cmd: string; ms?: string; kind?: string }) => chanRef.current?.postMessage(msg);
+  const send = (msg: { cmd: string; ms?: string; kind?: string; route?: string }) => chanRef.current?.postMessage(msg);
 
   const qr = useMemo(() => {
     const seed = (i: number) => { const x = i % 21, y = Math.floor(i / 21); const finder = (a: number, b: number) => (a < 7 && b < 7) || (a > 13 && b < 7) || (a < 7 && b > 13); if (finder(x, y)) { const dx = x > 13 ? x - 14 : x, dy = y > 13 ? y - 14 : y; const r = Math.max(Math.abs(dx - 3), Math.abs(dy - 3)); return r === 3 || r <= 1; } return (x * 7 + y * 13 + ((x * y) % 5)) % 3 === 0; };
@@ -699,6 +699,22 @@ function Control({ st, setState, say, broadcast }: Props) {
               <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
                 {TRIGGERS.map((t) => (
                   <button key={t.id} className="ah2" onClick={() => { broadcast?.(t); const k = trigToKind[t.id]; if (k) send({ cmd: 'event', kind: k }); }} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#E9EFF6;box-shadow:inset 0 0 0 1px rgba(0,24,56,.08)')}>
+                    <Ms size={21} color={t.color}>{t.icon}</Ms>
+                    <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Kippax','Archivo';color:#001838")}>{t.name}</span><span style={s("display:block;font:400 11px/1.3 'Kippax','Archivo';color:#3E5266;margin-top:5px")}>{t.blurb}</span></span>
+                  </button>
+                ))}
+              </div>
+            </Card>
+
+            <Card>
+              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>COMMUNITY &amp; GAMES</span><span style={s("font:500 11.5px/1 'Kippax','Archivo';color:#3E5266;margin-left:auto")}>Between the whistles &amp; dead time</span></div>
+              <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
+                {[
+                  { id: 'off', name: 'Off-matchday', blurb: 'Switch fans to the Community home', icon: 'groups', color: '#6E8299', act: () => { send({ cmd: 'state', ms: 'inactive' }); say('Fans switched to off-matchday', 'groups'); } },
+                  { id: 'club', name: 'Open the Club', blurb: 'Send everyone to the Community layer', icon: 'diversity_3', color: '#6CABDD', act: () => { send({ cmd: 'nav', route: 'community' }); say('Fans sent to the Club', 'diversity_3'); } },
+                  { id: 'spotkick', name: 'Push Spot Kick', blurb: 'Prompt fans to play the mini-game', icon: 'sports_soccer', color: '#6CABDD', act: () => { send({ cmd: 'nav', route: 'spotkick' }); say('Spot Kick pushed to devices', 'sports_soccer'); } },
+                ].map((t) => (
+                  <button key={t.id} className="ah2" onClick={t.act} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#E9EFF6;box-shadow:inset 0 0 0 1px rgba(0,24,56,.08)')}>
                     <Ms size={21} color={t.color}>{t.icon}</Ms>
                     <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Kippax','Archivo';color:#001838")}>{t.name}</span><span style={s("display:block;font:400 11px/1.3 'Kippax','Archivo';color:#3E5266;margin-top:5px")}>{t.blurb}</span></span>
                   </button>
