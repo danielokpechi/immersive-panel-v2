@@ -52,6 +52,7 @@ const EV: Record<string, { icon: string; color: string }> = {
   GOAL: { icon: 'sports_soccer', color: '#6CABDD' }, YELLOW: { icon: '', color: '#F4C400' }, 'RED CARD': { icon: '', color: '#D6202A' },
   'VAR CHECK': { icon: 'videocam', color: '#6CABDD' }, 'NO PENALTY': { icon: 'gavel', color: '#EAF1F8' }, PENALTY: { icon: 'gavel', color: '#6CABDD' },
   SUBSTITUTION: { icon: 'swap_vert', color: '#EAF1F8' }, 'DRINKS BREAK': { icon: 'local_drink', color: '#8AA0B6' }, CHANCE: { icon: 'crisis_alert', color: '#8AA0B6' },
+  PLAYER: { icon: 'verified', color: '#6CABDD' },
 };
 const ARTICLES = [
   { kicker: 'TACTICAL READ', title: 'Why City keep the line high, and what it costs them', meta: 'Sam Whitfield · 6 min read', slot: 'read-1', body: ['City have not dropped their defensive line below the halfway mark in a home European tie since November. It is a deliberate bet: squeeze the game into forty metres, win the ball back inside six seconds, and make the opposition defend a full half.', 'Madrid are the one side left in the competition built to punish it. Six of their goals in this campaign have come from counters starting inside their own half, and every one of them went through the left channel.', 'The compromise both managers are making tonight is the same, from opposite directions: City accept two clear chances against to create six, Madrid accept sixty minutes without the ball to get those two.', 'Watch the first fifteen minutes. If City press and Madrid clear long twice in a row, the game will be played in one half all night.'] },
@@ -60,11 +61,13 @@ const ARTICLES = [
   { kicker: 'THE NUMBERS', title: 'First goal, first leg, and the aggregate maths', meta: 'Data desk · 3 min read', slot: 'read-4', body: ['City lead 2–1 from the first leg. A 0–0 tonight sends them through; a single Madrid goal without reply forces extra time.', 'Nine of City’s last ten home wins have followed them scoring first, and they have won all nine.', 'Madrid have conceded the opening goal only twice in the competition. Both times they came back to draw.'] },
 ];
 
-// ── Community layer (Club → Crews → Box) ──
+// ── Crews layer (a persistent social layer; The Box is now a gated Crew) ──
+type CrewMsg = { user: string; initials: string; avBg: string; verified?: boolean; isText?: boolean; text?: string; isImage?: boolean; id?: string; caption?: string; isVoice?: boolean; dur?: string; wave?: number[]; isSocial?: boolean; socialIcon?: string; socialTitle?: string; socialSub?: string };
 const CREWS = [
-  { id: 'msb', name: 'Moss Side Blues', initials: 'MB', members: 1842, official: false, latest: '"Anyone getting picked up in Stockport?"' },
-  { id: 'b112', name: 'Block 112 Regulars', initials: 'B1', members: 340, official: false, latest: '"See you at the usual spot"' },
-  { id: 'academy', name: 'Academy Watch', initials: 'AW', members: 612, official: true, latest: '"Youth highlights are up"' },
+  { id: 'msb', name: 'Moss Side Blues', initials: 'MB', members: 1842, official: false, gated: false, unlockHint: '', latest: '"Anyone getting picked up in Stockport?"' },
+  { id: 'b112', name: 'Block 112 Regulars', initials: 'B1', members: 340, official: false, gated: false, unlockHint: '', latest: '"See you at the usual spot"' },
+  { id: 'academy', name: 'Academy Watch', initials: 'AW', members: 612, official: true, gated: false, unlockHint: '', latest: '"Youth highlights are up"' },
+  { id: 'seasontix', name: 'Season Ticket Holders', initials: 'ST', members: 0, official: true, gated: true, unlockHint: 'Open to season-ticket holders — 760 XP from unlocking', latest: '' },
 ];
 const DISCOVER_CREWS = [
   { id: 'awayday', name: 'Cityzens Away Days', members: 2210, official: false },
@@ -75,12 +78,22 @@ const CREW_PLANS = [
   { t: 'Coach to Munich', d: '31 May · 06:00 from the Etihad · 41 seats left', label: 'RSVP', fg: '#fff', bg: '#6CABDD' },
   { t: 'Pre-match pints, The Cotton Tree', d: 'Sat 08 Aug · from 15:00 · Ancoats', label: 'GOING', fg: 'var(--ink)', bg: 'var(--sand)' },
 ];
-const CREW_MSGS = [
-  { user: 'MARCUS_92', text: 'Coach seats are filling fast, get in now', avBg: '#6CABDD', initials: 'MA' },
-  { user: 'PRIYA_S', text: 'Anyone know if the Cotton Tree takes bookings?', avBg: '#0C3A5E', initials: 'PR' },
-  { user: 'DECLAN_K', text: 'Saved you a seat on the coach mate', avBg: '#6CABDD', initials: 'DE' },
-  { user: 'HANNAH_M', text: 'Munich hotel prices are criminal right now', avBg: '#0C3A5E', initials: 'HA' },
+const CREW_MSGS: CrewMsg[] = [
+  { user: 'MARCUS_92', text: 'Coach seats are filling fast, get in now', avBg: '#6CABDD', initials: 'MA', isText: true },
+  { user: 'PRIYA_S', text: 'Anyone know if the Cotton Tree takes bookings?', avBg: '#0C3A5E', initials: 'PR', isText: true },
+  { user: 'DECLAN_K', text: 'Saved you a seat on the coach mate', avBg: '#6CABDD', initials: 'DE', isText: true },
+  { user: 'HANNAH_M', text: 'Munich hotel prices are criminal right now', avBg: '#0C3A5E', initials: 'HA', isText: true },
 ];
+const PLAYERS = ['Erling Haaland', 'Kevin De Bruyne', 'Bernardo Silva'];
+const PLAYER_INIT: Record<string, string> = { 'Erling Haaland': 'EH', 'Kevin De Bruyne': 'KD', 'Bernardo Silva': 'BS' };
+// Verified player content already sitting in a Crew's permanent thread.
+const PLAYER_MSGS: Record<string, CrewMsg[]> = {
+  msb: [
+    { user: 'Erling Haaland', initials: 'EH', avBg: '#6CABDD', verified: true, isImage: true, id: 'pp-haaland-tunnel', caption: 'Tunnel before kick-off. See you out there, Moss Side.' },
+    { user: 'Kevin De Bruyne', initials: 'KD', avBg: '#6CABDD', verified: true, isVoice: true, dur: '0:18', wave: [8, 14, 10, 18, 12, 20, 9, 16, 11, 19, 13, 8, 15, 10] },
+    { user: 'Bernardo Silva', initials: 'BS', avBg: '#6CABDD', verified: true, isSocial: true, socialIcon: 'photo_camera', socialTitle: 'Posted to Instagram', socialSub: 'Matchday boots, fresh out the box' },
+  ],
+};
 const LB_CREW = [
   { name: 'Marcus_92', score: 5, initials: 'MA', bg: '#6CABDD' },
   { name: 'You', score: 4, initials: 'YO', bg: '#001838', me: true },
@@ -118,9 +131,13 @@ interface FSt {
   routeOn: boolean; prefs: Record<string, boolean>; theme: string; quests: Record<string, boolean>;
   toast: string | null; toastXp: string;
   crewsJoined: Record<string, boolean>; activeCrew: string; crewDraft: string;
-  crewMsgsExtra: { user: string; text: string; avBg: string; initials: string }[];
+  crewMsgsExtra: Record<string, CrewMsg[]>;
   boxUnlocked: boolean; lbScope: string;
   sk: { kick: number; goals: number; phase: string; flash: string | null; keeperZone: number | null };
+  dropIn: { active: boolean; crewId: string | null; player: string | null; endsAt: number | null; duration: number; queue: { id: number; user: string; text: string }[]; approved: { id: number; user: string; text: string; reply: string }[]; picked: { crewId: string; player: string; duration: number }; qDraft: string };
+  presenceStamps: Record<string, number>;
+  playerPost: { crewId: string; player: string; type: string };
+  playingVoice: string | null;
 }
 const money = (n: number) => '£' + n.toFixed(2);
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -134,11 +151,13 @@ export function MatchdayFan() {
     draft: '', room: 'ALL FANS', likes: {}, votes: {}, pred: { h: 2, a: 1, s: 'Haaland', done: false },
     size: 'M', basket: [], ordered: false, food: {}, foodPlaced: false, foodEta: 6,
     photos: 9, reels: {}, read: null, flash: null, flashOut: false, irisOut: false, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: 'light', quests: {}, toast: null, toastXp: '',
-    crewsJoined: { msb: true, b112: true }, activeCrew: 'msb', crewDraft: '', crewMsgsExtra: [],
+    crewsJoined: { msb: true, b112: true }, activeCrew: 'msb', crewDraft: '', crewMsgsExtra: {},
     boxUnlocked: false, lbScope: 'crew', sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null },
+    dropIn: { active: false, crewId: null, player: null, endsAt: null, duration: 10, queue: [], approved: [], picked: { crewId: 'seasontix', player: 'Erling Haaland', duration: 10 }, qDraft: '' },
+    presenceStamps: {}, playerPost: { crewId: 'msb', player: 'Erling Haaland', type: 'image' }, playingVoice: null,
   }));
   const set = (patch: Partial<FSt> | ((s: FSt) => Partial<FSt>)) => setSt((sPrev) => ({ ...sPrev, ...(typeof patch === 'function' ? patch(sPrev) : patch) }));
-  const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number; sk?: number }>({});
+  const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number; sk?: number; di?: number; diBanner?: number }>({});
   const { id = 'demo' } = useParams();
   // #2/#3 — play an exit animation, then unmount (symmetric enter/exit).
   const closeIris = () => { set({ irisOut: true }); window.setTimeout(() => set({ iris: false, irisOut: false }), 260); };
@@ -222,13 +241,17 @@ export function MatchdayFan() {
   };
   // Follow the control room: apply commands from the panel's channel. Ref keeps
   // the listener bound to fresh closures without re-subscribing every render.
-  const busRef = useRef<(m: { cmd: string; ms?: string; kind?: string; route?: string }) => void>(() => {});
+  const busRef = useRef<(m: any) => void>(() => {});
   busRef.current = (m) => {
     if (!m) return;
     if (m.cmd === 'state' && m.ms) applyState(m.ms);
     else if (m.cmd === 'event' && m.kind) applyEventCmd(m.kind);
-    // Operator prompt: send fans straight to a screen (Community, Spot Kick…).
+    // Operator prompt: send fans straight to a screen (Crews, Spot Kick…).
     else if (m.cmd === 'nav' && m.route) { if (m.route === 'spotkick') startSpotkick(); else set({ route: m.route, iris: false, read: null }); }
+    // Operator fires a player into a Crew, ends it, or posts verified content.
+    else if (m.cmd === 'dropin' && m.action === 'start') startDropInWith(m.crewId || 'seasontix', m.player || 'Erling Haaland', m.duration || 10);
+    else if (m.cmd === 'dropin' && m.action === 'end') endDropIn();
+    else if (m.cmd === 'player-post') postPlayerContentWith(m.crewId || 'msb', m.player || 'Erling Haaland', m.type || 'image');
   };
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
@@ -254,8 +277,54 @@ export function MatchdayFan() {
   };
   const postCrew = (text: string) => {
     if (!text.trim()) return;
-    set((sp) => ({ crewDraft: '', crewMsgsExtra: [...sp.crewMsgsExtra, { user: 'YOU', text: text.trim(), avBg: '#001838', initials: 'YO' }] }));
+    const crewId = st.activeCrew;
+    set((sp) => ({ crewDraft: '', crewMsgsExtra: { ...sp.crewMsgsExtra, [crewId]: [...(sp.crewMsgsExtra[crewId] || []), { user: 'YOU', text: text.trim(), avBg: '#001838', initials: 'YO', isText: true }] } }));
   };
+  // Verified player content dropped straight into a Crew's thread (operator-authored).
+  const postPlayerContent = () => postPlayerContentWith(st.playerPost.crewId, st.playerPost.player, st.playerPost.type);
+  const postPlayerContentWith = (crewId: string, player: string, type: string) => {
+    const initials = PLAYER_INIT[player] || '??';
+    let msg: CrewMsg = { user: player, initials, avBg: '#6CABDD', verified: true };
+    if (type === 'image') msg = { ...msg, isImage: true, id: 'pp-' + Date.now(), caption: player.split(' ')[0] + ' shares a moment from today' };
+    else if (type === 'voice') msg = { ...msg, isVoice: true, dur: '0:' + (12 + Math.floor(Math.random() * 20)), wave: Array.from({ length: 14 }, () => 6 + Math.floor(Math.random() * 16)) };
+    else msg = { ...msg, isSocial: true, socialIcon: 'photo_camera', socialTitle: player.split(' ')[0] + ' posted to Instagram', socialSub: 'Just now, ahead of kick-off' };
+    set((sp) => ({ crewMsgsExtra: { ...sp.crewMsgsExtra, [crewId]: [...(sp.crewMsgsExtra[crewId] || []), msg] } }));
+    notify(player.split(' ')[0].toUpperCase() + ' POSTED TO THE CREW');
+  };
+  // Player drop-in: a timed window where a player answers moderated questions in a Crew.
+  const askDropIn = (text: string) => {
+    if (!text.trim()) return;
+    set((sp) => ({ dropIn: { ...sp.dropIn, qDraft: '', queue: [...sp.dropIn.queue, { id: Date.now(), user: 'YOU', text: text.trim() }] } }));
+    notify('QUESTION SENT TO MODERATOR');
+  };
+  const startDropIn = () => startDropInWith(st.dropIn.picked.crewId, st.dropIn.picked.player, st.dropIn.picked.duration);
+  const startDropInWith = (crewId: string, player: string, duration: number) => {
+    const crew = CREWS.find((c) => c.id === crewId);
+    set((sp) => ({ dropIn: { ...sp.dropIn, active: true, crewId, player, duration, endsAt: Date.now() + duration * 60000, queue: [], approved: [], picked: { crewId, player, duration } } }));
+    fire('PLAYER', player, 0, player + ' has joined ' + (crew ? crew.name : 'the Crew') + '.', 'MAN CITY', 'h', true);
+    window.clearTimeout(timers.current.diBanner);
+    timers.current.diBanner = window.setTimeout(() => set({ event: null }), 5200);
+    window.clearTimeout(timers.current.di);
+    timers.current.di = window.setTimeout(() => endDropIn(), duration * 60000);
+  };
+  const endDropIn = () => {
+    window.clearTimeout(timers.current.di);
+    const wasCrew = st.dropIn.crewId;
+    set((sp) => {
+      const stamped = { ...sp.presenceStamps };
+      if (sp.dropIn.crewId) stamped[sp.dropIn.crewId] = (stamped[sp.dropIn.crewId] || 0) + 1;
+      return { presenceStamps: stamped, dropIn: { ...sp.dropIn, active: false, queue: [], endsAt: null } };
+    });
+    if (wasCrew === st.activeCrew) award(80, 'PROOF OF PRESENCE');
+  };
+  const approveQuestion = (id: number) => {
+    set((sp) => {
+      const q = sp.dropIn.queue.find((x) => x.id === id);
+      if (!q) return {};
+      return { dropIn: { ...sp.dropIn, queue: sp.dropIn.queue.filter((x) => x.id !== id), approved: [...sp.dropIn.approved, { ...q, reply: (sp.dropIn.player || 'The player') + ' will reply to this shortly.' }] } };
+    });
+  };
+  const discardQuestion = (id: number) => set((sp) => ({ dropIn: { ...sp.dropIn, queue: sp.dropIn.queue.filter((x) => x.id !== id) } }));
   // Spot Kick: tap a zone; keeper dives to a random zone; miss it to score.
   const shootZone = (zone: number) => {
     if (st.sk.phase !== 'idle') return;
@@ -308,9 +377,10 @@ export function MatchdayFan() {
   const previewMsgs = st.chat.filter((m) => !m.ev).slice(-5).map((m) => ({ user: m.me ? 'YOU' : m.user, text: m.text, initials: m.me ? 'YO' : m.user.slice(0, 2), avBg: TEAM[m.t].bg, avFg: TEAM[m.t].fg }));
 
   const statusLabel = inactive ? 'NEXT: SAT 08 AUG, 17:30' : pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
-  const myCrewCount = CREWS.filter((c) => st.crewsJoined[c.id]).length;
-  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'CITY STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'THE CLUB', crew: activeCrewData.name.toUpperCase(), box: 'THE BOX', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
-  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS JOINED', crew: activeCrewData.members.toLocaleString() + ' MEMBERS', box: st.boxUnlocked ? 'UNLOCKED' : 'LOCKED', spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
+  const myCrewCount = CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).length;
+  const crewGatedLocked = activeCrewData.gated && !st.boxUnlocked;
+  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'CITY STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
+  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS', crew: crewGatedLocked ? 'LOCKED' : activeCrewData.members.toLocaleString() + ' MEMBERS', spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
   const isHome = st.route === 'home', isSub = st.route !== 'home';
 
   const opBtn = (label: string, onClick: () => void, bg: string, color: string) => (
@@ -332,13 +402,50 @@ export function MatchdayFan() {
         <div style={{ ...s('display:flex;align-items:center;gap:8px;width:393px;padding:9px 10px'), background: 'var(--panel)' }}>
           <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>OPERATOR</span>
           <div style={s('display:flex;gap:4px;margin-left:auto')}>
-            {opBtn('OFF', () => applyState('inactive'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
+            {opBtn('CREWS', () => applyState('inactive'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('PRE', () => applyState('pre'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('LIVE', () => applyState('live'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('HT', () => applyState('ht'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('FT', () => applyState('ft'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('CARD', () => applyEventCmd('card'), '#F4C400', 'var(--ink)')}
             {opBtn('GOAL', () => applyEventCmd('goal'), '#6CABDD', '#fff')}
+          </div>
+        </div>
+        {/* PLAYER DROP-IN (operator) */}
+        <div style={{ ...s('display:flex;flex-direction:column;gap:8px;width:393px;padding:12px 12px 14px'), background: 'var(--panel)' }}>
+          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>PLAYER DROP-IN</span>
+          <div style={s('display:flex;gap:4px;flex-wrap:wrap')}>
+            {CREWS.map((c) => { const on = st.dropIn.picked.crewId === c.id; return <button key={c.id} onClick={() => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, picked: { ...sp.dropIn.picked, crewId: c.id } } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{c.name}</button>; })}
+          </div>
+          <div style={s('display:flex;gap:4px;flex-wrap:wrap;align-items:center')}>
+            {PLAYERS.map((pl) => { const on = st.dropIn.picked.player === pl; return <button key={pl} onClick={() => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, picked: { ...sp.dropIn.picked, player: pl } } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{pl.split(' ')[1]}</button>; })}
+            {[10, 15].map((d) => { const on = st.dropIn.picked.duration === d; return <button key={d} onClick={() => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, picked: { ...sp.dropIn.picked, duration: d } } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{d}m</button>; })}
+            {st.dropIn.active && <button onClick={endDropIn} style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;padding:7px 9px;background:#D6202A")}>END</button>}
+            <button onClick={startDropIn} style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;padding:7px 9px;background:#6CABDD")}>START</button>
+          </div>
+          {st.dropIn.active && (
+            <div style={s('border-top:1px solid rgba(234,241,248,.14);padding-top:8px;display:flex;flex-direction:column;gap:6px;max-height:120px;overflow-y:auto')}>
+              {st.dropIn.queue.length === 0 && <span style={s("font:600 10px/1.3 'Kippax','Archivo';color:#5E7488")}>No questions yet.</span>}
+              {st.dropIn.queue.map((q) => (
+                <div key={q.id} style={s('display:flex;align-items:center;gap:8px')}>
+                  <span style={s("flex:1;font:600 10.5px/1.3 'Kippax','Archivo';color:var(--on-panel)")}>{q.user}: {q.text}</span>
+                  <button onClick={() => approveQuestion(q.id)} style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#001838;padding:5px 6px;background:#6CABDD")}>OK</button>
+                  <button onClick={() => discardQuestion(q.id)} style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--on-panel);padding:5px 6px;background:rgba(234,241,248,.12)")}>X</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* PLAYER POST TO CREW (operator) */}
+        <div style={{ ...s('display:flex;flex-direction:column;gap:8px;width:393px;padding:12px 12px 14px'), background: 'var(--panel)' }}>
+          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>PLAYER POST TO CREW</span>
+          <div style={s('display:flex;gap:4px;flex-wrap:wrap')}>
+            {CREWS.map((c) => { const on = st.playerPost.crewId === c.id; return <button key={c.id} onClick={() => set((sp: FSt) => ({ playerPost: { ...sp.playerPost, crewId: c.id } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{c.name}</button>; })}
+          </div>
+          <div style={s('display:flex;gap:4px;flex-wrap:wrap;align-items:center')}>
+            {PLAYERS.map((pl) => { const on = st.playerPost.player === pl; return <button key={pl} onClick={() => set((sp: FSt) => ({ playerPost: { ...sp.playerPost, player: pl } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{pl.split(' ')[1]}</button>; })}
+            {[['image', 'Photo'], ['voice', 'Voice'], ['social', 'Social']].map(([k, lab]) => { const on = st.playerPost.type === k; return <button key={k} onClick={() => set((sp: FSt) => ({ playerPost: { ...sp.playerPost, type: k } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{lab}</button>; })}
+            <button onClick={postPlayerContent} style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;padding:7px 9px;background:#6CABDD")}>POST</button>
           </div>
         </div>
         <div style={{ ...s('display:flex;align-items:center;gap:8px;width:393px;padding:9px 10px'), background: 'var(--chrome)' }}>
@@ -430,8 +537,7 @@ export function MatchdayFan() {
             {/* ROUTES */}
             {isHome && <Home {...{ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, award, set }} />}
             {st.route === 'community' && <Community {...{ st, set, go }} />}
-            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, notify }} />}
-            {st.route === 'box' && <Box {...{ st, set }} />}
+            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn }} />}
             {st.route === 'spotkick' && <Spotkick {...{ st, shootZone }} />}
             {st.route === 'spotkickResult' && <SpotkickResult {...{ st, go, startSpotkick, notify }} />}
             {st.route === 'leaderboard' && <Leaderboard {...{ st, set }} />}
@@ -511,7 +617,10 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
       { t: 'Photo pool', tag: '1,204', d: 'Everyone’s photos in one place. Add yours for 25 XP.', icon: 'photo_library', go: go('photos') },
     ] : []),
   ];
-  const myCrews = CREWS.filter((c) => st.crewsJoined[c.id]);
+  const myCrews = CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).map((c) => {
+    const gatedLocked = c.gated && !st.boxUnlocked;
+    return { id: c.id, name: c.name, members: gatedLocked ? '—' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated };
+  });
   const communityHeadline = inactive ? 'While we wait' : 'Full-time. Still here.';
   const communitySub = inactive ? 'No match tonight — this is what the app is between matchdays.' : 'The result settles. The conversation doesn’t.';
   const communityBadge = pre ? '212 ONLINE' : live ? 'ONE TAP AWAY' : '214 ONLINE';
@@ -538,25 +647,21 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
       {isCommunityLead && (
         <section style={s('animation:bgFade .3s ease both')}>
           <div style={s('background:var(--panel);padding:18px 16px 20px')}>
-            <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:#6CABDD;transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>THE CLUB</span></div>
+            <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:#6CABDD;transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>CREWS</span></div>
             <div style={s("font:800 34px/.88 'KippaxCondensed','Archivo Black';color:var(--on-panel);margin-top:10px")}>{communityHeadline}</div>
             <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:8px;max-width:300px")}>{communitySub}</div>
-            <button onClick={go('community')} className="fp" style={s("display:inline-flex;align-items:center;gap:7px;margin-top:14px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:11px 14px")}>OPEN THE CLUB<Ms size={15} color="#fff">arrow_forward</Ms></button>
+            <button onClick={go('community')} className="fp" style={s("display:inline-flex;align-items:center;gap:7px;margin-top:14px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:11px 14px")}>OPEN CREWS<Ms size={15} color="#fff">arrow_forward</Ms></button>
           </div>
           <div style={s('padding:26px 16px 0')}>
             <div style={s('display:flex;align-items:baseline;justify-content:space-between')}>{label('YOUR CREWS')}<button onClick={go('community')} style={s("font:700 10.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:#6CABDD")}>SEE ALL</button></div>
             <div style={s('display:flex;gap:9px;margin-top:11px;overflow-x:auto')}>
               {myCrews.map((c) => (
                 <button key={c.id} onClick={go('community')} className="fs" style={s('flex:none;width:168px;text-align:left;background:var(--sand);padding:16px')}>
-                  <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 18px/1 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{c.name}</span>{c.id === 'msb' && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}</div>
-                  <div style={s("font:500 11.5px/1.4 'Kippax','Archivo';color:var(--label);margin-top:6px")}>{c.members.toLocaleString()} members · {c.latest}</div>
+                  <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 18px/1 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}</div>
+                  <div style={s("font:500 11.5px/1.4 'Kippax','Archivo';color:var(--label);margin-top:6px")}>{c.members} members · {c.latest}</div>
                 </button>
               ))}
             </div>
-          </div>
-          <div style={s('padding:26px 16px 0')}>
-            {label('CLUB ANNOUNCEMENT')}
-            <div style={s('margin-top:9px;background:var(--sand);padding:18px')}><div style={s("font:700 14px/1.3 'Kippax','Archivo';color:var(--ink)")}>Away allocation opens Thursday</div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>Semi-final away tickets go to Crews first, general sale Friday 10am.</div></div>
           </div>
           {inactive && (
             <div style={s('padding:26px 16px 0')}>
@@ -773,12 +878,12 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
       {/* COMMUNITY PREVIEW — the Match Intel treatment, applied to Community */}
       {showCommunityBlock && (
         <section style={s('margin:20px 16px 0;animation:bgRise .4s .14s ease both')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}>{label('COMMUNITY')}<span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{communityBadge}</span></div>
+          <div style={s('display:flex;align-items:center;gap:8px')}>{label('CREWS')}<span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{communityBadge}</span></div>
           <button onClick={go('community')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:2px;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
             <div style={s("font:800 26px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Your Crew,<br />between the whistles</div>
             <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>{communityBlockLine}</div>
             <div style={s('display:flex;gap:7px;margin-top:13px')}>{communityAvatars.map((a, i) => <span key={i} style={{ ...s("width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 9.5px/1 'Kippax','Archivo';color:#fff"), background: a.bg }}>{a.i}</span>)}</div>
-            <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink)")}>OPEN THE CLUB<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
+            <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink)")}>OPEN CREWS<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
           </button>
         </section>
       )}
@@ -806,29 +911,28 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
 
 // ═══════════ sub-screens ═══════════
 
-// ── Community: Club Home ──
-function Community({ st, set, go }: any) {
+// ── Crews Home ──
+function Community({ st, set }: any) {
   const L = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
-  const myCrews = CREWS.filter((c) => st.crewsJoined[c.id]);
-  const announcements = [
-    { t: 'Away allocation opens Thursday', d: 'Semi-final away tickets go to Crews first, general sale Friday 10am.' },
-    { t: 'New Crew badges are live', d: 'Ten seasons in a Crew now earns a founding-member mark.' },
-    { t: 'Off-season fixtures announced', d: 'Three pre-season friendlies confirmed, including Houston.' },
-  ];
+  const dropInCrewId = st.dropIn.active ? st.dropIn.crewId : null;
+  const myCrews = CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).map((c) => {
+    const gatedLocked = c.gated && !st.boxUnlocked;
+    return { id: c.id, name: c.name, initials: c.initials, members: gatedLocked ? '—' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated, locked: gatedLocked, avatarBg: gatedLocked ? '#5E7488' : '#6CABDD', dropInNow: dropInCrewId === c.id };
+  });
   const openCrew = (id: string) => () => set({ route: 'crew', activeCrew: id, iris: false, read: null });
   return (
-    <div style={s('animation:bgFade .25s ease both;padding-bottom:10px')}>
+    <div style={s('animation:bgFade .25s ease both;padding-bottom:26px')}>
       <div style={s('padding:16px 16px 0')}>
-        <div style={s("font:800 32px/.9 'KippaxCondensed','Archivo Black';color:var(--ink)")}>The Club</div>
-        <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px;max-width:300px")}>Every City fan’s home ground. It doesn’t reset at full-time — pick a Crew and it’s still here tomorrow.</div>
+        <div style={s("font:800 32px/.9 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Crews</div>
+        <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px;max-width:300px")}>Permanent fan groups that don’t reset at full-time. Join one, or start your own.</div>
       </div>
       <div style={s('padding:26px 16px 0')}>
         {L('YOUR CREWS')}
         <div style={s('margin-top:9px')}>
           {myCrews.map((c) => (
             <button key={c.id} onClick={openCrew(c.id)} className="frow" style={s('display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 0;border-bottom:1.5px solid var(--hair)')}>
-              <span style={s("width:46px;height:46px;flex:none;border-radius:50%;background:#6CABDD;display:flex;align-items:center;justify-content:center;font:800 11px/1 'Kippax','Archivo';color:#fff")}>{c.initials}</span>
-              <span style={s('flex:1;min-width:0')}><span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 14.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{c.name}</span>{c.id === 'msb' && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{c.members.toLocaleString()} members · {c.latest}</span></span>
+              <span style={{ ...s("width:46px;height:46px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 11px/1 'Kippax','Archivo';color:#fff"), background: c.avatarBg }}>{c.locked ? <Ms size={19} color="#fff">lock</Ms> : c.initials}</span>
+              <span style={s('flex:1;min-width:0')}><span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 14.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}{c.dropInNow && <span style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff;background:#6CABDD;padding:3px 5px")}>PLAYER HERE</span>}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{c.members} members · {c.latest}</span></span>
               <Ms size={18} color="var(--label)">chevron_right</Ms>
             </button>
           ))}
@@ -846,86 +950,119 @@ function Community({ st, set, go }: any) {
           ); })}
         </div>
       </div>
-      <div style={s('padding:28px 16px 0')}>
-        {L('THE BOX')}
-        <button onClick={go('box')} className="fp" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin-top:9px;background:var(--panel);padding:18px')}>
-          <span style={s('width:44px;height:44px;flex:none;background:rgba(234,241,248,.1);display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#8AA0B6">lock</Ms></span>
-          <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 18px/1 'KippaxCondensed','Archivo Black';color:var(--on-panel)")}>Season ticket holders</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:#8AA0B6;margin-top:3px")}>Gated. Earned, not bought.</span></span>
-          <Ms size={18} color="#8AA0B6">chevron_right</Ms>
-        </button>
-      </div>
-      <div style={s('padding:22px 16px 26px')}>
-        {L('CLUB ANNOUNCEMENTS')}
-        <div style={s('margin-top:9px')}>{announcements.map((a, i) => <div key={i} style={s('padding:15px 0;border-bottom:1.5px solid var(--hair)')}><div style={s("font:700 13.5px/1.3 'Kippax','Archivo';color:var(--ink)")}>{a.t}</div><div style={s("font:500 12px/1.5 'Kippax','Archivo';color:var(--body);margin-top:5px")}>{a.d}</div></div>)}</div>
-      </div>
     </div>
   );
 }
 
-// ── Community: Crew View (thread) ──
-function Crew({ st, crew, set, postCrew, notify }: any) {
+// ── Crew View: thread, plans, gated states, player drop-in, verified player posts ──
+function Crew({ st, crew, set, postCrew, askDropIn }: any) {
   const L = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const joined = !!st.crewsJoined[crew.id];
-  const msgs = [...CREW_MSGS, ...st.crewMsgsExtra];
+  const gatedLocked = crew.gated && !st.boxUnlocked;
+  const dropInActive = st.dropIn.active && st.dropIn.crewId === crew.id;
+  const secsLeft = dropInActive && st.dropIn.endsAt ? Math.max(0, Math.round((st.dropIn.endsAt - Date.now()) / 1000)) : 0;
+  const mm = Math.floor(secsLeft / 60), ss = String(secsLeft % 60).padStart(2, '0');
+  const presence = st.presenceStamps[crew.id] || 0;
+  const msgs: CrewMsg[] = [...CREW_MSGS, ...(PLAYER_MSGS[crew.id] || []), ...(st.crewMsgsExtra[crew.id] || [])];
   const memberAvatars = Array.from({ length: 8 }, (_, i) => ({ i: 'M' + (i + 1), bg: i % 2 ? '#6CABDD' : '#0C3A5E' }));
+  const playVoice = (key: string) => set((sp: FSt) => ({ playingVoice: sp.playingVoice === key ? null : key }));
   return (
     <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px')}>
       <div style={s('padding:16px 16px 0')}>
-        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 30px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{crew.name}</span>{crew.official && <Ms size={18} color="#6CABDD">verified</Ms>}</div>
-        <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>{crew.members.toLocaleString()} members · permanent thread</div>
-        <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} style={{ ...s("display:block;margin-top:11px;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:11px 14px"), background: joined ? 'var(--sand)' : '#6CABDD', color: joined ? 'var(--ink)' : '#fff' }}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
-      </div>
-      <div style={s('padding:18px 16px 0')}>
-        {L('UPCOMING PLANS')}
-        <div style={s('margin-top:9px')}>{CREW_PLANS.map((p, i) => <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{p.t}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{p.d}</span></span><button onClick={() => notify('RSVP’D')} style={{ ...s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.08em;padding:9px 10px"), background: p.bg, color: p.fg }}>{p.label}</button></div>)}</div>
-      </div>
-      <div style={s('padding:18px 16px 0')}>
-        {L('MEMBERS')}
-        <div style={s('display:flex;gap:6px;margin-top:9px')}>{memberAvatars.map((m, i) => <span key={i} style={{ ...s("width:32px;height:32px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff"), background: m.bg }}>{m.i}</span>)}</div>
-      </div>
-      <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label);padding:26px 16px 0")}>THE THREAD</div>
-      <div style={s('flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px')}>
-        {msgs.map((m: any, i: number) => (
-          <div key={i} style={s('display:flex;gap:8px')}>
-            <span style={{ ...s("width:26px;height:26px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 9px/1 'Kippax','Archivo';color:#fff"), background: m.avBg }}>{m.initials}</span>
-            <div style={s('flex:1;min-width:0')}><div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label)")}>{m.user}</div><div style={s("font:500 13px/1.4 'Kippax','Archivo';color:var(--ink);margin-top:4px;background:var(--sand);padding:8px 10px;border-radius:3px 14px 14px 14px")}>{m.text}</div></div>
+        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 30px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{crew.name}</span>{crew.official && <Ms size={18} color="#6CABDD">verified</Ms>}{crew.gated && <Ms size={18} color="var(--label)">lock</Ms>}</div>
+        {presence > 0 && (
+          <div style={s('display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:#6CABDD;padding:5px 8px')}><Ms size={13} color="#fff">verified</Ms><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff")}>WAS THERE FOR THE DROP-IN</span></div>
+        )}
+        {gatedLocked && (
+          <div style={s('margin-top:14px;background:var(--panel);padding:22px;text-align:center')}>
+            <Ms size={30} color="#8AA0B6">lock</Ms>
+            <div style={s("font:800 22px/1 'KippaxCondensed','Archivo Black';color:var(--on-panel);margin-top:10px")}>Locked</div>
+            <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:8px;max-width:260px;margin-left:auto;margin-right:auto")}>{crew.unlockHint}</div>
+            <button onClick={() => set({ boxUnlocked: true })} style={s("margin-top:14px;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#6CABDD;padding:11px 14px")}>DEMO · UNLOCK</button>
           </div>
-        ))}
+        )}
       </div>
-      <div style={s('padding:10px 16px 20px;display:flex;gap:8px;align-items:center')}>
-        <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.crewDraft} onChange={(e: any) => set({ crewDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') postCrew(st.crewDraft); }} placeholder="Message your Crew…" style={s("width:100%;font:500 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")} /></div>
-        <button onClick={() => postCrew(st.crewDraft)} style={s('width:44px;height:44px;flex:none;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
-      </div>
-    </div>
-  );
-}
 
-// ── Community: The Box (gated tier) ──
-function Box({ st, set }: any) {
-  const perks = [
-    { icon: 'confirmation_number', t: 'Early access', d: 'Away allocations 48h before general sale' },
-    { icon: 'checkroom', t: 'First look', d: 'Next season’s home shirt, before launch' },
-    { icon: 'forum', t: 'Private thread', d: 'Season-ticket holders only, no bots' },
-  ];
-  return (
-    <div style={s('animation:bgFade .25s ease both;padding:20px 16px 32px')}>
-      <div style={s("font:800 30px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>The Box</div>
-      <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>Season-ticket holders, VIP, and spaces a player drops into. Scarce, and earned.</div>
-      {!st.boxUnlocked ? (
-        <div style={s('margin-top:18px;background:var(--panel);padding:22px;text-align:center')}>
-          <Ms size={34} color="#8AA0B6">lock</Ms>
-          <div style={s("font:800 24px/1 'KippaxCondensed','Archivo Black';color:var(--on-panel);margin-top:12px")}>Locked</div>
-          <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:8px;max-width:260px;margin-left:auto;margin-right:auto")}>Open to season-ticket holders and Tier 3 fans. You’re Tier 2 — 760 XP from unlocking this Box.</div>
-          <button onClick={() => set({ boxUnlocked: true })} style={s("margin-top:16px;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#6CABDD;padding:11px 14px")}>DEMO · UNLOCK</button>
+      {!gatedLocked && (<>
+        {crew.gated && (
+          <div style={s('padding:0 16px 8px')}>
+            <div style={s("font:500 12px/1.5 'Kippax','Archivo';color:var(--body)")}>Early access, first look at the next shirt, private thread — season-ticket holders only.</div>
+            <button onClick={() => set({ boxUnlocked: false })} style={s("margin-top:8px;font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--label)")}>DEMO · LOCK AGAIN</button>
+          </div>
+        )}
+        <div style={s('padding:0 16px 0')}>
+          <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body)")}>{crew.members.toLocaleString()} members · permanent thread</div>
+          <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} style={{ ...s("display:block;margin-top:11px;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:11px 14px"), background: joined ? 'var(--sand)' : '#6CABDD', color: joined ? 'var(--ink)' : '#fff' }}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
         </div>
-      ) : (<>
-        <div style={s('margin-top:18px;background:var(--sand);padding:16px')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={16} color="#6CABDD">verified</Ms><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:var(--label)")}>UNLOCKED · SEASON TICKET HOLDERS</span></div>
-          <div style={s("font:800 24px/1 'KippaxCondensed','Archivo Black';color:var(--ink);margin-top:12px")}>Welcome in</div>
-          <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>A private thread, early access to away allocations, and first look at next season’s shirt.</div>
-          <button onClick={() => set({ boxUnlocked: false })} style={s("margin-top:14px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--label)")}>DEMO · LOCK AGAIN</button>
+
+        {dropInActive && (
+          <div style={s('margin:18px 16px 0;background:#6CABDD;padding:14px 16px;display:flex;align-items:center;gap:10px')}>
+            <Ms size={18} color="#fff">verified</Ms>
+            <span style={s("flex:1;font:800 12px/1.3 'Kippax','Archivo';color:#fff")}>{st.dropIn.player} is here — replying to approved questions</span>
+            <span style={s("font:800 13px/1 'Kippax','Archivo';color:#fff;font-variant-numeric:tabular-nums")}>{mm}:{ss}</span>
+          </div>
+        )}
+
+        <div style={s('padding:18px 16px 0')}>
+          {L('UPCOMING PLANS')}
+          <div style={s('margin-top:9px')}>{CREW_PLANS.map((p, i) => <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{p.t}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{p.d}</span></span><button onClick={() => set({ toast: 'RSVP’D', toastXp: '' })} style={{ ...s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.08em;padding:9px 10px"), background: p.bg, color: p.fg }}>{p.label}</button></div>)}</div>
         </div>
-        <div style={s('margin-top:14px')}>{perks.map((p, i) => <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1.5px solid var(--hair)')}><Ms size={20} color="var(--ink)">{p.icon}</Ms><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{p.t}</span><span style={s("display:block;font:500 12px/1.3 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{p.d}</span></span></div>)}</div>
+        <div style={s('padding:18px 16px 0')}>
+          {L('MEMBERS')}
+          <div style={s('display:flex;gap:6px;margin-top:9px')}>{memberAvatars.map((m, i) => <span key={i} style={{ ...s("width:32px;height:32px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff"), background: m.bg }}>{m.i}</span>)}</div>
+        </div>
+        <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label);padding:26px 16px 0")}>THE THREAD</div>
+        <div style={s('flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px')}>
+          {dropInActive && st.dropIn.approved.map((q: any) => (
+            <div key={q.id} style={s('background:var(--panel);padding:10px 12px')}>
+              <div style={s("font:600 12px/1.4 'Kippax','Archivo';color:#8AA0B6")}>{q.user}: {q.text}</div>
+              <div style={s('display:flex;align-items:center;gap:6px;margin-top:6px')}><Ms size={13} color="#6CABDD">verified</Ms><span style={s("font:700 12.5px/1.4 'Kippax','Archivo';color:var(--on-panel)")}>{q.reply}</span></div>
+            </div>
+          ))}
+          {msgs.map((m, i) => {
+            const vkey = 'v' + crew.id + i;
+            return (
+              <div key={i} style={s('display:flex;gap:8px')}>
+                <span style={{ ...s("width:26px;height:26px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 9px/1 'Kippax','Archivo';color:#fff"), background: m.avBg }}>{m.initials}</span>
+                <div style={s('flex:1;min-width:0')}>
+                  <div style={s('display:flex;align-items:center;gap:5px')}><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label)")}>{m.user}</span>{m.verified && <Ms size={12} color="#6CABDD">verified</Ms>}</div>
+                  {m.isText && <div style={s("font:500 13px/1.4 'Kippax','Archivo';color:var(--ink);margin-top:4px;background:var(--sand);padding:8px 10px;border-radius:3px 12px 12px 12px")}>{m.text}</div>}
+                  {m.isImage && (
+                    <div style={s('margin-top:4px;background:var(--sand);border-radius:3px 12px 12px 12px;overflow:hidden;max-width:220px')}>
+                      <div style={s('position:relative;width:220px;height:150px')}><Slot id={m.id!} label={m.caption || 'Player photo'} /></div>
+                      <div style={s("font:600 11.5px/1.4 'Kippax','Archivo';color:var(--ink);padding:8px 10px")}>{m.caption}</div>
+                    </div>
+                  )}
+                  {m.isVoice && (
+                    <button onClick={() => playVoice(vkey)} className="fs" style={s('display:flex;align-items:center;gap:9px;margin-top:4px;background:var(--sand);border-radius:3px 12px 12px 12px;padding:9px 12px 9px 9px')}>
+                      <span style={s('width:30px;height:30px;flex:none;border-radius:50%;background:#6CABDD;display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#fff">{st.playingVoice === vkey ? 'pause' : 'play_arrow'}</Ms></span>
+                      <span style={s('display:flex;align-items:center;gap:2px')}>{(m.wave || []).map((w, wi) => <span key={wi} style={{ width: 2.5, height: w, background: '#8AA0B6', borderRadius: 2 }} />)}</span>
+                      <span style={s("font:700 11px/1 'Kippax','Archivo';letter-spacing:.04em;color:var(--label)")}>{m.dur}</span>
+                    </button>
+                  )}
+                  {m.isSocial && (
+                    <div style={s('margin-top:4px;display:flex;align-items:center;gap:9px;background:var(--sand);border-radius:3px 12px 12px 12px;padding:10px 12px;max-width:240px')}>
+                      <Ms size={19} color="var(--ink)">{m.socialIcon!}</Ms>
+                      <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 12px/1.3 'Kippax','Archivo';color:var(--ink)")}>{m.socialTitle}</span><span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:var(--label);margin-top:2px")}>{m.socialSub}</span></span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {dropInActive ? (<>
+          <div style={s('padding:6px 16px 4px')}><div style={s("font:600 10.5px/1.4 'Kippax','Archivo';color:var(--label)")}>Questions go to a moderator, not straight to {st.dropIn.player}.</div></div>
+          <div style={s('padding:0 16px 20px;display:flex;gap:8px;align-items:center')}>
+            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.dropIn.qDraft} onChange={(e: any) => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, qDraft: e.target.value } }))} onKeyDown={(e: any) => { if (e.key === 'Enter') askDropIn(st.dropIn.qDraft); }} placeholder="Ask a question…" style={s("width:100%;font:500 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")} /></div>
+            <button onClick={() => askDropIn(st.dropIn.qDraft)} style={s('width:44px;height:44px;flex:none;background:#6CABDD;border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="#fff">arrow_upward</Ms></button>
+          </div>
+        </>) : (
+          <div style={s('padding:10px 16px 20px;display:flex;gap:8px;align-items:center')}>
+            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.crewDraft} onChange={(e: any) => set({ crewDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') postCrew(st.crewDraft); }} placeholder="Message your Crew…" style={s("width:100%;font:500 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")} /></div>
+            <button onClick={() => postCrew(st.crewDraft)} style={s('width:44px;height:44px;flex:none;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
+          </div>
+        )}
       </>)}
     </div>
   );
