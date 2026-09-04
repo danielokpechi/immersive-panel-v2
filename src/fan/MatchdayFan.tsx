@@ -348,8 +348,8 @@ export function MatchdayFan() {
   const { ms } = st;
   const pre = ms === 'pre', live = ms === 'live', ht = ms === 'ht', ft = ms === 'ft';
   const inactive = ms === 'inactive';
-  const isCommunityLead = inactive || ft;      // Community leads Home off-matchday & at full-time
-  const showCommunityBlock = !isCommunityLead; // receded card mid-Home during pre/live/ht
+  const isCommunityLead = inactive;            // Crews leads Home only off-matchday
+  const showCommunityBlock = !isCommunityLead; // receded card mid-Home during pre/live/ht/ft (below the score)
   const showSpotkickTile = ms !== 'live';      // hidden only during live play
   const activeCrewData = CREWS.find((c) => c.id === st.activeCrew) || CREWS[0];
   const minute = live ? 38 : ht ? 45 : 90;
@@ -603,17 +603,23 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
   const label = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const sections = [
     { t: 'Fan reactions', tag: 'LIVE', d: 'Reels & posts pulled from Instagram, TikTok, YouTube, X and Threads by #MCIRMA.', icon: 'sensors', go: go('reactions') },
-    { t: 'Predictions', tag: pre ? '2 OPEN' : 'LOCKED', d: 'Call the score and first scorer. 120 XP if you nail both.', icon: 'scoreboard', go: go('pred') },
-    { t: 'Polls', tag: 'LIVE', d: 'Two questions open. 40 XP a vote, results update live.', icon: 'bar_chart', go: go('polls') },
+    // Predictions close once the match ends — no tab at full-time.
+    ...(!ft ? [
+      { t: 'Predictions', tag: pre ? '2 OPEN' : 'LOCKED', d: 'Call the score and first scorer. 120 XP if you nail both.', icon: 'scoreboard', go: go('pred') },
+    ] : []),
+    { t: 'Polls', tag: ft ? 'MOTM' : 'LIVE', d: ft ? 'Vote for your man of the match. 40 XP a vote.' : 'Two questions open. 40 XP a vote, results update live.', icon: 'bar_chart', go: go('polls') },
     ...(showSpotkickTile ? [
       { t: 'Spot Kick', tag: 'BEST OF 5', d: 'A penalty shootout. Score to earn XP and climb your Crew’s board.', icon: 'sports_soccer', go: go('spotkick') },
     ] : []),
     { t: 'Reads', tag: '4 NEW', d: 'Tactical read, the Rodri number, and the away view.', icon: 'article', go: go('reads') },
     { t: 'City store', tag: 'MATCH DROP', d: 'Tonight-only shirt print, collected on the way out.', icon: 'shopping_bag', go: go('shop') },
-    { t: 'Your seat', tag: '112–J', d: 'Block plan, nearest kiosk, and the walk back out.', icon: 'event_seat', go: go('seat') },
+    { t: 'Your seat', tag: '112–J', d: ft ? 'Your block plan and the quickest walk back out.' : 'Block plan, nearest kiosk, and the walk back out.', icon: 'event_seat', go: go('seat') },
     { t: 'Your profile', tag: 'TIER 2', d: 'XP, rewards claimed, your photos and alerts.', icon: 'account_circle', go: go('profile') },
-    ...(!pre && !inactive ? [
+    // Order food only makes sense inside the match; drop it at full-time.
+    ...(live || ht ? [
       { t: 'Order food', tag: 'TO SEAT', d: 'Delivered to 112–J. Skip the half-time queue entirely.', icon: 'restaurant', go: go('food') },
+    ] : []),
+    ...(!pre && !inactive ? [
       { t: 'Photo pool', tag: '1,204', d: 'Everyone’s photos in one place. Add yours for 25 XP.', icon: 'photo_library', go: go('photos') },
     ] : []),
   ];
@@ -626,7 +632,8 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
   const communityBadge = pre ? '212 ONLINE' : live ? 'ONE TAP AWAY' : '214 ONLINE';
   const communityBlockLine = pre ? 'Moss Side Blues are sorting travel and banter before kick-off.'
     : live ? 'Reactions are piling up in Moss Side Blues — the terrace is buzzing.'
-    : 'Half-time chat is already livelier than the game.';
+    : ht ? 'Half-time chat is already livelier than the game.'
+    : 'Full-time — but the Crew is still going.';
   const communityAvatars = [{ i: 'MB', bg: '#6CABDD' }, { i: 'PR', bg: '#0C3A5E' }, { i: 'DE', bg: '#6CABDD' }, { i: 'HA', bg: '#0C3A5E' }];
   const formH = ['W', 'W', 'D', 'W', 'L'].map((r) => ({ r, bg: r === 'W' ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.26)', fg: r === 'W' ? '#0C3A5E' : '#fff' }));
   const formA = ['W', 'W', 'W', 'D', 'W'].map((r) => ({ r, bg: r === 'W' ? '#FEBE10' : 'rgba(255,255,255,.22)', fg: r === 'W' ? '#00296B' : '#fff' }));
