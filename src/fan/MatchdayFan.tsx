@@ -60,6 +60,48 @@ const ARTICLES = [
   { kicker: 'THE NUMBERS', title: 'First goal, first leg, and the aggregate maths', meta: 'Data desk · 3 min read', slot: 'read-4', body: ['City lead 2–1 from the first leg. A 0–0 tonight sends them through; a single Madrid goal without reply forces extra time.', 'Nine of City’s last ten home wins have followed them scoring first, and they have won all nine.', 'Madrid have conceded the opening goal only twice in the competition. Both times they came back to draw.'] },
 ];
 
+// ── Community layer (Club → Crews → Box) ──
+const CREWS = [
+  { id: 'msb', name: 'Moss Side Blues', initials: 'MB', members: 1842, official: false, latest: '"Anyone getting picked up in Stockport?"' },
+  { id: 'b112', name: 'Block 112 Regulars', initials: 'B1', members: 340, official: false, latest: '"See you at the usual spot"' },
+  { id: 'academy', name: 'Academy Watch', initials: 'AW', members: 612, official: true, latest: '"Youth highlights are up"' },
+];
+const DISCOVER_CREWS = [
+  { id: 'awayday', name: 'Cityzens Away Days', members: 2210, official: false },
+  { id: 'bluemoon', name: 'The Blue Moon Choir', members: 4102, official: true },
+  { id: 'family', name: 'Family Stand', members: 980, official: true },
+];
+const CREW_PLANS = [
+  { t: 'Coach to Munich', d: '31 May · 06:00 from the Etihad · 41 seats left', label: 'RSVP', fg: '#fff', bg: '#6CABDD' },
+  { t: 'Pre-match pints, The Cotton Tree', d: 'Sat 08 Aug · from 15:00 · Ancoats', label: 'GOING', fg: 'var(--ink)', bg: 'var(--sand)' },
+];
+const CREW_MSGS = [
+  { user: 'MARCUS_92', text: 'Coach seats are filling fast, get in now', avBg: '#6CABDD', initials: 'MA' },
+  { user: 'PRIYA_S', text: 'Anyone know if the Cotton Tree takes bookings?', avBg: '#0C3A5E', initials: 'PR' },
+  { user: 'DECLAN_K', text: 'Saved you a seat on the coach mate', avBg: '#6CABDD', initials: 'DE' },
+  { user: 'HANNAH_M', text: 'Munich hotel prices are criminal right now', avBg: '#0C3A5E', initials: 'HA' },
+];
+const LB_CREW = [
+  { name: 'Marcus_92', score: 5, initials: 'MA', bg: '#6CABDD' },
+  { name: 'You', score: 4, initials: 'YO', bg: '#001838', me: true },
+  { name: 'Priya_S', score: 4, initials: 'PR', bg: '#0C3A5E' },
+  { name: 'Declan_K', score: 3, initials: 'DE', bg: '#6CABDD' },
+  { name: 'Hannah_M', score: 3, initials: 'HA', bg: '#0C3A5E' },
+];
+const LB_GLOBAL = [
+  { name: 'kylerm', score: 5, initials: 'KY', bg: '#00529F' },
+  { name: 'Marcus_92', score: 5, initials: 'MA', bg: '#6CABDD' },
+  { name: 'sofia_rm', score: 5, initials: 'SO', bg: '#00529F' },
+  { name: 'You', score: 4, initials: 'YO', bg: '#001838', me: true },
+  { name: 'gaz', score: 4, initials: 'GA', bg: '#6CABDD' },
+  { name: 'jean_84', score: 3, initials: 'JE', bg: '#6CABDD' },
+];
+// 6 goal zones (2 rows × 3 cols); keeper dives to the zone's column.
+const SK_ZONES = [
+  { x: '8%', y: '14%', w: '28%', h: '24%' }, { x: '36%', y: '14%', w: '28%', h: '24%' }, { x: '64%', y: '14%', w: '28%', h: '24%' },
+  { x: '8%', y: '38%', w: '28%', h: '24%' }, { x: '36%', y: '38%', w: '28%', h: '24%' }, { x: '64%', y: '38%', w: '28%', h: '24%' },
+];
+
 interface FSt {
   route: string; ms: string; hs: number; as: number; n: number; rollY: number;
   event: { kind: string; who: string; minute: number; note: string; team: string; side: string } | null;
@@ -75,6 +117,10 @@ interface FSt {
   photos: number; reels: Record<string, string | boolean>; read: number | null;
   routeOn: boolean; prefs: Record<string, boolean>; theme: string; quests: Record<string, boolean>;
   toast: string | null; toastXp: string;
+  crewsJoined: Record<string, boolean>; activeCrew: string; crewDraft: string;
+  crewMsgsExtra: { user: string; text: string; avBg: string; initials: string }[];
+  boxUnlocked: boolean; lbScope: string;
+  sk: { kick: number; goals: number; phase: string; flash: string | null; keeperZone: number | null };
 }
 const money = (n: number) => '£' + n.toFixed(2);
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -88,9 +134,11 @@ export function MatchdayFan() {
     draft: '', room: 'ALL FANS', likes: {}, votes: {}, pred: { h: 2, a: 1, s: 'Haaland', done: false },
     size: 'M', basket: [], ordered: false, food: {}, foodPlaced: false, foodEta: 6,
     photos: 9, reels: {}, read: null, flash: null, flashOut: false, irisOut: false, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: 'light', quests: {}, toast: null, toastXp: '',
+    crewsJoined: { msb: true, b112: true }, activeCrew: 'msb', crewDraft: '', crewMsgsExtra: [],
+    boxUnlocked: false, lbScope: 'crew', sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null },
   }));
   const set = (patch: Partial<FSt> | ((s: FSt) => Partial<FSt>)) => setSt((sPrev) => ({ ...sPrev, ...(typeof patch === 'function' ? patch(sPrev) : patch) }));
-  const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number }>({});
+  const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number; sk?: number }>({});
   const { id = 'demo' } = useParams();
   // #2/#3 — play an exit animation, then unmount (symmetric enter/exit).
   const closeIris = () => { set({ irisOut: true }); window.setTimeout(() => set({ iris: false, irisOut: false }), 260); };
@@ -156,7 +204,8 @@ export function MatchdayFan() {
   // Shared operator actions — used by the local demo strip AND by the control
   // room over the realtime bus, so an operator drives this exact fan client.
   const applyState = (m: string) => {
-    if (m === 'pre') set({ ms: 'pre', route: 'home', event: null, hs: 0, as: 0 });
+    if (m === 'inactive') set({ ms: 'inactive', route: 'home', event: null, hs: 0, as: 0 });
+    else if (m === 'pre') set({ ms: 'pre', route: 'home', event: null, hs: 0, as: 0 });
     else if (m === 'live') { set({ ms: 'live', route: 'home', hs: 0, as: 0 }); fire('GOAL', 'Haaland', 23, 'Assist De Bruyne · xG 0.34', 'MAN CITY', 'h'); }
     else if (m === 'ht') set({ ms: 'ht', route: 'home', event: null, hs: 1, as: 1 });
     else if (m === 'ft') set({ ms: 'ft', route: 'home', event: null, hs: 2, as: 1 });
@@ -191,11 +240,43 @@ export function MatchdayFan() {
     set((sp) => ({ draft: '', chat: [...sp.chat, { id: 'me' + Date.now(), user: 'YOU', text: text.trim(), t: 'h', tag: 'BLOCK 112', me: true, time: '20:' + pad((44 + sp.n) % 60), likes: 0 }] }));
     award(2, 'MESSAGE POSTED', 'chat');
   };
+  // Toast with no XP badge (RSVP, share confirmations…).
+  const notify = (label: string) => {
+    window.clearTimeout(timers.current.toast);
+    set({ toast: label, toastXp: '' });
+    timers.current.toast = window.setTimeout(() => set({ toast: null }), 2400);
+  };
+  const postCrew = (text: string) => {
+    if (!text.trim()) return;
+    set((sp) => ({ crewDraft: '', crewMsgsExtra: [...sp.crewMsgsExtra, { user: 'YOU', text: text.trim(), avBg: '#001838', initials: 'YO' }] }));
+  };
+  // Spot Kick: tap a zone; keeper dives to a random zone; miss it to score.
+  const shootZone = (zone: number) => {
+    if (st.sk.phase !== 'idle') return;
+    const keeperZone = Math.floor(Math.random() * 6);
+    const goal = zone !== keeperZone;
+    set((sp) => ({ sk: { ...sp.sk, phase: 'flash', keeperZone, flash: goal ? 'GOAL' : 'SAVED' } }));
+    if (goal) award(20, 'GOAL! SPOT KICK');
+    window.clearTimeout(timers.current.sk);
+    timers.current.sk = window.setTimeout(() => {
+      set((sp) => {
+        const kick = sp.sk.kick + 1, goals = sp.sk.goals + (goal ? 1 : 0);
+        if (kick >= 5) return { sk: { kick, goals, phase: 'idle', flash: null, keeperZone: null }, route: 'spotkickResult' };
+        return { sk: { kick, goals, phase: 'idle', flash: null, keeperZone: null } };
+      });
+    }, 950);
+  };
+  const startSpotkick = () => set({ sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null }, route: 'spotkick', iris: false });
   const go = (r: string) => () => set({ route: r, iris: false, read: null });
 
   // ── derived ──
   const { ms } = st;
   const pre = ms === 'pre', live = ms === 'live', ht = ms === 'ht', ft = ms === 'ft';
+  const inactive = ms === 'inactive';
+  const isCommunityLead = inactive || ft;      // Community leads Home off-matchday & at full-time
+  const showCommunityBlock = !isCommunityLead; // receded card mid-Home during pre/live/ht
+  const showSpotkickTile = ms !== 'live';      // hidden only during live play
+  const activeCrewData = CREWS.find((c) => c.id === st.activeCrew) || CREWS[0];
   const minute = live ? 38 : ht ? 45 : 90;
   const cd = Math.max(3 * 3600 + 16 * 60 + 40 - st.tick, 0);
   const filled = Math.round(Math.min(st.xp / 2000, 1) * 20);
@@ -220,9 +301,10 @@ export function MatchdayFan() {
   const shown = st.chat;
   const previewMsgs = st.chat.filter((m) => !m.ev).slice(-5).map((m) => ({ user: m.me ? 'YOU' : m.user, text: m.text, initials: m.me ? 'YO' : m.user.slice(0, 2), avBg: TEAM[m.t].bg, avFg: TEAM[m.t].fg }));
 
-  const statusLabel = pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
-  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'CITY STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE' };
-  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET' };
+  const statusLabel = inactive ? 'NEXT: SAT 08 AUG, 17:30' : pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
+  const myCrewCount = CREWS.filter((c) => st.crewsJoined[c.id]).length;
+  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'CITY STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'THE CLUB', crew: activeCrewData.name.toUpperCase(), box: 'THE BOX', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
+  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS JOINED', crew: activeCrewData.members.toLocaleString() + ' MEMBERS', box: st.boxUnlocked ? 'UNLOCKED' : 'LOCKED', spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
   const isHome = st.route === 'home', isSub = st.route !== 'home';
 
   const opBtn = (label: string, onClick: () => void, bg: string, color: string) => (
@@ -244,6 +326,7 @@ export function MatchdayFan() {
         <div style={{ ...s('display:flex;align-items:center;gap:8px;width:393px;padding:9px 10px'), background: 'var(--panel)' }}>
           <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>OPERATOR</span>
           <div style={s('display:flex;gap:4px;margin-left:auto')}>
+            {opBtn('OFF', () => applyState('inactive'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('PRE', () => applyState('pre'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('LIVE', () => applyState('live'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('HT', () => applyState('ht'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
@@ -296,19 +379,30 @@ export function MatchdayFan() {
             <div style={s('position:sticky;top:0;z-index:40;background:var(--panel)')}>
               <div style={s('display:flex;align-items:stretch;height:44px')}>
                 {isSub && <button onClick={go('home')} className="fh" style={s("display:flex;align-items:center;gap:6px;padding:0 10px 0 15px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.14em;color:#8AA0B6")}><Ms size={15} color="inherit">arrow_back</Ms>HOME</button>}
-                <div style={s('display:flex;align-items:center;flex:1;min-width:0;padding-left:14px')}>
-                  <Badge club="city" size={22} bare />
-                  <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>MCI</span>
-                  <span style={s("font:800 19px/1 'Kippax','Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.hs}</span>
-                  <span style={s("font:700 13px/1 'Kippax','Archivo';color:var(--label);padding:0 6px")}>–</span>
-                  <span style={s("font:800 19px/1 'Kippax','Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.as}</span>
-                  <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>RMA</span>
-                  <Badge club="madrid" size={22} bare />
-                </div>
-                <div style={{ ...s('display:flex;align-items:center;gap:6px;padding:0 12px'), background: live ? '#D6202A' : '#3A352A' }}>
-                  {live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:bgBlink 1.6s steps(1,end) infinite')} />}
-                  <span style={s("font:800 12px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);font-variant-numeric:tabular-nums")}>{statusLabel}</span>
-                </div>
+                {inactive ? (<>
+                  <div style={s('display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding-left:14px')}>
+                    <span style={s('width:6px;height:18px;background:#6CABDD;transform:skewX(-8deg);display:inline-block')} />
+                    <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 10px")}>MAN CITY</span>
+                  </div>
+                  <div style={s('display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--chrome)')}>
+                    <Ms size={14} color="#8AA0B6">event</Ms>
+                    <span style={s("font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--on-panel)")}>{statusLabel}</span>
+                  </div>
+                </>) : (<>
+                  <div style={s('display:flex;align-items:center;flex:1;min-width:0;padding-left:14px')}>
+                    <Badge club="city" size={22} bare />
+                    <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>MCI</span>
+                    <span style={s("font:800 19px/1 'Kippax','Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.hs}</span>
+                    <span style={s("font:700 13px/1 'Kippax','Archivo';color:var(--label);padding:0 6px")}>–</span>
+                    <span style={s("font:800 19px/1 'Kippax','Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.as}</span>
+                    <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>RMA</span>
+                    <Badge club="madrid" size={22} bare />
+                  </div>
+                  <div style={{ ...s('display:flex;align-items:center;gap:6px;padding:0 12px'), background: live ? '#D6202A' : '#3A352A' }}>
+                    {live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:bgBlink 1.6s steps(1,end) infinite')} />}
+                    <span style={s("font:800 12px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);font-variant-numeric:tabular-nums")}>{statusLabel}</span>
+                  </div>
+                </>)}
                 <button onClick={() => set((x) => ({ theme: x.theme === 'auto' ? 'light' : x.theme === 'light' ? 'dark' : 'auto' }))} className="fh2" style={s('display:flex;align-items:center;padding:0 9px;background:var(--chrome)')}><Ms size={17} color="#8AA0B6">{st.theme === 'dark' ? 'dark_mode' : st.theme === 'light' ? 'light_mode' : 'brightness_auto'}</Ms></button>
                 <button onClick={go('profile')} className="fh2" style={s('display:flex;align-items:center;padding:0 12px 0 9px;background:var(--chrome)')}><span style={s("width:26px;height:26px;border-radius:50%;background:#6CABDD;display:flex;align-items:center;justify-content:center;font:800 9.5px/1 'Kippax','Archivo';color:#fff")}>AJ</span></button>
               </div>
@@ -328,7 +422,13 @@ export function MatchdayFan() {
             </div>
 
             {/* ROUTES */}
-            {isHome && <Home {...{ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go, award, set }} />}
+            {isHome && <Home {...{ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, award, set }} />}
+            {st.route === 'community' && <Community {...{ st, set, go }} />}
+            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, notify }} />}
+            {st.route === 'box' && <Box {...{ st, set }} />}
+            {st.route === 'spotkick' && <Spotkick {...{ st, shootZone }} />}
+            {st.route === 'spotkickResult' && <SpotkickResult {...{ st, go, startSpotkick, notify }} />}
+            {st.route === 'leaderboard' && <Leaderboard {...{ st, set }} />}
             {st.route === 'chat' && <Chat {...{ st, shown, set, post, chatRef }} />}
             {st.route === 'intel' && <Intel {...{ pre, live, ht, openIris: () => set({ iris: true }) }} />}
             {st.route === 'pred' && <Predictions {...{ st, set, award }} />}
@@ -385,23 +485,34 @@ export function MatchdayFan() {
 }
 
 // ═══════════ HOME ═══════════
-type HP = { st: FSt; pre: boolean; live: boolean; ht: boolean; ft: boolean; timeline: ReturnType<typeof Object>[] | any[]; previewMsgs: any[]; filled: number; cd: number; go: (r: string) => () => void; award: (x: number, l: string, q?: string) => void; set: (p: any) => void };
-function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: HP) {
+type HP = { st: FSt; pre: boolean; live: boolean; ht: boolean; ft: boolean; inactive: boolean; isCommunityLead: boolean; showCommunityBlock: boolean; showSpotkickTile: boolean; timeline: ReturnType<typeof Object>[] | any[]; previewMsgs: any[]; filled: number; cd: number; go: (r: string) => () => void; award: (x: number, l: string, q?: string) => void; set: (p: any) => void };
+function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go }: HP) {
   const liveish = live || ht;
   const label = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const sections = [
     { t: 'Fan reactions', tag: 'LIVE', d: 'Reels & posts pulled from Instagram, TikTok, YouTube, X and Threads by #MCIRMA.', icon: 'sensors', go: go('reactions') },
     { t: 'Predictions', tag: pre ? '2 OPEN' : 'LOCKED', d: 'Call the score and first scorer. 120 XP if you nail both.', icon: 'scoreboard', go: go('pred') },
     { t: 'Polls', tag: 'LIVE', d: 'Two questions open. 40 XP a vote, results update live.', icon: 'bar_chart', go: go('polls') },
+    ...(showSpotkickTile ? [
+      { t: 'Spot Kick', tag: 'BEST OF 5', d: 'A penalty shootout. Score to earn XP and climb your Crew’s board.', icon: 'sports_soccer', go: go('spotkick') },
+    ] : []),
     { t: 'Reads', tag: '4 NEW', d: 'Tactical read, the Rodri number, and the away view.', icon: 'article', go: go('reads') },
     { t: 'City store', tag: 'MATCH DROP', d: 'Tonight-only shirt print, collected on the way out.', icon: 'shopping_bag', go: go('shop') },
     { t: 'Your seat', tag: '112–J', d: 'Block plan, nearest kiosk, and the walk back out.', icon: 'event_seat', go: go('seat') },
     { t: 'Your profile', tag: 'TIER 2', d: 'XP, rewards claimed, your photos and alerts.', icon: 'account_circle', go: go('profile') },
-    ...(!pre ? [
+    ...(!pre && !inactive ? [
       { t: 'Order food', tag: 'TO SEAT', d: 'Delivered to 112–J. Skip the half-time queue entirely.', icon: 'restaurant', go: go('food') },
       { t: 'Photo pool', tag: '1,204', d: 'Everyone’s photos in one place. Add yours for 25 XP.', icon: 'photo_library', go: go('photos') },
     ] : []),
   ];
+  const myCrews = CREWS.filter((c) => st.crewsJoined[c.id]);
+  const communityHeadline = inactive ? 'While we wait' : 'Full-time. Still here.';
+  const communitySub = inactive ? 'No match tonight — this is what the app is between matchdays.' : 'The result settles. The conversation doesn’t.';
+  const communityBadge = pre ? '212 ONLINE' : live ? 'ONE TAP AWAY' : '214 ONLINE';
+  const communityBlockLine = pre ? 'Moss Side Blues are sorting travel and banter before kick-off.'
+    : live ? 'Reactions are piling up in Moss Side Blues — the terrace is buzzing.'
+    : 'Half-time chat is already livelier than the game.';
+  const communityAvatars = [{ i: 'MB', bg: '#6CABDD' }, { i: 'PR', bg: '#0C3A5E' }, { i: 'DE', bg: '#6CABDD' }, { i: 'HA', bg: '#0C3A5E' }];
   const formH = ['W', 'W', 'D', 'W', 'L'].map((r) => ({ r, bg: r === 'W' ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.26)', fg: r === 'W' ? '#0C3A5E' : '#fff' }));
   const formA = ['W', 'W', 'W', 'D', 'W'].map((r) => ({ r, bg: r === 'W' ? '#FEBE10' : 'rgba(255,255,255,.22)', fg: r === 'W' ? '#00296B' : '#fff' }));
   const ladder = [
@@ -418,6 +529,44 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
   const questsDone = questDefs.filter((q) => st.quests[q.k]).length;
   return (
     <div>
+      {isCommunityLead && (
+        <section style={s('animation:bgFade .3s ease both')}>
+          <div style={s('background:var(--panel);padding:18px 16px 20px')}>
+            <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:#6CABDD;transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>THE CLUB</span></div>
+            <div style={s("font:800 34px/.88 'KippaxCondensed','Archivo Black';color:var(--on-panel);margin-top:10px")}>{communityHeadline}</div>
+            <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:8px;max-width:300px")}>{communitySub}</div>
+            <button onClick={go('community')} className="fp" style={s("display:inline-flex;align-items:center;gap:7px;margin-top:14px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:11px 14px")}>OPEN THE CLUB<Ms size={15} color="#fff">arrow_forward</Ms></button>
+          </div>
+          <div style={s('padding:26px 16px 0')}>
+            <div style={s('display:flex;align-items:baseline;justify-content:space-between')}>{label('YOUR CREWS')}<button onClick={go('community')} style={s("font:700 10.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:#6CABDD")}>SEE ALL</button></div>
+            <div style={s('display:flex;gap:9px;margin-top:11px;overflow-x:auto')}>
+              {myCrews.map((c) => (
+                <button key={c.id} onClick={go('community')} className="fs" style={s('flex:none;width:168px;text-align:left;background:var(--sand);padding:16px')}>
+                  <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 18px/1 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{c.name}</span>{c.id === 'msb' && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}</div>
+                  <div style={s("font:500 11.5px/1.4 'Kippax','Archivo';color:var(--label);margin-top:6px")}>{c.members.toLocaleString()} members · {c.latest}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={s('padding:26px 16px 0')}>
+            {label('CLUB ANNOUNCEMENT')}
+            <div style={s('margin-top:9px;background:var(--sand);padding:18px')}><div style={s("font:700 14px/1.3 'Kippax','Archivo';color:var(--ink)")}>Away allocation opens Thursday</div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>Semi-final away tickets go to Crews first, general sale Friday 10am.</div></div>
+          </div>
+          {inactive && (
+            <div style={s('padding:26px 16px 0')}>
+              {label('NEXT MATCH')}
+              <div style={s('display:flex;align-items:center;gap:12px;margin-top:9px;background:var(--sand);padding:18px')}><div style={s('flex:1')}><div style={s("font:700 15px/1.3 'Kippax','Archivo';color:var(--ink)")}>Tottenham Hotspur</div><div style={s("font:500 11.5px/1.4 'Kippax','Archivo';color:var(--label);margin-top:4px")}>SAT 08 AUG · 17:30 · ETIHAD</div></div><Ms size={22} color="var(--label)">chevron_right</Ms></div>
+            </div>
+          )}
+          <div style={s('padding:26px 16px 0')}>
+            <button onClick={go('spotkick')} className="fp" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--panel);padding:18px')}>
+              <span style={s('width:44px;height:44px;flex:none;background:#6CABDD;display:flex;align-items:center;justify-content:center')}><Ms size={24} color="#fff">sports_soccer</Ms></span>
+              <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 19px/1 'KippaxCondensed','Archivo Black';color:var(--on-panel)")}>Spot Kick</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:#8AA0B6;margin-top:3px")}>Five penalties. Beat your Crew.</span></span>
+              <Ms size={18} color="#8AA0B6">chevron_right</Ms>
+            </button>
+          </div>
+        </section>
+      )}
       {pre && (
         <section style={s('animation:bgFade .35s ease both')}>
           <div style={s('position:relative;display:grid;grid-template-columns:1fr 1fr;height:222px;overflow:hidden')}>
@@ -512,8 +661,9 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
               <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>HALF-TIME · 15 MINUTES</div>
               <div style={s("font:800 28px/.9 'KippaxCondensed','Archivo Black';color:var(--ink);margin-top:10px")}>Beat the queue</div>
               <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>Order to seat 112–J and it lands before the restart.</div>
-              <div style={s('display:flex;gap:7px;margin-top:13px')}>
+              <div style={s('display:flex;gap:7px;margin-top:13px;flex-wrap:wrap')}>
                 <button onClick={go('food')} className="fp" style={s("display:flex;align-items:center;gap:7px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:12px 15px")}><Ms size={15} color="var(--on-panel)">restaurant</Ms>ORDER FOOD</button>
+                <button onClick={go('spotkick')} style={s("display:flex;align-items:center;gap:7px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:12px 15px")}><Ms size={15} color="#fff">sports_soccer</Ms>PLAY SPOT KICK</button>
                 <button onClick={go('intel')} className="fs" style={s("font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink);padding:12px 15px;box-shadow:inset 0 0 0 1.5px var(--ink)")}>HALF-TIME INTEL</button>
               </div>
             </div>
@@ -577,7 +727,7 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
       </section>
 
       {/* REWARDS */}
-      {!pre && (
+      {!pre && !inactive && (
         <section style={s('margin:20px 16px 0;background:var(--panel);padding:16px;border-radius:2px;box-shadow:0 8px 24px rgba(0,24,56,.16);animation:bgRise .4s .04s ease both')}>
           <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>MATCHDAY REWARDS</span><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:5px 7px")}>TIER 2</span></div>
           <div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:12px')}><span style={s("font:800 44px/.8 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.xp.toLocaleString()}</span><span style={s("font:600 11.5px/1 'Kippax','Archivo';color:#8AA0B6;padding-bottom:5px")}>/ 2,000 XP</span></div>
@@ -614,6 +764,19 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
         </button>
       </section>
 
+      {/* COMMUNITY PREVIEW — the Match Intel treatment, applied to Community */}
+      {showCommunityBlock && (
+        <section style={s('margin:20px 16px 0;animation:bgRise .4s .14s ease both')}>
+          <div style={s('display:flex;align-items:center;gap:8px')}>{label('COMMUNITY')}<span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{communityBadge}</span></div>
+          <button onClick={go('community')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:2px;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
+            <div style={s("font:800 26px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Your Crew,<br />between the whistles</div>
+            <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>{communityBlockLine}</div>
+            <div style={s('display:flex;gap:7px;margin-top:13px')}>{communityAvatars.map((a, i) => <span key={i} style={{ ...s("width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 9.5px/1 'Kippax','Archivo';color:#fff"), background: a.bg }}>{a.i}</span>)}</div>
+            <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink)")}>OPEN THE CLUB<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
+          </button>
+        </section>
+      )}
+
       {/* ALSO TONIGHT */}
       <section style={s('margin:24px 0 0;padding:0 16px;animation:bgRise .4s .16s ease both')}>
         {label('ALSO TONIGHT')}
@@ -636,6 +799,200 @@ function Home({ st, pre, live, ht, ft, timeline, previewMsgs, filled, cd, go }: 
 }
 
 // ═══════════ sub-screens ═══════════
+
+// ── Community: Club Home ──
+function Community({ st, set, go }: any) {
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const myCrews = CREWS.filter((c) => st.crewsJoined[c.id]);
+  const announcements = [
+    { t: 'Away allocation opens Thursday', d: 'Semi-final away tickets go to Crews first, general sale Friday 10am.' },
+    { t: 'New Crew badges are live', d: 'Ten seasons in a Crew now earns a founding-member mark.' },
+    { t: 'Off-season fixtures announced', d: 'Three pre-season friendlies confirmed, including Houston.' },
+  ];
+  const openCrew = (id: string) => () => set({ route: 'crew', activeCrew: id, iris: false, read: null });
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding-bottom:10px')}>
+      <div style={s('padding:16px 16px 0')}>
+        <div style={s("font:800 32px/.9 'KippaxCondensed','Archivo Black';color:var(--ink)")}>The Club</div>
+        <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px;max-width:300px")}>Every City fan’s home ground. It doesn’t reset at full-time — pick a Crew and it’s still here tomorrow.</div>
+      </div>
+      <div style={s('padding:26px 16px 0')}>
+        {L('YOUR CREWS')}
+        <div style={s('margin-top:9px')}>
+          {myCrews.map((c) => (
+            <button key={c.id} onClick={openCrew(c.id)} className="frow" style={s('display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 0;border-bottom:1.5px solid var(--hair)')}>
+              <span style={s("width:46px;height:46px;flex:none;border-radius:50%;background:#6CABDD;display:flex;align-items:center;justify-content:center;font:800 11px/1 'Kippax','Archivo';color:#fff")}>{c.initials}</span>
+              <span style={s('flex:1;min-width:0')}><span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 14.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{c.name}</span>{c.id === 'msb' && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{c.members.toLocaleString()} members · {c.latest}</span></span>
+              <Ms size={18} color="var(--label)">chevron_right</Ms>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={s('padding:26px 16px 0')}>
+        {L('DISCOVER CREWS')}
+        <div style={s('display:flex;gap:9px;margin-top:11px;overflow-x:auto')}>
+          {DISCOVER_CREWS.map((c) => { const joined = !!st.crewsJoined[c.id]; return (
+            <div key={c.id} style={s('flex:none;width:158px;background:var(--sand);padding:16px')}>
+              <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{c.name}</span>{c.official && <Ms size={14} color="#6CABDD">verified</Ms>}</div>
+              <div style={s("font:500 11.5px/1.4 'Kippax','Archivo';color:var(--label);margin-top:6px")}>{c.members.toLocaleString()} members</div>
+              <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [c.id]: !joined } }))} style={{ ...s("display:block;width:100%;margin-top:10px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.08em;padding:9px 0"), background: joined ? 'var(--ground)' : 'var(--panel)', color: joined ? 'var(--ink)' : 'var(--on-panel)' }}>{joined ? 'JOINED' : 'JOIN'}</button>
+            </div>
+          ); })}
+        </div>
+      </div>
+      <div style={s('padding:28px 16px 0')}>
+        {L('THE BOX')}
+        <button onClick={go('box')} className="fp" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin-top:9px;background:var(--panel);padding:18px')}>
+          <span style={s('width:44px;height:44px;flex:none;background:rgba(234,241,248,.1);display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#8AA0B6">lock</Ms></span>
+          <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 18px/1 'KippaxCondensed','Archivo Black';color:var(--on-panel)")}>Season ticket holders</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:#8AA0B6;margin-top:3px")}>Gated. Earned, not bought.</span></span>
+          <Ms size={18} color="#8AA0B6">chevron_right</Ms>
+        </button>
+      </div>
+      <div style={s('padding:22px 16px 26px')}>
+        {L('CLUB ANNOUNCEMENTS')}
+        <div style={s('margin-top:9px')}>{announcements.map((a, i) => <div key={i} style={s('padding:15px 0;border-bottom:1.5px solid var(--hair)')}><div style={s("font:700 13.5px/1.3 'Kippax','Archivo';color:var(--ink)")}>{a.t}</div><div style={s("font:500 12px/1.5 'Kippax','Archivo';color:var(--body);margin-top:5px")}>{a.d}</div></div>)}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Community: Crew View (thread) ──
+function Crew({ st, crew, set, postCrew, notify }: any) {
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const joined = !!st.crewsJoined[crew.id];
+  const msgs = [...CREW_MSGS, ...st.crewMsgsExtra];
+  const memberAvatars = Array.from({ length: 8 }, (_, i) => ({ i: 'M' + (i + 1), bg: i % 2 ? '#6CABDD' : '#0C3A5E' }));
+  return (
+    <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px')}>
+      <div style={s('padding:16px 16px 0')}>
+        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 30px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{crew.name}</span>{crew.official && <Ms size={18} color="#6CABDD">verified</Ms>}</div>
+        <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>{crew.members.toLocaleString()} members · permanent thread</div>
+        <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} style={{ ...s("display:block;margin-top:11px;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:11px 14px"), background: joined ? 'var(--sand)' : '#6CABDD', color: joined ? 'var(--ink)' : '#fff' }}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
+      </div>
+      <div style={s('padding:18px 16px 0')}>
+        {L('UPCOMING PLANS')}
+        <div style={s('margin-top:9px')}>{CREW_PLANS.map((p, i) => <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{p.t}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{p.d}</span></span><button onClick={() => notify('RSVP’D')} style={{ ...s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.08em;padding:9px 10px"), background: p.bg, color: p.fg }}>{p.label}</button></div>)}</div>
+      </div>
+      <div style={s('padding:18px 16px 0')}>
+        {L('MEMBERS')}
+        <div style={s('display:flex;gap:6px;margin-top:9px')}>{memberAvatars.map((m, i) => <span key={i} style={{ ...s("width:32px;height:32px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff"), background: m.bg }}>{m.i}</span>)}</div>
+      </div>
+      <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label);padding:26px 16px 0")}>THE THREAD</div>
+      <div style={s('flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px')}>
+        {msgs.map((m: any, i: number) => (
+          <div key={i} style={s('display:flex;gap:8px')}>
+            <span style={{ ...s("width:26px;height:26px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 9px/1 'Kippax','Archivo';color:#fff"), background: m.avBg }}>{m.initials}</span>
+            <div style={s('flex:1;min-width:0')}><div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label)")}>{m.user}</div><div style={s("font:500 13px/1.4 'Kippax','Archivo';color:var(--ink);margin-top:4px;background:var(--sand);padding:8px 10px;border-radius:3px 14px 14px 14px")}>{m.text}</div></div>
+          </div>
+        ))}
+      </div>
+      <div style={s('padding:10px 16px 20px;display:flex;gap:8px;align-items:center')}>
+        <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.crewDraft} onChange={(e: any) => set({ crewDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') postCrew(st.crewDraft); }} placeholder="Message your Crew…" style={s("width:100%;font:500 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")} /></div>
+        <button onClick={() => postCrew(st.crewDraft)} style={s('width:44px;height:44px;flex:none;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
+      </div>
+    </div>
+  );
+}
+
+// ── Community: The Box (gated tier) ──
+function Box({ st, set }: any) {
+  const perks = [
+    { icon: 'confirmation_number', t: 'Early access', d: 'Away allocations 48h before general sale' },
+    { icon: 'checkroom', t: 'First look', d: 'Next season’s home shirt, before launch' },
+    { icon: 'forum', t: 'Private thread', d: 'Season-ticket holders only, no bots' },
+  ];
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:20px 16px 32px')}>
+      <div style={s("font:800 30px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>The Box</div>
+      <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>Season-ticket holders, VIP, and spaces a player drops into. Scarce, and earned.</div>
+      {!st.boxUnlocked ? (
+        <div style={s('margin-top:18px;background:var(--panel);padding:22px;text-align:center')}>
+          <Ms size={34} color="#8AA0B6">lock</Ms>
+          <div style={s("font:800 24px/1 'KippaxCondensed','Archivo Black';color:var(--on-panel);margin-top:12px")}>Locked</div>
+          <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:8px;max-width:260px;margin-left:auto;margin-right:auto")}>Open to season-ticket holders and Tier 3 fans. You’re Tier 2 — 760 XP from unlocking this Box.</div>
+          <button onClick={() => set({ boxUnlocked: true })} style={s("margin-top:16px;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#6CABDD;padding:11px 14px")}>DEMO · UNLOCK</button>
+        </div>
+      ) : (<>
+        <div style={s('margin-top:18px;background:var(--sand);padding:16px')}>
+          <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={16} color="#6CABDD">verified</Ms><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:var(--label)")}>UNLOCKED · SEASON TICKET HOLDERS</span></div>
+          <div style={s("font:800 24px/1 'KippaxCondensed','Archivo Black';color:var(--ink);margin-top:12px")}>Welcome in</div>
+          <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>A private thread, early access to away allocations, and first look at next season’s shirt.</div>
+          <button onClick={() => set({ boxUnlocked: false })} style={s("margin-top:14px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--label)")}>DEMO · LOCK AGAIN</button>
+        </div>
+        <div style={s('margin-top:14px')}>{perks.map((p, i) => <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1.5px solid var(--hair)')}><Ms size={20} color="var(--ink)">{p.icon}</Ms><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{p.t}</span><span style={s("display:block;font:500 12px/1.3 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{p.d}</span></span></div>)}</div>
+      </>)}
+    </div>
+  );
+}
+
+// ── Spot Kick: the game ──
+function Spotkick({ st, shootZone }: any) {
+  const keeperCol = st.sk.keeperZone !== null ? st.sk.keeperZone % 3 : 1;
+  const keeperX = ((keeperCol - 1) * 70) + 'px';
+  const pips = Array.from({ length: 5 }, (_, i) => i < st.sk.goals ? '#6CABDD' : i < st.sk.kick ? 'var(--sand2)' : 'var(--sand)');
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 20px')}>
+      <div style={s('display:flex;align-items:center;justify-content:space-between')}><div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Spot Kick</div><span style={s("font:800 11px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label)")}>KICK {Math.min(st.sk.kick + 1, 5)} / 5</span></div>
+      <div style={s('display:flex;gap:5px;margin-top:10px')}>{pips.map((c, i) => <span key={i} style={{ flex: 1, height: 5, background: c }} />)}</div>
+      <div style={s('position:relative;margin-top:16px;height:340px;background:#173018;overflow:hidden')}>
+        <div style={s('position:absolute;left:8%;right:8%;top:14%;bottom:38%;border:5px solid #EAF1F8;border-bottom:0')} />
+        <div style={s('position:absolute;left:8%;right:8%;bottom:38%;height:3px;background:repeating-linear-gradient(90deg,#EAF1F8 0 10px,transparent 10px 20px)')} />
+        <div style={{ ...s('position:absolute;left:50%;bottom:16%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.3,.8,.3,1)'), transform: `translateX(calc(-50% + ${keeperX}))` }}>
+          <span style={s('width:40px;height:56px;background:#001838;border-radius:8px 8px 3px 3px')} />
+        </div>
+        {SK_ZONES.map((z, i) => <button key={i} onClick={() => shootZone(i)} className="skz" style={{ position: 'absolute', left: z.x, top: z.y, width: z.w, height: z.h, background: 'rgba(234,241,248,.02)' }} />)}
+        {st.sk.flash && (
+          <div style={s('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,24,56,.55);animation:bgFade .2s ease both')}>
+            <span style={{ ...s("font:800 44px/.9 'KippaxCondensed','Archivo Black'"), color: st.sk.flash === 'GOAL' ? '#6CABDD' : '#D6202A' }}>{st.sk.flash}</span>
+          </div>
+        )}
+      </div>
+      <div style={s('display:flex;align-items:center;justify-content:space-between;margin-top:14px')}>
+        <div><div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--label)")}>GOALS</div><div style={s("font:800 30px/.9 'KippaxCondensed','Archivo Black';color:var(--ink);margin-top:6px")}>{st.sk.goals}</div></div>
+        <div style={s("font:500 12px/1.5 'Kippax','Archivo';color:var(--body);max-width:180px;text-align:right")}>Tap a corner of the goal to place your shot.</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Spot Kick: result ──
+function SpotkickResult({ st, go, startSpotkick, notify }: any) {
+  const line = st.sk.goals >= 4 ? 'Elite. Your Crew will hear about this.' : st.sk.goals >= 2 ? 'Solid night from the spot.' : 'Room to improve before the next matchday.';
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:20px 16px 32px')}>
+      <div style={s('background:var(--panel);padding:22px;text-align:center')}>
+        <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>SPOT KICK · FULL TIME</div>
+        <div style={s("font:800 62px/.82 'KippaxCondensed','Archivo Black';color:var(--on-panel);margin-top:14px")}>{st.sk.goals}/5</div>
+        <div style={s("font:600 13px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:10px")}>{line}</div>
+        <div style={s('display:flex;align-items:baseline;gap:8px;justify-content:center;margin-top:14px')}><span style={s("font:800 26px/1 'KippaxCondensed','Archivo Black';color:#6CABDD")}>+{st.sk.goals * 20}</span><span style={s("font:700 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#8AA0B6")}>XP EARNED</span></div>
+      </div>
+      <div style={s('display:flex;gap:8px;margin-top:16px')}>
+        <button onClick={() => notify('RESULT CARD READY TO SHARE')} className="fs" style={s("flex:1;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink);background:var(--sand);padding:14px 0")}>SHARE RESULT</button>
+        <button onClick={go('leaderboard')} className="fp" style={s("flex:1;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:14px 0")}>LEADERBOARD</button>
+      </div>
+      <button onClick={startSpotkick} style={s("display:block;width:100%;margin-top:10px;font:800 11px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label);padding:12px 0")}>PLAY AGAIN</button>
+    </div>
+  );
+}
+
+// ── Spot Kick: leaderboard ──
+function Leaderboard({ st, set }: any) {
+  const rows = (st.lbScope === 'crew' ? LB_CREW : LB_GLOBAL).map((r: any, i: number) => ({ rank: i + 1, name: r.name, score: r.me ? st.sk.goals : r.score, initials: r.initials, avBg: r.bg, hl: !!r.me }));
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:20px 16px 32px')}>
+      <div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Leaderboard</div>
+      <div style={s('display:flex;gap:6px;margin-top:12px')}>{[['crew', 'YOUR CREW'], ['global', 'GLOBAL']].map(([k, lab]) => { const on = st.lbScope === k; return <button key={k} onClick={() => set({ lbScope: k })} style={{ ...s("flex:1;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.08em;padding:11px 0"), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{lab}</button>; })}</div>
+      <div style={s('margin-top:14px')}>{rows.map((r: any, i: number) => (
+        <div key={i} style={{ ...s('display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)'), background: r.hl ? 'rgba(108,171,221,.14)' : 'transparent' }}>
+          <span style={s("width:22px;font:800 13px/1 'Kippax','Archivo';color:var(--label)")}>{r.rank}</span>
+          <span style={{ ...s("width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff"), background: r.avBg }}>{r.initials}</span>
+          <span style={s("flex:1;min-width:0;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{r.name}</span>
+          <span style={s("font:800 14px/1 'Kippax','Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{r.score}/5</span>
+        </div>
+      ))}</div>
+    </div>
+  );
+}
 function Chat({ st, shown, set, post, chatRef }: any) {
   return (
     <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:640px')}>
@@ -1076,5 +1433,6 @@ const FAN_CSS = `
 .fq:hover{background:rgba(234,241,248,.14) !important}
 .fw:hover{background:#fff !important}
 .frow:hover{opacity:.72}
+.skz:hover{background:rgba(108,171,221,.22) !important}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
 `;
