@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   V2 design tokens — the approved warm ivory & ink language. Presentational
+   V2 design tokens, the approved warm ivory & ink language. Presentational
    components read these, so the incoming new UI can restyle by swapping
    tokens/components without touching the core engine.
 ═══════════════════════════════════════════════════════════════════════ */
@@ -70,7 +70,7 @@ button {
   transition: transform 130ms cubic-bezier(0.23, 1, 0.32, 1);
   -webkit-tap-highlight-color: transparent;
 }
-/* #1 — press feedback on every tappable (subtle, touch-first) */
+/* #1, press feedback on every tappable (subtle, touch-first) */
 button:active {
   transform: scale(0.97);
 }

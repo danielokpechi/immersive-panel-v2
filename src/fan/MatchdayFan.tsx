@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════
-// MatchdayFan — the mobile web fan panel.
+// MatchdayFan, the mobile web fan panel.
 // Man City v Real Madrid (CL semi, 2nd leg) across four operator-driven
 // states (PRE/LIVE/HT/FT) and eleven screens, themed light + dark via CSS
 // variables, with a broadcast aesthetic (score bug, lower thirds).
@@ -34,7 +34,7 @@ function Slot({ id, label }: { id: string; label: string }) {
 const POOL = [
   { user: 'MARCUS_92', text: 'Etihad is loud tonight. Genuinely loud.', t: 'h', tag: 'BLOCK 108' },
   { user: 'DECLAN_K', text: 'Rodri back in the middle changes everything', t: 's', tag: 'SOUTH STAND' },
-  { user: 'BLOCK112', text: 'Anyone else in 112 — we standing for the anthem?', t: 'h', tag: 'BLOCK 112' },
+  { user: 'BLOCK112', text: 'Anyone else in 112, we standing for the anthem?', t: 'h', tag: 'BLOCK 112' },
   { user: 'PRIYA_S', text: 'Foden on the left again? Interesting call', t: 'h', tag: 'BLOCK 231' },
   { user: 'TOMMY', text: 'First goal wins this. Watch.', t: 'n', tag: 'AT HOME' },
   { user: 'JEAN_84', text: 'Twenty-two years in the South Stand and this is the loudest', t: 's', tag: 'SOUTH STAND' },
@@ -56,28 +56,32 @@ const EV: Record<string, { icon: string; color: string }> = {
 };
 const ARTICLES = [
   { kicker: 'TACTICAL READ', title: 'Why City keep the line high, and what it costs them', meta: 'Sam Whitfield · 6 min read', slot: 'read-1', body: ['City have not dropped their defensive line below the halfway mark in a home European tie since November. It is a deliberate bet: squeeze the game into forty metres, win the ball back inside six seconds, and make the opposition defend a full half.', 'Madrid are the one side left in the competition built to punish it. Six of their goals in this campaign have come from counters starting inside their own half, and every one of them went through the left channel.', 'The compromise both managers are making tonight is the same, from opposite directions: City accept two clear chances against to create six, Madrid accept sixty minutes without the ball to get those two.', 'Watch the first fifteen minutes. If City press and Madrid clear long twice in a row, the game will be played in one half all night.'] },
-  { kicker: 'PLAYER FOCUS', title: 'The Rodri effect, in one number: 71%', meta: 'Priya Anand · 4 min read', slot: 'read-2', body: ['City win 71% of matches Rodri starts and completes. Without him on the pitch for the full ninety, that figure falls to 54% across three seasons.', 'It is not tackles. It is the tempo he sets when City are ahead — the pass count in the fifteen minutes after a City goal rises by a fifth when he is on.', 'He is also one booking from missing a final. Everything about tonight for him is a calculation.'] },
-  { kicker: 'AWAY VIEW', title: 'What Madrid fans actually expect tonight', meta: 'Elena Ruiz · 5 min read', slot: 'read-3', body: ['Ask the away end and nobody predicts a comfortable night. They predict a late one. That is not bravado — it is a pattern half of Madrid’s goals this season have come after the seventieth minute.', 'The travelling support has learned to treat the first hour as something to survive. They will sing through it either way.', 'If the tie is level at eighty minutes, every Madrid fan in this stadium will believe. History has earned them that.'] },
+  { kicker: 'PLAYER FOCUS', title: 'The Rodri effect, in one number: 71%', meta: 'Priya Anand · 4 min read', slot: 'read-2', body: ['City win 71% of matches Rodri starts and completes. Without him on the pitch for the full ninety, that figure falls to 54% across three seasons.', 'It is not tackles. It is the tempo he sets when City are ahead, the pass count in the fifteen minutes after a City goal rises by a fifth when he is on.', 'He is also one booking from missing a final. Everything about tonight for him is a calculation.'] },
+  { kicker: 'AWAY VIEW', title: 'What Madrid fans actually expect tonight', meta: 'Elena Ruiz · 5 min read', slot: 'read-3', body: ['Ask the away end and nobody predicts a comfortable night. They predict a late one. That is not bravado, it is a pattern half of Madrid’s goals this season have come after the seventieth minute.', 'The travelling support has learned to treat the first hour as something to survive. They will sing through it either way.', 'If the tie is level at eighty minutes, every Madrid fan in this stadium will believe. History has earned them that.'] },
   { kicker: 'THE NUMBERS', title: 'First goal, first leg, and the aggregate maths', meta: 'Data desk · 3 min read', slot: 'read-4', body: ['City lead 2–1 from the first leg. A 0–0 tonight sends them through; a single Madrid goal without reply forces extra time.', 'Nine of City’s last ten home wins have followed them scoring first, and they have won all nine.', 'Madrid have conceded the opening goal only twice in the competition. Both times they came back to draw.'] },
 ];
 
 // ── Crews layer (a persistent social layer; The Box is now a gated Crew) ──
 type CrewMsg = { user: string; initials: string; avBg: string; verified?: boolean; isText?: boolean; text?: string; isImage?: boolean; id?: string; caption?: string; isVoice?: boolean; dur?: string; wave?: number[]; isSocial?: boolean; socialIcon?: string; socialTitle?: string; socialSub?: string };
-const CREWS = [
+type CrewRec = { id: string; name: string; initials: string; members: number; official: boolean; gated: boolean; unlockHint: string; latest: string; isCustom?: boolean; rules?: string; privacy?: string };
+const CREWS: CrewRec[] = [
   { id: 'msb', name: 'Moss Side Blues', initials: 'MB', members: 1842, official: false, gated: false, unlockHint: '', latest: '"Anyone getting picked up in Stockport?"' },
-  { id: 'b112', name: 'Block 112 Regulars', initials: 'B1', members: 340, official: false, gated: false, unlockHint: '', latest: '"See you at the usual spot"' },
+  { id: 'kippax', name: 'The Kippax', initials: 'TK', members: 340, official: false, gated: false, unlockHint: '', latest: '"See you at the usual spot"' },
   { id: 'academy', name: 'Academy Watch', initials: 'AW', members: 612, official: true, gated: false, unlockHint: '', latest: '"Youth highlights are up"' },
-  { id: 'seasontix', name: 'Season Ticket Holders', initials: 'ST', members: 0, official: true, gated: true, unlockHint: 'Open to season-ticket holders — 760 XP from unlocking', latest: '' },
+  { id: 'seasontix', name: 'Season Ticket Holders', initials: 'ST', members: 0, official: true, gated: true, unlockHint: 'Open to season-ticket holders, 760 XP from unlocking', latest: '' },
 ];
 const DISCOVER_CREWS = [
-  { id: 'awayday', name: 'Cityzens Away Days', members: 2210, official: false },
+  { id: 'cityzens', name: 'Cityzens', members: 2210, official: false },
   { id: 'bluemoon', name: 'The Blue Moon Choir', members: 4102, official: true },
   { id: 'family', name: 'Family Stand', members: 980, official: true },
 ];
-const CREW_PLANS = [
-  { t: 'Coach to Munich', d: '31 May · 06:00 from the Etihad · 41 seats left', label: 'RSVP', fg: '#fff', bg: '#6CABDD' },
-  { t: 'Pre-match pints, The Cotton Tree', d: 'Sat 08 Aug · from 15:00 · Ancoats', label: 'GOING', fg: 'var(--ink)', bg: 'var(--sand)' },
-];
+// Per-Crew rules shown on the Crew Settings screen.
+const CREW_RULES: Record<string, string> = {
+  msb: 'Be civil, no ticket touting, keep away-day logistics pinned at the top.',
+  kippax: 'Matchday banter only, no spoilers for highlights before 11pm.',
+  academy: 'Youth and academy talk, keep transfer rumours to the main Crew.',
+  seasontix: 'Season-ticket holders only. Early access info stays inside this Crew.',
+};
 const CREW_MSGS: CrewMsg[] = [
   { user: 'MARCUS_92', text: 'Coach seats are filling fast, get in now', avBg: '#6CABDD', initials: 'MA', isText: true },
   { user: 'PRIYA_S', text: 'Anyone know if the Cotton Tree takes bookings?', avBg: '#0C3A5E', initials: 'PR', isText: true },
@@ -132,6 +136,11 @@ interface FSt {
   toast: string | null; toastXp: string;
   crewsJoined: Record<string, boolean>; activeCrew: string; crewDraft: string;
   crewMsgsExtra: Record<string, CrewMsg[]>;
+  navStack: string[];
+  customCrews: CrewRec[];
+  newCrewName: string; newCrewDesc: string; newCrewPrivacy: string;
+  inviteSent: Record<string, boolean>;
+  onboardingSkipped: boolean; crewsIntroSeen: boolean; forceCrewsIntro: boolean;
   boxUnlocked: boolean; lbScope: string;
   sk: { kick: number; goals: number; phase: string; flash: string | null; keeperZone: number | null };
   dropIn: { active: boolean; crewId: string | null; player: string | null; endsAt: number | null; duration: number; queue: { id: number; user: string; text: string }[]; approved: { id: number; user: string; text: string; reply: string }[]; picked: { crewId: string; player: string; duration: number }; qDraft: string };
@@ -146,12 +155,14 @@ export function MatchdayFan() {
   const [st, setSt] = useState<FSt>(() => ({
     route: 'home', ms: 'pre', hs: 0, as: 0, n: 6, rollY: 0, event: null, xp: 1240, tick: 0,
     iris: false, irisTyping: false, irisDraft: '',
-    thread: [{ me: false, text: 'I’m IRIS. Tonight’s briefing is already written — ask me anything from it, or open the full intel.' }],
+    thread: [{ me: false, text: 'I’m IRIS. Tonight’s briefing is already written, ask me anything from it, or open the full intel.' }],
     chat: POOL.slice(0, 7).map((m, i) => ({ ...m, id: 's' + i, time: '20:' + pad(11 + i * 3), likes: 1 + (i % 4) })),
     draft: '', room: 'ALL FANS', likes: {}, votes: {}, pred: { h: 2, a: 1, s: 'Haaland', done: false },
     size: 'M', basket: [], ordered: false, food: {}, foodPlaced: false, foodEta: 6,
     photos: 9, reels: {}, read: null, flash: null, flashOut: false, irisOut: false, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: 'light', quests: {}, toast: null, toastXp: '',
-    crewsJoined: { msb: true, b112: true }, activeCrew: 'msb', crewDraft: '', crewMsgsExtra: {},
+    crewsJoined: { msb: true, kippax: true }, activeCrew: 'msb', crewDraft: '', crewMsgsExtra: {},
+    navStack: [], customCrews: [], newCrewName: '', newCrewDesc: '', newCrewPrivacy: 'public', inviteSent: {},
+    onboardingSkipped: false, crewsIntroSeen: false, forceCrewsIntro: false,
     boxUnlocked: false, lbScope: 'crew', sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null },
     dropIn: { active: false, crewId: null, player: null, endsAt: null, duration: 10, queue: [], approved: [], picked: { crewId: 'seasontix', player: 'Erling Haaland', duration: 10 }, qDraft: '' },
     presenceStamps: {}, playerPost: { crewId: 'msb', player: 'Erling Haaland', type: 'image' }, playingVoice: null,
@@ -159,7 +170,7 @@ export function MatchdayFan() {
   const set = (patch: Partial<FSt> | ((s: FSt) => Partial<FSt>)) => setSt((sPrev) => ({ ...sPrev, ...(typeof patch === 'function' ? patch(sPrev) : patch) }));
   const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number; sk?: number; di?: number; diBanner?: number }>({});
   const { id = 'demo' } = useParams();
-  // #2/#3 — play an exit animation, then unmount (symmetric enter/exit).
+  // #2/#3, play an exit animation, then unmount (symmetric enter/exit).
   const closeIris = () => { set({ irisOut: true }); window.setTimeout(() => set({ iris: false, irisOut: false }), 260); };
   const closeFlash = () => { set((sp) => (sp.flash ? { flashOut: true } : {})); window.setTimeout(() => set({ flash: null, flashOut: false }), 200); };
 
@@ -216,11 +227,11 @@ export function MatchdayFan() {
   };
   const varCheck = () => {
     const min = st.ms === 'live' ? 38 : 71;
-    fire('VAR CHECK', 'Possible handball', min, 'Referee reviewing — Rodri, City penalty area', 'REAL MADRID APPEAL', 'a', true);
+    fire('VAR CHECK', 'Possible handball', min, 'Referee reviewing, Rodri, City penalty area', 'REAL MADRID APPEAL', 'a', true);
     window.clearTimeout(timers.current.varT);
     timers.current.varT = window.setTimeout(() => fire('NO PENALTY', 'Ball struck the shoulder', min, 'On-field decision stands · play restarts with a City free-kick', 'VAR DECISION', 'a'), 3600);
   };
-  // Shared operator actions — used by the local demo strip AND by the control
+  // Shared operator actions, used by the local demo strip AND by the control
   // room over the realtime bus, so an operator drives this exact fan client.
   const applyState = (m: string) => {
     if (m === 'inactive') set({ ms: 'inactive', route: 'home', event: null, hs: 0, as: 0 });
@@ -231,13 +242,13 @@ export function MatchdayFan() {
   };
   const applyEventCmd = (kind: string) => {
     // Events fire in place (the lower-third shows on every screen) so a moment
-    // in the game surfaces right where the fan is — including in the chat.
+    // in the game surfaces right where the fan is, including in the chat.
     if (kind === 'goal') { if (st.ms === 'pre') set({ ms: 'live', route: 'home', hs: 0, as: 0 }); fire('GOAL', 'Foden', 71, 'Assist Haaland · xG 0.19', 'MAN CITY', 'h'); }
     else if (kind === 'card') fire('YELLOW', 'Camavinga', 31, 'Late on Foden · second booking of the tie', 'REAL MADRID', 'a');
     else if (kind === 'red') fire('RED CARD', 'Camavinga', 64, 'Second yellow · Madrid down to ten', 'REAL MADRID', 'a');
     else if (kind === 'var') varCheck();
     else if (kind === 'sub') fire('SUBSTITUTION', 'Doku on', 68, 'Grealish off · 68 minutes played, 3 chances created', 'MAN CITY', 'h');
-    else if (kind === 'drinks') fire('DRINKS BREAK', 'Two minutes', 33, 'Referee has paused play — 26°C at kick-off', 'HYDRATION', 'n');
+    else if (kind === 'drinks') fire('DRINKS BREAK', 'Two minutes', 33, 'Referee has paused play, 26°C at kick-off', 'HYDRATION', 'n');
   };
   // Follow the control room: apply commands from the panel's channel. Ref keeps
   // the listener bound to fresh closures without re-subscribing every render.
@@ -247,7 +258,7 @@ export function MatchdayFan() {
     if (m.cmd === 'state' && m.ms) applyState(m.ms);
     else if (m.cmd === 'event' && m.kind) applyEventCmd(m.kind);
     // Operator prompt: send fans straight to a screen (Crews, Spot Kick…).
-    else if (m.cmd === 'nav' && m.route) { if (m.route === 'spotkick') startSpotkick(); else set({ route: m.route, iris: false, read: null }); }
+    else if (m.cmd === 'nav' && m.route) { if (m.route === 'spotkick') startSpotkick(); else set((sp) => ({ route: m.route, navStack: sp.route === m.route ? sp.navStack : [...sp.navStack, sp.route], iris: false, read: null })); }
     // Operator fires a player into a Crew, ends it, or posts verified content.
     else if (m.cmd === 'dropin' && m.action === 'start') startDropInWith(m.crewId || 'seasontix', m.player || 'Erling Haaland', m.duration || 10);
     else if (m.cmd === 'dropin' && m.action === 'end') endDropIn();
@@ -341,8 +352,29 @@ export function MatchdayFan() {
       });
     }, 950);
   };
-  const startSpotkick = () => set({ sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null }, route: 'spotkick', iris: false });
-  const go = (r: string) => () => set({ route: r, iris: false, read: null });
+  const startSpotkick = () => set((sp) => ({ sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null }, route: 'spotkick', navStack: sp.route === 'spotkick' ? sp.navStack : [...sp.navStack, sp.route], iris: false }));
+  // Navigate forward: push the current route so back returns to the actual previous screen.
+  const go = (r: string) => () => set((sp) => ({ route: r, navStack: sp.route === r ? sp.navStack : [...sp.navStack, sp.route], iris: false, read: null }));
+  // Navigate back: pop the stack (empties to Home).
+  const goBack = () => set((sp) => { const stack = sp.navStack.slice(); const prev = stack.pop(); return { route: prev || 'home', navStack: stack, iris: false, read: null }; });
+  const openCrew = (crewId: string) => set((sp) => ({ route: 'crew', activeCrew: crewId, navStack: [...sp.navStack, sp.route], iris: false, read: null }));
+  // Create a Crew: append it, auto-join, open it (with Crews pushed for back).
+  const createCrew = () => {
+    const name = st.newCrewName.trim();
+    if (!name) return;
+    const cid = 'custom-' + Date.now();
+    set((sp) => ({
+      customCrews: [...sp.customCrews, { id: cid, name, initials: name.slice(0, 2).toUpperCase(), members: 1, official: false, gated: false, unlockHint: '', latest: 'Crew created', rules: sp.newCrewDesc.trim() || 'No rules yet, set the tone.', privacy: sp.newCrewPrivacy, isCustom: true }],
+      crewsJoined: { ...sp.crewsJoined, [cid]: true }, activeCrew: cid,
+      newCrewName: '', newCrewDesc: '', newCrewPrivacy: 'public',
+      route: 'crew', navStack: [...sp.navStack, 'community'],
+    }));
+    notify('CREW CREATED');
+  };
+  const inviteContact = (name: string) => { set((sp) => ({ inviteSent: { ...sp.inviteSent, [name]: true } })); notify('INVITE SENT TO ' + name.toUpperCase()); };
+  const pickOnboarding = (crewId: string) => { set((sp) => ({ crewsJoined: { ...sp.crewsJoined, [crewId]: true } })); notify('JOINED'); };
+  const skipOnboarding = () => set({ onboardingSkipped: true });
+  const dismissCrewsIntro = () => set({ crewsIntroSeen: true, forceCrewsIntro: false });
 
   // ── derived ──
   const { ms } = st;
@@ -351,20 +383,21 @@ export function MatchdayFan() {
   const isCommunityLead = inactive;            // Crews leads Home only off-matchday
   const showCommunityBlock = !isCommunityLead; // receded card mid-Home during pre/live/ht/ft (below the score)
   const showSpotkickTile = ms !== 'live';      // hidden only during live play
-  const activeCrewData = CREWS.find((c) => c.id === st.activeCrew) || CREWS[0];
+  const ALL_CREWS: CrewRec[] = [...CREWS, ...st.customCrews];
+  const activeCrewData = ALL_CREWS.find((c) => c.id === st.activeCrew) || CREWS[0];
   const minute = live ? 38 : ht ? 45 : 90;
   const cd = Math.max(3 * 3600 + 16 * 60 + 40 - st.tick, 0);
   const filled = Math.round(Math.min(st.xp / 2000, 1) * 20);
 
   const evs: [number, string, string, string, string][] = live ? [
-    [36, 'VAR CHECK', 'Possible handball', 'a', 'No penalty — ball struck the shoulder'], [33, 'DRINKS BREAK', 'Two minutes', 'n', '26°C at kick-off'],
+    [36, 'VAR CHECK', 'Possible handball', 'a', 'No penalty, ball struck the shoulder'], [33, 'DRINKS BREAK', 'Two minutes', 'n', '26°C at kick-off'],
     [31, 'YELLOW', 'Camavinga', 'a', 'Late on Foden'], [23, 'GOAL', 'Haaland', 'h', 'Assist De Bruyne · xG 0.34'],
   ] : ht ? [
-    [45, 'GOAL', 'Vinícius Júnior', 'a', 'Counter from a City corner'], [41, 'SUBSTITUTION', 'Doku on', 'h', 'Grealish off — hamstring'],
+    [45, 'GOAL', 'Vinícius Júnior', 'a', 'Counter from a City corner'], [41, 'SUBSTITUTION', 'Doku on', 'h', 'Grealish off, hamstring'],
     [38, 'YELLOW', 'Rodri', 'h', 'One booking from a final ban'], [33, 'DRINKS BREAK', 'Two minutes', 'n', '26°C at kick-off'], [23, 'GOAL', 'Haaland', 'h', 'Assist De Bruyne · xG 0.34'],
   ] : [
-    [71, 'GOAL', 'Foden', 'h', 'Assist Haaland · xG 0.19'], [68, 'SUBSTITUTION', 'Doku on', 'h', 'Grealish off — 3 chances created'], [64, 'RED CARD', 'Camavinga', 'a', 'Second yellow · Madrid down to ten'],
-    [58, 'GOAL', 'Vinícius Júnior', 'a', 'VAR checked for offside — goal stands'], [36, 'VAR CHECK', 'Possible handball', 'a', 'No penalty given'], [23, 'GOAL', 'Haaland', 'h', 'Assist De Bruyne · xG 0.34'],
+    [71, 'GOAL', 'Foden', 'h', 'Assist Haaland · xG 0.19'], [68, 'SUBSTITUTION', 'Doku on', 'h', 'Grealish off, 3 chances created'], [64, 'RED CARD', 'Camavinga', 'a', 'Second yellow · Madrid down to ten'],
+    [58, 'GOAL', 'Vinícius Júnior', 'a', 'VAR checked for offside, goal stands'], [36, 'VAR CHECK', 'Possible handball', 'a', 'No penalty given'], [23, 'GOAL', 'Haaland', 'h', 'Assist De Bruyne · xG 0.34'],
   ];
   const timeline = evs.map(([min, kind, who, side, detail]) => ({
     min, kind, who, detail, isCard: kind === 'YELLOW' || kind === 'RED CARD', cardColor: kind === 'RED CARD' ? '#D6202A' : '#F4C400',
@@ -377,11 +410,13 @@ export function MatchdayFan() {
   const previewMsgs = st.chat.filter((m) => !m.ev).slice(-5).map((m) => ({ user: m.me ? 'YOU' : m.user, text: m.text, initials: m.me ? 'YO' : m.user.slice(0, 2), avBg: TEAM[m.t].bg, avFg: TEAM[m.t].fg }));
 
   const statusLabel = inactive ? 'NEXT: SAT 08 AUG, 17:30' : pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
-  const myCrewCount = CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).length;
+  const myCrewCount = ALL_CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).length;
   const crewGatedLocked = activeCrewData.gated && !st.boxUnlocked;
-  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'CITY STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
-  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS', crew: crewGatedLocked ? 'LOCKED' : activeCrewData.members.toLocaleString() + ' MEMBERS', spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
+  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'CITY STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), createCrew: 'START A CREW', crewSettings: 'CREW SETTINGS', invite: 'INVITE', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
+  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS', crew: crewGatedLocked ? 'LOCKED' : activeCrewData.members.toLocaleString() + ' MEMBERS', createCrew: 'FAN-RUN', crewSettings: activeCrewData.name.toUpperCase(), invite: activeCrewData.name.toUpperCase(), spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
   const isHome = st.route === 'home', isSub = st.route !== 'home';
+  const backLabel = st.navStack.length ? (titles[st.navStack[st.navStack.length - 1]] || 'HOME') : 'HOME';
+  const showCrewsIntro = st.forceCrewsIntro || ((st.route === 'community' || st.route === 'crew') && !st.crewsIntroSeen);
 
   const opBtn = (label: string, onClick: () => void, bg: string, color: string) => (
     <button onClick={onClick} style={{ ...s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.1em;padding:8px 10px"), background: bg, color }}>{label}</button>
@@ -491,7 +526,7 @@ export function MatchdayFan() {
             {/* score bug + header */}
             <div style={s('position:sticky;top:0;z-index:40;background:var(--panel)')}>
               <div style={s('display:flex;align-items:stretch;height:44px')}>
-                {isSub && <button onClick={go('home')} className="fh" style={s("display:flex;align-items:center;gap:6px;padding:0 10px 0 15px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.14em;color:#8AA0B6")}><Ms size={15} color="inherit">arrow_back</Ms>HOME</button>}
+                {isSub && <button onClick={goBack} className="fh" style={s("display:flex;align-items:center;gap:6px;padding:0 10px 0 15px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.14em;color:#8AA0B6")}><Ms size={15} color="inherit">arrow_back</Ms>{backLabel}</button>}
                 {inactive ? (<>
                   <div style={s('display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding-left:14px')}>
                     <span style={s('width:6px;height:18px;background:#6CABDD;transform:skewX(-8deg);display:inline-block')} />
@@ -536,8 +571,11 @@ export function MatchdayFan() {
 
             {/* ROUTES */}
             {isHome && <Home {...{ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, award, set }} />}
-            {st.route === 'community' && <Community {...{ st, set, go }} />}
-            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn }} />}
+            {st.route === 'community' && <Community {...{ st, set, go, openCrew, pickOnboarding, skipOnboarding }} />}
+            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn, go }} />}
+            {st.route === 'createCrew' && <CreateCrew {...{ st, set, createCrew }} />}
+            {st.route === 'crewSettings' && <CrewSettings {...{ st, crew: activeCrewData, set, go, notify }} />}
+            {st.route === 'invite' && <Invite {...{ st, crew: activeCrewData, set, inviteContact, notify }} />}
             {st.route === 'spotkick' && <Spotkick {...{ st, shootZone }} />}
             {st.route === 'spotkickResult' && <SpotkickResult {...{ st, go, startSpotkick, notify }} />}
             {st.route === 'leaderboard' && <Leaderboard {...{ st, set }} />}
@@ -554,7 +592,7 @@ export function MatchdayFan() {
             {st.route === 'profile' && <Profile {...{ st, filled, set, go }} />}
           </div>
 
-          {/* FLASH SALE — pops on a goal, dismissible */}
+          {/* FLASH SALE, pops on a goal, dismissible */}
           {st.flash && (
             <div style={{ ...s('position:absolute;top:122px;left:10px;right:10px;z-index:48'), animation: st.flashOut ? 'bgFlashOut .18s cubic-bezier(.23,1,.32,1) both' : 'bgRise .32s cubic-bezier(.18,.9,.2,1) both' }}>
               <div style={s('display:flex;align-items:center;gap:11px;padding:11px 11px 11px 13px;background:var(--panel);border-radius:2px;box-shadow:0 14px 34px -8px rgba(0,24,56,.55)')}>
@@ -577,6 +615,9 @@ export function MatchdayFan() {
             </button>
           )}
           {st.iris && <Iris {...{ st, pre, live, ht, set, ask, irisRef, go, closeIris }} />}
+
+          {/* CREWS INTRO, full-frame, shown once per session on first entry to Crews */}
+          {showCrewsIntro && <CrewsIntro dismiss={dismissCrewsIntro} />}
 
           {st.toast && (
             <div style={s('position:absolute;left:0;right:0;bottom:64px;z-index:55;display:flex;justify-content:center;pointer-events:none')}>
@@ -603,7 +644,7 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
   const label = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const sections = [
     { t: 'Fan reactions', tag: 'LIVE', d: 'Reels & posts pulled from Instagram, TikTok, YouTube, X and Threads by #MCIRMA.', icon: 'sensors', go: go('reactions') },
-    // Predictions close once the match ends — no tab at full-time.
+    // Predictions close once the match ends, no tab at full-time.
     ...(!ft ? [
       { t: 'Predictions', tag: pre ? '2 OPEN' : 'LOCKED', d: 'Call the score and first scorer. 120 XP if you nail both.', icon: 'scoreboard', go: go('pred') },
     ] : []),
@@ -625,15 +666,15 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
   ];
   const myCrews = CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).map((c) => {
     const gatedLocked = c.gated && !st.boxUnlocked;
-    return { id: c.id, name: c.name, members: gatedLocked ? '—' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated };
+    return { id: c.id, name: c.name, members: gatedLocked ? '–' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated };
   });
   const communityHeadline = inactive ? 'While we wait' : 'Full-time. Still here.';
-  const communitySub = inactive ? 'No match tonight — this is what the app is between matchdays.' : 'The result settles. The conversation doesn’t.';
+  const communitySub = inactive ? 'No match tonight, this is what the app is between matchdays.' : 'The result settles. The conversation doesn’t.';
   const communityBadge = pre ? '212 ONLINE' : live ? 'ONE TAP AWAY' : '214 ONLINE';
   const communityBlockLine = pre ? 'Moss Side Blues are sorting travel and banter before kick-off.'
-    : live ? 'Reactions are piling up in Moss Side Blues — the terrace is buzzing.'
+    : live ? 'Reactions are piling up in Moss Side Blues, the terrace is buzzing.'
     : ht ? 'Half-time chat is already livelier than the game.'
-    : 'Full-time — but the Crew is still going.';
+    : 'Full-time, but the Crew is still going.';
   const communityAvatars = [{ i: 'MB', bg: '#6CABDD' }, { i: 'PR', bg: '#0C3A5E' }, { i: 'DE', bg: '#6CABDD' }, { i: 'HA', bg: '#0C3A5E' }];
   const formH = ['W', 'W', 'D', 'W', 'L'].map((r) => ({ r, bg: r === 'W' ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.26)', fg: r === 'W' ? '#0C3A5E' : '#fff' }));
   const formA = ['W', 'W', 'W', 'D', 'W'].map((r) => ({ r, bg: r === 'W' ? '#FEBE10' : 'rgba(255,255,255,.22)', fg: r === 'W' ? '#00296B' : '#fff' }));
@@ -752,9 +793,9 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
         <section style={s('animation:bgFade .3s ease both')}>
           <div style={s('background:var(--panel);padding:18px 16px 20px')}>
             <div style={s('display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px')}>
-              <div><div style={s('display:flex;align-items:center;gap:7px')}><span style={s('width:5px;height:16px;background:#6CABDD;transform:skewX(-8deg)')} /><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>MAN CITY</span></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#8AA0B6;margin-top:8px")}>{st.hs > 1 ? 'Haaland 23’ · Foden 71’' : st.hs ? 'Haaland 23’' : '—'}</div></div>
+              <div><div style={s('display:flex;align-items:center;gap:7px')}><span style={s('width:5px;height:16px;background:#6CABDD;transform:skewX(-8deg)')} /><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>MAN CITY</span></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#8AA0B6;margin-top:8px")}>{st.hs > 1 ? 'Haaland 23’ · Foden 71’' : st.hs ? 'Haaland 23’' : '–'}</div></div>
               <div key={'s' + st.hs + st.as} style={s('display:flex;align-items:center;justify-content:center;gap:9px;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both')}><span style={s("font:800 58px/.8 'KippaxCondensed','Archivo Black';color:#EAF1F8;font-variant-numeric:tabular-nums")}>{st.hs}</span><span style={s('width:8px;height:2px;background:#6E6857')} /><span style={s("font:800 58px/.8 'KippaxCondensed','Archivo Black';color:#EAF1F8;font-variant-numeric:tabular-nums")}>{st.as}</span></div>
-              <div style={s('text-align:right')}><div style={s('display:flex;align-items:center;gap:7px;justify-content:flex-end')}><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>REAL MADRID</span><span style={s('width:5px;height:16px;background:#00529F;transform:skewX(-8deg)')} /></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#8AA0B6;margin-top:8px")}>{st.as ? (ht ? 'Vinícius 45’' : 'Vinícius 58’') : '—'}</div></div>
+              <div style={s('text-align:right')}><div style={s('display:flex;align-items:center;gap:7px;justify-content:flex-end')}><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>REAL MADRID</span><span style={s('width:5px;height:16px;background:#00529F;transform:skewX(-8deg)')} /></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#8AA0B6;margin-top:8px")}>{st.as ? (ht ? 'Vinícius 45’' : 'Vinícius 58’') : '–'}</div></div>
             </div>
             <div style={s('display:flex;align-items:center;gap:10px;margin-top:18px')}>
               <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6;font-variant-numeric:tabular-nums")}>{live ? "38'" : "45'+2"}</span>
@@ -853,12 +894,12 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
           <div style={s('display:flex;gap:2px;height:10px;margin-top:13px')}>{Array.from({ length: 20 }, (_, i) => <span key={i} style={{ flex: 1, background: i < filled ? '#EAF1F8' : 'rgba(234,241,248,.16)', transition: 'background .4s ease' }} />)}</div>
           <div style={s('display:flex;gap:5px;margin-top:12px')}>{ladder.map((l, i) => <div key={i} style={{ ...s('flex:1;padding:10px'), background: l.bg, opacity: l.op }}><div style={{ ...s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.12em"), color: l.tagFg }}>{l.tag}</div><div style={{ ...s("font:700 12.5px/1.25 'Kippax','Archivo';margin-top:6px"), color: l.fg }}>{l.name}</div><div style={{ ...s("font:500 10.5px/1 'Kippax','Archivo';margin-top:4px"), color: l.subFg }}>{l.cost}</div></div>)}</div>
           <div style={s('margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(234,241,248,.16)')}>
-            <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>HOW TO EARN IT — TONIGHT’S QUESTS</span><span style={s("font:700 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#6CABDD")}>{questsDone}/4 DONE</span></div>
+            <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>HOW TO EARN IT, TONIGHT’S QUESTS</span><span style={s("font:700 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#6CABDD")}>{questsDone}/4 DONE</span></div>
             <div style={s('margin-top:10px;display:flex;flex-direction:column;gap:6px')}>
               {questDefs.map((q) => { const done = !!st.quests[q.k]; return (
                 <button key={q.k} onClick={q.go} className="fq" style={s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 12px;background:rgba(234,241,248,.07)')}>
                   <span style={{ ...s('width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center'), background: done ? '#6CABDD' : 'rgba(234,241,248,.16)' }}><Ms size={14} color="#fff">{done ? 'check' : ''}</Ms></span>
-                  <span style={s('flex:1;min-width:0')}><span style={{ ...s("display:block;font:700 12.5px/1.2 'Kippax','Archivo';color:var(--on-panel)"), textDecoration: done ? 'line-through' : 'none' }}>{q.title}</span><span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:#8AA0B6;margin-top:3px")}>{done ? 'Done — XP added' : q.how}</span></span>
+                  <span style={s('flex:1;min-width:0')}><span style={{ ...s("display:block;font:700 12.5px/1.2 'Kippax','Archivo';color:var(--on-panel)"), textDecoration: done ? 'line-through' : 'none' }}>{q.title}</span><span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:#8AA0B6;margin-top:3px")}>{done ? 'Done, XP added' : q.how}</span></span>
                   <span style={{ ...s("font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em"), color: done ? '#6CABDD' : '#EAF1F8' }}>{done ? 'PAID' : q.xp}</span>
                 </button>
               ); })}
@@ -872,7 +913,7 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
         {label('MATCH INTEL')}
         <button onClick={go('intel')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:2px;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
           <div style={s("font:800 26px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>The briefing,<br />already written</div>
-          <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>Win probability, the shot map, head-to-head and form — prepared before kick-off.</div>
+          <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>Win probability, the shot map, head-to-head and form, prepared before kick-off.</div>
           <div style={s('display:flex;gap:2px;margin-top:14px')}>
             <div style={s('flex:46;background:#6CABDD;padding:9px 8px')}><div style={s("font:800 20px/1 'Kippax','Archivo';color:#fff")}>46%</div><div style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.1em;color:rgba(255,255,255,.9);margin-top:5px")}>CITY</div></div>
             <div style={s('flex:27;background:var(--sand2);padding:9px 8px')}><div style={s("font:800 20px/1 'Kippax','Archivo';color:var(--ink)")}>27%</div><div style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--body);margin-top:5px")}>DRAW</div></div>
@@ -882,7 +923,7 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
         </button>
       </section>
 
-      {/* COMMUNITY PREVIEW — the Match Intel treatment, applied to Community */}
+      {/* COMMUNITY PREVIEW, the Match Intel treatment, applied to Community */}
       {showCommunityBlock && (
         <section style={s('margin:20px 16px 0;animation:bgRise .4s .14s ease both')}>
           <div style={s('display:flex;align-items:center;gap:8px')}>{label('CREWS')}<span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{communityBadge}</span></div>
@@ -918,15 +959,43 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
 
 // ═══════════ sub-screens ═══════════
 
+// ── Crews onboarding: shown when the fan is in no non-gated Crew and hasn't skipped ──
+const ONBOARDING_OPTS = [
+  { icon: 'directions_bus', label: 'I travel to away games', crewId: 'cityzens', crewName: 'Cityzens' },
+  { icon: 'groups', label: 'I go with family or kids', crewId: 'family', crewName: 'Family Stand' },
+  { icon: 'music_note', label: 'I’m there for the atmosphere', crewId: 'bluemoon', crewName: 'The Blue Moon Choir' },
+  { icon: 'home', label: 'I mostly watch from home', crewId: 'msb', crewName: 'Moss Side Blues' },
+];
+function CrewsOnboarding({ pickOnboarding, skipOnboarding }: any) {
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
+      <div style={s("font:800 30px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Pick your matchday crew</div>
+      <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px;max-width:300px")}>Tell us how you watch and we’ll drop you into the Crew that fits. You can join more, or leave, any time.</div>
+      <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:20px')}>
+        {ONBOARDING_OPTS.map((o) => (
+          <button key={o.crewId} onClick={() => pickOnboarding(o.crewId)} className="fs" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--sand);padding:14px')}>
+            <Ms size={22} color="var(--ink)">{o.icon}</Ms>
+            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Kippax','Archivo';color:var(--ink)")}>{o.label}</span><span style={s("display:block;font:500 11.5px/1.4 'Kippax','Archivo';color:var(--label);margin-top:2px")}>Joins {o.crewName}</span></span>
+            <Ms size={18} color="var(--label)">chevron_right</Ms>
+          </button>
+        ))}
+      </div>
+      <button onClick={skipOnboarding} style={s("display:block;margin-top:16px;font:700 11px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--label)")}>SKIP FOR NOW</button>
+    </div>
+  );
+}
+
 // ── Crews Home ──
-function Community({ st, set }: any) {
+function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: any) {
   const L = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const allCrews: CrewRec[] = [...CREWS, ...st.customCrews];
+  const needsOnboarding = !allCrews.some((c) => !c.gated && st.crewsJoined[c.id]) && !st.onboardingSkipped;
+  if (needsOnboarding) return <CrewsOnboarding {...{ pickOnboarding, skipOnboarding }} />;
   const dropInCrewId = st.dropIn.active ? st.dropIn.crewId : null;
-  const myCrews = CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).map((c) => {
+  const myCrews = allCrews.filter((c) => st.crewsJoined[c.id] || c.gated).map((c) => {
     const gatedLocked = c.gated && !st.boxUnlocked;
-    return { id: c.id, name: c.name, initials: c.initials, members: gatedLocked ? '—' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated, locked: gatedLocked, avatarBg: gatedLocked ? '#5E7488' : '#6CABDD', dropInNow: dropInCrewId === c.id };
+    return { id: c.id, name: c.name, initials: c.initials, members: gatedLocked ? '–' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated, locked: gatedLocked, avatarBg: gatedLocked ? '#5E7488' : '#6CABDD', dropInNow: dropInCrewId === c.id };
   });
-  const openCrew = (id: string) => () => set({ route: 'crew', activeCrew: id, iris: false, read: null });
   return (
     <div style={s('animation:bgFade .25s ease both;padding-bottom:26px')}>
       <div style={s('padding:16px 16px 0')}>
@@ -937,7 +1006,7 @@ function Community({ st, set }: any) {
         {L('YOUR CREWS')}
         <div style={s('margin-top:9px')}>
           {myCrews.map((c) => (
-            <button key={c.id} onClick={openCrew(c.id)} className="frow" style={s('display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 0;border-bottom:1.5px solid var(--hair)')}>
+            <button key={c.id} onClick={() => openCrew(c.id)} className="frow" style={s('display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 0;border-bottom:1.5px solid var(--hair)')}>
               <span style={{ ...s("width:46px;height:46px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 11px/1 'Kippax','Archivo';color:#fff"), background: c.avatarBg }}>{c.locked ? <Ms size={19} color="#fff">lock</Ms> : c.initials}</span>
               <span style={s('flex:1;min-width:0')}><span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 14.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}{c.dropInNow && <span style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff;background:#6CABDD;padding:3px 5px")}>PLAYER HERE</span>}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{c.members} members · {c.latest}</span></span>
               <Ms size={18} color="var(--label)">chevron_right</Ms>
@@ -955,6 +1024,12 @@ function Community({ st, set }: any) {
               <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [c.id]: !joined } }))} style={{ ...s("display:block;width:100%;margin-top:10px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.08em;padding:9px 0"), background: joined ? 'var(--ground)' : 'var(--panel)', color: joined ? 'var(--ink)' : 'var(--on-panel)' }}>{joined ? 'JOINED' : 'JOIN'}</button>
             </div>
           ); })}
+          {/* Start a Crew tile */}
+          <button onClick={go('createCrew')} className="fs" style={s('flex:none;width:158px;text-align:left;background:var(--sand);padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:9px')}>
+            <Ms size={22} color="#6CABDD">add_circle</Ms>
+            <span style={s("font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>Start a Crew</span>
+            <span style={s("font:500 11.5px/1.4 'Kippax','Archivo';color:var(--label)")}>Fan-run, yours to shape</span>
+          </button>
         </div>
       </div>
     </div>
@@ -962,7 +1037,7 @@ function Community({ st, set }: any) {
 }
 
 // ── Crew View: thread, plans, gated states, player drop-in, verified player posts ──
-function Crew({ st, crew, set, postCrew, askDropIn }: any) {
+function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
   const L = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const joined = !!st.crewsJoined[crew.id];
   const gatedLocked = crew.gated && !st.boxUnlocked;
@@ -975,8 +1050,15 @@ function Crew({ st, crew, set, postCrew, askDropIn }: any) {
   const playVoice = (key: string) => set((sp: FSt) => ({ playingVoice: sp.playingVoice === key ? null : key }));
   return (
     <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px')}>
+      {/* Twitter-style banner header */}
+      <div style={s('position:relative;height:118px;background:var(--panel)')}><Slot id={'crew-banner-' + crew.id} label="Crew banner" /></div>
       <div style={s('padding:16px 16px 0')}>
-        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 30px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{crew.name}</span>{crew.official && <Ms size={18} color="#6CABDD">verified</Ms>}{crew.gated && <Ms size={18} color="var(--label)">lock</Ms>}</div>
+        <div style={s('display:flex;align-items:center;gap:8px')}>
+          <span style={s("flex:1;min-width:0;font:800 30px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{crew.name}</span>
+          {crew.official && <Ms size={18} color="#6CABDD">verified</Ms>}
+          {crew.gated && <Ms size={18} color="var(--label)">lock</Ms>}
+          <button onClick={go('crewSettings')} className="fs" style={s('flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--sand)')}><Ms size={17} color="var(--ink)">settings</Ms></button>
+        </div>
         {presence > 0 && (
           <div style={s('display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:#6CABDD;padding:5px 8px')}><Ms size={13} color="#fff">verified</Ms><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff")}>WAS THERE FOR THE DROP-IN</span></div>
         )}
@@ -993,7 +1075,7 @@ function Crew({ st, crew, set, postCrew, askDropIn }: any) {
       {!gatedLocked && (<>
         {crew.gated && (
           <div style={s('padding:0 16px 8px')}>
-            <div style={s("font:500 12px/1.5 'Kippax','Archivo';color:var(--body)")}>Early access, first look at the next shirt, private thread — season-ticket holders only.</div>
+            <div style={s("font:500 12px/1.5 'Kippax','Archivo';color:var(--body)")}>Early access, first look at the next shirt, private thread, season-ticket holders only.</div>
             <button onClick={() => set({ boxUnlocked: false })} style={s("margin-top:8px;font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--label)")}>DEMO · LOCK AGAIN</button>
           </div>
         )}
@@ -1005,15 +1087,11 @@ function Crew({ st, crew, set, postCrew, askDropIn }: any) {
         {dropInActive && (
           <div style={s('margin:18px 16px 0;background:#6CABDD;padding:14px 16px;display:flex;align-items:center;gap:10px')}>
             <Ms size={18} color="#fff">verified</Ms>
-            <span style={s("flex:1;font:800 12px/1.3 'Kippax','Archivo';color:#fff")}>{st.dropIn.player} is here — replying to approved questions</span>
+            <span style={s("flex:1;font:800 12px/1.3 'Kippax','Archivo';color:#fff")}>{st.dropIn.player} is here, replying to approved questions</span>
             <span style={s("font:800 13px/1 'Kippax','Archivo';color:#fff;font-variant-numeric:tabular-nums")}>{mm}:{ss}</span>
           </div>
         )}
 
-        <div style={s('padding:18px 16px 0')}>
-          {L('UPCOMING PLANS')}
-          <div style={s('margin-top:9px')}>{CREW_PLANS.map((p, i) => <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{p.t}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{p.d}</span></span><button onClick={() => set({ toast: 'RSVP’D', toastXp: '' })} style={{ ...s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.08em;padding:9px 10px"), background: p.bg, color: p.fg }}>{p.label}</button></div>)}</div>
-        </div>
         <div style={s('padding:18px 16px 0')}>
           {L('MEMBERS')}
           <div style={s('display:flex;gap:6px;margin-top:9px')}>{memberAvatars.map((m, i) => <span key={i} style={{ ...s("width:32px;height:32px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff"), background: m.bg }}>{m.i}</span>)}</div>
@@ -1071,6 +1149,148 @@ function Crew({ st, crew, set, postCrew, askDropIn }: any) {
           </div>
         )}
       </>)}
+    </div>
+  );
+}
+
+// ── Create Crew: name, blurb, privacy, banner + icon ──
+function CreateCrew({ st, set, createCrew }: any) {
+  const L = (t: string) => <div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
+  const privacyOpts = [{ k: 'public', label: 'PUBLIC' }, { k: 'invite', label: 'INVITE ONLY' }];
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
+      <div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Start a Crew</div>
+      <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>Permanent, fan-run, yours to shape. You’re the first admin.</div>
+
+      <div style={s('margin-top:20px')}>{L('CREW NAME')}
+        <input value={st.newCrewName} onChange={(e: any) => set({ newCrewName: e.target.value })} placeholder="e.g. Kippax Corner" style={s("display:block;width:100%;margin-top:7px;padding:12px 14px;background:var(--sand);font:700 14px/1 'Kippax','Archivo';color:var(--ink)")} />
+      </div>
+      <div style={s('margin-top:16px')}>{L('WHAT’S IT ABOUT')}
+        <textarea value={st.newCrewDesc} onChange={(e: any) => set({ newCrewDesc: e.target.value })} placeholder="Who this Crew is for and what happens in it" style={s("display:block;width:100%;height:74px;margin-top:7px;padding:12px 14px;background:var(--sand);font:500 13px/1.4 'Kippax','Archivo';color:var(--ink);resize:none")} />
+      </div>
+      <div style={s('margin-top:16px')}>{L('PRIVACY')}
+        <div style={s('display:flex;gap:6px;margin-top:7px')}>{privacyOpts.map((o) => { const on = st.newCrewPrivacy === o.k; return <button key={o.k} onClick={() => set({ newCrewPrivacy: o.k })} style={{ ...s("flex:1;font:800 11px/1 'Kippax','Archivo';letter-spacing:.04em;padding:11px 0"), background: on ? '#6CABDD' : 'var(--sand)', color: on ? '#fff' : 'var(--ink)' }}>{o.label}</button>; })}</div>
+      </div>
+      <div style={s('margin-top:16px')}>{L('BANNER & ICON')}
+        <div style={s('position:relative;height:80px;margin-top:7px;background:var(--sand)')}>
+          <Slot id="new-crew-banner" label="Tap to add a banner" />
+          <span style={s('position:absolute;left:14px;bottom:-20px;width:44px;height:44px;border-radius:50%;background:var(--sand2);box-shadow:0 0 0 3px var(--ground);display:flex;align-items:center;justify-content:center')}><Ms size={18} color="var(--label)">add_photo_alternate</Ms></span>
+        </div>
+      </div>
+      <button onClick={createCrew} className="fp" style={s("display:block;width:100%;margin-top:32px;font:800 12px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:15px 0")}>CREATE CREW</button>
+    </div>
+  );
+}
+
+// ── Crew Settings: banner/avatar, rules, invite link, members, leave ──
+function CrewSettings({ st, crew, set, go, notify }: any) {
+  const L = (t: string) => <div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
+  const joined = !!st.crewsJoined[crew.id];
+  const rules = crew.rules || CREW_RULES[crew.id] || 'Be respectful. Keep it about City.';
+  const inviteLink = 'city.app/join/' + crew.id;
+  const memberRows = [
+    { name: 'You', initials: 'YO', bg: '#001838', isAdmin: !!crew.isCustom },
+    { name: 'Marcus_92', initials: 'MA', bg: '#6CABDD', isAdmin: !crew.isCustom },
+    { name: 'Priya_S', initials: 'PR', bg: '#0C3A5E', isAdmin: false },
+    { name: 'Declan_K', initials: 'DE', bg: '#6CABDD', isAdmin: false },
+  ];
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding-bottom:30px')}>
+      <div style={s('position:relative;height:100px;background:var(--panel)')}>
+        <Slot id={'crew-banner-' + crew.id} label="Tap to change banner" />
+        <span style={{ ...s('position:absolute;left:16px;bottom:-24px;width:56px;height:56px;border-radius:50%;box-shadow:0 0 0 4px var(--ground);display:flex;align-items:center;justify-content:center;font:800 15px/1 \'Kippax\',\'Archivo\';color:#fff'), background: crew.gated ? '#5E7488' : '#6CABDD' }}>{crew.initials}</span>
+      </div>
+      <div style={s('padding:34px 16px 0')}>
+        <div style={s("font:800 26px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{crew.name}</div>
+        <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>{rules}</div>
+      </div>
+      <div style={s('padding:22px 16px 0')}>{L('INVITE LINK')}
+        <div style={s('display:flex;align-items:center;gap:10px;margin-top:9px;background:var(--sand);padding:12px 14px')}>
+          <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12.5px/1 'Kippax','Archivo';color:var(--body)")}>{inviteLink}</span>
+          <button onClick={() => notify('LINK COPIED')} className="fs" style={s("flex:none;font:800 10px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink);background:var(--sand3);padding:8px 10px")}>COPY</button>
+        </div>
+        <button onClick={go('invite')} className="frow" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;margin-top:4px;border-bottom:1.5px solid var(--hair)')}>
+          <Ms size={20} color="var(--ink)">person_add</Ms>
+          <span style={s("flex:1;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>Invite people</span>
+          <Ms size={18} color="var(--label)">chevron_right</Ms>
+        </button>
+      </div>
+      <div style={s('padding:22px 16px 0')}>{L('MEMBERS (' + crew.members.toLocaleString() + ')')}
+        <div style={s('margin-top:9px')}>{memberRows.map((m, i) => (
+          <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}>
+            <span style={{ ...s("width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff"), background: m.bg }}>{m.initials}</span>
+            <span style={s("flex:1;font:700 12.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{m.name}</span>
+            {m.isAdmin && <span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label);background:var(--sand);padding:4px 6px")}>ADMIN</span>}
+          </div>
+        ))}</div>
+      </div>
+      <div style={s('padding:26px 16px 0')}>
+        <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} className="fs" style={s("display:block;width:100%;font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--label);padding:13px 0;box-shadow:inset 0 0 0 1.5px var(--hair)")}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Invite / Add People: shareable link + suggested contacts ──
+const INVITE_NAMES = ['Sam Whitfield', 'Jordan Ade', 'Louis Marsh', 'Fatima Noor'];
+function Invite({ st, crew, inviteContact, notify }: any) {
+  const L = (t: string) => <div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
+  const inviteLink = 'city.app/join/' + crew.id;
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
+      <div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Invite to {crew.name}</div>
+      <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>Share the link, or invite someone directly.</div>
+      <div style={s('display:flex;align-items:center;gap:10px;margin-top:18px;background:var(--sand);padding:13px 14px')}>
+        <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12.5px/1 'Kippax','Archivo';color:var(--body)")}>{inviteLink}</span>
+        <button onClick={() => notify('LINK COPIED')} className="fs" style={s("flex:none;font:800 10px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink);background:var(--sand3);padding:8px 10px")}>COPY</button>
+      </div>
+      <button onClick={() => notify('SHARE SHEET OPENED')} className="fp" style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:9px;font:800 12px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:14px 0")}><Ms size={16} color="#fff">ios_share</Ms>SHARE LINK</button>
+      <div style={s('margin-top:22px')}>{L('SUGGESTED')}
+        <div style={s('margin-top:9px')}>{INVITE_NAMES.map((n) => { const sent = !!st.inviteSent[n]; return (
+          <div key={n} style={s('display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)')}>
+            <span style={s("width:32px;height:32px;flex:none;border-radius:50%;background:#0C3A5E;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff")}>{n.split(' ').map((w) => w[0]).join('')}</span>
+            <span style={s("flex:1;font:700 13px/1.2 'Kippax','Archivo';color:var(--ink)")}>{n}</span>
+            <button onClick={() => inviteContact(n)} disabled={sent} style={{ ...s("flex:none;font:800 10px/1 'Kippax','Archivo';letter-spacing:.06em;padding:8px 11px"), background: sent ? 'var(--sand)' : '#6CABDD', color: sent ? 'var(--label)' : '#fff' }}>{sent ? 'SENT' : 'INVITE'}</button>
+          </div>
+        ); })}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Crews intro modal: full-frame, city-crowd backdrop, once per session ──
+function CrewsIntro({ dismiss }: { dismiss: () => void }) {
+  const feats = [
+    { icon: 'groups', t: 'Your people, always on', d: 'Join a Crew and pick up the thread whenever you open the app.' },
+    { icon: 'verified', t: 'Real drop-ins from the players', d: 'Verified Q&A and posts land straight in the Crew.' },
+    { icon: 'photo_camera', t: 'Verified posts, straight to you', d: 'Player photos, voice notes and social cards in the thread.' },
+  ];
+  return (
+    <div style={s('position:absolute;inset:0;z-index:60;background:var(--panel);display:flex;flex-direction:column;animation:bgFade .3s ease both')}>
+      <div style={s('position:relative;height:320px;flex:none;overflow:hidden')}>
+        <Slot id="crews-intro-bg" label="City crowd" />
+        <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,24,56,.05) 0%,rgba(0,24,56,.1) 45%,var(--panel) 96%)')} />
+        <div style={s('position:absolute;inset:0;background:linear-gradient(100deg,rgba(0,24,56,.6) 0%,transparent 55%)')} />
+        <button onClick={dismiss} style={s('position:absolute;top:16px;right:16px;z-index:2;width:34px;height:34px;border-radius:50%;background:rgba(0,24,56,.4);display:flex;align-items:center;justify-content:center')}><Ms size={19} color="#fff">close</Ms></button>
+        <div style={s('position:absolute;left:24px;bottom:20px;z-index:2;display:flex;align-items:center;gap:9px')}>
+          <span style={s('width:7px;height:18px;background:#6CABDD;transform:skewX(-8deg)')} />
+          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.2em;color:#fff;background:#D6202A;padding:6px 8px")}>NEW FEATURE</span>
+        </div>
+      </div>
+      <div style={s('flex:1;overflow-y:auto;padding:26px 24px 0')}>
+        <div style={s("font:800 52px/.84 'KippaxCondensed','Archivo Black';color:var(--on-panel)")}>Introducing<br />Crews</div>
+        <div style={s("font:500 14px/1.6 'Kippax','Archivo';color:#8AA0B6;margin-top:14px;max-width:320px")}>A permanent place for your people. Crews don’t reset at full-time, they’re the thread, the plans, and the banter that carry through every matchday.</div>
+        <div style={s('margin-top:8px')}>{feats.map((f, i) => (
+          <div key={i} style={{ ...s('display:flex;align-items:flex-start;gap:12px;padding:16px 0;border-top:1.5px solid rgba(234,241,248,.1)'), borderBottom: i === feats.length - 1 ? '1.5px solid rgba(234,241,248,.1)' : undefined }}>
+            <span style={s('width:40px;height:40px;flex:none;background:#6CABDD;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">{f.icon}</Ms></span>
+            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14.5px/1.2 'Kippax','Archivo';color:var(--on-panel)")}>{f.t}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:#8AA0B6;margin-top:3px")}>{f.d}</span></span>
+          </div>
+        ))}</div>
+      </div>
+      <div style={s('flex:none;padding:18px 24px 24px;background:var(--panel)')}>
+        <button onClick={dismiss} style={s("display:block;width:100%;font:800 13px/1 'Kippax','Archivo';letter-spacing:.06em;color:#001838;background:#6CABDD;padding:16px 0")}>TRY IT OUT</button>
+        <button onClick={dismiss} className="fh" style={s("display:block;width:100%;margin-top:12px;font:700 11px/1 'Kippax','Archivo';letter-spacing:.08em;color:#8AA0B6;padding:4px 0")}>MAYBE LATER</button>
+      </div>
     </div>
   );
 }
@@ -1194,7 +1414,7 @@ function Intel({ pre, live, ht, openIris }: any) {
     <div style={s('animation:bgFade .25s ease both')}>
       <div style={s('background:var(--panel);padding:16px 16px 20px')}>
         <div style={s("font:800 36px/.9 'KippaxCondensed','Archivo Black';color:var(--on-panel)")}>Match intel</div>
-        <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:9px;max-width:300px")}>Written from this season’s data and refreshed at half-time and full-time. Read it — or ask IRIS for any part of it.</div>
+        <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:9px;max-width:300px")}>Written from this season’s data and refreshed at half-time and full-time. Read it, or ask IRIS for any part of it.</div>
         <div style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--label);margin-top:12px")}>UPDATED {stamp}</div>
       </div>
       <div style={s('padding:18px 16px 0')}>{L('WIN PROBABILITY')}<div style={s('display:flex;gap:2px;margin-top:11px')}><div style={s('flex:46;background:#6CABDD;padding:13px 11px')}><div style={s("font:800 32px/.86 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums")}>46%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;margin-top:8px")}>MAN CITY</div></div><div style={s('flex:27;background:var(--sand2);padding:13px 9px')}><div style={s("font:800 25px/.86 'KippaxCondensed','Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--body);margin-top:8px")}>DRAW</div></div><div style={s('flex:27;background:#00529F;padding:13px 9px')}><div style={s("font:800 25px/.86 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#FEBE10;margin-top:8px")}>MADRID</div></div></div></div>
@@ -1205,7 +1425,7 @@ function Intel({ pre, live, ht, openIris }: any) {
         </div>
         <div style={s("display:flex;align-items:center;gap:13px;margin-top:9px;font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label)")}><span style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#6CABDD')} />CITY 17</span><span style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#00529F')} />MADRID 11</span><span style={s('margin-left:auto')}>SIZE = XG</span></div>
       </div>
-      <div style={s('padding:22px 16px 0')}>{L('KEY STAT')}<div style={s('display:flex;align-items:flex-start;gap:13px;margin-top:11px')}><div style={s("font:800 58px/.78 'KippaxCondensed','Archivo Black';color:#6CABDD;font-variant-numeric:tabular-nums")}>9<span style={s('font-size:24px;color:var(--ink)')}>/10</span></div><div style={s("flex:1;font:600 15px/1.3 'Kippax','Archivo';color:var(--ink)")}>City have scored first in nine of their last ten at home — and won all nine.<span style={s("display:block;font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>The first goal decides this tie more than possession does.</span></div></div></div>
+      <div style={s('padding:22px 16px 0')}>{L('KEY STAT')}<div style={s('display:flex;align-items:flex-start;gap:13px;margin-top:11px')}><div style={s("font:800 58px/.78 'KippaxCondensed','Archivo Black';color:#6CABDD;font-variant-numeric:tabular-nums")}>9<span style={s('font-size:24px;color:var(--ink)')}>/10</span></div><div style={s("flex:1;font:600 15px/1.3 'Kippax','Archivo';color:var(--ink)")}>City have scored first in nine of their last ten at home, and won all nine.<span style={s("display:block;font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>The first goal decides this tie more than possession does.</span></div></div></div>
       <div style={s('padding:22px 16px 0')}>{L('HEAD-TO-HEAD · LAST 5')}<div style={s('margin-top:9px')}>{h2h.map((g, i) => <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}><span style={{ ...s("width:22px;height:22px;flex:none;font:800 11px/22px 'Kippax','Archivo';text-align:center"), background: g.bg, color: g.fg }}>{g.r}</span><span style={s("font:800 14px/1 'Kippax','Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{g.score}</span><span style={s("font:500 12px/1.3 'Kippax','Archivo';color:var(--body)")}>{g.comp}</span><span style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--label);margin-left:auto")}>{g.date}</span></div>)}</div></div>
       <div style={s('padding:22px 16px 0')}>{L('FORM & EXPECTED GOALS')}<div style={s('display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px')}><div style={s('padding:14px;background:var(--sand);border-top:5px solid #6CABDD')}><div style={s("font:800 12px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink)")}>MAN CITY</div><div style={s("font:800 34px/.88 'KippaxCondensed','Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.87</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Kippax','Archivo';color:var(--body);margin-top:9px")}>Unbeaten in 8 at home. Haaland 12 in the competition.</div></div><div style={s('padding:14px;background:var(--sand);border-top:5px solid #00529F')}><div style={s("font:800 12px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink)")}>REAL MADRID</div><div style={s("font:800 34px/.88 'KippaxCondensed','Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.64</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Kippax','Archivo';color:var(--body);margin-top:9px")}>Score late: 7 of 14 goals after the 70th minute.</div></div></div></div>
       <div style={s('padding:22px 16px 26px')}>{L('WATCH FOR')}<div style={s('margin-top:7px')}>{watch.map((w, i) => <div key={i} style={s('padding:12px 0;border-bottom:1.5px solid var(--hair)')}><div style={s("font:700 14px/1.3 'Kippax','Archivo';color:var(--ink)")}>{w.t}</div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:4px")}>{w.d}</div></div>)}</div><button onClick={openIris} className="fp" style={s("display:block;width:100%;margin-top:18px;padding:15px;background:var(--panel);font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);text-align:center")}>ASK IRIS ABOUT ANY OF THIS</button></div>
@@ -1348,7 +1568,7 @@ const PLAT: Record<string, { bg: string; fg: string; short: string }> = {
   Threads: { bg: '#101012', fg: '#fff', short: 'Threads' },
 };
 const REELS = [
-  { id: 'r1', plat: 'Instagram', handle: '@bluemoon.media', cap: 'Anthem at the Etihad — chills 🔵 #MCIRMA', likes: 2400, slot: 'reel-1', dur: '0:24' },
+  { id: 'r1', plat: 'Instagram', handle: '@bluemoon.media', cap: 'Anthem at the Etihad, chills 🔵 #MCIRMA', likes: 2400, slot: 'reel-1', dur: '0:24' },
   { id: 'r2', plat: 'TikTok', handle: '@cityzone', cap: 'Haaland warm-up routine, up close #MCIRMA', likes: 8100, slot: 'reel-2', dur: '0:31' },
   { id: 'r3', plat: 'YouTube', handle: 'CityXtra', cap: 'LIVE: the walk-in from Gate 4', likes: 1200, slot: 'reel-3', dur: '2:10' },
   { id: 'r4', plat: 'Instagram', handle: '@ftbl.frames', cap: 'Tunnel cam before kick-off 🎥 #MCIRMA', likes: 5700, slot: 'photo-3', dur: '0:18' },
@@ -1356,7 +1576,7 @@ const REELS = [
 const POSTS = [
   { id: 'p1', plat: 'X', handle: '@CityMatchday', text: 'The noise for the anthem tonight. Never heard the Etihad like that. #MCIRMA', likes: 3100, rt: 842, t: '2m' },
   { id: 'p2', plat: 'Threads', handle: '@bluemoonrising', text: 'If Rodri runs this midfield we’re going to Munich. Simple as that.', likes: 1900, rt: 210, t: '5m' },
-  { id: 'p3', plat: 'X', handle: '@ftbltalk', text: 'City press, Madrid counter. First goal decides the tie — buckle up.', likes: 2600, rt: 540, t: '8m' },
+  { id: 'p3', plat: 'X', handle: '@ftbltalk', text: 'City press, Madrid counter. First goal decides the tie, buckle up.', likes: 2600, rt: 540, t: '8m' },
 ];
 const kfmt = (n: number) => (n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'k' : String(n));
 const PLATS = ['All', 'Instagram', 'TikTok', 'YouTube', 'X', 'Threads'];
@@ -1380,7 +1600,7 @@ function Reactions() {
         <div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Fan reactions</div>
         <span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:5px 7px;border-radius:100px")}>#MCIRMA</span>
       </div>
-      <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>Reels, clips and posts pulled from across social by hashtag — Instagram, TikTok, YouTube, X and Threads, in one place.</div>
+      <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>Reels, clips and posts pulled from across social by hashtag, Instagram, TikTok, YouTube, X and Threads, in one place.</div>
 
       {/* platform filter */}
       <div style={s('display:flex;gap:7px;margin-top:14px;overflow-x:auto')}>
@@ -1433,7 +1653,7 @@ function Reactions() {
         </div>
       )}
 
-      <div style={s("font:500 10.5px/1.5 'Kippax','Archivo';color:var(--label);margin-top:18px")}>Curated &amp; moderated from #MCIRMA before it appears here — approved clips play in-app via each platform’s embed.</div>
+      <div style={s("font:500 10.5px/1.5 'Kippax','Archivo';color:var(--label);margin-top:18px")}>Curated &amp; moderated from #MCIRMA before it appears here, approved clips play in-app via each platform’s embed.</div>
     </div>
   );
 }
@@ -1463,7 +1683,7 @@ function Reads({ st, set }: any) {
 
 function Seat({ st, set, go }: any) {
   const blockDefs: [string, string][] = [['1 / 1 / 2 / 3', '101'], ['1 / 3 / 2 / 5', '102'], ['1 / 5 / 2 / 7', '103'], ['2 / 1 / 4 / 2', '120'], ['2 / 6 / 4 / 7', '104'], ['4 / 1 / 6 / 2', '119'], ['4 / 6 / 6 / 7', '105'], ['6 / 1 / 7 / 3', '112'], ['6 / 3 / 7 / 5', '111'], ['6 / 5 / 7 / 7', '110']];
-  const facts = [{ k: 'ENTRANCE', v: 'Gate 4, then stairs C' }, { k: 'NEAREST KIOSK', v: 'Kiosk 14 — 40m, turn right' }, { k: 'TOILETS', v: 'Concourse south, 25m' }, { k: 'QUICKEST EXIT', v: 'Gate 4 to Ashton New Road' }];
+  const facts = [{ k: 'ENTRANCE', v: 'Gate 4, then stairs C' }, { k: 'NEAREST KIOSK', v: 'Kiosk 14, 40m, turn right' }, { k: 'TOILETS', v: 'Concourse south, 25m' }, { k: 'QUICKEST EXIT', v: 'Gate 4 to Ashton New Road' }];
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
       <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Block 112 · row J</div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>South stand, lower tier. Seat 14.</div></div><button onClick={() => set((sp: FSt) => ({ routeOn: !sp.routeOn }))} style={{ ...s("font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:12px 13px;flex:none"), color: st.routeOn ? '#fff' : '#001838', background: st.routeOn ? '#6CABDD' : '#E4DACA' }}>{st.routeOn ? 'HIDE ROUTE' : 'SHOW ROUTE'}</button></div>
@@ -1482,9 +1702,9 @@ function Profile({ st, filled, set, go }: any) {
   const stats = [{ icon: 'stadium', v: '14', k: 'MATCHES THIS SEASON' }, { icon: 'forum', v: '212', k: 'CHAT MESSAGES' }, { icon: 'photo_camera', v: '38', k: 'PHOTOS ADDED' }, { icon: 'emoji_events', v: '6', k: 'PREDICTIONS WON' }];
   const activity = [
     { icon: 'redeem', t: '£5 food credit', d: 'Claimed at 500 XP', v: 'USED', color: 'var(--label)' },
-    { icon: 'restaurant', t: st.foodPlaced ? 'Steak pie to 112–J' : 'No food order yet', d: st.foodPlaced ? 'Runner on the way' : 'Order before half-time', v: st.foodPlaced ? 'LIVE' : '—', color: st.foodPlaced ? '#6CABDD' : 'var(--label)' },
+    { icon: 'restaurant', t: st.foodPlaced ? 'Steak pie to 112–J' : 'No food order yet', d: st.foodPlaced ? 'Runner on the way' : 'Order before half-time', v: st.foodPlaced ? 'LIVE' : '–', color: st.foodPlaced ? '#6CABDD' : 'var(--label)' },
     { icon: 'shopping_bag', t: st.basket.length ? st.basket.length + ' items in basket' : 'Basket empty', d: st.ordered ? 'Collect at Gate 4' : 'Collection on the way out', v: st.ordered ? 'PAID' : 'OPEN', color: st.ordered ? '#6CABDD' : 'var(--label)' },
-    { icon: 'scoreboard', t: st.pred.done ? 'Prediction ' + st.pred.h + '–' + st.pred.a + ', ' + st.pred.s : 'No prediction yet', d: st.pred.done ? 'Settles at full-time' : 'Closes at kick-off', v: st.pred.done ? '+120' : '—', color: st.pred.done ? '#6CABDD' : 'var(--label)' },
+    { icon: 'scoreboard', t: st.pred.done ? 'Prediction ' + st.pred.h + '–' + st.pred.a + ', ' + st.pred.s : 'No prediction yet', d: st.pred.done ? 'Settles at full-time' : 'Closes at kick-off', v: st.pred.done ? '+120' : '–', color: st.pred.done ? '#6CABDD' : 'var(--label)' },
   ];
   const themeOpts = [{ k: 'auto', label: 'Auto', icon: 'brightness_auto' }, { k: 'light', label: 'Light', icon: 'light_mode' }, { k: 'dark', label: 'Dark', icon: 'dark_mode' }];
   const prefs = [{ k: 'goals', label: 'Goal alerts', icon: 'sports_soccer' }, { k: 'ht', label: 'Half-time summary', icon: 'schedule' }, { k: 'rewards', label: 'Reward updates', icon: 'redeem' }];
@@ -1512,26 +1732,26 @@ function Profile({ st, filled, set, go }: any) {
 function Iris({ st, pre, live, ht, set, ask, irisRef, go, closeIris }: any) {
   const QA: [string, string, string?, string?][] = pre ? [
     ['Who decides this?', 'Erling Haaland against a Madrid back line that has conceded first only twice all competition. He has 12 in the competition and scores 0.82 goals per 90 at home.', '12', 'GOALS IN THIS COMPETITION'],
-    ['Why is City favourite?', 'Home leg, unbeaten in eight here, and 1.87 xG per game against Madrid’s 1.64. The model still only gives City 46% — Madrid score late.', '46%', 'MODELLED WIN CHANCE'],
+    ['Why is City favourite?', 'Home leg, unbeaten in eight here, and 1.87 xG per game against Madrid’s 1.64. The model still only gives City 46%, Madrid score late.', '46%', 'MODELLED WIN CHANCE'],
     ['Madrid’s main threat?', 'Vinícius against a high line. Madrid have six counter-attack goals in the competition, more than any side left in it.', '6', 'COUNTER-ATTACK GOALS'],
-    ['What can I win tonight?', 'You’re 760 XP from a seat upgrade for the final. Two predictions are open — 120 XP — and polls pay 40 XP each.', '760', 'XP TO A SEAT UPGRADE'],
+    ['What can I win tonight?', 'You’re 760 XP from a seat upgrade for the final. Two predictions are open, 120 XP, and polls pay 40 XP each.', '760', 'XP TO A SEAT UPGRADE'],
   ] : live ? [
     ['What just happened?', 'Haaland finished a De Bruyne cutback on 23 minutes from an 0.34 xG chance. City lead and are 3–2 up on aggregate.', '0.34', 'XG ON THE OPENING GOAL'],
-    ['Is City in control?', 'Territorially yes — 58% possession, 8 shots on target — but Madrid have scored half their goals after the 70th minute.', '58%', 'CITY POSSESSION'],
+    ['Is City in control?', 'Territorially yes, 58% possession, 8 shots on target, but Madrid have scored half their goals after the 70th minute.', '58%', 'CITY POSSESSION'],
     ['Who’s the danger man?', 'Vinícius. He has been isolated wide left all half; every Madrid counter has gone through him.', '6', 'MADRID COUNTER GOALS'],
-    ['How do I earn XP now?', 'The live poll is open — 40 XP — and chat messages pay 2 XP each.', '40', 'XP FOR THIS POLL'],
+    ['How do I earn XP now?', 'The live poll is open, 40 XP, and chat messages pay 2 XP each.', '40', 'XP FOR THIS POLL'],
   ] : ht ? [
-    ['What changed in the first half?', 'Madrid equalised on 45 minutes through Vinícius, against the run of play — City had 2.1 xG to their 0.6 before it went in.', '2.1', 'CITY XG, FIRST HALF'],
+    ['What changed in the first half?', 'Madrid equalised on 45 minutes through Vinícius, against the run of play, City had 2.1 xG to their 0.6 before it went in.', '2.1', 'CITY XG, FIRST HALF'],
     ['What should City fix?', 'The high line. Both Madrid shots on target came from balls played in behind the full-backs.', '2', 'MADRID SHOTS ON TARGET'],
     ['Who wins from here?', 'Aggregate is level. On second-half form the model swings to City 51%, Madrid 29%, draw 20%.', '51%', 'CITY, SECOND HALF ON'],
-    ['Can I still order food?', 'Fifteen minutes left — an order to 112–J typically lands with four minutes to spare.', '15', 'MINUTES OF HALF-TIME'],
+    ['Can I still order food?', 'Fifteen minutes left, an order to 112–J typically lands with four minutes to spare.', '15', 'MINUTES OF HALF-TIME'],
   ] : [
-    ['Who was man of the match?', 'Fans gave it to Phil Foden — the 71st-minute winner and 4 chances created. The model preferred Rodri.', '71’', 'THE WINNING GOAL'],
-    ['How did City win it?', '2.34 xG to 1.02, and the first goal again — nine of their last ten home wins have followed it.', '2.34', 'CITY EXPECTED GOALS'],
+    ['Who was man of the match?', 'Fans gave it to Phil Foden, the 71st-minute winner and 4 chances created. The model preferred Rodri.', '71’', 'THE WINNING GOAL'],
+    ['How did City win it?', '2.34 xG to 1.02, and the first goal again, nine of their last ten home wins have followed it.', '2.34', 'CITY EXPECTED GOALS'],
     ['What happens next?', 'The final is in Munich on 31 May. Your seat upgrade unlocks at 2,000 XP; player ratings are worth a final 80 XP.', '80', 'XP LEFT TONIGHT'],
     ['Best of the fan content?', '1,204 photos in the pool and the away-end reaction reels are worth a minute of your time.', '1,204', 'FAN PHOTOS TONIGHT'],
   ];
-  const fallback = 'That one isn’t in tonight’s briefing yet. I refresh at half-time and full-time — until then, the shot map and the win-probability model on the Match Intel page cover most of it.';
+  const fallback = 'That one isn’t in tonight’s briefing yet. I refresh at half-time and full-time, until then, the shot map and the win-probability model on the Match Intel page cover most of it.';
   const askFree = (q: string) => { const words = q.toLowerCase().split(/\W+/).filter((w) => w.length > 3); const hit = QA.find(([qq]) => words.some((w) => qq.toLowerCase().indexOf(w) > -1)); if (hit) ask(hit[0], hit[1], hit[2], hit[3]); else ask(q, fallback); };
   return (
     <div style={{ ...s('position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,24,56,.45)'), animation: st.irisOut ? 'bgFadeOut .26s ease both' : undefined }}>

@@ -13,7 +13,7 @@ export default function App() {
       <Route path="/studio/:id/edit" element={<PanelStudio start="builder" />} />
       <Route path="/studio/:id/stats" element={<PanelStudio start="stats" />} />
       <Route path="/control/:id" element={<PanelStudio start="control" />} />
-      {/* Fan surface — the shareable link. The "Matchday Companion v4" design. */}
+      {/* Fan surface, the shareable link. The "Matchday Companion v4" design. */}
       <Route path="/p/:id" element={<MatchdayFan />} />
       <Route path="*" element={<Navigate to="/studio" replace />} />
     </Routes>

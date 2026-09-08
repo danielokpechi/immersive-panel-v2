@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════
-// PanelStudio — the club-side operator app.
+// PanelStudio, the club-side operator app.
 // Five surfaces (Dashboard · Create wizard · Builder · Stats · Control Room)
 // in one self-contained state machine. The Control Room's monitor renders the
 // real fan client and its triggers/sessions broadcast over the ControlBus
@@ -21,7 +21,7 @@ const Ms = ({ children, size = 18, color, style }: { children: string; size?: nu
 const modOf = (id: string) => MODULES.find((m) => m.id === id) || { id, name: id, icon: 'widgets', blurb: '' };
 const sportOf = (id: string) => SPORTS.find((x) => x.id === id) || { name: '', icon: 'shield', states: '' };
 const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
-// The real fan panel (Matchday Companion v4) lives at /p/:id — open it for real.
+// The real fan panel (Matchday Companion v4) lives at /p/:id, open it for real.
 const fanUrl = (id: string) => `${import.meta.env.BASE_URL}p/${id.toLowerCase()}`;
 const openFan = (id: string) => window.open(fanUrl(id), '_blank', 'noopener');
 // Map the studio's phases + triggers to the fan client's operator commands.
@@ -47,7 +47,7 @@ const STEP_DEFS = [
   { label: 'Experience', title: 'How will fans watch?', blurb: 'This sets the live states available to the panel and how fans get in.', hint: 'Pick one to continue' },
   { label: 'Competition', title: 'Which competition?', blurb: 'The competition sets the live states, the badge treatment and which fixture feed the panel reads.', hint: 'Champions League is tonight’s flagship' },
   { label: 'Template', title: 'Start from a City template', blurb: 'Templates carry the right venue, seat map and module defaults for that kind of fixture.', hint: 'Everything stays editable afterwards' },
-  { label: 'Blocks & states', title: 'Compose each state', blurb: 'Pick a match state, then choose which blocks appear in it and in what order. Pre-match, live and full-time can look completely different.', hint: 'Reorder with the arrows — top of the list is top of the screen' },
+  { label: 'Blocks & states', title: 'Compose each state', blurb: 'Pick a match state, then choose which blocks appear in it and in what order. Pre-match, live and full-time can look completely different.', hint: 'Reorder with the arrows, top of the list is top of the screen' },
   { label: 'Details & brand', title: 'Name it and set the palette', blurb: 'The last step before you author sessions.', hint: 'Sessions come next' },
 ];
 
@@ -183,7 +183,7 @@ function Dashboard({ st, setState, say }: Props) {
           <div style={s('flex:1;min-width:0')}>
             <div style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.16em;color:#6E8299")}>MANCHESTER CITY · CLUB WORKSPACE</div>
             <h1 style={s("font:700 40px/1.02 'Kippax','Archivo';letter-spacing:-.025em;margin:14px 0 0")}>Your immersive panels</h1>
-            <p style={s("font:400 15px/1.5 'Kippax','Archivo';color:#3E5266;margin:10px 0 0;max-width:520px")}>{st.panels.length} panels across {new Set(st.panels.map((x) => x.sport)).size} competitions — league, cups, women’s and tour. Author each one once, then drive it live on matchday.</p>
+            <p style={s("font:400 15px/1.5 'Kippax','Archivo';color:#3E5266;margin:10px 0 0;max-width:520px")}>{st.panels.length} panels across {new Set(st.panels.map((x) => x.sport)).size} competitions, league, cups, women’s and tour. Author each one once, then drive it live on matchday.</p>
           </div>
           <button className="ah-ink-btn" onClick={() => setState({ screen: 'wizard', step: 0 })} style={s("display:flex;align-items:center;gap:9px;padding:15px 20px;border-radius:14px;background:#001838;font:600 13.5px/1 'Kippax','Archivo';color:#EEF3F9;box-shadow:0 8px 20px -10px rgba(0,24,56,.5)")}>
             <Ms size={19} color="#EEF3F9">add</Ms>Create new panel
@@ -259,7 +259,7 @@ function Dashboard({ st, setState, say }: Props) {
 function Wizard({ st, setState, say }: Props) {
   const d = st.draft;
   const setDraft = (patch: Partial<Draft>) => setState({ draft: { ...d, ...patch } });
-  const editState = d.sessions[d.editIdx] || { name: '—', phase: 'Live', stack: [] };
+  const editState = d.sessions[d.editIdx] || { name: '–', phase: 'Live', stack: [] };
   const def = STEP_DEFS[st.step];
   const nextStep = () => {
     if (st.step < 4) { setState({ step: st.step + 1 }); return; }
@@ -268,7 +268,7 @@ function Wizard({ st, setState, say }: Props) {
     const np: AdminPanel = { id: 'PNL-' + (4500 + st.panels.length), title: d.name || 'Untitled panel', club: sportOf(d.sport).name, abbr: 'MCI', venue: d.experience === 'IN-PERSON' ? 'HOME' : 'AWAY', venueIcon: d.experience === 'IN-PERSON' ? 'stadium' : 'flight', sport: d.sport, experience: d.experience, primary: d.primary, accent: d.accent, desc: d.desc || 'Authored in the studio, not yet deployed.', live: false, fans: 0, mods, updated: 'Updated just now' };
     void preset;
     setState((s2) => ({ panels: [np, ...s2.panels], cur: 0, screen: 'builder', sessions: clone(s2.draft.sessions), previewIdx: Math.min(1, s2.draft.sessions.length - 1) }));
-    say('Panel created — author the sessions', 'check_circle');
+    say('Panel created, author the sessions', 'check_circle');
   };
   const summary = [
     { k: 'Experience', v: d.experience === 'IN-PERSON' ? 'In-person event' : d.experience === 'VOD' ? 'VOD (on-demand)' : 'Online stream' },
@@ -347,7 +347,7 @@ function Wizard({ st, setState, say }: Props) {
                 <div style={s('display:flex;gap:20px;margin-top:18px')}>
                   <div style={s('flex:1;min-width:0;padding:18px;border-radius:14px;background:#E9EFF6')}>
                     <div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.13em;color:#6E8299")}>ON SCREEN IN “{editState.name}”</span><span style={s("font:500 11px/1 'Kippax','Archivo';color:#6E8299;margin-left:auto")}>Top to bottom</span></div>
-                    {editState.stack.length === 0 && <div style={s("margin-top:12px;padding:16px;border-radius:12px;background:#FFFFFF;font:400 12.5px/1.5 'Kippax','Archivo';color:#6E8299")}>Nothing in this state yet — add blocks from the library on the right.</div>}
+                    {editState.stack.length === 0 && <div style={s("margin-top:12px;padding:16px;border-radius:12px;background:#FFFFFF;font:400 12.5px/1.5 'Kippax','Archivo';color:#6E8299")}>Nothing in this state yet, add blocks from the library on the right.</div>}
                     <div style={s('display:flex;flex-direction:column;gap:7px;margin-top:12px')}>
                       {editState.stack.map((id, j) => {
                         const m = modOf(id);
@@ -438,7 +438,7 @@ function Builder({ st, setState, say }: Props) {
         </div>
         <div style={s('display:flex;align-items:center;gap:9px;margin-left:auto')}>
           <button className="ah" onClick={() => say('Draft saved', 'save')} style={s("display:flex;align-items:center;gap:7px;padding:11px 15px;border-radius:11px;font:600 12.5px/1 'Kippax','Archivo';color:#001838;box-shadow:inset 0 0 0 1px rgba(0,24,56,.14)")}><Ms size={16} color="#001838">save</Ms>Save draft</button>
-          <button className="ah-ink-btn" onClick={() => { setPanel((pl) => { pl.live = true; pl.fans = 0.4; pl.updated = 'Updated just now'; }); setState({ screen: 'control', sync: 'connecting' }); say('Panel deployed — control room open', 'rocket_launch'); window.setTimeout(() => setState({ sync: 'live' }), 1400); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#001838;font:600 12.5px/1 'Kippax','Archivo';color:#EEF3F9")}>Save &amp; go live<Ms size={16} color="#EEF3F9">arrow_forward</Ms></button>
+          <button className="ah-ink-btn" onClick={() => { setPanel((pl) => { pl.live = true; pl.fans = 0.4; pl.updated = 'Updated just now'; }); setState({ screen: 'control', sync: 'connecting' }); say('Panel deployed, control room open', 'rocket_launch'); window.setTimeout(() => setState({ sync: 'live' }), 1400); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#001838;font:600 12.5px/1 'Kippax','Archivo';color:#EEF3F9")}>Save &amp; go live<Ms size={16} color="#EEF3F9">arrow_forward</Ms></button>
         </div>
       </header>
 
@@ -492,7 +492,7 @@ function Builder({ st, setState, say }: Props) {
                     </div>
                     <div style={s('margin-top:14px;padding-top:14px;border-top:1px dashed rgba(0,24,56,.14)')}>
                       <div style={s("font:600 10px/1 'Kippax','Archivo';letter-spacing:.14em;color:#6E8299")}>MODULE STACK · TOP TO BOTTOM ON SCREEN</div>
-                      {se.stack.length === 0 && <div style={s("font:400 12.5px/1.5 'Kippax','Archivo';color:#6E8299;margin-top:10px;padding:13px 14px;border-radius:11px;background:#FFFFFF")}>No modules yet — add them below; they stack top-to-bottom on screen.</div>}
+                      {se.stack.length === 0 && <div style={s("font:400 12.5px/1.5 'Kippax','Archivo';color:#6E8299;margin-top:10px;padding:13px 14px;border-radius:11px;background:#FFFFFF")}>No modules yet, add them below; they stack top-to-bottom on screen.</div>}
                       <div style={s('display:flex;flex-direction:column;gap:6px;margin-top:10px')}>
                         {se.stack.map((id, j) => { const m = modOf(id); return (
                           <div key={id + j} style={s('display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:11px;background:#FFFFFF')}>
@@ -521,7 +521,7 @@ function Builder({ st, setState, say }: Props) {
         </div>
 
         <aside style={s('width:330px;flex:none;position:sticky;top:96px;align-self:flex-start')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#6CABDD')} /><span style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.14em;color:#6E8299")}>FAN PREVIEW · {(sess[st.previewIdx] || {}).name || '—'}</span></div>
+          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#6CABDD')} /><span style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.14em;color:#6E8299")}>FAN PREVIEW · {(sess[st.previewIdx] || {}).name || '–'}</span></div>
           <div style={s('margin-top:14px;padding:14px;background:#FFFFFF;border-radius:26px;box-shadow:0 1px 2px rgba(0,24,56,.05)')}><Phone st={st} wizard={false} /></div>
           <div style={s('display:flex;gap:7px;margin-top:12px')}>{sess.slice(0, 5).map((se, i) => { const on = st.previewIdx === i; return <button key={i} onClick={() => setState({ previewIdx: i })} style={{ ...s("flex:1;padding:9px 0;border-radius:10px;font:600 10.5px/1 'Kippax','Archivo';text-align:center"), background: on ? '#001838' : '#FFFFFF', color: on ? '#EEF3F9' : '#3E5266' }}>{se.name.split(' ')[0]}</button>; })}</div>
         </aside>
@@ -585,10 +585,10 @@ function Control({ st, setState, say, broadcast }: Props) {
   const cur = sess[st.liveIdx] || sess[0] || { name: 'Idle', phase: 'Idle', stack: [] };
   const stripe = PHASE_COLOR[cur.phase] || '#6E8299';
   const syncMap: Record<string, { label: string; dot: string; anim: string; note: string }> = {
-    local: { label: 'LOCAL ONLY', dot: '#6E8299', anim: 'none', note: 'Nothing is broadcasting yet — fans on the link will see the default session.' },
+    local: { label: 'LOCAL ONLY', dot: '#6E8299', anim: 'none', note: 'Nothing is broadcasting yet, fans on the link will see the default session.' },
     connecting: { label: 'CONNECTING', dot: '#6CABDD', anim: 'stBlink 1s steps(1,end) infinite', note: 'Handshaking with the realtime relay. Controls stay staged until sync completes.' },
     live: { label: 'LIVE SYNC ACTIVE', dot: '#6CABDD', anim: 'stPulse 2.4s ease-out infinite', note: 'Every session jump, trigger and countdown change reaches all connected devices in under 400ms.' },
-    down: { label: 'SYNC UNAVAILABLE', dot: '#C0473C', anim: 'stBlink .8s steps(1,end) infinite', note: 'Relay unreachable — actions are queued locally and will flush when the connection returns.' },
+    down: { label: 'SYNC UNAVAILABLE', dot: '#C0473C', anim: 'stBlink .8s steps(1,end) infinite', note: 'Relay unreachable, actions are queued locally and will flush when the connection returns.' },
   };
   const sync = syncMap[st.sync] || syncMap.live;
 
@@ -670,11 +670,11 @@ function Control({ st, setState, say, broadcast }: Props) {
                 <button className="ah" onClick={() => { setState({ clock: 0, liveIdx: 0, log: [] }); say('Panel restarted for all devices', 'restart_alt'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Kippax','Archivo';color:#001838;box-shadow:inset 0 0 0 1px rgba(0,24,56,.14)")}><Ms size={17} color="inherit">restart_alt</Ms>Restart</button>
                 <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#E9EFF6;margin-left:auto')}>{['1×', '2×', '5×', '10×'].map((x) => { const on = st.speed === x; return <button key={x} onClick={() => setState({ speed: x })} style={{ ...s("padding:9px 12px;border-radius:9px;font:600 11.5px/1 'Kippax','Archivo';font-variant-numeric:tabular-nums"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#001838' : '#3E5266' }}>{x}</button>; })}</div>
               </div>
-              <div style={s("font:400 12px/1.5 'Kippax','Archivo';color:#3E5266;margin-top:16px")}>{st.mode === 'manual' ? 'Manual: nothing advances unless you advance it. Safest during a live match.' : 'Auto: sessions advance on the match clock — you can still fire events and override.'}</div>
+              <div style={s("font:400 12px/1.5 'Kippax','Archivo';color:#3E5266;margin-top:16px")}>{st.mode === 'manual' ? 'Manual: nothing advances unless you advance it. Safest during a live match.' : 'Auto: sessions advance on the match clock, you can still fire events and override.'}</div>
             </Card>
 
             <Card>
-              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>SESSIONS</span><span style={s("font:500 11.5px/1 'Kippax','Archivo';color:#3E5266;margin-left:auto")}>Jump to any state — every fan device follows</span></div>
+              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>SESSIONS</span><span style={s("font:500 11.5px/1 'Kippax','Archivo';color:#3E5266;margin-left:auto")}>Jump to any state, every fan device follows</span></div>
               <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
                 {sess.map((se, i) => { const on = i === st.liveIdx; return (
                   <button key={i} className="ah" onClick={() => { setState({ liveIdx: i }); send({ cmd: 'state', ms: phaseToMs(se.phase) }); say(`Fans moved to “${se.name}”`, 'swap_horiz'); }} style={{ ...s('display:flex;align-items:center;gap:10px;padding:14px;border-radius:12px'), background: on ? '#E9EFF6' : '#FFFFFF', boxShadow: on ? 'inset 0 0 0 2px #001838' : 'inset 0 0 0 1px rgba(0,24,56,.12)' }}>
@@ -688,7 +688,7 @@ function Control({ st, setState, say, broadcast }: Props) {
             </Card>
 
             <Card>
-              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>KICKOFF COUNTDOWN</span><span style={s("font:800 34px/.9 'KippaxCondensed','Archivo Black';margin-left:auto;font-variant-numeric:tabular-nums")}>{st.countdown > 0 ? fmt(st.countdown) : '—'}</span></div>
+              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>KICKOFF COUNTDOWN</span><span style={s("font:800 34px/.9 'KippaxCondensed','Archivo Black';margin-left:auto;font-variant-numeric:tabular-nums")}>{st.countdown > 0 ? fmt(st.countdown) : '–'}</span></div>
               <div style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px')}>
                 {[{ n: '0:30', v: 30 }, { n: '2:00', v: 120 }, { n: '5:00', v: 300 }, { n: '15:00', v: 900 }, { n: 'Clear', v: 0 }].map((c) => { const on = st.countdown === c.v && c.v > 0; return <button key={c.n} onClick={() => { setState({ countdown: c.v }); say(c.v ? `Countdown set to ${c.n}` : 'Countdown cleared', 'timer'); }} style={{ ...s("padding:13px 0;border-radius:12px;font:600 12px/1 'Kippax','Archivo';text-align:center;font-variant-numeric:tabular-nums"), background: on ? '#001838' : '#E9EFF6', color: on ? '#EEF3F9' : '#001838', boxShadow: on ? 'none' : 'inset 0 0 0 1px rgba(0,24,56,.1)' }}>{c.n}</button>; })}
               </div>
@@ -739,7 +739,7 @@ function Control({ st, setState, say, broadcast }: Props) {
               <div style={s('margin-top:20px;padding-top:16px;border-top:1px solid rgba(0,24,56,.08)')}>
                 <span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>BROADCAST LOG</span>
                 <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:230px;overflow-y:auto')}>
-                  {st.log.length === 0 && <div style={s("font:400 11.5px/1.5 'Kippax','Archivo';color:#6E8299;padding:4px 0")}>Nothing pushed yet — fire an event to broadcast it to every device.</div>}
+                  {st.log.length === 0 && <div style={s("font:400 11.5px/1.5 'Kippax','Archivo';color:#6E8299;padding:4px 0")}>Nothing pushed yet, fire an event to broadcast it to every device.</div>}
                   {st.log.map((l) => (
                     <div key={l.id} style={s('display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;background:#E9EFF6;animation:stSlide .25s ease both')}>
                       <Ms size={16} color={l.color}>{l.icon}</Ms>
