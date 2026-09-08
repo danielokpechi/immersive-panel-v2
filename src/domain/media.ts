@@ -27,6 +27,23 @@ export const media = {
   reel3: `${base}media/223068987790622209.jpeg`,
   reel4: `${base}media/237213105371834932.jpeg`,
   reel5: `${base}media/25614291625815684.jpeg`,
+  // Crews layer imagery (bundled from the design handoff, downscaled).
+  crowd: `${base}media/crews/crowd.jpg`,
+  bannerA: `${base}media/crews/banner-a.jpg`,
+  bannerB: `${base}media/crews/banner-b.jpg`,
+  bannerC: `${base}media/crews/banner-c.jpg`,
+  bannerD: `${base}media/crews/banner-d.jpg`,
+  avMarcus: `${base}media/crews/av-marcus.jpg`,
+  avPriya: `${base}media/crews/av-priya.jpg`,
+  avDeclan: `${base}media/crews/av-declan.jpg`,
+  avHannah: `${base}media/crews/av-hannah.jpg`,
+  avR1: `${base}media/crews/av-r1.jpg`,
+  avR2: `${base}media/crews/av-r2.jpg`,
+  avR3: `${base}media/crews/av-r3.jpg`,
+  playerHaaland: `${base}media/crews/player-haaland.webp`,
+  playerFoden: `${base}media/crews/player-foden.webp`,
+  playerDoku: `${base}media/crews/player-doku.webp`,
+  playerAitNouri: `${base}media/crews/player-ait-nouri.webp`,
 } as const;
 
 export const reelPhotos = [media.reel1, media.reel2, media.reel3, media.reel4, media.reel5];

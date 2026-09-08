@@ -62,7 +62,13 @@ const ARTICLES = [
 ];
 
 // ── Crews layer (a persistent social layer; The Box is now a gated Crew) ──
-type CrewMsg = { user: string; initials: string; avBg: string; verified?: boolean; isText?: boolean; text?: string; isImage?: boolean; id?: string; caption?: string; isVoice?: boolean; dur?: string; wave?: number[]; isSocial?: boolean; socialIcon?: string; socialTitle?: string; socialSub?: string };
+type CrewMsg = { user: string; initials: string; avBg: string; photo?: string; verified?: boolean; isText?: boolean; text?: string; isImage?: boolean; id?: string; caption?: string; isVoice?: boolean; dur?: string; wave?: number[]; isSocial?: boolean; socialIcon?: string; socialTitle?: string; socialSub?: string };
+// Circular avatar: a real photo when we have one, else the initials disc.
+const Avatar = ({ src, initials, bg, size = 26, style }: { src?: string; initials?: string; bg?: string; size?: number; style?: CSSProperties }) => (
+  src
+    ? <img src={src} alt="" loading="lazy" style={{ width: size, height: size, flex: 'none', borderRadius: '50%', objectFit: 'cover', ...style }} />
+    : <span style={{ width: size, height: size, flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg || '#6CABDD', color: '#fff', fontFamily: "'Kippax','Archivo'", fontWeight: 800, fontSize: Math.round(size * 0.34), lineHeight: 1, ...style }}>{initials}</span>
+);
 type CrewRec = { id: string; name: string; initials: string; members: number; official: boolean; gated: boolean; unlockHint: string; latest: string; isCustom?: boolean; rules?: string; privacy?: string };
 const CREWS: CrewRec[] = [
   { id: 'msb', name: 'Moss Side Blues', initials: 'MB', members: 1842, official: false, gated: false, unlockHint: '', latest: '"Anyone getting picked up in Stockport?"' },
@@ -82,20 +88,24 @@ const CREW_RULES: Record<string, string> = {
   academy: 'Youth and academy talk, keep transfer rumours to the main Crew.',
   seasontix: 'Season-ticket holders only. Early access info stays inside this Crew.',
 };
+// Real photos for the recurring Crew members + roster fill (from the handoff).
+const MEMBER_PHOTO: Record<string, string> = { MARCUS_92: media.avMarcus, PRIYA_S: media.avPriya, DECLAN_K: media.avDeclan, HANNAH_M: media.avHannah };
+const ROSTER_PHOTOS = [media.avR1, media.avR2, media.avR3, media.avMarcus, media.avPriya, media.avDeclan, media.avHannah];
 const CREW_MSGS: CrewMsg[] = [
-  { user: 'MARCUS_92', text: 'Coach seats are filling fast, get in now', avBg: '#6CABDD', initials: 'MA', isText: true },
-  { user: 'PRIYA_S', text: 'Anyone know if the Cotton Tree takes bookings?', avBg: '#0C3A5E', initials: 'PR', isText: true },
-  { user: 'DECLAN_K', text: 'Saved you a seat on the coach mate', avBg: '#6CABDD', initials: 'DE', isText: true },
-  { user: 'HANNAH_M', text: 'Munich hotel prices are criminal right now', avBg: '#0C3A5E', initials: 'HA', isText: true },
+  { user: 'MARCUS_92', text: 'Coach seats are filling fast, get in now', avBg: '#6CABDD', initials: 'MA', photo: media.avMarcus, isText: true },
+  { user: 'PRIYA_S', text: 'Anyone know if the Cotton Tree takes bookings?', avBg: '#0C3A5E', initials: 'PR', photo: media.avPriya, isText: true },
+  { user: 'DECLAN_K', text: 'Saved you a seat on the coach mate', avBg: '#6CABDD', initials: 'DE', photo: media.avDeclan, isText: true },
+  { user: 'HANNAH_M', text: 'Munich hotel prices are criminal right now', avBg: '#0C3A5E', initials: 'HA', photo: media.avHannah, isText: true },
 ];
-const PLAYERS = ['Erling Haaland', 'Kevin De Bruyne', 'Bernardo Silva'];
-const PLAYER_INIT: Record<string, string> = { 'Erling Haaland': 'EH', 'Kevin De Bruyne': 'KD', 'Bernardo Silva': 'BS' };
+const PLAYERS = ['Erling Haaland', 'Phil Foden', 'Jeremy Doku', 'Rayan Ait-Nouri'];
+const PLAYER_INIT: Record<string, string> = { 'Erling Haaland': 'EH', 'Phil Foden': 'PF', 'Jeremy Doku': 'JD', 'Rayan Ait-Nouri': 'RA' };
+const PLAYER_PHOTO: Record<string, string> = { 'Erling Haaland': media.playerHaaland, 'Phil Foden': media.playerFoden, 'Jeremy Doku': media.playerDoku, 'Rayan Ait-Nouri': media.playerAitNouri };
 // Verified player content already sitting in a Crew's permanent thread.
 const PLAYER_MSGS: Record<string, CrewMsg[]> = {
   msb: [
-    { user: 'Erling Haaland', initials: 'EH', avBg: '#6CABDD', verified: true, isImage: true, id: 'pp-haaland-tunnel', caption: 'Tunnel before kick-off. See you out there, Moss Side.' },
-    { user: 'Kevin De Bruyne', initials: 'KD', avBg: '#6CABDD', verified: true, isVoice: true, dur: '0:18', wave: [8, 14, 10, 18, 12, 20, 9, 16, 11, 19, 13, 8, 15, 10] },
-    { user: 'Bernardo Silva', initials: 'BS', avBg: '#6CABDD', verified: true, isSocial: true, socialIcon: 'photo_camera', socialTitle: 'Posted to Instagram', socialSub: 'Matchday boots, fresh out the box' },
+    { user: 'Erling Haaland', initials: 'EH', avBg: '#6CABDD', photo: media.playerHaaland, verified: true, isImage: true, id: 'pp-haaland-tunnel', caption: 'Ready for tonight. See you out there, Moss Side.' },
+    { user: 'Phil Foden', initials: 'PF', avBg: '#6CABDD', photo: media.playerFoden, verified: true, isVoice: true, dur: '0:18', wave: [8, 14, 10, 18, 12, 20, 9, 16, 11, 19, 13, 8, 15, 10] },
+    { user: 'Jeremy Doku', initials: 'JD', avBg: '#6CABDD', photo: media.playerDoku, verified: true, isSocial: true, socialIcon: 'photo_camera', socialTitle: 'Posted to Instagram', socialSub: 'Matchday boots, fresh out the box' },
   ],
 };
 const LB_CREW = [
@@ -295,7 +305,7 @@ export function MatchdayFan() {
   const postPlayerContent = () => postPlayerContentWith(st.playerPost.crewId, st.playerPost.player, st.playerPost.type);
   const postPlayerContentWith = (crewId: string, player: string, type: string) => {
     const initials = PLAYER_INIT[player] || '??';
-    let msg: CrewMsg = { user: player, initials, avBg: '#6CABDD', verified: true };
+    let msg: CrewMsg = { user: player, initials, avBg: '#6CABDD', photo: PLAYER_PHOTO[player], verified: true };
     if (type === 'image') msg = { ...msg, isImage: true, id: 'pp-' + Date.now(), caption: player.split(' ')[0] + ' shares a moment from today' };
     else if (type === 'voice') msg = { ...msg, isVoice: true, dur: '0:' + (12 + Math.floor(Math.random() * 20)), wave: Array.from({ length: 14 }, () => 6 + Math.floor(Math.random() * 16)) };
     else msg = { ...msg, isSocial: true, socialIcon: 'photo_camera', socialTitle: player.split(' ')[0] + ' posted to Instagram', socialSub: 'Just now, ahead of kick-off' };
@@ -1046,7 +1056,7 @@ function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
   const mm = Math.floor(secsLeft / 60), ss = String(secsLeft % 60).padStart(2, '0');
   const presence = st.presenceStamps[crew.id] || 0;
   const msgs: CrewMsg[] = [...CREW_MSGS, ...(PLAYER_MSGS[crew.id] || []), ...(st.crewMsgsExtra[crew.id] || [])];
-  const memberAvatars = Array.from({ length: 8 }, (_, i) => ({ i: 'M' + (i + 1), bg: i % 2 ? '#6CABDD' : '#0C3A5E' }));
+  const memberAvatars = Array.from({ length: 8 }, (_, i) => ({ src: ROSTER_PHOTOS[i % ROSTER_PHOTOS.length], initials: 'M' + (i + 1), bg: i % 2 ? '#6CABDD' : '#0C3A5E' }));
   const playVoice = (key: string) => set((sp: FSt) => ({ playingVoice: sp.playingVoice === key ? null : key }));
   return (
     <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px')}>
@@ -1094,7 +1104,7 @@ function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
 
         <div style={s('padding:18px 16px 0')}>
           {L('MEMBERS')}
-          <div style={s('display:flex;gap:6px;margin-top:9px')}>{memberAvatars.map((m, i) => <span key={i} style={{ ...s("width:32px;height:32px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff"), background: m.bg }}>{m.i}</span>)}</div>
+          <div style={s('display:flex;gap:6px;margin-top:9px')}>{memberAvatars.map((m, i) => <Avatar key={i} src={m.src} initials={m.initials} bg={m.bg} size={32} />)}</div>
         </div>
         <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label);padding:26px 16px 0")}>THE THREAD</div>
         <div style={s('flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px')}>
@@ -1108,7 +1118,7 @@ function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
             const vkey = 'v' + crew.id + i;
             return (
               <div key={i} style={s('display:flex;gap:8px')}>
-                <span style={{ ...s("width:26px;height:26px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 9px/1 'Kippax','Archivo';color:#fff"), background: m.avBg }}>{m.initials}</span>
+                <Avatar src={m.photo} initials={m.initials} bg={m.avBg} size={26} />
                 <div style={s('flex:1;min-width:0')}>
                   <div style={s('display:flex;align-items:center;gap:5px')}><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label)")}>{m.user}</span>{m.verified && <Ms size={12} color="#6CABDD">verified</Ms>}</div>
                   {m.isText && <div style={s("font:500 13px/1.4 'Kippax','Archivo';color:var(--ink);margin-top:4px;background:var(--sand);padding:8px 10px;border-radius:3px 12px 12px 12px")}>{m.text}</div>}
@@ -1189,10 +1199,10 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
   const rules = crew.rules || CREW_RULES[crew.id] || 'Be respectful. Keep it about City.';
   const inviteLink = 'city.app/join/' + crew.id;
   const memberRows = [
-    { name: 'You', initials: 'YO', bg: '#001838', isAdmin: !!crew.isCustom },
-    { name: 'Marcus_92', initials: 'MA', bg: '#6CABDD', isAdmin: !crew.isCustom },
-    { name: 'Priya_S', initials: 'PR', bg: '#0C3A5E', isAdmin: false },
-    { name: 'Declan_K', initials: 'DE', bg: '#6CABDD', isAdmin: false },
+    { name: 'You', initials: 'YO', bg: '#001838', photo: undefined as string | undefined, isAdmin: !!crew.isCustom },
+    { name: 'Marcus_92', initials: 'MA', bg: '#6CABDD', photo: MEMBER_PHOTO.MARCUS_92, isAdmin: !crew.isCustom },
+    { name: 'Priya_S', initials: 'PR', bg: '#0C3A5E', photo: MEMBER_PHOTO.PRIYA_S, isAdmin: false },
+    { name: 'Declan_K', initials: 'DE', bg: '#6CABDD', photo: MEMBER_PHOTO.DECLAN_K, isAdmin: false },
   ];
   return (
     <div style={s('animation:bgFade .25s ease both;padding-bottom:30px')}>
@@ -1218,7 +1228,7 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
       <div style={s('padding:22px 16px 0')}>{L('MEMBERS (' + crew.members.toLocaleString() + ')')}
         <div style={s('margin-top:9px')}>{memberRows.map((m, i) => (
           <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}>
-            <span style={{ ...s("width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff"), background: m.bg }}>{m.initials}</span>
+            <Avatar src={m.photo} initials={m.initials} bg={m.bg} size={30} />
             <span style={s("flex:1;font:700 12.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{m.name}</span>
             {m.isAdmin && <span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label);background:var(--sand);padding:4px 6px")}>ADMIN</span>}
           </div>
@@ -1233,6 +1243,7 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
 
 // ── Invite / Add People: shareable link + suggested contacts ──
 const INVITE_NAMES = ['Sam Whitfield', 'Jordan Ade', 'Louis Marsh', 'Fatima Noor'];
+const INVITE_PHOTO = [media.avR1, media.avR2, media.avDeclan, media.avR3];
 function Invite({ st, crew, inviteContact, notify }: any) {
   const L = (t: string) => <div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
   const inviteLink = 'city.app/join/' + crew.id;
@@ -1246,9 +1257,9 @@ function Invite({ st, crew, inviteContact, notify }: any) {
       </div>
       <button onClick={() => notify('SHARE SHEET OPENED')} className="fp" style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:9px;font:800 12px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:14px 0")}><Ms size={16} color="#fff">ios_share</Ms>SHARE LINK</button>
       <div style={s('margin-top:22px')}>{L('SUGGESTED')}
-        <div style={s('margin-top:9px')}>{INVITE_NAMES.map((n) => { const sent = !!st.inviteSent[n]; return (
+        <div style={s('margin-top:9px')}>{INVITE_NAMES.map((n, ni) => { const sent = !!st.inviteSent[n]; return (
           <div key={n} style={s('display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)')}>
-            <span style={s("width:32px;height:32px;flex:none;border-radius:50%;background:#0C3A5E;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff")}>{n.split(' ').map((w) => w[0]).join('')}</span>
+            <Avatar src={INVITE_PHOTO[ni]} initials={n.split(' ').map((w) => w[0]).join('')} bg="#0C3A5E" size={32} />
             <span style={s("flex:1;font:700 13px/1.2 'Kippax','Archivo';color:var(--ink)")}>{n}</span>
             <button onClick={() => inviteContact(n)} disabled={sent} style={{ ...s("flex:none;font:800 10px/1 'Kippax','Archivo';letter-spacing:.06em;padding:8px 11px"), background: sent ? 'var(--sand)' : '#6CABDD', color: sent ? 'var(--label)' : '#fff' }}>{sent ? 'SENT' : 'INVITE'}</button>
           </div>

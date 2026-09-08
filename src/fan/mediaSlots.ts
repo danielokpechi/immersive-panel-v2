@@ -21,13 +21,13 @@ const MAP: Record<string, string> = {
   'profile-photo-2': media.meal,
   'profile-photo-3': reelPhotos[4],
   // Player posts dropped into a Crew thread.
-  'pp-haaland-tunnel': media.haaland,
+  'pp-haaland-tunnel': media.playerHaaland,
   // Crew banners (Twitter-style header art) + the Crews intro backdrop.
-  'crew-banner-msb': media.etihad,
-  'crew-banner-kippax': media.vsPoster,
-  'crew-banner-academy': media.formation,
-  'crew-banner-seasontix': media.posterUCL,
-  'crews-intro-bg': media.etihad,
+  'crew-banner-msb': media.bannerA,
+  'crew-banner-kippax': media.bannerB,
+  'crew-banner-academy': media.bannerC,
+  'crew-banner-seasontix': media.bannerD,
+  'crews-intro-bg': media.crowd,
 };
 const PHOTO_CYCLE = [reelPhotos[0], reelPhotos[1], reelPhotos[2], media.meal, media.meal2, media.meal3, reelPhotos[3], reelPhotos[4], media.haaland];
 // Player-post images use real City shots (operator posts carry a `pp-<ts>` id).
