@@ -97,7 +97,6 @@ const CREW_MSGS: CrewMsg[] = [
   { user: 'DECLAN_K', text: 'Saved you a seat on the coach mate', avBg: '#6CABDD', initials: 'DE', photo: media.avDeclan, isText: true },
   { user: 'HANNAH_M', text: 'Munich hotel prices are criminal right now', avBg: '#0C3A5E', initials: 'HA', photo: media.avHannah, isText: true },
 ];
-const PLAYERS = ['Erling Haaland', 'Phil Foden', 'Jeremy Doku', 'Rayan Ait-Nouri'];
 const PLAYER_INIT: Record<string, string> = { 'Erling Haaland': 'EH', 'Phil Foden': 'PF', 'Jeremy Doku': 'JD', 'Rayan Ait-Nouri': 'RA' };
 const PLAYER_PHOTO: Record<string, string> = { 'Erling Haaland': media.playerHaaland, 'Phil Foden': media.playerFoden, 'Jeremy Doku': media.playerDoku, 'Rayan Ait-Nouri': media.playerAitNouri };
 // Verified player content already sitting in a Crew's permanent thread.
@@ -157,6 +156,7 @@ interface FSt {
   presenceStamps: Record<string, number>;
   playerPost: { crewId: string; player: string; type: string };
   playingVoice: string | null;
+  call: { active: boolean; player: string; joined: boolean };
 }
 const money = (n: number) => '£' + n.toFixed(2);
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -176,6 +176,7 @@ export function MatchdayFan() {
     boxUnlocked: false, lbScope: 'crew', sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null },
     dropIn: { active: false, crewId: null, player: null, endsAt: null, duration: 10, queue: [], approved: [], picked: { crewId: 'seasontix', player: 'Erling Haaland', duration: 10 }, qDraft: '' },
     presenceStamps: {}, playerPost: { crewId: 'msb', player: 'Erling Haaland', type: 'image' }, playingVoice: null,
+    call: { active: false, player: 'Erling Haaland', joined: false },
   }));
   const set = (patch: Partial<FSt> | ((s: FSt) => Partial<FSt>)) => setSt((sPrev) => ({ ...sPrev, ...(typeof patch === 'function' ? patch(sPrev) : patch) }));
   const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number; sk?: number; di?: number; diBanner?: number }>({});
@@ -302,7 +303,6 @@ export function MatchdayFan() {
     set((sp) => ({ crewDraft: '', crewMsgsExtra: { ...sp.crewMsgsExtra, [crewId]: [...(sp.crewMsgsExtra[crewId] || []), { user: 'YOU', text: text.trim(), avBg: '#001838', initials: 'YO', isText: true }] } }));
   };
   // Verified player content dropped straight into a Crew's thread (operator-authored).
-  const postPlayerContent = () => postPlayerContentWith(st.playerPost.crewId, st.playerPost.player, st.playerPost.type);
   const postPlayerContentWith = (crewId: string, player: string, type: string) => {
     const initials = PLAYER_INIT[player] || '??';
     let msg: CrewMsg = { user: player, initials, avBg: '#6CABDD', photo: PLAYER_PHOTO[player], verified: true };
@@ -318,7 +318,6 @@ export function MatchdayFan() {
     set((sp) => ({ dropIn: { ...sp.dropIn, qDraft: '', queue: [...sp.dropIn.queue, { id: Date.now(), user: 'YOU', text: text.trim() }] } }));
     notify('QUESTION SENT TO MODERATOR');
   };
-  const startDropIn = () => startDropInWith(st.dropIn.picked.crewId, st.dropIn.picked.player, st.dropIn.picked.duration);
   const startDropInWith = (crewId: string, player: string, duration: number) => {
     const crew = CREWS.find((c) => c.id === crewId);
     set((sp) => ({ dropIn: { ...sp.dropIn, active: true, crewId, player, duration, endsAt: Date.now() + duration * 60000, queue: [], approved: [], picked: { crewId, player, duration } } }));
@@ -338,14 +337,6 @@ export function MatchdayFan() {
     });
     if (wasCrew === st.activeCrew) award(80, 'PROOF OF PRESENCE');
   };
-  const approveQuestion = (id: number) => {
-    set((sp) => {
-      const q = sp.dropIn.queue.find((x) => x.id === id);
-      if (!q) return {};
-      return { dropIn: { ...sp.dropIn, queue: sp.dropIn.queue.filter((x) => x.id !== id), approved: [...sp.dropIn.approved, { ...q, reply: (sp.dropIn.player || 'The player') + ' will reply to this shortly.' }] } };
-    });
-  };
-  const discardQuestion = (id: number) => set((sp) => ({ dropIn: { ...sp.dropIn, queue: sp.dropIn.queue.filter((x) => x.id !== id) } }));
   // Spot Kick: tap a zone; keeper dives to a random zone; miss it to score.
   const shootZone = (zone: number) => {
     if (st.sk.phase !== 'idle') return;
@@ -385,6 +376,10 @@ export function MatchdayFan() {
   const pickOnboarding = (crewId: string) => { set((sp) => ({ crewsJoined: { ...sp.crewsJoined, [crewId]: true } })); notify('JOINED'); };
   const skipOnboarding = () => set({ onboardingSkipped: true });
   const dismissCrewsIntro = () => set({ crewsIntroSeen: true, forceCrewsIntro: false });
+  // Rooms (group video call): a player on the main stage, the Crew in thumbnails.
+  const openRoom = (player = 'Erling Haaland') => set((sp) => ({ call: { active: true, player, joined: false }, route: 'room', navStack: sp.route === 'room' ? sp.navStack : [...sp.navStack, sp.route], iris: false, read: null }));
+  const joinRoom = () => set((sp) => ({ call: { ...sp.call, joined: true } }));
+  const leaveRoom = () => { set((sp) => ({ call: { ...sp.call, active: false } })); goBack(); };
 
   // ── derived ──
   const { ms } = st;
@@ -422,8 +417,8 @@ export function MatchdayFan() {
   const statusLabel = inactive ? 'NEXT: SAT 08 AUG, 17:30' : pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
   const myCrewCount = ALL_CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).length;
   const crewGatedLocked = activeCrewData.gated && !st.boxUnlocked;
-  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'CITY STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), createCrew: 'START A CREW', crewSettings: 'CREW SETTINGS', invite: 'INVITE', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
-  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS', crew: crewGatedLocked ? 'LOCKED' : activeCrewData.members.toLocaleString() + ' MEMBERS', createCrew: 'FAN-RUN', crewSettings: activeCrewData.name.toUpperCase(), invite: activeCrewData.name.toUpperCase(), spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
+  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'CITY STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), createCrew: 'START A CREW', crewSettings: 'CREW SETTINGS', invite: 'INVITE', room: 'ROOM', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
+  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS', crew: crewGatedLocked ? 'LOCKED' : activeCrewData.members.toLocaleString() + ' MEMBERS', createCrew: 'FAN-RUN', crewSettings: activeCrewData.name.toUpperCase(), invite: activeCrewData.name.toUpperCase(), room: 'LIVE', spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
   const isHome = st.route === 'home', isSub = st.route !== 'home';
   const backLabel = st.navStack.length ? (titles[st.navStack[st.navStack.length - 1]] || 'HOME') : 'HOME';
   const showCrewsIntro = st.forceCrewsIntro || ((st.route === 'community' || st.route === 'crew') && !st.crewsIntroSeen);
@@ -443,63 +438,16 @@ export function MatchdayFan() {
       <style>{FAN_CSS}</style>
       <div style={colStyle}>
         {!embed && (<>
-        {/* operator strip (demo) */}
+        {/* operator strip (demo): match states + a goal drop */}
         <div style={{ ...s('display:flex;align-items:center;gap:8px;width:393px;padding:9px 10px'), background: 'var(--panel)' }}>
           <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>OPERATOR</span>
           <div style={s('display:flex;gap:4px;margin-left:auto')}>
-            {opBtn('CREWS', () => applyState('inactive'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('PRE', () => applyState('pre'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('LIVE', () => applyState('live'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('HT', () => applyState('ht'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
             {opBtn('FT', () => applyState('ft'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
-            {opBtn('CARD', () => applyEventCmd('card'), '#F4C400', 'var(--ink)')}
             {opBtn('GOAL', () => applyEventCmd('goal'), '#6CABDD', '#fff')}
-          </div>
-        </div>
-        {/* PLAYER DROP-IN (operator) */}
-        <div style={{ ...s('display:flex;flex-direction:column;gap:8px;width:393px;padding:12px 12px 14px'), background: 'var(--panel)' }}>
-          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>PLAYER DROP-IN</span>
-          <div style={s('display:flex;gap:4px;flex-wrap:wrap')}>
-            {CREWS.map((c) => { const on = st.dropIn.picked.crewId === c.id; return <button key={c.id} onClick={() => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, picked: { ...sp.dropIn.picked, crewId: c.id } } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{c.name}</button>; })}
-          </div>
-          <div style={s('display:flex;gap:4px;flex-wrap:wrap;align-items:center')}>
-            {PLAYERS.map((pl) => { const on = st.dropIn.picked.player === pl; return <button key={pl} onClick={() => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, picked: { ...sp.dropIn.picked, player: pl } } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{pl.split(' ')[1]}</button>; })}
-            {[10, 15].map((d) => { const on = st.dropIn.picked.duration === d; return <button key={d} onClick={() => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, picked: { ...sp.dropIn.picked, duration: d } } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{d}m</button>; })}
-            {st.dropIn.active && <button onClick={endDropIn} style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;padding:7px 9px;background:#D6202A")}>END</button>}
-            <button onClick={startDropIn} style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;padding:7px 9px;background:#6CABDD")}>START</button>
-          </div>
-          {st.dropIn.active && (
-            <div style={s('border-top:1px solid rgba(234,241,248,.14);padding-top:8px;display:flex;flex-direction:column;gap:6px;max-height:120px;overflow-y:auto')}>
-              {st.dropIn.queue.length === 0 && <span style={s("font:600 10px/1.3 'Kippax','Archivo';color:#5E7488")}>No questions yet.</span>}
-              {st.dropIn.queue.map((q) => (
-                <div key={q.id} style={s('display:flex;align-items:center;gap:8px')}>
-                  <span style={s("flex:1;font:600 10.5px/1.3 'Kippax','Archivo';color:var(--on-panel)")}>{q.user}: {q.text}</span>
-                  <button onClick={() => approveQuestion(q.id)} style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#001838;padding:5px 6px;background:#6CABDD")}>OK</button>
-                  <button onClick={() => discardQuestion(q.id)} style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--on-panel);padding:5px 6px;background:rgba(234,241,248,.12)")}>X</button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        {/* PLAYER POST TO CREW (operator) */}
-        <div style={{ ...s('display:flex;flex-direction:column;gap:8px;width:393px;padding:12px 12px 14px'), background: 'var(--panel)' }}>
-          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>PLAYER POST TO CREW</span>
-          <div style={s('display:flex;gap:4px;flex-wrap:wrap')}>
-            {CREWS.map((c) => { const on = st.playerPost.crewId === c.id; return <button key={c.id} onClick={() => set((sp: FSt) => ({ playerPost: { ...sp.playerPost, crewId: c.id } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{c.name}</button>; })}
-          </div>
-          <div style={s('display:flex;gap:4px;flex-wrap:wrap;align-items:center')}>
-            {PLAYERS.map((pl) => { const on = st.playerPost.player === pl; return <button key={pl} onClick={() => set((sp: FSt) => ({ playerPost: { ...sp.playerPost, player: pl } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{pl.split(' ')[1]}</button>; })}
-            {[['image', 'Photo'], ['voice', 'Voice'], ['social', 'Social']].map(([k, lab]) => { const on = st.playerPost.type === k; return <button key={k} onClick={() => set((sp: FSt) => ({ playerPost: { ...sp.playerPost, type: k } }))} style={{ ...s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.04em;padding:7px 8px;background:rgba(234,241,248,.12)"), color: on ? '#6CABDD' : 'var(--on-panel)' }}>{lab}</button>; })}
-            <button onClick={postPlayerContent} style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;padding:7px 9px;background:#6CABDD")}>POST</button>
-          </div>
-        </div>
-        <div style={{ ...s('display:flex;align-items:center;gap:8px;width:393px;padding:9px 10px'), background: 'var(--chrome)' }}>
-          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>EVENTS</span>
-          <div style={s('display:flex;gap:4px;margin-left:auto')}>
-            {opBtn('VAR', () => applyEventCmd('var'), 'rgba(234,241,248,.12)', '#EAF1F8')}
-            {opBtn('SUB', () => applyEventCmd('sub'), 'rgba(234,241,248,.12)', '#EAF1F8')}
-            {opBtn('DRINKS', () => applyEventCmd('drinks'), 'rgba(234,241,248,.12)', '#EAF1F8')}
-            {opBtn('RED', () => applyEventCmd('red'), '#D6202A', '#fff')}
+            {opBtn('ROOM', () => openRoom('Erling Haaland'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
           </div>
         </div>
         </>)}
@@ -586,6 +534,7 @@ export function MatchdayFan() {
             {st.route === 'createCrew' && <CreateCrew {...{ st, set, createCrew }} />}
             {st.route === 'crewSettings' && <CrewSettings {...{ st, crew: activeCrewData, set, go, notify }} />}
             {st.route === 'invite' && <Invite {...{ st, crew: activeCrewData, set, inviteContact, notify }} />}
+            {st.route === 'room' && <Room {...{ st, joinRoom, leaveRoom }} />}
             {st.route === 'spotkick' && <Spotkick {...{ st, shootZone }} />}
             {st.route === 'spotkickResult' && <SpotkickResult {...{ st, go, startSpotkick, notify }} />}
             {st.route === 'leaderboard' && <Leaderboard {...{ st, set }} />}
@@ -1031,7 +980,7 @@ function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: an
             <div key={c.id} style={s('flex:none;width:158px;background:var(--sand);padding:16px')}>
               <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{c.name}</span>{c.official && <Ms size={14} color="#6CABDD">verified</Ms>}</div>
               <div style={s("font:500 11.5px/1.4 'Kippax','Archivo';color:var(--label);margin-top:6px")}>{c.members.toLocaleString()} members</div>
-              <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [c.id]: !joined } }))} style={{ ...s("display:block;width:100%;margin-top:10px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.08em;padding:9px 0"), background: joined ? 'var(--ground)' : 'var(--panel)', color: joined ? 'var(--ink)' : 'var(--on-panel)' }}>{joined ? 'JOINED' : 'JOIN'}</button>
+              <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [c.id]: !joined } }))} style={{ ...s("display:block;width:100%;margin-top:10px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.08em;padding:9px 0;text-align:center"), background: joined ? 'var(--ground)' : 'var(--panel)', color: joined ? 'var(--ink)' : 'var(--on-panel)' }}>{joined ? 'JOINED' : 'JOIN'}</button>
             </div>
           ); })}
           {/* Start a Crew tile */}
@@ -1091,7 +1040,7 @@ function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
         )}
         <div style={s('padding:0 16px 0')}>
           <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body)")}>{crew.members.toLocaleString()} members · permanent thread</div>
-          <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} style={{ ...s("display:block;margin-top:11px;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:11px 14px"), background: joined ? 'var(--sand)' : '#6CABDD', color: joined ? 'var(--ink)' : '#fff' }}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
+          <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} style={{ ...s("display:block;margin-top:11px;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:11px 14px;text-align:center"), background: joined ? 'var(--sand)' : '#6CABDD', color: joined ? 'var(--ink)' : '#fff' }}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
         </div>
 
         {dropInActive && (
@@ -1179,7 +1128,7 @@ function CreateCrew({ st, set, createCrew }: any) {
         <textarea value={st.newCrewDesc} onChange={(e: any) => set({ newCrewDesc: e.target.value })} placeholder="Who this Crew is for and what happens in it" style={s("display:block;width:100%;height:74px;margin-top:7px;padding:12px 14px;background:var(--sand);font:500 13px/1.4 'Kippax','Archivo';color:var(--ink);resize:none")} />
       </div>
       <div style={s('margin-top:16px')}>{L('PRIVACY')}
-        <div style={s('display:flex;gap:6px;margin-top:7px')}>{privacyOpts.map((o) => { const on = st.newCrewPrivacy === o.k; return <button key={o.k} onClick={() => set({ newCrewPrivacy: o.k })} style={{ ...s("flex:1;font:800 11px/1 'Kippax','Archivo';letter-spacing:.04em;padding:11px 0"), background: on ? '#6CABDD' : 'var(--sand)', color: on ? '#fff' : 'var(--ink)' }}>{o.label}</button>; })}</div>
+        <div style={s('display:flex;gap:6px;margin-top:7px')}>{privacyOpts.map((o) => { const on = st.newCrewPrivacy === o.k; return <button key={o.k} onClick={() => set({ newCrewPrivacy: o.k })} style={{ ...s("flex:1;font:800 11px/1 'Kippax','Archivo';letter-spacing:.04em;padding:11px 0;text-align:center"), background: on ? '#6CABDD' : 'var(--sand)', color: on ? '#fff' : 'var(--ink)' }}>{o.label}</button>; })}</div>
       </div>
       <div style={s('margin-top:16px')}>{L('BANNER & ICON')}
         <div style={s('position:relative;height:80px;margin-top:7px;background:var(--sand)')}>
@@ -1187,7 +1136,7 @@ function CreateCrew({ st, set, createCrew }: any) {
           <span style={s('position:absolute;left:14px;bottom:-20px;width:44px;height:44px;border-radius:50%;background:var(--sand2);box-shadow:0 0 0 3px var(--ground);display:flex;align-items:center;justify-content:center')}><Ms size={18} color="var(--label)">add_photo_alternate</Ms></span>
         </div>
       </div>
-      <button onClick={createCrew} className="fp" style={s("display:block;width:100%;margin-top:32px;font:800 12px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:15px 0")}>CREATE CREW</button>
+      <button onClick={createCrew} className="fp" style={s("display:block;width:100%;margin-top:32px;font:800 12px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:15px 0;text-align:center")}>CREATE CREW</button>
     </div>
   );
 }
@@ -1235,7 +1184,7 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
         ))}</div>
       </div>
       <div style={s('padding:26px 16px 0')}>
-        <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} className="fs" style={s("display:block;width:100%;font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--label);padding:13px 0;box-shadow:inset 0 0 0 1.5px var(--hair)")}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
+        <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} className="fs" style={s("display:block;width:100%;font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--label);padding:13px 0;text-align:center;box-shadow:inset 0 0 0 1.5px var(--hair)")}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
       </div>
     </div>
   );
@@ -1265,6 +1214,59 @@ function Invite({ st, crew, inviteContact, notify }: any) {
           </div>
         ); })}</div>
       </div>
+    </div>
+  );
+}
+
+// ── Room (group video call): player on the main stage, Crew in thumbnails ──
+const ROOM_GUESTS: { name: string; src?: string }[] = [
+  { name: 'Marcus_92', src: media.avMarcus },
+  { name: 'Priya_S', src: media.avPriya },
+  { name: 'You' },
+];
+function Room({ st, joinRoom, leaveRoom }: any) {
+  const player = st.call.player;
+  const mainSrc = player === 'Erling Haaland' ? media.roomHaaland : PLAYER_PHOTO[player];
+  const inRoom = ROOM_GUESTS.length + 1;
+  const ctrl = (icon: string, label: string, bg: string, onClick?: () => void) => (
+    <button onClick={onClick} style={s('display:flex;flex-direction:column;align-items:center;gap:6px')}>
+      <span style={{ ...s('width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center'), background: bg }}><Ms size={20} color="#fff">{icon}</Ms></span>
+      <span style={s("font:700 9px/1 'Kippax','Archivo';color:#fff")}>{label}</span>
+    </button>
+  );
+  return (
+    <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px;background:#0A0908')}>
+      <div style={s('display:flex;align-items:center;gap:8px;padding:14px 16px')}>
+        <span style={s('width:6px;height:6px;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} />
+        <span style={s("flex:1;font:800 12px/1.2 'Kippax','Archivo';letter-spacing:.04em;color:#fff")}>Moss Side Blues Room</span>
+        <span style={s("font:700 11px/1 'Kippax','Archivo';color:#8C8577")}>{inRoom} in the room</span>
+      </div>
+      <div style={s('flex:1;position:relative;margin:0 8px;border-radius:10px;overflow:hidden;background:#1B1812;min-height:380px')}>
+        <img src={mainSrc} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />
+        <div style={s('position:absolute;left:10px;bottom:10px;display:flex;align-items:center;gap:6px;background:rgba(16,14,10,.55);padding:5px 10px;border-radius:100px')}>
+          <Ms size={14} color="#6CABDD">verified</Ms>
+          <span style={s("font:800 11px/1 'Kippax','Archivo';color:#fff")}>{player}</span>
+        </div>
+        <div style={s('position:absolute;left:0;right:0;bottom:0;display:flex;gap:6px;padding:0 8px 8px;justify-content:flex-end')}>
+          {ROOM_GUESTS.map((t, i) => (
+            <div key={i} style={s('position:relative;width:64px;height:86px;background:#100E0A;border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center')}>
+              {t.src ? <img src={t.src} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} /> : <Ms size={22} color="#5F5949">person</Ms>}
+              <span style={s("position:absolute;left:4px;bottom:3px;font:700 8.5px/1 'Kippax','Archivo';color:#fff;background:rgba(16,14,10,.55);padding:2px 4px;border-radius:4px")}>{t.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {st.call.joined ? (
+        <div style={s('display:flex;justify-content:center;gap:22px;padding:16px 0 20px')}>
+          {ctrl('mic', 'MUTE', 'rgba(242,237,227,.14)')}
+          {ctrl('videocam', 'CAMERA', 'rgba(242,237,227,.14)')}
+          {ctrl('call_end', 'LEAVE', '#D6202A', leaveRoom)}
+        </div>
+      ) : (
+        <div style={s('padding:16px 16px 22px')}>
+          <button onClick={joinRoom} style={s("display:block;width:100%;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:#100E0A;background:#6CABDD;padding:14px 0;text-align:center")}>JOIN ROOM</button>
+        </div>
+      )}
     </div>
   );
 }

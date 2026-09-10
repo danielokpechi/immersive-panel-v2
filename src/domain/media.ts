@@ -44,6 +44,7 @@ export const media = {
   playerFoden: `${base}media/crews/player-foden.webp`,
   playerDoku: `${base}media/crews/player-doku.webp`,
   playerAitNouri: `${base}media/crews/player-ait-nouri.webp`,
+  roomHaaland: `${base}media/crews/room-haaland.jpg`,
 } as const;
 
 export const reelPhotos = [media.reel1, media.reel2, media.reel3, media.reel4, media.reel5];
