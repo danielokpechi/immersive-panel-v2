@@ -29,9 +29,7 @@ export const media = {
   reel5: `${base}media/25614291625815684.jpeg`,
   // Crews layer imagery (bundled from the design handoff, downscaled).
   crowd: `${base}media/crews/crowd.jpg`,
-  bannerA: `${base}media/crews/banner-a.jpg`,
   bannerB: `${base}media/crews/banner-b.jpg`,
-  bannerC: `${base}media/crews/banner-c.jpg`,
   bannerD: `${base}media/crews/banner-d.jpg`,
   avMarcus: `${base}media/crews/av-marcus.jpg`,
   avPriya: `${base}media/crews/av-priya.jpg`,

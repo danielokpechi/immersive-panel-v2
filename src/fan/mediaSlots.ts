@@ -23,9 +23,9 @@ const MAP: Record<string, string> = {
   // Player posts dropped into a Crew thread.
   'pp-haaland-tunnel': media.playerHaaland,
   // Crew banners (Twitter-style header art) + the Crews intro backdrop.
-  'crew-banner-msb': media.bannerA,
+  'crew-banner-msb': media.crowd,
   'crew-banner-kippax': media.bannerB,
-  'crew-banner-academy': media.bannerC,
+  'crew-banner-academy': media.formation,
   'crew-banner-seasontix': media.bannerD,
   'crews-intro-bg': media.crowd,
 };

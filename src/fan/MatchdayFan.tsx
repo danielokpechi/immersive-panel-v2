@@ -62,7 +62,8 @@ const ARTICLES = [
 ];
 
 // ── Crews layer (a persistent social layer; The Box is now a gated Crew) ──
-type CrewMsg = { user: string; initials: string; avBg: string; photo?: string; verified?: boolean; isText?: boolean; text?: string; isImage?: boolean; id?: string; caption?: string; isVoice?: boolean; dur?: string; wave?: number[]; isSocial?: boolean; socialIcon?: string; socialTitle?: string; socialSub?: string };
+type CrewMsg = { user: string; initials: string; avBg: string; photo?: string; verified?: boolean; isText?: boolean; text?: string; isImage?: boolean; id?: string; caption?: string; isVoice?: boolean; dur?: string; wave?: number[]; isSocial?: boolean; socialIcon?: string; socialTitle?: string; socialSub?: string; replyToId?: string; baseReactions?: Record<string, number> };
+const REACTION_EMOJIS = ['❤️', '😂', '🔥'];
 // Circular avatar: a real photo when we have one, else the initials disc.
 const Avatar = ({ src, initials, bg, size = 26, style }: { src?: string; initials?: string; bg?: string; size?: number; style?: CSSProperties }) => (
   src
@@ -92,19 +93,27 @@ const CREW_RULES: Record<string, string> = {
 const MEMBER_PHOTO: Record<string, string> = { MARCUS_92: media.avMarcus, PRIYA_S: media.avPriya, DECLAN_K: media.avDeclan, HANNAH_M: media.avHannah };
 const ROSTER_PHOTOS = [media.avR1, media.avR2, media.avR3, media.avMarcus, media.avPriya, media.avDeclan, media.avHannah];
 const CREW_MSGS: CrewMsg[] = [
-  { user: 'MARCUS_92', text: 'Coach seats are filling fast, get in now', avBg: '#6CABDD', initials: 'MA', photo: media.avMarcus, isText: true },
-  { user: 'PRIYA_S', text: 'Anyone know if the Cotton Tree takes bookings?', avBg: '#0C3A5E', initials: 'PR', photo: media.avPriya, isText: true },
-  { user: 'DECLAN_K', text: 'Saved you a seat on the coach mate', avBg: '#6CABDD', initials: 'DE', photo: media.avDeclan, isText: true },
-  { user: 'HANNAH_M', text: 'Munich hotel prices are criminal right now', avBg: '#0C3A5E', initials: 'HA', photo: media.avHannah, isText: true },
+  { id: 'cm1', user: 'MARCUS_92', text: 'Coach seats are filling fast, get in now, who else is in?', avBg: '#6CABDD', initials: 'MA', photo: media.avMarcus, isText: true },
+  { id: 'cm2', user: 'PRIYA_S', text: 'Anyone know if the Cotton Tree takes bookings?', avBg: '#0C3A5E', initials: 'PR', photo: media.avPriya, isText: true },
+  { id: 'cm3', user: 'DECLAN_K', text: 'Saved you a seat on the coach mate', avBg: '#6CABDD', initials: 'DE', photo: media.avDeclan, isText: true, replyToId: 'cm1', baseReactions: { '❤️': 3 } },
+  { id: 'cm4', user: 'HANNAH_M', text: 'Away hotel prices are criminal right now', avBg: '#0C3A5E', initials: 'HA', photo: media.avHannah, isText: true },
+  { id: 'cm5', user: 'MARCUS_92', text: 'Yeah booked mine last week, prices only go up from here', avBg: '#6CABDD', initials: 'MA', photo: media.avMarcus, isText: true, replyToId: 'cm4' },
+  { id: 'cm6', user: 'TOMMY_R', text: 'Kids strip finally arrived, my lad is buzzing', avBg: '#6CABDD', initials: 'TO', photo: media.avR1, isText: true },
+  { id: 'cm7', user: 'PRIYA_S', text: 'Can we get a group order in for the away scarves?', avBg: '#0C3A5E', initials: 'PR', photo: media.avPriya, isText: true },
+  { id: 'cm8', user: 'DECLAN_K', text: 'Count me in for two', avBg: '#6CABDD', initials: 'DE', photo: media.avDeclan, isText: true, replyToId: 'cm7' },
+  { id: 'cm9', user: 'HANNAH_M', text: 'Same, put me down for one', avBg: '#0C3A5E', initials: 'HA', photo: media.avHannah, isText: true, replyToId: 'cm7' },
+  { id: 'cm10', user: 'SAM_W', text: 'Anyone watching the reserves on Tuesday?', avBg: '#6CABDD', initials: 'SA', photo: media.avR2, isText: true },
+  { id: 'cm11', user: 'MARCUS_92', text: 'Yeah, streaming it from the usual spot', avBg: '#6CABDD', initials: 'MA', photo: media.avMarcus, isText: true, replyToId: 'cm10' },
+  { id: 'cm12', user: 'TOMMY_R', text: 'This Crew is more active than my actual group chat', avBg: '#6CABDD', initials: 'TO', photo: media.avR1, isText: true, baseReactions: { '😂': 5 } },
 ];
 const PLAYER_INIT: Record<string, string> = { 'Erling Haaland': 'EH', 'Phil Foden': 'PF', 'Jeremy Doku': 'JD', 'Rayan Ait-Nouri': 'RA' };
 const PLAYER_PHOTO: Record<string, string> = { 'Erling Haaland': media.playerHaaland, 'Phil Foden': media.playerFoden, 'Jeremy Doku': media.playerDoku, 'Rayan Ait-Nouri': media.playerAitNouri };
 // Verified player content already sitting in a Crew's permanent thread.
 const PLAYER_MSGS: Record<string, CrewMsg[]> = {
   msb: [
-    { user: 'Erling Haaland', initials: 'EH', avBg: '#6CABDD', photo: media.playerHaaland, verified: true, isImage: true, id: 'pp-haaland-tunnel', caption: 'Ready for tonight. See you out there, Moss Side.' },
-    { user: 'Phil Foden', initials: 'PF', avBg: '#6CABDD', photo: media.playerFoden, verified: true, isVoice: true, dur: '0:18', wave: [8, 14, 10, 18, 12, 20, 9, 16, 11, 19, 13, 8, 15, 10] },
-    { user: 'Jeremy Doku', initials: 'JD', avBg: '#6CABDD', photo: media.playerDoku, verified: true, isSocial: true, socialIcon: 'photo_camera', socialTitle: 'Posted to Instagram', socialSub: 'Matchday boots, fresh out the box' },
+    { id: 'pp-haaland-tunnel', user: 'Erling Haaland', initials: 'EH', avBg: '#6CABDD', photo: media.playerHaaland, verified: true, isImage: true, caption: 'Ready for tonight. See you out there, Moss Side.', baseReactions: { '❤️': 42, '🔥': 18 } },
+    { id: 'pp-foden-voice', user: 'Phil Foden', initials: 'PF', avBg: '#6CABDD', photo: media.playerFoden, verified: true, isVoice: true, dur: '0:18', wave: [8, 14, 10, 18, 12, 20, 9, 16, 11, 19, 13, 8, 15, 10] },
+    { id: 'pp-doku-social', user: 'Jeremy Doku', initials: 'JD', avBg: '#6CABDD', photo: media.playerDoku, verified: true, isSocial: true, socialIcon: 'photo_camera', socialTitle: 'Posted to Instagram', socialSub: 'Matchday boots, fresh out the box' },
   ],
 };
 const LB_CREW = [
@@ -157,6 +166,7 @@ interface FSt {
   playerPost: { crewId: string; player: string; type: string };
   playingVoice: string | null;
   call: { active: boolean; player: string; joined: boolean };
+  reactions: Record<string, number>; replyDraftId: string | null;
 }
 const money = (n: number) => '£' + n.toFixed(2);
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -177,6 +187,7 @@ export function MatchdayFan() {
     dropIn: { active: false, crewId: null, player: null, endsAt: null, duration: 10, queue: [], approved: [], picked: { crewId: 'seasontix', player: 'Erling Haaland', duration: 10 }, qDraft: '' },
     presenceStamps: {}, playerPost: { crewId: 'msb', player: 'Erling Haaland', type: 'image' }, playingVoice: null,
     call: { active: false, player: 'Erling Haaland', joined: false },
+    reactions: {}, replyDraftId: null,
   }));
   const set = (patch: Partial<FSt> | ((s: FSt) => Partial<FSt>)) => setSt((sPrev) => ({ ...sPrev, ...(typeof patch === 'function' ? patch(sPrev) : patch) }));
   const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number; sk?: number; di?: number; diBanner?: number }>({});
@@ -300,8 +311,15 @@ export function MatchdayFan() {
   const postCrew = (text: string) => {
     if (!text.trim()) return;
     const crewId = st.activeCrew;
-    set((sp) => ({ crewDraft: '', crewMsgsExtra: { ...sp.crewMsgsExtra, [crewId]: [...(sp.crewMsgsExtra[crewId] || []), { user: 'YOU', text: text.trim(), avBg: '#001838', initials: 'YO', isText: true }] } }));
+    set((sp) => {
+      const msg: CrewMsg = { id: 'you-' + Date.now(), user: 'YOU', text: text.trim(), avBg: '#001838', initials: 'YO', isText: true, ...(sp.replyDraftId ? { replyToId: sp.replyDraftId } : {}) };
+      return { crewDraft: '', replyDraftId: null, crewMsgsExtra: { ...sp.crewMsgsExtra, [crewId]: [...(sp.crewMsgsExtra[crewId] || []), msg] } };
+    });
   };
+  // Crew thread: toggle a reaction on a message, or start/cancel a reply.
+  const toggleReaction = (msgId: string, emoji: string) => set((sp) => { const key = msgId + ':' + emoji; return { reactions: { ...sp.reactions, [key]: sp.reactions[key] ? 0 : 1 } }; });
+  const setReply = (msgId: string) => set({ replyDraftId: msgId });
+  const cancelReply = () => set({ replyDraftId: null });
   // Verified player content dropped straight into a Crew's thread (operator-authored).
   const postPlayerContentWith = (crewId: string, player: string, type: string) => {
     const initials = PLAYER_INIT[player] || '??';
@@ -530,7 +548,7 @@ export function MatchdayFan() {
             {/* ROUTES */}
             {isHome && <Home {...{ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, award, set }} />}
             {st.route === 'community' && <Community {...{ st, set, go, openCrew, pickOnboarding, skipOnboarding }} />}
-            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn, go }} />}
+            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply }} />}
             {st.route === 'createCrew' && <CreateCrew {...{ st, set, createCrew }} />}
             {st.route === 'crewSettings' && <CrewSettings {...{ st, crew: activeCrewData, set, go, notify }} />}
             {st.route === 'invite' && <Invite {...{ st, crew: activeCrewData, set, inviteContact, notify }} />}
@@ -996,7 +1014,7 @@ function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: an
 }
 
 // ── Crew View: thread, plans, gated states, player drop-in, verified player posts ──
-function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
+function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply }: any) {
   const L = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const joined = !!st.crewsJoined[crew.id];
   const gatedLocked = crew.gated && !st.boxUnlocked;
@@ -1007,6 +1025,10 @@ function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
   const msgs: CrewMsg[] = [...CREW_MSGS, ...(PLAYER_MSGS[crew.id] || []), ...(st.crewMsgsExtra[crew.id] || [])];
   const memberAvatars = Array.from({ length: 8 }, (_, i) => ({ src: ROSTER_PHOTOS[i % ROSTER_PHOTOS.length], initials: 'M' + (i + 1), bg: i % 2 ? '#6CABDD' : '#0C3A5E' }));
   const playVoice = (key: string) => set((sp: FSt) => ({ playingVoice: sp.playingVoice === key ? null : key }));
+  // Reply threading: look up the quoted message + who/what the composer is replying to.
+  const bySrcId: Record<string, CrewMsg> = {}; msgs.forEach((m) => { if (m.id) bySrcId[m.id] = m; });
+  const quoteText = (q: CrewMsg) => q.text || q.caption || '(voice note)';
+  const replyDraftSrc = st.replyDraftId ? bySrcId[st.replyDraftId] : null;
   return (
     <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px')}>
       {/* Twitter-style banner header */}
@@ -1065,11 +1087,20 @@ function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
           ))}
           {msgs.map((m, i) => {
             const vkey = 'v' + crew.id + i;
+            const quoted = m.replyToId ? bySrcId[m.replyToId] : null;
+            const mid = m.id ?? '';
+            const rx = REACTION_EMOJIS.map((e) => { const on = !!(mid && st.reactions[mid + ':' + e]); return { e, on, count: ((m.baseReactions && m.baseReactions[e]) || 0) + (on ? 1 : 0) }; }).filter((r) => r.count > 0);
             return (
               <div key={i} style={s('display:flex;gap:8px')}>
                 <Avatar src={m.photo} initials={m.initials} bg={m.avBg} size={26} />
                 <div style={s('flex:1;min-width:0')}>
                   <div style={s('display:flex;align-items:center;gap:5px')}><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label)")}>{m.user}</span>{m.verified && <Ms size={12} color="#6CABDD">verified</Ms>}</div>
+                  {quoted && (
+                    <div style={s('display:flex;align-items:center;gap:5px;margin-top:4px;padding-left:8px;border-left:2px solid #6CABDD')}>
+                      <span style={s("font:700 10.5px/1.3 'Kippax','Archivo';color:#6CABDD")}>{quoted.user}</span>
+                      <span style={s("font:500 10.5px/1.3 'Kippax','Archivo';color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px")}>{quoteText(quoted)}</span>
+                    </div>
+                  )}
                   {m.isText && <div style={s("font:500 13px/1.4 'Kippax','Archivo';color:var(--ink);margin-top:4px;background:var(--sand);padding:8px 10px;border-radius:3px 12px 12px 12px")}>{m.text}</div>}
                   {m.isImage && (
                     <div style={s('margin-top:4px;background:var(--sand);border-radius:3px 12px 12px 12px;overflow:hidden;max-width:220px')}>
@@ -1090,6 +1121,15 @@ function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
                       <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 12px/1.3 'Kippax','Archivo';color:var(--ink)")}>{m.socialTitle}</span><span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:var(--label);margin-top:2px")}>{m.socialSub}</span></span>
                     </div>
                   )}
+                  {m.id && (
+                    <div style={s('display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap')}>
+                      {rx.map((r) => (
+                        <button key={r.e} onClick={() => toggleReaction(mid, r.e)} style={{ ...s("display:flex;align-items:center;gap:4px;font:700 10.5px/1 'Kippax','Archivo';padding:4px 7px;border-radius:100px"), background: r.on ? '#6CABDD' : 'var(--sand)', color: r.on ? '#fff' : 'var(--label)' }}><span>{r.e}</span><span>{r.count}</span></button>
+                      ))}
+                      <button onClick={() => toggleReaction(mid, '❤️')} style={s("font:700 12px/1 'Kippax','Archivo';color:var(--label);padding:4px 6px")}>+😀</button>
+                      <button onClick={() => setReply(mid)} style={s("font:700 10.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:var(--label);padding:4px 6px")}>REPLY</button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -1101,12 +1141,18 @@ function Crew({ st, crew, set, postCrew, askDropIn, go }: any) {
             <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.dropIn.qDraft} onChange={(e: any) => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, qDraft: e.target.value } }))} onKeyDown={(e: any) => { if (e.key === 'Enter') askDropIn(st.dropIn.qDraft); }} placeholder="Ask a question…" style={s("width:100%;font:500 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")} /></div>
             <button onClick={() => askDropIn(st.dropIn.qDraft)} style={s('width:44px;height:44px;flex:none;background:#6CABDD;border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="#fff">arrow_upward</Ms></button>
           </div>
-        </>) : (
+        </>) : (<>
+          {replyDraftSrc && (
+            <div style={s('display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--sand)')}>
+              <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 11.5px/1.3 'Kippax','Archivo';color:var(--label)")}>Replying to <strong style={{ color: 'var(--ink)' }}>{replyDraftSrc.user}</strong>: {quoteText(replyDraftSrc)}</span>
+              <button onClick={cancelReply} style={s("flex:none;font:800 12px/1 'Kippax','Archivo';color:var(--label)")}>✕</button>
+            </div>
+          )}
           <div style={s('padding:10px 16px 20px;display:flex;gap:8px;align-items:center')}>
-            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.crewDraft} onChange={(e: any) => set({ crewDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') postCrew(st.crewDraft); }} placeholder="Message your Crew…" style={s("width:100%;font:500 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")} /></div>
+            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.crewDraft} onChange={(e: any) => set({ crewDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') postCrew(st.crewDraft); }} placeholder={replyDraftSrc ? 'Reply to ' + replyDraftSrc.user + '…' : 'Message your Crew…'} style={s("width:100%;font:500 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")} /></div>
             <button onClick={() => postCrew(st.crewDraft)} style={s('width:44px;height:44px;flex:none;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
           </div>
-        )}
+        </>)}
       </>)}
     </div>
   );
@@ -1301,8 +1347,8 @@ function CrewsIntro({ dismiss }: { dismiss: () => void }) {
         ))}</div>
       </div>
       <div style={s('flex:none;padding:18px 24px 24px;background:var(--panel)')}>
-        <button onClick={dismiss} style={s("display:block;width:100%;font:800 13px/1 'Kippax','Archivo';letter-spacing:.06em;color:#001838;background:#6CABDD;padding:16px 0")}>TRY IT OUT</button>
-        <button onClick={dismiss} className="fh" style={s("display:block;width:100%;margin-top:12px;font:700 11px/1 'Kippax','Archivo';letter-spacing:.08em;color:#8AA0B6;padding:4px 0")}>MAYBE LATER</button>
+        <button onClick={dismiss} style={s("display:block;width:100%;font:800 13px/1 'Kippax','Archivo';letter-spacing:.06em;color:#001838;background:#6CABDD;padding:16px 0;text-align:center")}>TRY IT OUT</button>
+        <button onClick={dismiss} className="fh" style={s("display:block;width:100%;margin-top:12px;font:700 11px/1 'Kippax','Archivo';letter-spacing:.08em;color:#8AA0B6;padding:4px 0;text-align:center")}>MAYBE LATER</button>
       </div>
     </div>
   );
