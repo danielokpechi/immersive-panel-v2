@@ -62,7 +62,7 @@ const ARTICLES = [
 ];
 
 // ── Crews layer (a persistent social layer; The Box is now a gated Crew) ──
-type CrewMsg = { user: string; initials: string; avBg: string; photo?: string; verified?: boolean; isText?: boolean; text?: string; isImage?: boolean; id?: string; caption?: string; isVoice?: boolean; dur?: string; wave?: number[]; isSocial?: boolean; socialIcon?: string; socialTitle?: string; socialSub?: string; replyToId?: string; baseReactions?: Record<string, number> };
+type CrewMsg = { user: string; initials: string; avBg: string; photo?: string; verified?: boolean; isText?: boolean; text?: string; isImage?: boolean; id?: string; caption?: string; isVoice?: boolean; dur?: string; wave?: number[]; isSocial?: boolean; socialIcon?: string; socialTitle?: string; socialSub?: string; isCall?: boolean; callPlayer?: string; callTitle?: string; callSub?: string; replyToId?: string; baseReactions?: Record<string, number> };
 const REACTION_EMOJIS = ['❤️', '😂', '🔥'];
 // Circular avatar: a real photo when we have one, else the initials disc.
 const Avatar = ({ src, initials, bg, size = 26, style }: { src?: string; initials?: string; bg?: string; size?: number; style?: CSSProperties }) => (
@@ -114,6 +114,7 @@ const PLAYER_MSGS: Record<string, CrewMsg[]> = {
     { id: 'pp-haaland-tunnel', user: 'Erling Haaland', initials: 'EH', avBg: '#6CABDD', photo: media.playerHaaland, verified: true, isImage: true, caption: 'Ready for tonight. See you out there, Moss Side.', baseReactions: { '❤️': 42, '🔥': 18 } },
     { id: 'pp-foden-voice', user: 'Phil Foden', initials: 'PF', avBg: '#6CABDD', photo: media.playerFoden, verified: true, isVoice: true, dur: '0:18', wave: [8, 14, 10, 18, 12, 20, 9, 16, 11, 19, 13, 8, 15, 10] },
     { id: 'pp-doku-social', user: 'Jeremy Doku', initials: 'JD', avBg: '#6CABDD', photo: media.playerDoku, verified: true, isSocial: true, socialIcon: 'photo_camera', socialTitle: 'Posted to Instagram', socialSub: 'Matchday boots, fresh out the box' },
+    { id: 'pp-haaland-room', user: 'Erling Haaland', initials: 'EH', avBg: '#6CABDD', photo: media.playerHaaland, verified: true, isCall: true, callPlayer: 'Erling Haaland', callTitle: 'Erling started a Room', callSub: 'Live now · tap to join', baseReactions: { '🔥': 21 } },
   ],
 };
 const LB_CREW = [
@@ -548,7 +549,7 @@ export function MatchdayFan() {
             {/* ROUTES */}
             {isHome && <Home {...{ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, award, set }} />}
             {st.route === 'community' && <Community {...{ st, set, go, openCrew, pickOnboarding, skipOnboarding }} />}
-            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply }} />}
+            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom }} />}
             {st.route === 'createCrew' && <CreateCrew {...{ st, set, createCrew }} />}
             {st.route === 'crewSettings' && <CrewSettings {...{ st, crew: activeCrewData, set, go, notify }} />}
             {st.route === 'invite' && <Invite {...{ st, crew: activeCrewData, set, inviteContact, notify }} />}
@@ -1014,7 +1015,7 @@ function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: an
 }
 
 // ── Crew View: thread, plans, gated states, player drop-in, verified player posts ──
-function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply }: any) {
+function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom }: any) {
   const L = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const joined = !!st.crewsJoined[crew.id];
   const gatedLocked = crew.gated && !st.boxUnlocked;
@@ -1120,6 +1121,16 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
                       <Ms size={19} color="var(--ink)">{m.socialIcon!}</Ms>
                       <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 12px/1.3 'Kippax','Archivo';color:var(--ink)")}>{m.socialTitle}</span><span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:var(--label);margin-top:2px")}>{m.socialSub}</span></span>
                     </div>
+                  )}
+                  {m.isCall && (
+                    <button onClick={() => openRoom(m.callPlayer || m.user)} className="fs" style={s('margin-top:4px;display:flex;align-items:center;gap:11px;width:100%;max-width:300px;background:var(--panel);border-radius:3px 12px 12px 12px;padding:11px 12px;text-align:left')}>
+                      <span style={s('width:38px;height:38px;flex:none;border-radius:10px;background:#6CABDD;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#100E0A">videocam</Ms></span>
+                      <span style={s('flex:1;min-width:0')}>
+                        <span style={s('display:flex;align-items:center;gap:5px')}><span style={s('width:5px;height:5px;flex:none;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} /><span style={s("font:800 12px/1.3 'Kippax','Archivo';color:var(--on-panel)")}>{m.callTitle}</span></span>
+                        <span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:#8B93A0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{m.callSub}</span>
+                      </span>
+                      <span style={s("flex:none;font:800 10px/1 'Kippax','Archivo';letter-spacing:.06em;color:#100E0A;background:#6CABDD;padding:8px 13px;border-radius:100px")}>JOIN</span>
+                    </button>
                   )}
                   {m.id && (
                     <div style={s('display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap')}>
@@ -1280,37 +1291,48 @@ function Room({ st, joinRoom, leaveRoom }: any) {
       <span style={s("font:700 9px/1 'Kippax','Archivo';color:#fff")}>{label}</span>
     </button>
   );
+  // Crew members ride a clean filmstrip below the player's stage, so nothing
+  // overlaps the bottom of the video. The "You" tile (no src) reads as self.
+  const tile = (t: { name: string; src?: string }, i: number) => {
+    const you = !t.src;
+    return (
+      <div key={i} style={s('display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0')}>
+        <div style={{ ...s('position:relative;width:58px;height:70px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#161311'), border: you ? '1.5px solid #6CABDD' : '1px solid rgba(242,237,227,.10)' }}>
+          {t.src ? <img src={t.src} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} /> : <Ms size={24} color="#6CABDD">person</Ms>}
+          <span style={s('position:absolute;right:4px;bottom:4px;width:16px;height:16px;border-radius:50%;background:rgba(10,9,8,.7);display:flex;align-items:center;justify-content:center')}><Ms size={11} color="#B8B0A2">mic_off</Ms></span>
+        </div>
+        <span style={{ ...s("font:700 9px/1 'Kippax','Archivo';max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"), color: you ? '#6CABDD' : '#C4BCA6' }}>{you ? 'You' : t.name}</span>
+      </div>
+    );
+  };
   return (
     <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px;background:#0A0908')}>
-      <div style={s('display:flex;align-items:center;gap:8px;padding:14px 16px')}>
+      <div style={s('display:flex;align-items:center;gap:8px;padding:14px 16px 12px')}>
         <span style={s('width:6px;height:6px;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} />
         <span style={s("flex:1;font:800 12px/1.2 'Kippax','Archivo';letter-spacing:.04em;color:#fff")}>Moss Side Blues Room</span>
-        <span style={s("font:700 11px/1 'Kippax','Archivo';color:#8C8577")}>{inRoom} in the room</span>
+        <span style={s("display:flex;align-items:center;gap:4px;font:700 11px/1 'Kippax','Archivo';color:#8C8577")}><Ms size={13} color="#8C8577">group</Ms>{inRoom}</span>
       </div>
-      <div style={s('flex:1;position:relative;margin:0 8px;border-radius:10px;overflow:hidden;background:#1B1812;min-height:380px')}>
+      <div style={s('flex:1;position:relative;margin:0 8px;border-radius:14px;overflow:hidden;background:#1B1812;min-height:320px')}>
         <img src={mainSrc} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />
-        <div style={s('position:absolute;left:10px;bottom:10px;display:flex;align-items:center;gap:6px;background:rgba(16,14,10,.55);padding:5px 10px;border-radius:100px')}>
+        <div style={s('position:absolute;left:0;right:0;bottom:0;height:92px;background:linear-gradient(rgba(10,9,8,0),rgba(10,9,8,.72))')} />
+        <span style={s("position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:5px;background:rgba(214,32,42,.92);padding:4px 8px;border-radius:100px;font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff")}><span style={s('width:5px;height:5px;border-radius:50%;background:#fff')} />LIVE</span>
+        <div style={s('position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:6px;background:rgba(16,14,10,.5);padding:6px 11px;border-radius:100px;backdrop-filter:blur(6px)')}>
           <Ms size={14} color="#6CABDD">verified</Ms>
           <span style={s("font:800 11px/1 'Kippax','Archivo';color:#fff")}>{player}</span>
         </div>
-        <div style={s('position:absolute;left:0;right:0;bottom:0;display:flex;gap:6px;padding:0 8px 8px;justify-content:flex-end')}>
-          {ROOM_GUESTS.map((t, i) => (
-            <div key={i} style={s('position:relative;width:64px;height:86px;background:#100E0A;border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center')}>
-              {t.src ? <img src={t.src} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} /> : <Ms size={22} color="#5F5949">person</Ms>}
-              <span style={s("position:absolute;left:4px;bottom:3px;font:700 8.5px/1 'Kippax','Archivo';color:#fff;background:rgba(16,14,10,.55);padding:2px 4px;border-radius:4px")}>{t.name}</span>
-            </div>
-          ))}
-        </div>
+      </div>
+      <div style={s('display:flex;gap:10px;padding:14px 16px 4px;overflow-x:auto')}>
+        {ROOM_GUESTS.map((t, i) => tile(t, i))}
       </div>
       {st.call.joined ? (
-        <div style={s('display:flex;justify-content:center;gap:22px;padding:16px 0 20px')}>
+        <div style={s('display:flex;justify-content:center;gap:22px;padding:12px 0 20px')}>
           {ctrl('mic', 'MUTE', 'rgba(242,237,227,.14)')}
           {ctrl('videocam', 'CAMERA', 'rgba(242,237,227,.14)')}
           {ctrl('call_end', 'LEAVE', '#D6202A', leaveRoom)}
         </div>
       ) : (
-        <div style={s('padding:16px 16px 22px')}>
-          <button onClick={joinRoom} style={s("display:block;width:100%;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:#100E0A;background:#6CABDD;padding:14px 0;text-align:center")}>JOIN ROOM</button>
+        <div style={s('padding:12px 16px 22px')}>
+          <button onClick={joinRoom} style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:#100E0A;background:#6CABDD;padding:15px 0;border-radius:12px")}><Ms size={17} color="#100E0A">videocam</Ms>JOIN ROOM</button>
         </div>
       )}
     </div>
