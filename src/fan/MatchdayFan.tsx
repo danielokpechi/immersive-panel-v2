@@ -64,7 +64,7 @@ const POOL = [
 const TEAM: Record<string, { bg: string; fg: string }> = { h: { bg: '#6CABDD', fg: '#fff' }, s: { bg: '#0C3A5E', fg: '#fff' }, n: { bg: '#C3B69A', fg: '#001838' } };
 const EV: Record<string, { icon: string; color: string }> = {
   GOAL: { icon: 'sports_soccer', color: '#6CABDD' }, YELLOW: { icon: '', color: '#F4C400' }, 'RED CARD': { icon: '', color: '#D6202A' },
-  'VAR CHECK': { icon: 'videocam', color: '#6CABDD' }, 'NO PENALTY': { icon: 'gavel', color: '#EAF1F8' }, PENALTY: { icon: 'gavel', color: '#6CABDD' },
+  'VAR CHECK': { icon: 'videocam', color: '#6CABDD' }, 'NO PENALTY': { icon: 'gavel', color: '#EAF1F8' }, PENALTY: { icon: 'gavel', color: '#6CABDD' }, OFFSIDE: { icon: 'flag', color: '#F4C400' },
   SUBSTITUTION: { icon: 'swap_vert', color: '#EAF1F8' }, 'DRINKS BREAK': { icon: 'local_drink', color: '#8AA0B6' }, CHANCE: { icon: 'crisis_alert', color: '#8AA0B6' },
   PLAYER: { icon: 'verified', color: '#6CABDD' },
 };
@@ -285,6 +285,7 @@ export function MatchdayFan() {
     else if (kind === 'red') fire('RED CARD', 'Camavinga', 64, 'Second yellow · Madrid down to ten', 'REAL MADRID', 'a');
     else if (kind === 'var') varCheck();
     else if (kind === 'sub') fire('SUBSTITUTION', 'Doku on', 68, 'Grealish off · 68 minutes played, 3 chances created', 'MAN CITY', 'h');
+    else if (kind === 'offside') fire('OFFSIDE', 'Vinícius Júnior', 44, 'Flag up · Madrid strike ruled out, tight one on the shoulder', 'REAL MADRID', 'a');
     else if (kind === 'drinks') fire('DRINKS BREAK', 'Two minutes', 33, 'Referee has paused play, 26°C at kick-off', 'HYDRATION', 'n');
   };
   // Follow the control room: apply commands from the panel's channel. Ref keeps
@@ -458,8 +459,8 @@ export function MatchdayFan() {
   const backLabel = st.navStack.length ? (titles[st.navStack[st.navStack.length - 1]] || 'HOME') : 'HOME';
   const showCrewsIntro = st.forceCrewsIntro || ((st.route === 'community' || st.route === 'crew') && !st.crewsIntroSeen);
 
-  const opBtn = (label: string, onClick: () => void, bg: string, color: string) => (
-    <button onClick={onClick} style={{ ...s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.1em;padding:8px 10px"), background: bg, color }}>{label}</button>
+  const opBtn = (label: string, onClick: () => void, bg: string, color: string, pad = '8px 10px') => (
+    <button onClick={onClick} style={{ ...s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.08em;padding:" + pad), background: bg, color }}>{label}</button>
   );
 
   // Embed mode (control-room monitor iframe): fill the frame, no operator strip / bezel.
@@ -485,15 +486,26 @@ export function MatchdayFan() {
       <div style={colStyle}>
         {showOperator && (<>
         {/* operator strip (demo): match states + a goal drop */}
-        <div style={{ ...s('display:flex;align-items:center;gap:8px;padding:9px 10px'), width: frameless ? '100%' : '393px', background: 'var(--panel)' }}>
-          <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>OPERATOR</span>
-          <div style={s('display:flex;gap:4px;margin-left:auto')}>
-            {opBtn('PRE', () => applyState('pre'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
-            {opBtn('LIVE', () => applyState('live'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
-            {opBtn('HT', () => applyState('ht'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
-            {opBtn('FT', () => applyState('ft'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
-            {opBtn('GOAL', () => applyEventCmd('goal'), '#6CABDD', '#fff')}
-            {opBtn('ROOM', () => openRoom('Erling Haaland'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
+        <div style={{ ...s('display:flex;flex-direction:column;gap:7px;padding:9px 10px'), width: frameless ? '100%' : '393px', background: 'var(--panel)' }}>
+          <div style={s('display:flex;align-items:center;gap:8px')}>
+            <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>STATE</span>
+            <div style={s('display:flex;gap:4px;margin-left:auto')}>
+              {opBtn('PRE', () => applyState('pre'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
+              {opBtn('LIVE', () => applyState('live'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
+              {opBtn('HT', () => applyState('ht'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
+              {opBtn('FT', () => applyState('ft'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
+            </div>
+          </div>
+          <div style={s('display:flex;align-items:center;gap:8px')}>
+            <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>EVENT</span>
+            <div style={s('display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end')}>
+              {opBtn('GOAL', () => applyEventCmd('goal'), '#6CABDD', '#fff', '8px 7px')}
+              {opBtn('YELLOW', () => applyEventCmd('card'), '#F4C400', '#001838', '8px 7px')}
+              {opBtn('RED', () => applyEventCmd('red'), '#D6202A', '#fff', '8px 7px')}
+              {opBtn('OFFSIDE', () => applyEventCmd('offside'), 'rgba(234,241,248,.12)', 'var(--on-panel)', '8px 7px')}
+              {opBtn('VAR', () => applyEventCmd('var'), 'rgba(234,241,248,.12)', 'var(--on-panel)', '8px 7px')}
+              {opBtn('SUB', () => applyEventCmd('sub'), 'rgba(234,241,248,.12)', 'var(--on-panel)', '8px 7px')}
+            </div>
           </div>
         </div>
         </>)}
