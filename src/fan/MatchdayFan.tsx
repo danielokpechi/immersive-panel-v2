@@ -30,6 +30,20 @@ function Slot({ id, label }: { id: string; label: string }) {
   return <span style={s("position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:var(--label)")}>{label}</span>;
 }
 
+// Cinematic matchday backdrop: City crowd, floodlight grade + vignette, one-shot sweep.
+// Shared by the PRE/LIVE/HT/FT hero heads so every match state feels like one broadcast.
+function HeroBg({ pos = '50% 8%', glow = 'rgba(108,171,221,.46)', sweep = true }: { pos?: string; glow?: string; sweep?: boolean }) {
+  return (
+    <>
+      <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:' + pos)} />
+      <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,17,46,.46) 0%,rgba(0,17,46,.62) 24%,rgba(0,15,38,.9) 52%,#00112e 88%)')} />
+      <div style={{ ...s('position:absolute;inset:0'), background: 'radial-gradient(120% 72% at 50% -14%,' + glow + ',transparent 56%)', animation: 'bgFloods 5s ease-in-out infinite' }} />
+      <div style={s('position:absolute;inset:0;background:radial-gradient(140% 88% at 50% 26%,transparent 42%,rgba(0,12,30,.5))')} />
+      {sweep && <div style={s('position:absolute;top:0;bottom:0;left:-45%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);transform:skewX(-12deg);animation:bgSweep 1.6s cubic-bezier(.3,.7,.3,1) .3s both;pointer-events:none')} />}
+    </>
+  );
+}
+
 // seeded match chatter
 const POOL = [
   { user: 'MARCUS_92', text: 'Etihad is loud tonight. Genuinely loud.', t: 'h', tag: 'BLOCK 108' },
@@ -70,7 +84,7 @@ const Avatar = ({ src, initials, bg, size = 26, style }: { src?: string; initial
     ? <img src={src} alt="" loading="lazy" style={{ width: size, height: size, flex: 'none', borderRadius: '50%', objectFit: 'cover', ...style }} />
     : <span style={{ width: size, height: size, flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg || '#6CABDD', color: '#fff', fontFamily: "'Kippax','Archivo'", fontWeight: 800, fontSize: Math.round(size * 0.34), lineHeight: 1, ...style }}>{initials}</span>
 );
-type CrewRec = { id: string; name: string; initials: string; members: number; official: boolean; gated: boolean; unlockHint: string; latest: string; isCustom?: boolean; rules?: string; privacy?: string };
+type CrewRec = { id: string; name: string; initials: string; members: number; official: boolean; gated: boolean; unlockHint: string; latest: string; isCustom?: boolean; rules?: string; privacy?: string; status?: 'pending' | 'approved' };
 const CREWS: CrewRec[] = [
   { id: 'msb', name: 'Moss Side Blues', initials: 'MB', members: 1842, official: false, gated: false, unlockHint: '', latest: '"Anyone getting picked up in Stockport?"' },
   { id: 'kippax', name: 'The Kippax', initials: 'TK', members: 340, official: false, gated: false, unlockHint: '', latest: '"See you at the usual spot"' },
@@ -384,13 +398,15 @@ export function MatchdayFan() {
     if (!name) return;
     const cid = 'custom-' + Date.now();
     set((sp) => ({
-      customCrews: [...sp.customCrews, { id: cid, name, initials: name.slice(0, 2).toUpperCase(), members: 1, official: false, gated: false, unlockHint: '', latest: 'Crew created', rules: sp.newCrewDesc.trim() || 'No rules yet, set the tone.', privacy: sp.newCrewPrivacy, isCustom: true }],
+      customCrews: [...sp.customCrews, { id: cid, name, initials: name.slice(0, 2).toUpperCase(), members: 1, official: false, gated: false, unlockHint: '', latest: 'Submitted for review', rules: sp.newCrewDesc.trim() || 'No rules yet, set the tone.', privacy: sp.newCrewPrivacy, isCustom: true, status: 'pending' }],
       crewsJoined: { ...sp.crewsJoined, [cid]: true }, activeCrew: cid,
       newCrewName: '', newCrewDesc: '', newCrewPrivacy: 'public',
       route: 'crew', navStack: [...sp.navStack, 'community'],
     }));
-    notify('CREW CREATED');
+    notify('SUBMITTED FOR REVIEW');
   };
+  // Man City clears a pending Crew (demo shortcut for the club-validation step).
+  const approveCrew = (cid: string) => { set((sp) => ({ customCrews: sp.customCrews.map((c) => c.id === cid ? { ...c, status: 'approved', latest: 'Approved by Man City · live now' } : c) })); notify('CREW APPROVED'); };
   const inviteContact = (name: string) => { set((sp) => ({ inviteSent: { ...sp.inviteSent, [name]: true } })); notify('INVITE SENT TO ' + name.toUpperCase()); };
   const pickOnboarding = (crewId: string) => { set((sp) => ({ crewsJoined: { ...sp.crewsJoined, [crewId]: true } })); notify('JOINED'); };
   const skipOnboarding = () => set({ onboardingSkipped: true });
@@ -514,16 +530,16 @@ export function MatchdayFan() {
                     <span style={s("font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--on-panel)")}>{statusLabel}</span>
                   </div>
                 </>) : (<>
-                  <div style={s('display:flex;align-items:center;flex:1;min-width:0;padding-left:14px')}>
+                  <div style={s('display:flex;align-items:center;flex:1;min-width:0;padding-left:14px;overflow:hidden')}>
                     <Badge club="city" size={22} bare />
-                    <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>MCI</span>
-                    <span style={s("font:800 19px/1 'Kippax','Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.hs}</span>
+                    {!isSub && <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>MCI</span>}
+                    <span style={s("font:800 19px/1 'Kippax','Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums;padding-left:" + (isSub ? '8px' : '0'))}>{st.hs}</span>
                     <span style={s("font:700 13px/1 'Kippax','Archivo';color:var(--label);padding:0 6px")}>–</span>
-                    <span style={s("font:800 19px/1 'Kippax','Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.as}</span>
-                    <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>RMA</span>
+                    <span style={s("font:800 19px/1 'Kippax','Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums;padding-right:" + (isSub ? '8px' : '0'))}>{st.as}</span>
+                    {!isSub && <span style={s("font:800 15px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>RMA</span>}
                     <Badge club="madrid" size={22} bare />
                   </div>
-                  <div style={{ ...s('display:flex;align-items:center;gap:6px;padding:0 12px'), background: live ? '#D6202A' : '#3A352A' }}>
+                  <div style={{ ...s('display:flex;align-items:center;gap:6px;padding:0 12px'), background: live ? '#D6202A' : 'rgba(234,241,248,.14)' }}>
                     {live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:bgBlink 1.6s steps(1,end) infinite')} />}
                     <span style={s("font:800 12px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);font-variant-numeric:tabular-nums")}>{statusLabel}</span>
                   </div>
@@ -539,9 +555,10 @@ export function MatchdayFan() {
                 </div>
               )}
               {isSub && (
-                <div style={s('display:flex;align-items:center;gap:8px;height:34px;padding:0 15px;background:var(--chrome)')}>
-                  <span style={s("font:800 17px/1 'KippaxCondensed','Archivo Black';letter-spacing:.06em;color:var(--on-panel)")}>{titles[st.route]}</span>
-                  <span style={s("font:700 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6;margin-left:auto")}>{metas[st.route]}</span>
+                <div style={s('display:flex;align-items:center;gap:9px;height:40px;padding:0 15px;background:var(--chrome);box-shadow:inset 0 -1px 0 rgba(234,241,248,.08)')}>
+                  <span style={s('width:5px;height:16px;flex:none;background:#6CABDD;transform:skewX(-8deg)')} />
+                  <span style={s("font:800 19px/1 'KippaxCondensed','Archivo Black';letter-spacing:.05em;color:var(--on-panel)")}>{titles[st.route]}</span>
+                  <span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.12em;color:#9DB2C7;margin-left:auto;background:rgba(234,241,248,.08);padding:5px 8px")}>{metas[st.route]}</span>
                 </div>
               )}
             </div>
@@ -549,7 +566,7 @@ export function MatchdayFan() {
             {/* ROUTES */}
             {isHome && <Home {...{ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, award, set }} />}
             {st.route === 'community' && <Community {...{ st, set, go, openCrew, pickOnboarding, skipOnboarding }} />}
-            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom }} />}
+            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom, approveCrew }} />}
             {st.route === 'createCrew' && <CreateCrew {...{ st, set, createCrew }} />}
             {st.route === 'crewSettings' && <CrewSettings {...{ st, crew: activeCrewData, set, go, notify }} />}
             {st.route === 'invite' && <Invite {...{ st, crew: activeCrewData, set, inviteContact, notify }} />}
@@ -620,6 +637,8 @@ type HP = { st: FSt; pre: boolean; live: boolean; ht: boolean; ft: boolean; inac
 function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go }: HP) {
   const liveish = live || ht;
   const label = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  // Section header with the City-blue skewed accent tick, to tie the light body to the heroes.
+  const sect = (t: string) => <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:5px;height:15px;flex:none;background:#6CABDD;transform:skewX(-8deg)')} />{label(t)}</div>;
   const sections = [
     { t: 'Fan reactions', tag: 'LIVE', d: 'Reels & posts pulled from Instagram, TikTok, YouTube, X and Threads by #MCIRMA.', icon: 'sensors', go: go('reactions') },
     // Predictions close once the match ends, no tab at full-time.
@@ -658,8 +677,8 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
   const formA = ['W', 'W', 'W', 'D', 'W'].map((r) => ({ r, bg: r === 'W' ? '#FEBE10' : 'rgba(255,255,255,.22)', fg: r === 'W' ? '#00296B' : '#fff' }));
   const ladder = [
     { name: '£5 food credit', cost: '500 XP', tag: 'CLAIMED', bg: 'rgba(234,241,248,.08)', fg: '#EAF1F8', subFg: '#8AA0B6', tagFg: '#6CABDD', op: 1 },
-    { name: 'Seat upgrade', cost: '2,000 XP', tag: 'NEXT UP', bg: '#EAF1F8', fg: '#001838', subFg: '#5F5949', tagFg: '#001838', op: 1 },
-    { name: 'Home shirt', cost: '5,000 XP', tag: 'LOCKED', bg: 'rgba(234,241,248,.08)', fg: '#EAF1F8', subFg: '#A9A18E', tagFg: '#A9A18E', op: 0.6 },
+    { name: 'Seat upgrade', cost: '2,000 XP', tag: 'NEXT UP', bg: '#EAF1F8', fg: '#001838', subFg: '#5E7488', tagFg: '#001838', op: 1 },
+    { name: 'Home shirt', cost: '5,000 XP', tag: 'LOCKED', bg: 'rgba(234,241,248,.08)', fg: '#EAF1F8', subFg: '#8AA0B6', tagFg: '#8AA0B6', op: 0.6 },
   ];
   const questDefs = [
     { k: 'predict', title: 'Lock in a prediction', how: 'Correct score + first scorer', xp: '120 XP', go: go('pred') },
@@ -705,36 +724,71 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
         </section>
       )}
       {pre && (
-        <section style={s('animation:bgFade .35s ease both')}>
-          <div style={s('position:relative;display:grid;grid-template-columns:1fr 1fr;height:222px;overflow:hidden')}>
-            <div style={s('background:#6CABDD;position:relative;padding:15px 13px;display:flex;flex-direction:column;justify-content:space-between')}>
-              <div style={s('position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.11) 0 10px,transparent 10px 26px)')} />
-              <div style={s('position:relative;display:flex;align-items:center;gap:9px')}><Badge club="city" size={40} /><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.16em;color:#fff")}>HOME</span></div>
-              <div style={s('position:relative')}>
-                <div style={s("font:800 36px/.84 'KippaxCondensed','Archivo Black';letter-spacing:.01em;color:#fff")}>Man<br />City</div>
-                <div style={s('display:flex;gap:4px;margin-top:11px')}>{formH.map((f, i) => <span key={i} style={{ ...s("font:800 9.5px/1 'Kippax','Archivo';padding:5px 6px"), color: f.fg, background: f.bg }}>{f.r}</span>)}</div>
+        <section style={s('position:relative;animation:bgFade .35s ease both')}>
+          {/* ── Cinematic night-match hero: City crowd, floodlight grade, live countdown ── */}
+          <div style={s('position:relative;overflow:hidden;background:#00112e')}>
+            <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 8%')} />
+            <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,17,46,.46) 0%,rgba(0,17,46,.62) 24%,rgba(0,15,38,.9) 52%,#00112e 88%)')} />
+            <div style={s('position:absolute;inset:0;background:radial-gradient(140% 88% at 50% 26%,transparent 42%,rgba(0,12,30,.5))')} />
+            <div style={s('position:absolute;inset:0;background:radial-gradient(120% 72% at 50% -14%,rgba(108,171,221,.46),transparent 56%);animation:bgFloods 5s ease-in-out infinite')} />
+            <div style={s('position:absolute;top:0;bottom:0;left:-45%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);transform:skewX(-12deg);animation:bgSweep 1.6s cubic-bezier(.3,.7,.3,1) .3s both;pointer-events:none')} />
+
+            <div style={s('position:relative;padding:16px 16px 0')}>
+              {/* competition */}
+              <div style={s('display:flex;align-items:center;justify-content:center;gap:11px')}>
+                <span style={s('height:1px;flex:1;max-width:38px;background:linear-gradient(90deg,transparent,rgba(234,241,248,.55))')} />
+                <div style={s('text-align:center')}>
+                  <div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.24em;color:#EAF1F8;text-shadow:0 1px 10px rgba(0,10,28,.85)")}>UEFA CHAMPIONS LEAGUE</div>
+                  <div style={s("font:700 8px/1 'Kippax','Archivo';letter-spacing:.2em;color:#7FB3E0;margin-top:6px")}>SEMI-FINAL · SECOND LEG</div>
+                </div>
+                <span style={s('height:1px;flex:1;max-width:38px;background:linear-gradient(90deg,rgba(234,241,248,.55),transparent)')} />
               </div>
-            </div>
-            <div style={s('background:#00529F;position:relative;padding:15px 13px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;text-align:right')}>
-              <div style={s('position:absolute;inset:0;background:linear-gradient(200deg,rgba(255,255,255,.12),transparent 55%)')} />
-              <div style={s('position:relative;display:flex;align-items:center;gap:9px')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.16em;color:#FEBE10")}>AWAY</span><Badge club="madrid" size={40} /></div>
-              <div style={s('position:relative')}>
-                <div style={s("font:800 36px/.84 'KippaxCondensed','Archivo Black';letter-spacing:.01em;color:#fff")}>Real<br />Madrid</div>
-                <div style={s('display:flex;gap:4px;margin-top:11px;justify-content:flex-end')}>{formA.map((f, i) => <span key={i} style={{ ...s("font:800 9.5px/1 'Kippax','Archivo';padding:5px 6px"), color: f.fg, background: f.bg }}>{f.r}</span>)}</div>
+
+              {/* matchup */}
+              <div style={s('display:flex;align-items:flex-start;justify-content:center;margin-top:18px')}>
+                <div style={s('flex:1;display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="city" size={58} />
+                  <div style={s("font:800 19px/.88 'KippaxCondensed','Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(0,10,28,.75)")}>MAN<br />CITY</div>
+                  <div style={s('display:flex;gap:3px')}>{formH.map((f, i) => <span key={i} style={{ ...s("font:800 8px/1 'Kippax','Archivo';padding:3px 4px"), color: f.fg, background: f.bg }}>{f.r}</span>)}</div>
+                </div>
+                <div style={s("flex:none;padding-top:20px;font:800 13px/1 'KippaxCondensed','Archivo Black';letter-spacing:.06em;color:#7FB3E0")}>V</div>
+                <div style={s('flex:1;display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="madrid" size={58} />
+                  <div style={s("font:800 19px/.88 'KippaxCondensed','Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(0,10,28,.75)")}>REAL<br />MADRID</div>
+                  <div style={s('display:flex;gap:3px')}>{formA.map((f, i) => <span key={i} style={{ ...s("font:800 8px/1 'Kippax','Archivo';padding:3px 4px"), color: f.fg, background: f.bg }}>{f.r}</span>)}</div>
+                </div>
               </div>
-            </div>
-            <div style={s('position:absolute;left:50%;top:0;bottom:0;width:32px;transform:translateX(-50%) skewX(-8deg);background:var(--ground);display:flex;align-items:center;justify-content:center')}><span style={s("font:800 14px/1 'KippaxCondensed','Archivo Black';letter-spacing:.08em;color:var(--ink);transform:skewX(8deg)")}>V</span></div>
-          </div>
-          <div style={s('display:flex;align-items:center;background:var(--panel);padding:14px 16px')}>
-            <div style={s('flex:1')}>
-              <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6")}>KICK-OFF IN</div>
-              <div style={s('display:flex;align-items:flex-end;gap:2px;margin-top:8px;color:var(--on-panel)')}>
-                <span style={s("font:800 42px/.82 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums")}>{pad(Math.floor(cd / 3600))}</span><span style={s("font:700 12px/1 'Kippax','Archivo';color:#8AA0B6;padding:0 7px 5px 2px")}>H</span>
-                <span style={s("font:800 42px/.82 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums")}>{pad(Math.floor(cd / 60) % 60)}</span><span style={s("font:700 12px/1 'Kippax','Archivo';color:#8AA0B6;padding:0 7px 5px 2px")}>M</span>
-                <span style={s("font:800 42px/.82 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums;color:#8AA0B6")}>{pad(cd % 60)}</span><span style={s("font:700 12px/1 'Kippax','Archivo';color:#8AA0B6;padding:0 0 5px 2px")}>S</span>
+
+              {/* live countdown, the focal moment */}
+              <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.3em;color:#7FB3E0;text-align:center;margin-top:26px;text-shadow:0 1px 8px rgba(0,10,28,.8)")}>KICK-OFF IN</div>
+              <div style={s('display:flex;align-items:flex-start;justify-content:center;gap:9px;margin-top:13px;animation:bgReveal .6s cubic-bezier(.2,.85,.2,1) .25s both')}>
+                <div style={s('display:flex;flex-direction:column;align-items:center')}>
+                  <span style={s("font:800 62px/.78 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 3px 24px rgba(0,10,28,.65)")}>{pad(Math.floor(cd / 3600))}</span>
+                  <span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;margin-top:10px")}>HRS</span>
+                </div>
+                <span style={s("padding-top:5px;font:800 44px/.78 'KippaxCondensed','Archivo Black';color:rgba(234,241,248,.26)")}>:</span>
+                <div style={s('display:flex;flex-direction:column;align-items:center')}>
+                  <span style={s("font:800 62px/.78 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 3px 24px rgba(0,10,28,.65)")}>{pad(Math.floor(cd / 60) % 60)}</span>
+                  <span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;margin-top:10px")}>MIN</span>
+                </div>
+                <span style={s("padding-top:5px;font:800 44px/.78 'KippaxCondensed','Archivo Black';color:rgba(234,241,248,.26)")}>:</span>
+                <div style={s('display:flex;flex-direction:column;align-items:center')}>
+                  <span style={s("font:800 62px/.78 'KippaxCondensed','Archivo Black';font-variant-numeric:tabular-nums;color:#6CABDD;text-shadow:0 3px 24px rgba(108,171,221,.4)")}>{pad(cd % 60)}</span>
+                  <span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#6CABDD;margin-top:10px")}>SEC</span>
+                </div>
               </div>
+              <div style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.14em;color:#9DB2C6;text-align:center;margin-top:17px")}>TUE 20:00 · ETIHAD STADIUM</div>
             </div>
-            <div style={s("text-align:right;font:600 10.5px/1.55 'Kippax','Archivo';letter-spacing:.06em;color:#8AA0B6")}>TUE 20:00<br />ETIHAD STADIUM<br />SEMI-FINAL, 2ND LEG</div>
+
+            {/* aggregate, the tale of the tie */}
+            <button onClick={go('reads')} className="agg" style={s('position:relative;display:flex;align-items:center;gap:13px;width:100%;text-align:left;margin-top:22px;padding:14px 16px;background:rgba(108,171,221,.14);box-shadow:inset 0 1px 0 rgba(234,241,248,.12)')}>
+              <span style={s('width:38px;height:38px;flex:none;background:#6CABDD;display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#001838">trending_up</Ms></span>
+              <span style={s('flex:1;min-width:0')}>
+                <span style={s("display:block;font:800 15px/1 'KippaxCondensed','Archivo Black';letter-spacing:.03em;color:#fff")}>CITY LEAD 2–1 ON AGGREGATE</span>
+                <span style={s("display:block;font:500 11.5px/1.3 'Kippax','Archivo';color:#9DB2C6;margin-top:4px")}>90 minutes from the final in Munich.</span>
+              </span>
+              <Ms size={18} color="#7FB3E0">chevron_right</Ms>
+            </button>
           </div>
           <div style={s('padding:22px 16px 0')}>
             {label('THE FIRST LEG')}
@@ -768,17 +822,40 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
       )}
 
       {liveish && (
-        <section style={s('animation:bgFade .3s ease both')}>
-          <div style={s('background:var(--panel);padding:18px 16px 20px')}>
-            <div style={s('display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px')}>
-              <div><div style={s('display:flex;align-items:center;gap:7px')}><span style={s('width:5px;height:16px;background:#6CABDD;transform:skewX(-8deg)')} /><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>MAN CITY</span></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#8AA0B6;margin-top:8px")}>{st.hs > 1 ? 'Haaland 23’ · Foden 71’' : st.hs ? 'Haaland 23’' : '–'}</div></div>
-              <div key={'s' + st.hs + st.as} style={s('display:flex;align-items:center;justify-content:center;gap:9px;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both')}><span style={s("font:800 58px/.8 'KippaxCondensed','Archivo Black';color:#EAF1F8;font-variant-numeric:tabular-nums")}>{st.hs}</span><span style={s('width:8px;height:2px;background:#6E6857')} /><span style={s("font:800 58px/.8 'KippaxCondensed','Archivo Black';color:#EAF1F8;font-variant-numeric:tabular-nums")}>{st.as}</span></div>
-              <div style={s('text-align:right')}><div style={s('display:flex;align-items:center;gap:7px;justify-content:flex-end')}><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>REAL MADRID</span><span style={s('width:5px;height:16px;background:#00529F;transform:skewX(-8deg)')} /></div><div style={s("font:500 11px/1.45 'Kippax','Archivo';color:#8AA0B6;margin-top:8px")}>{st.as ? (ht ? 'Vinícius 45’' : 'Vinícius 58’') : '–'}</div></div>
-            </div>
-            <div style={s('display:flex;align-items:center;gap:10px;margin-top:18px')}>
-              <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6;font-variant-numeric:tabular-nums")}>{live ? "38'" : "45'+2"}</span>
-              <div style={s('flex:1;height:5px;background:rgba(234,241,248,.16);position:relative')}><span style={{ ...s('position:absolute;left:0;top:0;bottom:0;background:#D6202A;transition:width 1s linear'), width: Math.min((live ? 38 : 45) / 90 * 100, 100) + '%' }} /><span style={s('position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:var(--ground)')} /></div>
-              <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6")}>90′</span>
+        <section style={s('position:relative;animation:bgFade .3s ease both')}>
+          {/* ── Cinematic in-play hero: giant live score over the floodlit crowd ── */}
+          <div style={s('position:relative;overflow:hidden;background:#00112e')}>
+            <HeroBg pos="50% 8%" glow={ht ? 'rgba(254,190,16,.3)' : 'rgba(214,32,42,.32)'} sweep={false} />
+            <div style={s('position:relative;padding:15px 16px 18px')}>
+              <div style={s('display:flex;align-items:center;justify-content:center')}>
+                {ht
+                  ? <span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.2em;color:#FEBE10;background:rgba(254,190,16,.16);padding:7px 10px")}>HALF-TIME</span>
+                  : <span style={s('display:flex;align-items:center;gap:7px;background:rgba(214,32,42,.92);padding:7px 11px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} /><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.2em;color:#fff")}>LIVE · {live ? "38'" : "45'+2"}</span></span>}
+              </div>
+              <div style={s('display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-top:16px')}>
+                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="city" size={46} />
+                  <span style={s("font:800 15px/.9 'KippaxCondensed','Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(0,10,28,.75)")}>MAN CITY</span>
+                </div>
+                <div key={'s' + st.hs + st.as} style={s('display:flex;align-items:center;justify-content:center;gap:13px;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both')}>
+                  <span style={s("font:800 76px/.76 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(0,10,28,.6)")}>{st.hs}</span>
+                  <span style={s('width:15px;height:3px;background:#6CABDD')} />
+                  <span style={s("font:800 76px/.76 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(0,10,28,.6)")}>{st.as}</span>
+                </div>
+                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="madrid" size={46} />
+                  <span style={s("font:800 15px/.9 'KippaxCondensed','Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(0,10,28,.75)")}>REAL MADRID</span>
+                </div>
+              </div>
+              <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:13px;font:500 11px/1.45 'Kippax','Archivo';color:#9DB2C6")}>
+                <span>{st.hs > 1 ? 'Haaland 23’ · Foden 71’' : st.hs ? 'Haaland 23’' : '—'}</span>
+                <span style={s('text-align:right')}>{st.as ? (ht ? 'Vinícius 45’' : 'Vinícius 58’') : '—'}</span>
+              </div>
+              <div style={s('display:flex;align-items:center;gap:10px;margin-top:16px')}>
+                <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#7FB3E0;font-variant-numeric:tabular-nums")}>{live ? "38'" : "45'+2"}</span>
+                <div style={s('flex:1;height:4px;background:rgba(234,241,248,.18);position:relative')}><span style={{ ...s('position:absolute;left:0;top:0;bottom:0;background:#D6202A;transition:width 1s linear'), width: Math.min((live ? 38 : 45) / 90 * 100, 100) + '%' }} /><span style={s('position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:rgba(234,241,248,.45)')} /></div>
+                <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#7FB3E0")}>90′</span>
+              </div>
             </div>
           </div>
           <div style={s('padding:0 16px')}>
@@ -809,15 +886,39 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
       )}
 
       {ft && (
-        <section style={s('animation:bgFade .3s ease both')}>
-          <div style={s('background:var(--panel);padding:20px 16px 22px')}>
-            <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.16em;color:#fff;background:#D6202A;padding:5px 7px")}>FULL-TIME</span><span style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6")}>CITY ADVANCE 4–3 ON AGGREGATE</span></div>
-            <div style={s('display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:18px')}>
-              <Badge club="city" size={46} />
-              <div style={s("font:800 66px/.8 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums;text-align:center")}>2 – 1</div>
-              <Badge club="madrid" size={46} />
+        <section style={s('position:relative;animation:bgFade .3s ease both')}>
+          {/* ── Cinematic full-time hero: the result, the aggregate, Munich ── */}
+          <div style={s('position:relative;overflow:hidden;background:#00112e')}>
+            <HeroBg pos="50% 30%" glow="rgba(108,171,221,.5)" sweep={true} />
+            <div style={s('position:relative;padding:16px 16px 18px')}>
+              <div style={s('display:flex;align-items:center;justify-content:center')}>
+                <span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.2em;color:#fff;background:#D6202A;padding:7px 11px")}>FULL-TIME</span>
+              </div>
+              <div style={s('display:flex;align-items:center;justify-content:center;gap:15px;margin-top:16px')}>
+                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="city" size={50} />
+                  <span style={s("font:800 15px/.9 'KippaxCondensed','Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(0,10,28,.75)")}>MAN CITY</span>
+                </div>
+                <div style={s('display:flex;align-items:center;gap:13px')}>
+                  <span style={s("font:800 82px/.74 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(0,10,28,.6)")}>2</span>
+                  <span style={s('width:16px;height:3px;background:#6CABDD')} />
+                  <span style={s("font:800 82px/.74 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(0,10,28,.6)")}>1</span>
+                </div>
+                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="madrid" size={50} />
+                  <span style={s("font:800 15px/.9 'KippaxCondensed','Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(0,10,28,.75)")}>REAL MADRID</span>
+                </div>
+              </div>
+              <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:14px;font:500 11px/1.5 'Kippax','Archivo';color:#9DB2C6")}><span>Haaland 23’ · Foden 71’</span><span style={s('text-align:right')}>Vinícius 58’</span></div>
             </div>
-            <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:14px;font:500 11px/1.5 'Kippax','Archivo';color:#8AA0B6")}><span>Haaland 23’<br />Foden 71’</span><span style={s('text-align:right')}>Vinícius 58’</span></div>
+            <button onClick={go('reads')} className="agg" style={s('position:relative;display:flex;align-items:center;gap:13px;width:100%;text-align:left;padding:14px 16px;background:rgba(108,171,221,.16);box-shadow:inset 0 1px 0 rgba(234,241,248,.12)')}>
+              <span style={s('width:38px;height:38px;flex:none;background:#6CABDD;display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#001838">emoji_events</Ms></span>
+              <span style={s('flex:1;min-width:0')}>
+                <span style={s("display:block;font:800 15px/1 'KippaxCondensed','Archivo Black';letter-spacing:.03em;color:#fff")}>CITY ADVANCE 4–3 ON AGGREGATE</span>
+                <span style={s("display:block;font:500 11.5px/1.3 'Kippax','Archivo';color:#9DB2C6;margin-top:4px")}>Into the final. Munich, 31 May.</span>
+              </span>
+              <Ms size={18} color="#7FB3E0">chevron_right</Ms>
+            </button>
           </div>
           <div style={s('padding:20px 16px 0')}>
             {label('MATCH STATS')}
@@ -846,7 +947,7 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
 
       {/* FAN CHAT PREVIEW */}
       <section style={s('margin:20px 16px 0;animation:bgRise .4s .08s ease both')}>
-        <div style={s('display:flex;align-items:center;gap:8px')}>{label('FAN CHAT')}<span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{298 + (st.n % 40)} TALKING NOW</span></div>
+        <div style={s('display:flex;align-items:center;gap:8px')}>{sect('FAN CHAT')}<span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{298 + (st.n % 40)} TALKING NOW</span></div>
         <button onClick={go('chat')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
           <div style={s('height:150px;overflow:hidden;position:relative;padding:0 12px')}>
             <div style={{ ...s('position:absolute;left:12px;right:12px;bottom:11px;display:flex;flex-direction:column;gap:8px;transition:transform .5s cubic-bezier(.2,.85,.2,1)'), transform: `translateY(${st.rollY}px)` }}>
@@ -888,14 +989,14 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
 
       {/* MATCH INTEL PREVIEW */}
       <section style={s('margin:20px 16px 0;animation:bgRise .4s .12s ease both')}>
-        {label('MATCH INTEL')}
+        {sect('MATCH INTEL')}
         <button onClick={go('intel')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:2px;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
           <div style={s("font:800 26px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>The briefing,<br />already written</div>
           <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>Win probability, the shot map, head-to-head and form, prepared before kick-off.</div>
-          <div style={s('display:flex;gap:2px;margin-top:14px')}>
-            <div style={s('flex:46;background:#6CABDD;padding:9px 8px')}><div style={s("font:800 20px/1 'Kippax','Archivo';color:#fff")}>46%</div><div style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.1em;color:rgba(255,255,255,.9);margin-top:5px")}>CITY</div></div>
-            <div style={s('flex:27;background:var(--sand2);padding:9px 8px')}><div style={s("font:800 20px/1 'Kippax','Archivo';color:var(--ink)")}>27%</div><div style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--body);margin-top:5px")}>DRAW</div></div>
-            <div style={s('flex:27;background:#00529F;padding:9px 8px')}><div style={s("font:800 20px/1 'Kippax','Archivo';color:#fff")}>27%</div><div style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.1em;color:#FEBE10;margin-top:5px")}>MADRID</div></div>
+          <div style={s('display:flex;gap:2px;margin-top:15px')}>
+            <div style={s('flex:46;background:#6CABDD;padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Kippax','Archivo';letter-spacing:.14em;color:rgba(255,255,255,.9)")}>MOST LIKELY</div><div style={s("font:800 27px/1 'KippaxCondensed','Archivo Black';color:#fff;margin-top:8px;font-variant-numeric:tabular-nums")}>46%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.12em;color:rgba(255,255,255,.92);margin-top:6px")}>CITY WIN</div></div>
+            <div style={s('flex:27;background:var(--sand2);padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Kippax','Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/1 'KippaxCondensed','Archivo Black';color:var(--ink);margin-top:8px;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--body);margin-top:6px")}>DRAW</div></div>
+            <div style={s('flex:27;background:#00529F;padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Kippax','Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/1 'KippaxCondensed','Archivo Black';color:#fff;margin-top:8px;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.12em;color:#FEBE10;margin-top:6px")}>MADRID</div></div>
           </div>
           <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink)")}>READ THE BRIEFING<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
         </button>
@@ -904,25 +1005,34 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
       {/* COMMUNITY PREVIEW, the Match Intel treatment, applied to Community */}
       {showCommunityBlock && (
         <section style={s('margin:20px 16px 0;animation:bgRise .4s .14s ease both')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}>{label('CREWS')}<span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{communityBadge}</span></div>
-          <button onClick={go('community')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:2px;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
-            <div style={s("font:800 26px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Your Crew,<br />between the whistles</div>
-            <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>{communityBlockLine}</div>
-            <div style={s('display:flex;gap:7px;margin-top:13px')}>{communityAvatars.map((a, i) => <span key={i} style={{ ...s("width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 9.5px/1 'Kippax','Archivo';color:#fff"), background: a.bg }}>{a.i}</span>)}</div>
-            <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink)")}>OPEN CREWS<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
+          <div style={s('display:flex;align-items:center;gap:8px')}>{sect('CREWS')}<span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{communityBadge}</span></div>
+          <button onClick={go('community')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(0,24,56,.07)')}>
+            <div style={s('position:relative;height:104px;overflow:hidden')}>
+              <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 32%')} />
+              <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,17,46,.12),rgba(0,17,46,.84))')} />
+              <div style={s('position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:9px')}>
+                <div style={s('display:flex')}>{communityAvatars.map((a, i) => <span key={i} style={{ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Kippax','Archivo';color:#fff;box-shadow:0 0 0 2px #00112e"), background: a.bg, marginLeft: i ? -8 : 0 }}>{a.i}</span>)}</div>
+                <span style={s("font:700 10.5px/1 'Kippax','Archivo';letter-spacing:.05em;color:#EAF1F8;text-shadow:0 1px 6px rgba(0,10,28,.8)")}>2,182 in your Crews right now</span>
+              </div>
+            </div>
+            <div style={s('padding:14px 16px 16px')}>
+              <div style={s("font:800 24px/.92 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Your Crew,<br />between the whistles</div>
+              <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:8px")}>{communityBlockLine}</div>
+              <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--ink)")}>OPEN CREWS<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
+            </div>
           </button>
         </section>
       )}
 
       {/* ALSO TONIGHT */}
       <section style={s('margin:24px 0 0;padding:0 16px;animation:bgRise .4s .16s ease both')}>
-        {label('ALSO TONIGHT')}
+        {sect('ALSO TONIGHT')}
         <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:11px')}>
           {sections.map((x) => (
             <button key={x.t} onClick={x.go} className="frow" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 13px;background:var(--sand);border-radius:2px;box-shadow:0 2px 10px rgba(0,24,56,.05)')}>
-              <span style={s('width:48px;height:48px;flex:none;border-radius:2px;background:var(--ground);display:flex;align-items:center;justify-content:center')}><Ms size={25} color="var(--ink)">{x.icon}</Ms></span>
+              <span style={s('width:44px;height:44px;flex:none;border-radius:2px;background:transparent;box-shadow:inset 0 0 0 1.5px var(--hair);display:flex;align-items:center;justify-content:center')}><Ms size={25} color="var(--ink)">{x.icon}</Ms></span>
               <span style={s('flex:1;min-width:0')}>
-                <span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 19px/1 'KippaxCondensed','Archivo Black';letter-spacing:.03em;color:var(--ink)")}>{x.t}</span><span style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--on-panel);background:#5F5949;padding:4px 5px;border-radius:5px")}>{x.tag}</span></span>
+                <span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 19px/1 'KippaxCondensed','Archivo Black';letter-spacing:.03em;color:var(--ink)")}>{x.t}</span><span style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:4px 5px")}>{x.tag}</span></span>
                 <span style={s("display:block;font:500 12.5px/1.4 'Kippax','Archivo';color:var(--body);margin-top:3px")}>{x.d}</span>
               </span>
               <Ms size={18} color="var(--label)">chevron_right</Ms>
@@ -972,7 +1082,7 @@ function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: an
   const dropInCrewId = st.dropIn.active ? st.dropIn.crewId : null;
   const myCrews = allCrews.filter((c) => st.crewsJoined[c.id] || c.gated).map((c) => {
     const gatedLocked = c.gated && !st.boxUnlocked;
-    return { id: c.id, name: c.name, initials: c.initials, members: gatedLocked ? '–' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated, locked: gatedLocked, avatarBg: gatedLocked ? '#5E7488' : '#6CABDD', dropInNow: dropInCrewId === c.id };
+    return { id: c.id, name: c.name, initials: c.initials, members: gatedLocked ? '–' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated, locked: gatedLocked, avatarBg: c.status === 'pending' ? '#B98900' : gatedLocked ? '#5E7488' : '#6CABDD', dropInNow: dropInCrewId === c.id, pending: c.status === 'pending' };
   });
   return (
     <div style={s('animation:bgFade .25s ease both;padding-bottom:26px')}>
@@ -986,7 +1096,7 @@ function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: an
           {myCrews.map((c) => (
             <button key={c.id} onClick={() => openCrew(c.id)} className="frow" style={s('display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 0;border-bottom:1.5px solid var(--hair)')}>
               <span style={{ ...s("width:46px;height:46px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 11px/1 'Kippax','Archivo';color:#fff"), background: c.avatarBg }}>{c.locked ? <Ms size={19} color="#fff">lock</Ms> : c.initials}</span>
-              <span style={s('flex:1;min-width:0')}><span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 14.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}{c.dropInNow && <span style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff;background:#6CABDD;padding:3px 5px")}>PLAYER HERE</span>}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{c.members} members · {c.latest}</span></span>
+              <span style={s('flex:1;min-width:0')}><span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 14.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}{c.pending && <span style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.08em;color:#B98900;background:rgba(254,190,16,.18);padding:3px 5px")}>PENDING</span>}{c.dropInNow && <span style={s("font:800 8px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff;background:#6CABDD;padding:3px 5px")}>PLAYER HERE</span>}</span><span style={s("display:block;font:500 12px/1.4 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{c.pending ? 'Pending Man City review' : c.members + ' members · ' + c.latest}</span></span>
               <Ms size={18} color="var(--label)">chevron_right</Ms>
             </button>
           ))}
@@ -1015,9 +1125,10 @@ function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: an
 }
 
 // ── Crew View: thread, plans, gated states, player drop-in, verified player posts ──
-function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom }: any) {
+function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom, approveCrew }: any) {
   const L = (t: string) => <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const joined = !!st.crewsJoined[crew.id];
+  const pendingReview = crew.status === 'pending';
   const gatedLocked = crew.gated && !st.boxUnlocked;
   const dropInActive = st.dropIn.active && st.dropIn.crewId === crew.id;
   const secsLeft = dropInActive && st.dropIn.endsAt ? Math.max(0, Math.round((st.dropIn.endsAt - Date.now()) / 1000)) : 0;
@@ -1030,6 +1141,10 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
   const bySrcId: Record<string, CrewMsg> = {}; msgs.forEach((m) => { if (m.id) bySrcId[m.id] = m; });
   const quoteText = (q: CrewMsg) => q.text || q.caption || '(voice note)';
   const replyDraftSrc = st.replyDraftId ? bySrcId[st.replyDraftId] : null;
+  // Pinned notification with RSVP (Johan's "pin a coach to the away game, let people RSVP").
+  const [rsvp, setRsvp] = useState<null | 'in' | 'out'>(null);
+  const goingCount = 18 + (rsvp === 'in' ? 1 : 0);
+  const rsvpAvatars = ROSTER_PHOTOS.slice(0, 4);
   return (
     <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px')}>
       {/* Twitter-style banner header */}
@@ -1037,10 +1152,22 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
       <div style={s('padding:16px 16px 0')}>
         <div style={s('display:flex;align-items:center;gap:8px')}>
           <span style={s("flex:1;min-width:0;font:800 30px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>{crew.name}</span>
+          {pendingReview && <span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#B98900;background:rgba(254,190,16,.18);padding:5px 7px")}>PENDING</span>}
           {crew.official && <Ms size={18} color="#6CABDD">verified</Ms>}
           {crew.gated && <Ms size={18} color="var(--label)">lock</Ms>}
           <button onClick={go('crewSettings')} className="fs" style={s('flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--sand)')}><Ms size={17} color="var(--ink)">settings</Ms></button>
         </div>
+        {pendingReview && (
+          <div style={s('margin-top:14px;background:var(--panel);padding:16px')}>
+            <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color="#6CABDD">verified_user</Ms><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.16em;color:#6CABDD")}>PENDING MAN CITY REVIEW</span></div>
+            <div style={s("font:800 21px/1.04 'KippaxCondensed','Archivo Black';color:var(--on-panel);margin-top:11px")}>We’re checking your Crew over</div>
+            <div style={s("font:500 12.5px/1.55 'Kippax','Archivo';color:#8AA0B6;margin-top:8px")}>Every fan-run Crew gets a quick safety check from Man City, usually cleared within a few hours. It’s already yours, so invite people and set the tone now. It goes public the moment it’s approved.</div>
+            <div style={s('display:flex;gap:8px;margin-top:14px')}>
+              <button onClick={go('invite')} style={s("display:flex;align-items:center;gap:7px;font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:11px 13px")}><Ms size={15} color="#fff">person_add</Ms>INVITE PEOPLE</button>
+              <button onClick={() => approveCrew(crew.id)} className="fq" style={s("font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#8AA0B6;background:rgba(234,241,248,.08);padding:11px 13px")}>DEMO · APPROVE</button>
+            </div>
+          </div>
+        )}
         {presence > 0 && (
           <div style={s('display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:#6CABDD;padding:5px 8px')}><Ms size={13} color="#fff">verified</Ms><span style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff")}>WAS THERE FOR THE DROP-IN</span></div>
         )}
@@ -1065,6 +1192,22 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
           <div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body)")}>{crew.members.toLocaleString()} members · permanent thread</div>
           <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} style={{ ...s("display:block;margin-top:11px;font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:11px 14px;text-align:center"), background: joined ? 'var(--sand)' : '#6CABDD', color: joined ? 'var(--ink)' : '#fff' }}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
         </div>
+
+        {!crew.gated && !crew.isCustom && (
+          <div style={s('margin:18px 16px 0;background:var(--panel);padding:15px 16px')}>
+            <div style={s('display:flex;align-items:center;gap:7px')}><Ms size={15} color="#6CABDD">push_pin</Ms><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.14em;color:#6CABDD")}>PINNED · COACH TRAVEL</span><span style={s("font:700 9px/1 'Kippax','Archivo';letter-spacing:.06em;color:#7E97AE;margin-left:auto")}>BY MARCUS_92</span></div>
+            <div style={s("font:800 21px/1.04 'KippaxCondensed','Archivo Black';color:var(--on-panel);margin-top:11px")}>Coach to Millwall (A)</div>
+            <div style={s("font:500 12.5px/1.55 'Kippax','Archivo';color:#9DB2C6;margin-top:7px")}>Sat 12 Aug · leaves the Etihad 10:30 · £15 return, kids half price. RSVP by Thursday so we can book the seats.</div>
+            <div style={s('display:flex;align-items:center;gap:10px;margin-top:13px')}>
+              <div style={s('display:flex')}>{rsvpAvatars.map((src: string, i: number) => <span key={i} style={{ ...s('width:26px;height:26px;flex:none;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px var(--panel)'), marginLeft: i ? -8 : 0 }}><img src={src} alt="" style={s('width:100%;height:100%;object-fit:cover')} /></span>)}</div>
+              <span style={s("font:700 11px/1 'Kippax','Archivo';color:#9DB2C6")}>{goingCount} going</span>
+            </div>
+            <div style={s('display:flex;gap:8px;margin-top:14px')}>
+              <button onClick={() => setRsvp(rsvp === 'in' ? null : 'in')} style={{ ...s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;padding:12px 0"), background: rsvp === 'in' ? '#6CABDD' : 'rgba(234,241,248,.1)', color: rsvp === 'in' ? '#fff' : 'var(--on-panel)' }}><Ms size={15} color={rsvp === 'in' ? '#fff' : '#6CABDD'}>{rsvp === 'in' ? 'check_circle' : 'directions_bus'}</Ms>{rsvp === 'in' ? 'YOU’RE GOING' : 'I’M GOING'}</button>
+              <button onClick={() => setRsvp(rsvp === 'out' ? null : 'out')} style={{ ...s("flex:none;font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;padding:12px 16px"), background: rsvp === 'out' ? 'rgba(234,241,248,.22)' : 'rgba(234,241,248,.06)', color: rsvp === 'out' ? 'var(--on-panel)' : '#7E97AE' }}>CAN’T</button>
+            </div>
+          </div>
+        )}
 
         {dropInActive && (
           <div style={s('margin:18px 16px 0;background:#6CABDD;padding:14px 16px;display:flex;align-items:center;gap:10px')}>
@@ -1193,7 +1336,14 @@ function CreateCrew({ st, set, createCrew }: any) {
           <span style={s('position:absolute;left:14px;bottom:-20px;width:44px;height:44px;border-radius:50%;background:var(--sand2);box-shadow:0 0 0 3px var(--ground);display:flex;align-items:center;justify-content:center')}><Ms size={18} color="var(--label)">add_photo_alternate</Ms></span>
         </div>
       </div>
-      <button onClick={createCrew} className="fp" style={s("display:block;width:100%;margin-top:32px;font:800 12px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:15px 0;text-align:center")}>CREATE CREW</button>
+      <div style={s('display:flex;align-items:flex-start;gap:11px;margin-top:26px;background:var(--sand);padding:13px 14px')}>
+        <Ms size={18} color="#6CABDD">verified_user</Ms>
+        <span style={s('flex:1;min-width:0')}>
+          <span style={s("display:block;font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--ink)")}>QUICK SAFETY CHECK</span>
+          <span style={s("display:block;font:500 12px/1.5 'Kippax','Archivo';color:var(--body);margin-top:5px")}>New Crews get a light review from Man City, usually cleared within a few hours. Invite people and set it up straight away, it just goes public once it’s approved.</span>
+        </span>
+      </div>
+      <button onClick={createCrew} className="fp" style={s("display:block;width:100%;margin-top:12px;font:800 12px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff;background:#6CABDD;padding:15px 0;text-align:center")}>SUBMIT FOR REVIEW</button>
     </div>
   );
 }
@@ -1204,6 +1354,13 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
   const joined = !!st.crewsJoined[crew.id];
   const rules = crew.rules || CREW_RULES[crew.id] || 'Be respectful. Keep it about City.';
   const inviteLink = 'city.app/join/' + crew.id;
+  // Join requests waiting on the admin (the pending-members queue for invite-only Crews).
+  const [requests, setRequests] = useState([
+    { id: 'rq1', name: 'Aisha_R', initials: 'AI', bg: '#6CABDD', note: 'Season ticket · Block 108' },
+    { id: 'rq2', name: 'Tomasz_K', initials: 'TO', bg: '#0C3A5E', note: 'Invited by Marcus_92' },
+    { id: 'rq3', name: 'Bea_M', initials: 'BE', bg: '#5E7488', note: 'New to the app' },
+  ]);
+  const resolveReq = (id: string, ok: boolean) => { setRequests((rs) => rs.filter((r) => r.id !== id)); notify(ok ? 'MEMBER APPROVED' : 'REQUEST DECLINED'); };
   const memberRows = [
     { name: 'You', initials: 'YO', bg: '#001838', photo: undefined as string | undefined, isAdmin: !!crew.isCustom },
     { name: 'Marcus_92', initials: 'MA', bg: '#6CABDD', photo: MEMBER_PHOTO.MARCUS_92, isAdmin: !crew.isCustom },
@@ -1240,6 +1397,19 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
           </div>
         ))}</div>
       </div>
+      {requests.length > 0 && (
+        <div style={s('padding:22px 16px 0')}>
+          <div style={s('display:flex;align-items:center;gap:8px')}>{L('JOIN REQUESTS')}<span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:#B98900;background:rgba(254,190,16,.18);padding:4px 6px")}>{requests.length} WAITING</span></div>
+          <div style={s('margin-top:9px')}>{requests.map((r) => (
+            <div key={r.id} style={s('display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}>
+              <Avatar initials={r.initials} bg={r.bg} size={34} />
+              <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Kippax','Archivo';color:var(--ink)")}>{r.name}</span><span style={s("display:block;font:500 11px/1.3 'Kippax','Archivo';color:var(--label);margin-top:2px")}>{r.note}</span></span>
+              <button onClick={() => resolveReq(r.id, false)} className="fs" style={s('flex:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--sand)')}><Ms size={18} color="var(--label)">close</Ms></button>
+              <button onClick={() => resolveReq(r.id, true)} style={s('flex:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#6CABDD')}><Ms size={18} color="#fff">check</Ms></button>
+            </div>
+          ))}</div>
+        </div>
+      )}
       <div style={s('padding:26px 16px 0')}>
         <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} className="fs" style={s("display:block;width:100%;font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;color:var(--label);padding:13px 0;text-align:center;box-shadow:inset 0 0 0 1.5px var(--hair)")}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
       </div>
@@ -1285,54 +1455,68 @@ function Room({ st, joinRoom, leaveRoom }: any) {
   const player = st.call.player;
   const mainSrc = player === 'Erling Haaland' ? media.roomHaaland : PLAYER_PHOTO[player];
   const inRoom = ROOM_GUESTS.length + 1;
-  const ctrl = (icon: string, label: string, bg: string, onClick?: () => void) => (
-    <button onClick={onClick} style={s('display:flex;flex-direction:column;align-items:center;gap:6px')}>
-      <span style={{ ...s('width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center'), background: bg }}><Ms size={20} color="#fff">{icon}</Ms></span>
-      <span style={s("font:700 9px/1 'Kippax','Archivo';color:#fff")}>{label}</span>
+  // Live reactions float up over the stage when the Crew taps a reaction.
+  const [floats, setFloats] = useState<{ id: number; icon: string; color: string; x: number }[]>([]);
+  const react = (icon: string, color: string) => {
+    const id = Date.now() + Math.random();
+    setFloats((f) => [...f, { id, icon, color, x: 6 + Math.random() * 62 }]);
+    window.setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300);
+  };
+  const REACTIONS = [{ icon: 'favorite', color: '#FF3B57' }, { icon: 'local_fire_department', color: '#FF8A3D' }, { icon: 'celebration', color: '#FEBE10' }, { icon: 'sports_soccer', color: '#6CABDD' }];
+  const ctrl = (icon: string, label: string, bg: string, onClick?: () => void, fg = '#fff') => (
+    <button onClick={onClick} style={s('display:flex;flex-direction:column;align-items:center;gap:7px')}>
+      <span style={{ ...s('width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center'), background: bg }}><Ms size={21} color={fg}>{icon}</Ms></span>
+      <span style={s("font:700 8.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#9DB2C6")}>{label}</span>
     </button>
   );
-  // Crew members ride a clean filmstrip below the player's stage, so nothing
-  // overlaps the bottom of the video. The "You" tile (no src) reads as self.
+  // Crew members ride a clean filmstrip below the player's stage. The "You" tile (no src) reads as self.
   const tile = (t: { name: string; src?: string }, i: number) => {
     const you = !t.src;
     return (
       <div key={i} style={s('display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0')}>
-        <div style={{ ...s('position:relative;width:58px;height:70px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#161311'), border: you ? '1.5px solid #6CABDD' : '1px solid rgba(242,237,227,.10)' }}>
+        <div style={{ ...s('position:relative;width:56px;height:70px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#122438'), boxShadow: you ? 'inset 0 0 0 2px #6CABDD' : 'inset 0 0 0 1px rgba(234,241,248,.12)' }}>
           {t.src ? <img src={t.src} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} /> : <Ms size={24} color="#6CABDD">person</Ms>}
-          <span style={s('position:absolute;right:4px;bottom:4px;width:16px;height:16px;border-radius:50%;background:rgba(10,9,8,.7);display:flex;align-items:center;justify-content:center')}><Ms size={11} color="#B8B0A2">mic_off</Ms></span>
+          <span style={s('position:absolute;right:4px;bottom:4px;width:16px;height:16px;border-radius:50%;background:rgba(10,20,32,.78);display:flex;align-items:center;justify-content:center')}><Ms size={11} color="#9DB2C6">mic_off</Ms></span>
         </div>
-        <span style={{ ...s("font:700 9px/1 'Kippax','Archivo';max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"), color: you ? '#6CABDD' : '#C4BCA6' }}>{you ? 'You' : t.name}</span>
+        <span style={{ ...s("font:700 9px/1 'Kippax','Archivo';max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"), color: you ? '#6CABDD' : '#AFC1D4' }}>{you ? 'You' : t.name}</span>
       </div>
     );
   };
   return (
-    <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px;background:#0A0908')}>
-      <div style={s('display:flex;align-items:center;gap:8px;padding:14px 16px 12px')}>
+    <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px;background:#0A1420')}>
+      <div style={s('display:flex;align-items:center;gap:9px;padding:14px 16px 12px')}>
         <span style={s('width:6px;height:6px;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} />
-        <span style={s("flex:1;font:800 12px/1.2 'Kippax','Archivo';letter-spacing:.04em;color:#fff")}>Moss Side Blues Room</span>
-        <span style={s("display:flex;align-items:center;gap:4px;font:700 11px/1 'Kippax','Archivo';color:#8C8577")}><Ms size={13} color="#8C8577">group</Ms>{inRoom}</span>
+        <span style={s("flex:1;font:800 12px/1.2 'Kippax','Archivo';letter-spacing:.03em;color:#fff")}>Moss Side Blues Room</span>
+        <span style={s("display:flex;align-items:center;gap:5px;font:700 10.5px/1 'Kippax','Archivo';color:#7E97AE")}><Ms size={13} color="#7E97AE">group</Ms>{inRoom} on camera</span>
       </div>
-      <div style={s('flex:1;position:relative;margin:0 8px;border-radius:14px;overflow:hidden;background:#1B1812;min-height:320px')}>
+      <div style={s('flex:1;position:relative;margin:0 8px;border-radius:16px;overflow:hidden;background:#0E1E30;min-height:338px')}>
         <img src={mainSrc} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />
-        <div style={s('position:absolute;left:0;right:0;bottom:0;height:92px;background:linear-gradient(rgba(10,9,8,0),rgba(10,9,8,.72))')} />
-        <span style={s("position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:5px;background:rgba(214,32,42,.92);padding:4px 8px;border-radius:100px;font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff")}><span style={s('width:5px;height:5px;border-radius:50%;background:#fff')} />LIVE</span>
-        <div style={s('position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:6px;background:rgba(16,14,10,.5);padding:6px 11px;border-radius:100px;backdrop-filter:blur(6px)')}>
-          <Ms size={14} color="#6CABDD">verified</Ms>
-          <span style={s("font:800 11px/1 'Kippax','Archivo';color:#fff")}>{player}</span>
+        <div style={s('position:absolute;left:0;right:0;bottom:0;height:126px;background:linear-gradient(rgba(6,12,22,0),rgba(6,12,22,.84))')} />
+        <span style={s("position:absolute;top:11px;right:11px;display:flex;align-items:center;gap:5px;background:#D6202A;padding:5px 9px;border-radius:100px;font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff")}><span style={s('width:5px;height:5px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} />LIVE</span>
+        <span style={s("position:absolute;top:11px;left:11px;display:flex;align-items:center;gap:5px;background:rgba(10,20,32,.55);backdrop-filter:blur(6px);padding:5px 9px;border-radius:100px;font:700 9px/1 'Kippax','Archivo';color:#EAF1F8")}><Ms size={12} color="#EAF1F8">visibility</Ms>1,204 watching</span>
+        {floats.map((f) => <span key={f.id} style={{ ...s('position:absolute;bottom:70px;pointer-events:none;animation:bgFloatUp 1.3s ease-out both'), left: f.x + '%' }}><Ms size={26} color={f.color}>{f.icon}</Ms></span>)}
+        <div style={s('position:absolute;left:12px;right:12px;bottom:12px')}>
+          <div style={s('display:flex;align-items:center;gap:6px')}><Ms size={16} color="#6CABDD">verified</Ms><span style={s("font:800 16px/1 'KippaxCondensed','Archivo Black';letter-spacing:.02em;color:#fff")}>{player}</span></div>
+          <div style={s("font:500 10.5px/1.3 'Kippax','Archivo';color:#C6D3E1;margin-top:5px")}>Taking questions from Moss Side Blues</div>
         </div>
       </div>
-      <div style={s('display:flex;gap:10px;padding:14px 16px 4px;overflow-x:auto')}>
+      <div style={s('display:flex;gap:10px;padding:13px 16px 4px;overflow-x:auto')}>
         {ROOM_GUESTS.map((t, i) => tile(t, i))}
       </div>
+      <div style={s('display:flex;align-items:center;gap:8px;padding:8px 16px 2px')}>
+        <span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#7E97AE")}>REACT</span>
+        {REACTIONS.map((r) => <button key={r.icon} onClick={() => react(r.icon, r.color)} className="fq" style={s('width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(234,241,248,.07)')}><Ms size={20} color={r.color}>{r.icon}</Ms></button>)}
+        <button onClick={() => react('pan_tool', '#6CABDD')} style={s("margin-left:auto;display:flex;align-items:center;gap:6px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.06em;color:#001838;background:#6CABDD;padding:11px 13px")}><Ms size={15} color="#001838">pan_tool</Ms>ASK</button>
+      </div>
       {st.call.joined ? (
-        <div style={s('display:flex;justify-content:center;gap:22px;padding:12px 0 20px')}>
-          {ctrl('mic', 'MUTE', 'rgba(242,237,227,.14)')}
-          {ctrl('videocam', 'CAMERA', 'rgba(242,237,227,.14)')}
+        <div style={s('display:flex;justify-content:center;gap:26px;padding:12px 0 20px')}>
+          {ctrl('mic', 'MUTE', 'rgba(234,241,248,.12)')}
+          {ctrl('videocam', 'CAMERA', 'rgba(234,241,248,.12)')}
           {ctrl('call_end', 'LEAVE', '#D6202A', leaveRoom)}
         </div>
       ) : (
         <div style={s('padding:12px 16px 22px')}>
-          <button onClick={joinRoom} style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:#100E0A;background:#6CABDD;padding:15px 0;border-radius:12px")}><Ms size={17} color="#100E0A">videocam</Ms>JOIN ROOM</button>
+          <button onClick={joinRoom} style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:#001838;background:#6CABDD;padding:15px 0;border-radius:12px")}><Ms size={17} color="#001838">videocam</Ms>JOIN WITH CAMERA</button>
         </div>
       )}
     </div>
@@ -1498,9 +1682,9 @@ function Intel({ pre, live, ht, openIris }: any) {
         <div style={s("font:500 13px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:9px;max-width:300px")}>Written from this season’s data and refreshed at half-time and full-time. Read it, or ask IRIS for any part of it.</div>
         <div style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--label);margin-top:12px")}>UPDATED {stamp}</div>
       </div>
-      <div style={s('padding:18px 16px 0')}>{L('WIN PROBABILITY')}<div style={s('display:flex;gap:2px;margin-top:11px')}><div style={s('flex:46;background:#6CABDD;padding:13px 11px')}><div style={s("font:800 32px/.86 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums")}>46%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;margin-top:8px")}>MAN CITY</div></div><div style={s('flex:27;background:var(--sand2);padding:13px 9px')}><div style={s("font:800 25px/.86 'KippaxCondensed','Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--body);margin-top:8px")}>DRAW</div></div><div style={s('flex:27;background:#00529F;padding:13px 9px')}><div style={s("font:800 25px/.86 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#FEBE10;margin-top:8px")}>MADRID</div></div></div></div>
+      <div style={s('padding:18px 16px 0')}>{L('WIN PROBABILITY')}<div style={s('display:flex;gap:2px;margin-top:11px')}><div style={s('flex:46;background:#6CABDD;padding:12px 11px 14px')}><div style={s("font:800 7px/1 'Kippax','Archivo';letter-spacing:.14em;color:rgba(255,255,255,.9)")}>MOST LIKELY</div><div style={s("font:800 34px/.86 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums;margin-top:8px")}>46%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;margin-top:8px")}>CITY WIN</div></div><div style={s('flex:27;background:var(--sand2);padding:12px 9px 14px')}><div style={s("font:800 7px/1 'Kippax','Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/.86 'KippaxCondensed','Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums;margin-top:8px")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--body);margin-top:8px")}>DRAW</div></div><div style={s('flex:27;background:#00529F;padding:12px 9px 14px')}><div style={s("font:800 7px/1 'Kippax','Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/.86 'KippaxCondensed','Archivo Black';color:#fff;font-variant-numeric:tabular-nums;margin-top:8px")}>27%</div><div style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:#FEBE10;margin-top:8px")}>MADRID</div></div></div></div>
       <div style={s('padding:20px 16px 0')}>{L('SHOT MAP · FIRST LEG')}
-        <div style={s('position:relative;margin-top:11px;height:182px;background:#17150F;overflow:hidden')}>
+        <div style={s('position:relative;margin-top:11px;height:182px;background:#101A26;overflow:hidden')}>
           <div style={s('position:absolute;inset:10px;border:1.5px solid rgba(226,216,196,.45)')} /><div style={s('position:absolute;left:10px;right:10px;top:50%;height:1.5px;background:rgba(226,216,196,.45)')} /><div style={s('position:absolute;left:50%;top:50%;width:52px;height:52px;border:1.5px solid rgba(226,216,196,.45);border-radius:50%;transform:translate(-50%,-50%)')} /><div style={s('position:absolute;left:50%;top:10px;width:104px;height:34px;border:1.5px solid rgba(226,216,196,.45);border-top:0;transform:translateX(-50%)')} /><div style={s('position:absolute;left:50%;bottom:10px;width:104px;height:34px;border:1.5px solid rgba(226,216,196,.45);border-bottom:0;transform:translateX(-50%)')} />
           {shots.map((p, i) => <span key={i} style={{ position: 'absolute', left: p.x, top: p.y, width: p.d, height: p.d, borderRadius: '50%', background: p.bg, boxShadow: '0 0 0 1.5px rgba(226,216,196,.55)', transform: 'translate(-50%,-50%)' }} />)}
         </div>
@@ -1768,7 +1952,7 @@ function Seat({ st, set, go }: any) {
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
       <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink)")}>Block 112 · row J</div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:var(--body);margin-top:6px")}>South stand, lower tier. Seat 14.</div></div><button onClick={() => set((sp: FSt) => ({ routeOn: !sp.routeOn }))} style={{ ...s("font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;padding:12px 13px;flex:none"), color: st.routeOn ? '#fff' : '#001838', background: st.routeOn ? '#6CABDD' : '#E4DACA' }}>{st.routeOn ? 'HIDE ROUTE' : 'SHOW ROUTE'}</button></div>
-      <div style={s('position:relative;margin-top:16px;height:280px;background:#17150F;padding:20px;display:flex;align-items:center;justify-content:center')}>
+      <div style={s('position:relative;margin-top:16px;height:280px;background:#101A26;padding:20px;display:flex;align-items:center;justify-content:center')}>
         <div style={s('position:relative;width:100%;height:100%;border:1.5px solid rgba(226,216,196,.4)')}><div style={s('position:absolute;left:0;right:0;top:50%;height:1.5px;background:rgba(226,216,196,.4)')} /><div style={s('position:absolute;left:50%;top:50%;width:60px;height:60px;border:1.5px solid rgba(226,216,196,.4);border-radius:50%;transform:translate(-50%,-50%)')} /></div>
         <div style={s('position:absolute;inset:6px;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);gap:3px;pointer-events:none')}>{blockDefs.map(([area, label]) => <span key={label} style={{ ...s("display:flex;align-items:center;justify-content:center;font:800 7.5px/1 'Kippax','Archivo';letter-spacing:.04em"), gridArea: area, background: label === '112' ? '#6CABDD' : 'rgba(226,216,196,.14)', color: label === '112' ? '#fff' : '#8AA0B6' }}>{label}</span>)}</div>
         {st.routeOn && (<><div style={s('position:absolute;left:22%;top:78%;width:52%;height:3px;background:repeating-linear-gradient(90deg,#6CABDD 0 7px,transparent 7px 12px)')} /><div style={s('position:absolute;left:74%;top:52%;width:3px;height:28%;background:repeating-linear-gradient(0deg,#6CABDD 0 7px,transparent 7px 12px)')} /></>)}
@@ -1860,8 +2044,8 @@ function Iris({ st, pre, live, ht, set, ask, irisRef, go, closeIris }: any) {
 
 const FAN_CSS = `
 :root{--ground:#F1F5FA;--sand:#E4ECF4;--sand2:#C3D4E4;--sand3:#D8E2EE;--ink:#001838;--body:#33475C;--label:#5E7488;--panel:#001838;--panel-hover:#0A2A4A;--chrome:#011529;--on-panel:#EAF1F8;--hair:rgba(0,24,56,.12);--desk:#C3D4E4}
-:root[data-theme="dark"]{--ground:#100E0B;--sand:#1C1A14;--sand2:#312C23;--sand3:#252219;--ink:#EAF1F8;--body:#C6BEAE;--label:#8AA0B6;--panel:#272319;--panel-hover:#332E23;--chrome:#1A1712;--on-panel:#EAF1F8;--hair:rgba(244,240,230,.10);--desk:#080807}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ground:#100E0B;--sand:#1C1A14;--sand2:#312C23;--sand3:#252219;--ink:#EAF1F8;--body:#C6BEAE;--label:#8AA0B6;--panel:#272319;--panel-hover:#332E23;--chrome:#1A1712;--on-panel:#EAF1F8;--hair:rgba(244,240,230,.10);--desk:#080807}}
+:root[data-theme="dark"]{--ground:#0B1622;--sand:#142637;--sand2:#213954;--sand3:#182C40;--ink:#EAF1F8;--body:#AFC1D4;--label:#7F98AF;--panel:#14304C;--panel-hover:#1B3C5E;--chrome:#0A1420;--on-panel:#EAF1F8;--hair:rgba(180,205,232,.12);--desk:#060B11}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ground:#0B1622;--sand:#142637;--sand2:#213954;--sand3:#182C40;--ink:#EAF1F8;--body:#AFC1D4;--label:#7F98AF;--panel:#14304C;--panel-hover:#1B3C5E;--chrome:#0A1420;--on-panel:#EAF1F8;--hair:rgba(180,205,232,.12);--desk:#060B11}}
 .ms{font-family:'Material Symbols Rounded';font-weight:400;line-height:1;display:inline-block;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased}
 @keyframes bgRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes bgFade{from{opacity:0}to{opacity:1}}
@@ -1877,13 +2061,23 @@ const FAN_CSS = `
 @keyframes bgFadeOut{from{opacity:1}to{opacity:0}}
 @keyframes bgFlashOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-8px)}}
 @keyframes bgPop{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
+@keyframes bgSweep{from{transform:translateX(0) skewX(-12deg)}to{transform:translateX(420%) skewX(-12deg)}}
+@keyframes bgReveal{from{opacity:0;transform:translateY(12px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes bgFloatUp{0%{opacity:0;transform:translateY(0) scale(.5)}18%{opacity:1;transform:translateY(-16px) scale(1.1)}100%{opacity:0;transform:translateY(-128px) scale(.95)}}
+@keyframes bgFloods{0%,100%{opacity:.85}50%{opacity:1}}
+.fs,.fp,.fq,.fw,.frow,.skz,.agg{transition:background .18s ease,box-shadow .18s ease,transform .13s cubic-bezier(.2,.7,.3,1)}
+.agg:hover{background:rgba(108,171,221,.2) !important}
+.agg:active{transform:scale(.99)}
 .fs:hover{background:var(--sand3) !important}
 .fp:hover{background:var(--panel-hover) !important}
 .fh:hover{color:var(--on-panel) !important}
 .fh2:hover{background:var(--panel-hover) !important}
 .fq:hover{background:rgba(234,241,248,.14) !important}
 .fw:hover{background:#fff !important}
-.frow:hover{opacity:.72}
+.frow:hover{background:var(--sand3) !important}
+.frow > .ms{transition:transform .13s cubic-bezier(.2,.7,.3,1)}
+.frow:hover > .ms{transform:translateX(3px)}
+.fs:active,.fp:active,.fq:active,.fw:active,.frow:active{transform:scale(.985)}
 .skz:hover{background:rgba(108,171,221,.22) !important}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
 `;
