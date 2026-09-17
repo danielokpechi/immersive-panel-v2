@@ -463,18 +463,29 @@ export function MatchdayFan() {
   );
 
   // Embed mode (control-room monitor iframe): fill the frame, no operator strip / bezel.
-  const embed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === '1';
-  const wrapStyle = embed ? s('height:100%;background:var(--ground)') : s('min-height:100vh;background:var(--desk);display:flex;justify-content:center;padding:28px 16px 40px');
-  const colStyle = embed ? s('height:100%') : s('display:flex;flex-direction:column;gap:12px');
-  const phoneStyle = embed ? s('position:relative;width:100%;height:100vh;background:var(--ground);overflow:hidden') : s('position:relative;width:393px;height:844px;background:var(--ground);border-radius:44px;overflow:hidden;box-shadow:0 2px 2px rgba(0,24,56,.06),0 26px 56px -18px rgba(0,24,56,.4),0 0 0 9px #001838,0 0 0 10px #0A2A4A');
+  const embedParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === '1';
+  const [vw, setVw] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  useEffect(() => {
+    const onResize = () => setVw(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  // On a real phone (narrow viewport) or when embedded, drop the phone mockup and fill
+  // the screen like a normal web app. Desktop keeps the framed mockup. ?embed=1 also hides
+  // the operator strip for a clean, fan-facing view.
+  const frameless = embedParam || vw <= 520;
+  const showOperator = !embedParam;
+  const wrapStyle = frameless ? s('height:100dvh;background:var(--ground);display:flex;justify-content:center') : s('min-height:100vh;background:var(--desk);display:flex;justify-content:center;padding:28px 16px 40px');
+  const colStyle = frameless ? s('display:flex;flex-direction:column;height:100%;width:100%;max-width:520px') : s('display:flex;flex-direction:column;gap:12px');
+  const phoneStyle = frameless ? s('position:relative;flex:1;min-height:0;width:100%;background:var(--ground);overflow:hidden') : s('position:relative;width:393px;height:844px;background:var(--ground);border-radius:44px;overflow:hidden;box-shadow:0 2px 2px rgba(0,24,56,.06),0 26px 56px -18px rgba(0,24,56,.4),0 0 0 9px #001838,0 0 0 10px #0A2A4A');
 
   return (
     <div style={wrapStyle}>
       <style>{FAN_CSS}</style>
       <div style={colStyle}>
-        {!embed && (<>
+        {showOperator && (<>
         {/* operator strip (demo): match states + a goal drop */}
-        <div style={{ ...s('display:flex;align-items:center;gap:8px;width:393px;padding:9px 10px'), background: 'var(--panel)' }}>
+        <div style={{ ...s('display:flex;align-items:center;gap:8px;padding:9px 10px'), width: frameless ? '100%' : '393px', background: 'var(--panel)' }}>
           <span style={s("font:800 10px/1 'Kippax','Archivo';letter-spacing:.18em;color:#8AA0B6;padding-left:4px")}>OPERATOR</span>
           <div style={s('display:flex;gap:4px;margin-left:auto')}>
             {opBtn('PRE', () => applyState('pre'), 'rgba(234,241,248,.12)', 'var(--on-panel)')}
@@ -570,7 +581,7 @@ export function MatchdayFan() {
             {st.route === 'createCrew' && <CreateCrew {...{ st, set, createCrew }} />}
             {st.route === 'crewSettings' && <CrewSettings {...{ st, crew: activeCrewData, set, go, notify }} />}
             {st.route === 'invite' && <Invite {...{ st, crew: activeCrewData, set, inviteContact, notify }} />}
-            {st.route === 'room' && <Room {...{ st, joinRoom, leaveRoom }} />}
+            {st.route === 'room' && <Room {...{ st, joinRoom, leaveRoom, frameless }} />}
             {st.route === 'spotkick' && <Spotkick {...{ st, shootZone }} />}
             {st.route === 'spotkickResult' && <SpotkickResult {...{ st, go, startSpotkick, notify }} />}
             {st.route === 'leaderboard' && <Leaderboard {...{ st, set }} />}
@@ -1451,7 +1462,7 @@ const ROOM_GUESTS: { name: string; src?: string }[] = [
   { name: 'Priya_S', src: media.avPriya },
   { name: 'You' },
 ];
-function Room({ st, joinRoom, leaveRoom }: any) {
+function Room({ st, joinRoom, leaveRoom, frameless }: any) {
   const player = st.call.player;
   const mainSrc = player === 'Erling Haaland' ? media.roomHaaland : PLAYER_PHOTO[player];
   const inRoom = ROOM_GUESTS.length + 1;
@@ -1467,7 +1478,7 @@ function Room({ st, joinRoom, leaveRoom }: any) {
     <button onClick={onClick} style={{ ...s('width:52px;height:52px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center'), background: bg }}><Ms size={23} color={fg}>{icon}</Ms></button>
   );
   return (
-    <div style={s('animation:bgFade .25s ease both;position:relative;height:710px;overflow:hidden;background:#0A1420')}>
+    <div style={s('animation:bgFade .25s ease both;position:relative;height:' + (frameless ? 'calc(100dvh - 232px)' : '710px') + ';min-height:440px;overflow:hidden;background:#0A1420')}>
       <img src={mainSrc} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />
       <div style={s('position:absolute;left:0;right:0;top:0;height:104px;background:linear-gradient(rgba(6,12,22,.72),transparent)')} />
       <div style={s('position:absolute;left:0;right:0;bottom:0;height:340px;background:linear-gradient(transparent,rgba(6,12,22,.94))')} />
