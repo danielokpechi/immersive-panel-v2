@@ -1455,70 +1455,53 @@ function Room({ st, joinRoom, leaveRoom }: any) {
   const player = st.call.player;
   const mainSrc = player === 'Erling Haaland' ? media.roomHaaland : PLAYER_PHOTO[player];
   const inRoom = ROOM_GUESTS.length + 1;
-  // Live reactions float up over the stage when the Crew taps a reaction.
-  const [floats, setFloats] = useState<{ id: number; icon: string; color: string; x: number }[]>([]);
-  const react = (icon: string, color: string) => {
+  // Live emoji reactions float up the right rail, live-stream style.
+  const [floats, setFloats] = useState<{ id: number; e: string; x: number }[]>([]);
+  const react = (e: string) => {
     const id = Date.now() + Math.random();
-    setFloats((f) => [...f, { id, icon, color, x: 6 + Math.random() * 62 }]);
-    window.setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id)), 1300);
+    setFloats((f) => [...f, { id, e, x: Math.random() * 26 }]);
+    window.setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id)), 1400);
   };
-  const REACTIONS = [{ icon: 'favorite', color: '#FF3B57' }, { icon: 'local_fire_department', color: '#FF8A3D' }, { icon: 'celebration', color: '#FEBE10' }, { icon: 'sports_soccer', color: '#6CABDD' }];
-  const ctrl = (icon: string, label: string, bg: string, onClick?: () => void, fg = '#fff') => (
-    <button onClick={onClick} style={s('display:flex;flex-direction:column;align-items:center;gap:7px')}>
-      <span style={{ ...s('width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center'), background: bg }}><Ms size={21} color={fg}>{icon}</Ms></span>
-      <span style={s("font:700 8.5px/1 'Kippax','Archivo';letter-spacing:.06em;color:#9DB2C6")}>{label}</span>
-    </button>
+  const REACTIONS = ['❤️', '🔥', '👏', '⚽'];
+  const orb = (icon: string, bg: string, onClick?: () => void, fg = '#fff') => (
+    <button onClick={onClick} style={{ ...s('width:52px;height:52px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center'), background: bg }}><Ms size={23} color={fg}>{icon}</Ms></button>
   );
-  // Crew members ride a clean filmstrip below the player's stage. The "You" tile (no src) reads as self.
-  const tile = (t: { name: string; src?: string }, i: number) => {
-    const you = !t.src;
-    return (
-      <div key={i} style={s('display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0')}>
-        <div style={{ ...s('position:relative;width:56px;height:70px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#122438'), boxShadow: you ? 'inset 0 0 0 2px #6CABDD' : 'inset 0 0 0 1px rgba(234,241,248,.12)' }}>
-          {t.src ? <img src={t.src} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} /> : <Ms size={24} color="#6CABDD">person</Ms>}
-          <span style={s('position:absolute;right:4px;bottom:4px;width:16px;height:16px;border-radius:50%;background:rgba(10,20,32,.78);display:flex;align-items:center;justify-content:center')}><Ms size={11} color="#9DB2C6">mic_off</Ms></span>
-        </div>
-        <span style={{ ...s("font:700 9px/1 'Kippax','Archivo';max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"), color: you ? '#6CABDD' : '#AFC1D4' }}>{you ? 'You' : t.name}</span>
-      </div>
-    );
-  };
   return (
-    <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px;background:#0A1420')}>
-      <div style={s('display:flex;align-items:center;gap:9px;padding:14px 16px 12px')}>
-        <span style={s('width:6px;height:6px;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} />
-        <span style={s("flex:1;font:800 12px/1.2 'Kippax','Archivo';letter-spacing:.03em;color:#fff")}>Moss Side Blues Room</span>
-        <span style={s("display:flex;align-items:center;gap:5px;font:700 10.5px/1 'Kippax','Archivo';color:#7E97AE")}><Ms size={13} color="#7E97AE">group</Ms>{inRoom} on camera</span>
+    <div style={s('animation:bgFade .25s ease both;position:relative;height:710px;overflow:hidden;background:#0A1420')}>
+      <img src={mainSrc} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />
+      <div style={s('position:absolute;left:0;right:0;top:0;height:104px;background:linear-gradient(rgba(6,12,22,.72),transparent)')} />
+      <div style={s('position:absolute;left:0;right:0;bottom:0;height:340px;background:linear-gradient(transparent,rgba(6,12,22,.94))')} />
+      <div style={s('position:absolute;left:14px;right:14px;top:13px;display:flex;align-items:center;gap:8px')}>
+        <span style={s('width:6px;height:6px;flex:none;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} />
+        <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 12px/1.2 'Kippax','Archivo';color:#fff;text-shadow:0 1px 6px rgba(0,10,28,.75)")}>Moss Side Blues Room</span>
+        <span style={s("display:flex;align-items:center;gap:5px;flex:none;background:rgba(10,20,32,.5);backdrop-filter:blur(6px);padding:5px 9px;border-radius:100px;font:700 9px/1 'Kippax','Archivo';color:#EAF1F8")}><Ms size={12} color="#EAF1F8">visibility</Ms>1,204</span>
+        <span style={s("display:flex;align-items:center;gap:5px;flex:none;background:#D6202A;padding:5px 9px;border-radius:100px;font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff")}><span style={s('width:5px;height:5px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} />LIVE</span>
       </div>
-      <div style={s('flex:1;position:relative;margin:0 8px;border-radius:16px;overflow:hidden;background:#0E1E30;min-height:338px')}>
-        <img src={mainSrc} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />
-        <div style={s('position:absolute;left:0;right:0;bottom:0;height:126px;background:linear-gradient(rgba(6,12,22,0),rgba(6,12,22,.84))')} />
-        <span style={s("position:absolute;top:11px;right:11px;display:flex;align-items:center;gap:5px;background:#D6202A;padding:5px 9px;border-radius:100px;font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:#fff")}><span style={s('width:5px;height:5px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} />LIVE</span>
-        <span style={s("position:absolute;top:11px;left:11px;display:flex;align-items:center;gap:5px;background:rgba(10,20,32,.55);backdrop-filter:blur(6px);padding:5px 9px;border-radius:100px;font:700 9px/1 'Kippax','Archivo';color:#EAF1F8")}><Ms size={12} color="#EAF1F8">visibility</Ms>1,204 watching</span>
-        {floats.map((f) => <span key={f.id} style={{ ...s('position:absolute;bottom:70px;pointer-events:none;animation:bgFloatUp 1.3s ease-out both'), left: f.x + '%' }}><Ms size={26} color={f.color}>{f.icon}</Ms></span>)}
-        <div style={s('position:absolute;left:12px;right:12px;bottom:12px')}>
-          <div style={s('display:flex;align-items:center;gap:6px')}><Ms size={16} color="#6CABDD">verified</Ms><span style={s("font:800 16px/1 'KippaxCondensed','Archivo Black';letter-spacing:.02em;color:#fff")}>{player}</span></div>
-          <div style={s("font:500 10.5px/1.3 'Kippax','Archivo';color:#C6D3E1;margin-top:5px")}>Taking questions from Moss Side Blues</div>
+      <div style={s('position:absolute;right:14px;bottom:246px;display:flex;flex-direction:column;gap:11px')}>
+        {REACTIONS.map((e) => <button key={e} onClick={() => react(e)} className="fw" style={s('width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(10,20,32,.5);backdrop-filter:blur(8px);font-size:21px;line-height:1')}>{e}</button>)}
+      </div>
+      {floats.map((f) => <span key={f.id} style={{ ...s('position:absolute;right:24px;bottom:296px;pointer-events:none;font-size:27px;line-height:1;animation:bgFloatUp 1.4s ease-out both'), marginRight: f.x + 'px' }}>{f.e}</span>)}
+      <div style={s('position:absolute;left:0;right:0;bottom:0;padding:0 15px 64px')}>
+        <div style={s('display:flex;align-items:center;gap:6px')}><Ms size={18} color="#6CABDD">verified</Ms><span style={s("font:800 21px/1 'KippaxCondensed','Archivo Black';letter-spacing:.02em;color:#fff")}>{player}</span></div>
+        <div style={s("font:500 11px/1.3 'Kippax','Archivo';color:#C6D3E1;margin-top:5px")}>Taking questions from Moss Side Blues · {inRoom} on camera</div>
+        <div style={s('display:flex;gap:8px;margin-top:14px')}>
+          {ROOM_GUESTS.map((t, i) => { const you = !t.src; return (
+            <div key={i} style={{ ...s('position:relative;width:42px;height:42px;flex:none;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#122438'), boxShadow: you ? 'inset 0 0 0 2px #6CABDD' : 'inset 0 0 0 1px rgba(234,241,248,.18)' }}>
+              {t.src ? <img src={t.src} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} /> : <Ms size={19} color="#6CABDD">person</Ms>}
+            </div>
+          ); })}
+        </div>
+        <div style={s('display:flex;align-items:center;gap:10px;margin-top:15px')}>
+          {st.call.joined ? (<>
+            {orb('mic', 'rgba(234,241,248,.18)')}
+            {orb('videocam', 'rgba(234,241,248,.18)')}
+            <button onClick={() => react('✋')} style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font:800 11px/1 'Kippax','Archivo';letter-spacing:.06em;color:#001838;background:#6CABDD;padding:16px 0;border-radius:100px")}><Ms size={16} color="#001838">pan_tool</Ms>ASK A QUESTION</button>
+            {orb('call_end', '#D6202A', leaveRoom)}
+          </>) : (
+            <button onClick={joinRoom} style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:#001838;background:#6CABDD;padding:17px 0;border-radius:100px")}><Ms size={17} color="#001838">videocam</Ms>JOIN WITH CAMERA</button>
+          )}
         </div>
       </div>
-      <div style={s('display:flex;gap:10px;padding:13px 16px 4px;overflow-x:auto')}>
-        {ROOM_GUESTS.map((t, i) => tile(t, i))}
-      </div>
-      <div style={s('display:flex;align-items:center;gap:8px;padding:8px 16px 2px')}>
-        <span style={s("font:800 8.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#7E97AE")}>REACT</span>
-        {REACTIONS.map((r) => <button key={r.icon} onClick={() => react(r.icon, r.color)} className="fq" style={s('width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(234,241,248,.07)')}><Ms size={20} color={r.color}>{r.icon}</Ms></button>)}
-        <button onClick={() => react('pan_tool', '#6CABDD')} style={s("margin-left:auto;display:flex;align-items:center;gap:6px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.06em;color:#001838;background:#6CABDD;padding:11px 13px")}><Ms size={15} color="#001838">pan_tool</Ms>ASK</button>
-      </div>
-      {st.call.joined ? (
-        <div style={s('display:flex;justify-content:center;gap:26px;padding:12px 0 20px')}>
-          {ctrl('mic', 'MUTE', 'rgba(234,241,248,.12)')}
-          {ctrl('videocam', 'CAMERA', 'rgba(234,241,248,.12)')}
-          {ctrl('call_end', 'LEAVE', '#D6202A', leaveRoom)}
-        </div>
-      ) : (
-        <div style={s('padding:12px 16px 22px')}>
-          <button onClick={joinRoom} style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.04em;color:#001838;background:#6CABDD;padding:15px 0;border-radius:12px")}><Ms size={17} color="#001838">videocam</Ms>JOIN WITH CAMERA</button>
-        </div>
-      )}
     </div>
   );
 }
