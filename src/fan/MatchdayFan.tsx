@@ -10,6 +10,9 @@ import { useParams } from 'react-router-dom';
 import { s } from '../admin/s';
 import { mediaFor } from './mediaSlots';
 import { media } from '../domain/media';
+// Autoplay demo mode (?autoplay=1) — isolated feature, inert unless enabled.
+import { useAutoplay } from '../features/autoplay/useAutoplay';
+import { AutoChip } from '../features/autoplay/AutoChip';
 
 const Ms = ({ children, size = 18, color, style }: { children: string; size?: number; color?: string; style?: CSSProperties }) => (
   <span className="ms" style={{ fontSize: size, color, ...style }}>{children}</span>
@@ -288,6 +291,10 @@ export function MatchdayFan() {
     else if (kind === 'offside') fire('OFFSIDE', 'Vinícius Júnior', 44, 'Flag up · Madrid strike ruled out, tight one on the shoulder', 'REAL MADRID', 'a');
     else if (kind === 'drinks') fire('DRINKS BREAK', 'Two minutes', 33, 'Referee has paused play, 26°C at kick-off', 'HYDRATION', 'n');
   };
+  // Autoplay demo mode (?autoplay=1): scripts the timeline via the dispatch above.
+  // Inert (no timers, no listeners) unless the flag is present.
+  const autoplay = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('autoplay') === '1';
+  const autoplayState = useAutoplay({ enabled: autoplay, applyState, applyEventCmd });
   // Follow the control room: apply commands from the panel's channel. Ref keeps
   // the listener bound to fresh closures without re-subscribing every render.
   const busRef = useRef<(m: any) => void>(() => {});
@@ -518,6 +525,7 @@ export function MatchdayFan() {
             <div style={s('display:flex;align-items:center;gap:5px')}><span style={s('width:15px;height:8px;border:1.4px solid #EAF1F8;border-radius:2px;display:inline-block')} /><span style={s("font:700 10px/1 'Kippax','Archivo';letter-spacing:.06em")}>5G</span></div>
           </div>
 
+          {autoplay && <AutoChip interacting={autoplayState.interacting} />}
           <div style={s('position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:46px;padding-bottom:56px')}>
             {/* event lower-third */}
             {st.event && (() => { const e = st.event!; const color = EV[e.kind]?.color || '#6CABDD'; const isCard = e.kind === 'YELLOW' || e.kind === 'RED CARD'; const hasIcon = !!EV[e.kind]?.icon; return (
