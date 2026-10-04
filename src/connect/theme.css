@@ -1,0 +1,204 @@
+/* ---------- Club theme tokens ----------
+   Connect is multi-tenant: swap these per club (Arsenal shown). Components only use the tokens. */
+:root {
+  --gold: #b4a174;
+  --gold-dark: #8f7e52;
+  --gold-soft: #cbbc93;
+  --title-gold: #b9a67b;
+  --cream: #efedea;
+  --card: #efece8;
+  --bubble: #dedbd7;
+  --tile: #e2dfdb;
+  --ink: #1d1b19;
+  --muted: #7d7771;
+  --line: #d9d5cf;
+  --outline: #8f8a84;
+  --danger: #a3271f;
+  --danger-soft: #f2dedb;
+  --night: #161514;
+  --iris: #8b3df5;
+
+  /* Fonts: the prototype loads stand-ins. Production must use the Figma fonts:
+     Chesna (display / club page) and Hiragino (chat and panels). */
+  --font-display: 'Chesna Grotesk', 'Chesna', 'Manrope', system-ui, sans-serif;
+  --font-ui: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Zen Kaku Gothic New', system-ui, sans-serif;
+
+  /* Text styles from Figma (Hiragino: xs 11, s 13, p 16, h5 19) */
+  --fs-xs: 11px;
+  --fs-s: 13px;
+  --fs-p: 16px;
+  --fs-h5: 19px;
+
+  --radius-card: 20px;
+  --radius-panel: 22px;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+/* Scoped to the Connect wrapper so these globals don't leak into the rest of
+   the app (the operator / existing Man City panel live in the same bundle). */
+.connect-page {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--fs-s);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  /* Desk: the phone mockup floats on it (desktop). */
+  background:
+    radial-gradient(1000px 520px at 50% -8%, #332f3f, transparent 62%),
+    #17161c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px;
+}
+
+/* Phone mockup: 393x844 device with a bezel, like the Man City panel. */
+.connect-phone {
+  position: relative;
+  width: 393px;
+  max-width: 100%;
+  height: 844px;
+  max-height: calc(100dvh - 48px);
+  border-radius: 44px;
+  overflow: hidden;
+  background: var(--cream);
+  box-shadow:
+    0 2px 2px rgba(0, 0, 0, 0.25),
+    0 26px 60px -18px rgba(0, 0, 0, 0.6),
+    0 0 0 9px #0b0a0f,
+    0 0 0 10px #2a2733;
+}
+.connect-phone .app {
+  height: 100%;
+  max-width: none;
+}
+
+/* Real phones: drop the mockup and fill the screen like a web app. */
+@media (max-width: 520px) {
+  .connect-page { padding: 0; background: var(--cream); }
+  .connect-phone {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+img { display: block; max-width: 100%; }
+:focus-visible { outline: 2px solid var(--gold-dark); outline-offset: 2px; }
+
+/* The app column: full width on phones, a centred phone-width column on larger screens */
+.app {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 100dvh;
+  margin: 0 auto;
+  background: var(--cream);
+  overflow: hidden;
+}
+.scroll { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+.hscroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.hscroll::-webkit-scrollbar { display: none; }
+.hscroll > * { scroll-snap-align: start; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* Hero */
+.hero { position: relative; height: 284px; background: #141312; overflow: hidden; }
+.hero > img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero .title { position: absolute; left: 0; right: 0; top: 152px; text-align: center; font-family: var(--font-display);
+  font-weight: 700; font-size: 26px; color: var(--title-gold); text-shadow: 0 0 12px rgba(185,166,123,.35); }
+
+/* Panels (full-height surfaces that slide over the hero) */
+.panel {
+  position: absolute; left: 12px; right: 12px; top: 20px; bottom: 0;
+  background: var(--card); border: 1px solid #dcd8d2; border-bottom: 0;
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: rise .22s ease-out;
+}
+@keyframes rise { from { transform: translateY(24px); opacity: .4 } to { transform: none; opacity: 1 } }
+.panel-head { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 62px; padding: 26px 16px 12px; border-bottom: 1px solid var(--line); }
+.panel-body { flex: 1; min-height: 0; }
+.panel-foot { flex-shrink: 0; border-top: 1px solid var(--line); padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); background: var(--card); }
+
+/* Overlay cards (sheets) */
+.sheet-scrim { position: absolute; inset: 0; background: rgba(20,19,18,.28); z-index: 40; animation: fade .15s; }
+@keyframes fade { from { opacity: 0 } }
+.sheet {
+  position: absolute; left: 18px; right: 18px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 41;
+  max-height: calc(100% - 80px); overflow-y: auto;
+  background: var(--card); border: 1px solid #b9b4ae; border-radius: var(--radius-card); box-shadow: 0 6px 24px rgba(0,0,0,.18);
+  padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px;
+  animation: rise .2s ease-out;
+}
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px;
+  border: 1px solid var(--outline); background: transparent; height: 40px; padding: 0 16px; font-size: var(--fs-s);
+  font-weight: 500; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.gold { background: var(--gold); border-color: var(--gold-dark); }
+.btn.dark { border-color: var(--ink); }
+.btn.danger { border-color: var(--danger); color: var(--danger); }
+.btn.sm { height: 32px; padding: 0 12px; font-size: 12px; }
+.btn.xs { height: 30px; padding: 0 12px; font-size: 12px; }
+.btn.block { width: 100%; height: 44px; }
+.btn.icon { width: 44px; padding: 0; height: 30px; }
+.round { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
+
+/* Inputs */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field-label { display: flex; justify-content: space-between; align-items: baseline; font-weight: 500; }
+.field-label small { font-weight: 400; color: var(--muted); font-size: var(--fs-xs); }
+.input { width: 100%; height: 44px; border-radius: 10px; border: 1px solid #b5b0aa; background: transparent; padding: 0 14px; font-size: var(--fs-s); }
+.input:focus { outline: none; border-color: var(--gold); background: #f6f4f1; }
+textarea.input { height: 72px; padding: 10px 14px; resize: none; line-height: 1.5; }
+.pill-input { width: 100%; height: 48px; border-radius: 24px; border: 1px solid var(--outline); background: var(--bubble); padding: 0 18px; font-size: var(--fs-s); }
+.pill-input:focus { outline: none; border-color: var(--gold-dark); }
+.error { color: var(--danger); font-size: var(--fs-xs); }
+
+/* Chips & bits */
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 10px; border-radius: 15px; background: var(--bubble); color: var(--muted); }
+.tag { display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 8px; border-radius: 10px; font-size: var(--fs-xs); }
+.tag.private { background: #1e1d1c; color: #fff; }
+.tag.public { border: 1px solid var(--outline); color: var(--muted); }
+.badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--gold); font-size: var(--fs-xs); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.muted { color: var(--muted); }
+.xs { font-size: var(--fs-xs); }
+.h5 { font-size: var(--fs-h5); line-height: 1.3; }
+.p { font-size: var(--fs-p); }
+.bold { font-weight: 700; }
+.row { display: flex; align-items: center; gap: 10px; }
+.col { display: flex; flex-direction: column; }
+.grow { flex: 1; min-width: 0; }
+.tile { background: var(--bubble); border-radius: 16px; border: 1px solid transparent; }
+/* <button> flex items don't stretch to a flex container's cross-axis in Chrome,
+   so button list-rows collapse to content width. Force them full-width. */
+button.tile { width: 100%; }
+
+/* Chat */
+.bubble { background: var(--bubble); border-radius: 16px; padding: 8px 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.bubble.me { background: var(--gold-soft); border: 1px solid #a9986c; }
+.sys { align-self: center; padding: 4px 12px; border-radius: 12px; background: var(--bubble); font-size: var(--fs-xs); color: var(--muted); text-align: center; }
+
+/* Toggle */
+.toggle { position: relative; width: 42px; height: 26px; border-radius: 13px; border: 1px solid var(--outline); background: var(--bubble); flex-shrink: 0; padding: 0; }
+.toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
+.toggle[aria-checked='true'] { background: var(--gold); border-color: var(--gold-dark); }
+.toggle[aria-checked='true']::after { left: 19px; }
+
+/* Toast */
+.toast { position: absolute; left: 50%; top: 22px; transform: translateX(-50%); z-index: 60; background: #1e1d1c; color: #fff;
+  padding: 14px 22px; border-radius: 14px; font-size: 15.5px; font-weight: 500; line-height: 1.35; letter-spacing: .1px;
+  border: 1px solid rgba(255,255,255,.08); box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  width: max-content; max-width: calc(100% - 28px); text-align: center; animation: fade .15s; }
