@@ -17,7 +17,7 @@ export const T = {
   purpleText: 'var(--cs-purpleText)',
   green: '#2BD47D',
   amber: '#F5A524',
-  font: "'Zen Kaku Gothic New','Hiragino Sans','Hiragino Kaku Gothic ProN',system-ui,sans-serif",
+  font: "'Inter',system-ui,-apple-system,'Segoe UI',sans-serif",
 };
 
 export type Theme = 'dark' | 'light';
