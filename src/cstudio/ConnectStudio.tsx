@@ -13,7 +13,7 @@ export type Toast = (m: string) => void;
 
 export const btn = (variant: 'primary' | 'ghost' = 'ghost', on = false): React.CSSProperties => ({
   fontFamily: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-  height: variant === 'primary' ? 40 : 36, padding: '0 18px', borderRadius: 999, fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap',
+  height: variant === 'primary' ? 40 : 36, padding: '0 18px', borderRadius: 999, fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap',
   background: variant === 'primary' ? T.purple : on ? T.purpleSoft : 'transparent',
   color: variant === 'primary' ? '#fff' : T.ink,
   border: `1px solid ${variant === 'primary' || on ? T.purple : T.line2}`,
@@ -64,7 +64,7 @@ export default function ConnectStudio() {
   const remove = (id: string) => { const p = panels.find((x) => x.id === id); setPanels((ps) => ps.filter((x) => x.id !== id)); toast(`${p?.title ?? 'Panel'} deleted`); };
 
   return (
-    <div className="cs" style={{ ...THEME_VARS[theme], minHeight: '100dvh', background: T.bg, color: T.ink, fontFamily: T.font, fontSize: 13, lineHeight: 1.5 } as React.CSSProperties}>
+    <div className="cs" style={{ ...THEME_VARS[theme], minHeight: '100dvh', background: T.bg, color: T.ink, fontFamily: T.font, fontSize: 14, lineHeight: 1.5 } as React.CSSProperties}>
       <style>{CS_CSS}</style>
       <TopBar theme={theme} onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))} toast={toast} />
       {view === 'dashboard' && <Dashboard panels={panels} filter={filter} setFilter={setFilter} onNew={startNew} onControl={(id) => { setActiveId(id); setView('control'); }} onStats={(id) => { setActiveId(id); setView('stats'); }} onEdit={startEdit} onDelete={remove} />}
@@ -74,7 +74,7 @@ export default function ConnectStudio() {
       {view === 'stats' && active && <Stats panel={active} onBack={() => setView('dashboard')} />}
 
       {toastMsg && (
-        <div style={{ position: 'fixed', left: '50%', bottom: 28, transform: 'translateX(-50%)', background: T.surface2, border: `1px solid ${T.line}`, color: T.ink, padding: '12px 18px', borderRadius: 12, fontSize: 13, fontWeight: 500, boxShadow: '0 12px 34px rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'center', gap: 9 }}>
+        <div style={{ position: 'fixed', left: '50%', bottom: 28, transform: 'translateX(-50%)', background: T.surface2, border: `1px solid ${T.line}`, color: T.ink, padding: '12px 18px', borderRadius: 12, fontSize: 14, fontWeight: 500, boxShadow: '0 12px 34px rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'center', gap: 9 }}>
           <Ico name="check" size={16} w={2.2} color={T.purple} />{toastMsg}
         </div>
       )}
@@ -93,16 +93,16 @@ export function TopBar({ theme, onToggleTheme, toast }: { theme: Theme; onToggle
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src={A('boltos.png')} alt="BOLT OS" style={{ width: 86, height: 20, filter: 'var(--cs-logo-filter)' }} />
-          <span style={{ fontSize: 11, color: T.purple, fontWeight: 700, letterSpacing: 1 }}>STUDIO</span>
+          <span style={{ fontSize: 12, color: T.purple, fontWeight: 700, letterSpacing: 1 }}>STUDIO</span>
         </div>
-        <button onClick={() => toast('Multi-club switching is coming soon')} style={{ fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px 0 6px', borderRadius: 999, border: `1px solid ${T.line}`, background: T.surface2, color: T.ink, fontSize: 13, fontWeight: 600 }}>
+        <button onClick={() => toast('Multi-club switching is coming soon')} style={{ fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px 0 6px', borderRadius: 999, border: `1px solid ${T.line}`, background: T.surface2, color: T.ink, fontSize: 14, fontWeight: 600 }}>
           <img src={A('crest.png')} alt="" style={{ width: 26, height: 26 }} />Arsenal<Ico name="chev" size={12} w={2.2} color={T.muted} />
         </button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button aria-label="Toggle theme" onClick={onToggleTheme} style={iconBtn}><Ico name={theme === 'dark' ? 'sun' : 'moon'} size={18} /></button>
         <button aria-label="Settings" onClick={() => toast('Studio settings are coming soon')} style={iconBtn}><Ico name="gear" size={18} /></button>
-        <span title="Daniel O." style={{ width: 40, height: 40, borderRadius: '50%', background: T.purple, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff' }}>DO</span>
+        <span title="Daniel O." style={{ width: 40, height: 40, borderRadius: '50%', background: T.purple, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>DO</span>
       </div>
     </header>
   );
@@ -130,7 +130,7 @@ function Dashboard({ panels, filter, setFilter, onNew, onControl, onStats, onEdi
             {filters.map(([k, lab, n]) => {
               const on = filter === k;
               return (
-                <button key={k} onClick={() => setFilter(k)} style={{ fontFamily: 'inherit', cursor: 'pointer', height: 34, padding: '0 14px', borderRadius: 17, border: `1px solid ${on ? T.purple : T.line}`, background: on ? T.purpleSoft : 'transparent', color: on ? T.ink : T.muted, fontSize: 13, fontWeight: 600 }}>
+                <button key={k} onClick={() => setFilter(k)} style={{ fontFamily: 'inherit', cursor: 'pointer', height: 34, padding: '0 14px', borderRadius: 17, border: `1px solid ${on ? T.purple : T.line}`, background: on ? T.purpleSoft : 'transparent', color: on ? T.ink : T.muted, fontSize: 14, fontWeight: 600 }}>
                   {lab} <span style={{ color: T.muted, fontWeight: 500 }}>{n}</span>
                 </button>
               );
@@ -157,11 +157,11 @@ function PanelCard({ p, onControl, onStats, onEdit, onDelete }: { p: Panel; onCo
       <button onClick={() => onStats(p.id)} style={{ all: 'unset', cursor: 'pointer', position: 'relative', height: 112, display: 'block' }}>
         <img src={p.image} alt="" style={{ width: '100%', height: 112, objectFit: 'cover', display: 'block', opacity: p.dimImage ? 0.5 : 1 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(14,14,18,0) 30%, rgba(14,14,18,0.85) 100%)' }} />
-        <span style={{ position: 'absolute', left: 16, top: 12, display: 'inline-flex', alignItems: 'center', gap: 6, height: 24, padding: '0 10px', borderRadius: 12, background: st.fg + '22', color: st.fg, fontSize: 11, fontWeight: 600 }}>
+        <span style={{ position: 'absolute', left: 16, top: 12, display: 'inline-flex', alignItems: 'center', gap: 6, height: 24, padding: '0 10px', borderRadius: 12, background: st.fg + '22', color: st.fg, fontSize: 12, fontWeight: 600 }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: st.fg }} />{st.label}
         </span>
         <img src={A('crest.png')} alt="" style={{ position: 'absolute', left: 16, bottom: 10, width: 34, height: 34 }} />
-        <span style={{ position: 'absolute', right: 14, bottom: 12, fontSize: 11, color: '#D6D6DE' }}>{p.typeLabel}</span>
+        <span style={{ position: 'absolute', right: 14, bottom: 12, fontSize: 12, color: '#D6D6DE' }}>{p.typeLabel}</span>
       </button>
       {/* overflow menu */}
       <button aria-label="Panel options" onClick={(e) => { e.stopPropagation(); setMenu((m) => !m); }} style={{ position: 'absolute', right: 10, top: 10, width: 30, height: 30, borderRadius: '50%', border: 'none', background: 'rgba(14,14,18,0.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Ico name="more" size={16} /></button>
@@ -176,12 +176,12 @@ function PanelCard({ p, onControl, onStats, onEdit, onDelete }: { p: Panel; onCo
       )}
       <div style={{ padding: '14px 18px 16px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
         <div style={{ fontSize: 19, fontWeight: 700, lineHeight: 1.3 }}>{p.title}</div>
-        <div style={{ fontSize: 13, color: T.muted }}>{p.desc}</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 11, color: T.purpleText }}>
+        <div style={{ fontSize: 14, color: T.muted }}>{p.desc}</div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12, color: T.purpleText }}>
           <span style={{ flex: 'none', marginTop: 1 }}><Ico name="spark" size={13} w={2} color={T.purple} /></span><span>{p.insight}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 'auto', paddingTop: 12, borderTop: `1px solid ${T.line}` }}>
-          <span style={{ fontSize: 11, color: T.muted }}>
+          <span style={{ fontSize: 12, color: T.muted }}>
             {p.live ? <><span style={{ color: T.green, fontWeight: 700 }}>Live now</span> · {p.footer.replace('Live now · ', '')}</> : p.footer}
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -197,7 +197,7 @@ function PanelCard({ p, onControl, onStats, onEdit, onDelete }: { p: Panel; onCo
     </div>
   );
 }
-const menuItem: React.CSSProperties = { fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', background: 'transparent', border: 'none', color: T.ink, fontSize: 13, fontWeight: 500, textAlign: 'left' };
+const menuItem: React.CSSProperties = { fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', background: 'transparent', border: 'none', color: T.ink, fontSize: 14, fontWeight: 500, textAlign: 'left' };
 
 // ---------------- Panel ready ----------------
 function PanelReady({ panel, onHome, onStart }: { panel: Panel; onHome: () => void; onStart: () => void }) {

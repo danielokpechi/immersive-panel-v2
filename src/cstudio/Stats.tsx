@@ -30,40 +30,40 @@ export function Stats({ panel, onBack }: { panel: Panel; onBack: () => void }) {
         <img src={A('crest.png')} alt="" style={{ width: 36, height: 36 }} />
         <div>
           <b style={{ fontSize: 18 }}>{panel.title}</b>
-          <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>Stats · 2026/27 season</div>
+          <div style={{ fontSize: 13, color: T.muted, marginTop: 2 }}>Stats · 2026/27 season</div>
         </div>
       </div>
 
       <main style={{ padding: '28px 40px 48px', maxWidth: 1200, margin: '0 auto', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, color: T.purpleText }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 16, color: T.purpleText }}>
           <span style={{ marginTop: 2 }}><Ico name="spark" size={17} w={2} color={T.purple} /></span>
           <span>Arsenal at Home is up 18% on last month. Predictions are the busiest section after chat, and shop taps spike at half-time.</span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
           {totals.map(([k, v]) => (
-            <div key={k} style={card}><div style={{ fontSize: 12, color: T.muted }}>{k}</div><div style={{ fontSize: 28, fontWeight: 700, marginTop: 6 }}>{v}</div></div>
+            <div key={k} style={card}><div style={{ fontSize: 13, color: T.muted }}>{k}</div><div style={{ fontSize: 28, fontWeight: 700, marginTop: 6 }}>{v}</div></div>
           ))}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20 }}>
           <div style={card}>
-            <b style={{ fontSize: 15 }}>Fans per session</b>
+            <b style={{ fontSize: 16 }}>Fans per session</b>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, height: 180, marginTop: 20 }}>
               {SESSIONS.map((x) => (
                 <div key={x.s} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: '100%', maxWidth: 46, height: `${(x.fans / max) * 150}px`, borderRadius: '8px 8px 0 0', background: `linear-gradient(180deg, ${T.purple}, ${T.purple}66)` }} />
-                  <span style={{ fontSize: 10, color: T.muted, textAlign: 'center' }}>{x.s.replace('v ', '')}</span>
+                  <span style={{ fontSize: 11, color: T.muted, textAlign: 'center' }}>{x.s.replace('v ', '')}</span>
                 </div>
               ))}
             </div>
           </div>
           <div style={card}>
-            <b style={{ fontSize: 15 }}>Where fans spend time</b>
+            <b style={{ fontSize: 16 }}>Where fans spend time</b>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 18 }}>
               {SPEND.map(([n, p]) => (
                 <div key={n}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}><span>{n}</span><span style={{ color: T.muted }}>{p}%</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}><span>{n}</span><span style={{ color: T.muted }}>{p}%</span></div>
                   <div style={{ height: 8, borderRadius: 4, background: T.surface2, overflow: 'hidden' }}><div style={{ width: `${p * 2.4}%`, height: '100%', background: T.purple }} /></div>
                 </div>
               ))}
@@ -72,10 +72,10 @@ export function Stats({ panel, onBack }: { panel: Panel; onBack: () => void }) {
         </div>
 
         <div style={card}>
-          <b style={{ fontSize: 15 }}>Recent sessions</b>
+          <b style={{ fontSize: 16 }}>Recent sessions</b>
           <div style={{ marginTop: 14 }}>
             {SESSIONS.map((x, i) => (
-              <div key={x.s} style={{ display: 'flex', alignItems: 'center', padding: '12px 0', borderTop: i ? `1px solid ${T.line}` : 'none', fontSize: 13 }}>
+              <div key={x.s} style={{ display: 'flex', alignItems: 'center', padding: '12px 0', borderTop: i ? `1px solid ${T.line}` : 'none', fontSize: 14 }}>
                 <span style={{ flex: 2, fontWeight: 600 }}>{x.s}</span>
                 <span style={{ flex: 2, color: T.muted }}>{x.d}</span>
                 <span style={{ flex: 1, textAlign: 'right' }}>{x.fans.toLocaleString()} fans</span>

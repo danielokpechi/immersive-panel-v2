@@ -10,7 +10,7 @@
   --bubble: #dedbd7;
   --tile: #e2dfdb;
   --ink: #1d1b19;
-  --muted: #7d7771;
+  --muted: #5f5953;
   --line: #d9d5cf;
   --outline: #8f8a84;
   --danger: #a3271f;
@@ -18,14 +18,14 @@
   --night: #161514;
   --iris: #8b3df5;
 
-  /* Fonts: the prototype loads stand-ins. Production must use the Figma fonts:
-     Chesna (display / club page) and Hiragino (chat and panels). */
+  /* Fonts: Chesna (display / club page) per Figma, with a Manrope stand-in. UI text is
+     Inter for legibility in the scaled-down demo (Figma specifies Hiragino). */
   --font-display: 'Chesna Grotesk', 'Chesna', 'Manrope', system-ui, sans-serif;
-  --font-ui: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Zen Kaku Gothic New', system-ui, sans-serif;
+  --font-ui: 'Inter', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Zen Kaku Gothic New', system-ui, sans-serif;
 
-  /* Text styles from Figma (Hiragino: xs 11, s 13, p 16, h5 19) */
-  --fs-xs: 11px;
-  --fs-s: 13px;
+  /* Text styles: Figma has xs 11 / s 13; bumped 1px for readability */
+  --fs-xs: 12px;
+  --fs-s: 14px;
   --fs-p: 16px;
   --fs-h5: 19px;
 
@@ -150,8 +150,8 @@ img { display: block; max-width: 100%; }
 .btn.gold { background: var(--gold); border-color: var(--gold-dark); }
 .btn.dark { border-color: var(--ink); }
 .btn.danger { border-color: var(--danger); color: var(--danger); }
-.btn.sm { height: 32px; padding: 0 12px; font-size: 12px; }
-.btn.xs { height: 30px; padding: 0 12px; font-size: 12px; }
+.btn.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn.xs { height: 30px; padding: 0 12px; font-size: 13px; }
 .btn.block { width: 100%; height: 44px; }
 .btn.icon { width: 44px; padding: 0; height: 30px; }
 .round { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
@@ -187,7 +187,7 @@ textarea.input { height: 72px; padding: 10px 14px; resize: none; line-height: 1.
 button.tile { width: 100%; }
 
 /* Chat */
-.bubble { background: var(--bubble); border-radius: 16px; padding: 8px 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.bubble { background: var(--bubble); border-radius: 16px; padding: 9px 14px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
 .bubble.me { background: var(--gold-soft); border: 1px solid #a9986c; }
 .sys { align-self: center; padding: 4px 12px; border-radius: 12px; background: var(--bubble); font-size: var(--fs-xs); color: var(--muted); text-align: center; }
 

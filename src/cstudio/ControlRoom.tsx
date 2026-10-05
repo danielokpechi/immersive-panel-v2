@@ -48,7 +48,7 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
 
   const stat = (label: string, value: string) => (
     <div style={{ flex: 1, background: T.surface, border: `1px solid ${T.line}`, borderRadius: 14, padding: '14px 16px' }}>
-      <div style={{ fontSize: 12, color: T.muted }}>{label}</div>
+      <div style={{ fontSize: 13, color: T.muted }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>{value}</div>
     </div>
   );
@@ -62,9 +62,9 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <b style={{ fontSize: 18 }}>{panel.title}</b>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 22, padding: '0 10px', borderRadius: 11, background: T.green + '22', color: T.green, fontSize: 11, fontWeight: 600 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green }} />Live</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 22, padding: '0 10px', borderRadius: 11, background: T.green + '22', color: T.green, fontSize: 12, fontWeight: 600 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green }} />Live</span>
             </div>
-            <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>Control room · Session: v Chelsea · Sat 25 Oct</div>
+            <div style={{ fontSize: 13, color: T.muted, marginTop: 2 }}>Control room · Session: v Chelsea · Sat 25 Oct</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -77,8 +77,8 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
         {/* fan chat */}
         <div style={{ width: 320, flex: 'none', borderRight: `1px solid ${T.line}`, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
-            <b style={{ fontSize: 14 }}>Fan chat</b>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: T.muted }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: T.purple }} />AI moderation on</span>
+            <b style={{ fontSize: 15 }}>Fan chat</b>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: T.muted }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: T.purple }} />AI moderation on</span>
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {held && (
@@ -100,7 +100,7 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
             {stat('Fans in panel', '4,812')}{stat('Poll votes', '1,284')}{stat('Messages / min', '312')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <b style={{ fontSize: 15 }}>Push to fans</b>
+            <b style={{ fontSize: 16 }}>Push to fans</b>
             <button onClick={() => setComposer(true)} style={btn('ghost')}><Ico name="plus" size={15} />New activity</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -111,14 +111,14 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
                   <span style={{ width: 40, height: 40, borderRadius: 10, flex: 'none', background: T.surface2, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.muted }}><Ico name={a.icon} size={18} /></span>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <b style={{ fontSize: 14 }}>{a.label}</b>
-                      {isLive && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 700, color: T.green }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green }} />LIVE ON FANS</span>}
+                      <b style={{ fontSize: 15 }}>{a.label}</b>
+                      {isLive && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: T.green }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green }} />LIVE ON FANS</span>}
                     </div>
-                    <span style={{ fontSize: 12, color: T.muted }}>{a.sub}</span>
+                    <span style={{ fontSize: 13, color: T.muted }}>{a.sub}</span>
                   </div>
                   <button className="pushbtn" onClick={() => togglePush(a)} style={isLive
-                    ? { fontFamily: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, height: 36, padding: '0 16px', borderRadius: 999, fontSize: 13, fontWeight: 600, background: 'rgba(43,212,125,0.14)', color: T.green, border: '1px solid rgba(43,212,125,0.5)' }
-                    : { fontFamily: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, height: 36, padding: '0 18px', borderRadius: 999, fontSize: 13, fontWeight: 600, background: 'transparent', color: T.purpleText, border: `1px solid ${T.purple}` }}>
+                    ? { fontFamily: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, height: 36, padding: '0 16px', borderRadius: 999, fontSize: 14, fontWeight: 600, background: 'rgba(43,212,125,0.14)', color: T.green, border: '1px solid rgba(43,212,125,0.5)' }
+                    : { fontFamily: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, height: 36, padding: '0 18px', borderRadius: 999, fontSize: 14, fontWeight: 600, background: 'transparent', color: T.purpleText, border: `1px solid ${T.purple}` }}>
                     {isLive ? <><Ico name="check" size={14} w={2.4} />Pushed · pull</> : 'Push to fans'}
                   </button>
                 </div>
@@ -129,7 +129,7 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
 
         {/* preview */}
         <aside style={{ width: 300, flex: 'none', borderLeft: `1px solid ${T.line}`, padding: '20px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, overflowY: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.muted, fontSize: 12, alignSelf: 'flex-end' }}><Ico name="eye" size={14} color={T.muted} />Fan view preview</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.muted, fontSize: 13, alignSelf: 'flex-end' }}><Ico name="eye" size={14} color={T.muted} />Fan view preview</div>
           <FanPreview title={panel.title} colors={panel.colors} sections={panel.sections} />
         </aside>
       </div>
@@ -142,14 +142,14 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
               <b style={{ fontSize: 18 }}>New activity</b>
               <button onClick={() => setComposer(false)} aria-label="Close" style={{ ...iconBtn, width: 34, height: 34 }}><Ico name="x" size={16} /></button>
             </div>
-            <div style={{ fontSize: 12, color: T.muted, fontWeight: 600, marginBottom: 9 }}>Type</div>
+            <div style={{ fontSize: 13, color: T.muted, fontWeight: 600, marginBottom: 9 }}>Type</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
               {NEW_TYPES.map((t) => {
                 const on = ctype === t.label;
-                return <button key={t.label} onClick={() => setCtype(t.label)} style={{ fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, height: 36, padding: '0 14px', borderRadius: 19, background: on ? T.purpleSoft : 'transparent', border: `1px solid ${on ? T.purple : T.line}`, color: T.ink, fontSize: 13, fontWeight: 600 }}><Ico name={t.icon} size={15} />{t.label}</button>;
+                return <button key={t.label} onClick={() => setCtype(t.label)} style={{ fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, height: 36, padding: '0 14px', borderRadius: 19, background: on ? T.purpleSoft : 'transparent', border: `1px solid ${on ? T.purple : T.line}`, color: T.ink, fontSize: 14, fontWeight: 600 }}><Ico name={t.icon} size={15} />{t.label}</button>;
               })}
             </div>
-            <div style={{ fontSize: 12, color: T.muted, fontWeight: 600, marginBottom: 9 }}>Question</div>
+            <div style={{ fontSize: 13, color: T.muted, fontWeight: 600, marginBottom: 9 }}>Question</div>
             <input autoFocus value={cq} onChange={(e) => setCq(e.target.value)} placeholder="e.g. Who scores first for Arsenal?" style={{ width: '100%', height: 44, padding: '0 14px', borderRadius: 10, background: T.bg, border: `1px solid ${T.line}`, color: T.ink, font: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
               <button onClick={() => setComposer(false)} style={btn('ghost')}>Cancel</button>
@@ -165,10 +165,10 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
 function ChatRow({ m, note }: { m: Msg; note?: string }) {
   return (
     <div style={{ display: 'flex', gap: 10 }}>
-      <span style={{ width: 28, height: 28, borderRadius: '50%', flex: 'none', background: m.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{m.initials}</span>
+      <span style={{ width: 28, height: 28, borderRadius: '50%', flex: 'none', background: m.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>{m.initials}</span>
       <div>
-        <div style={{ fontSize: 12, color: T.muted }}>{m.who}{note && <span style={{ color: '#E5484D' }}> · {note}</span>}</div>
-        <div style={{ fontSize: 13, marginTop: 2 }}>{m.text}</div>
+        <div style={{ fontSize: 13, color: T.muted }}>{m.who}{note && <span style={{ color: '#E5484D' }}> · {note}</span>}</div>
+        <div style={{ fontSize: 14, marginTop: 2 }}>{m.text}</div>
       </div>
     </div>
   );

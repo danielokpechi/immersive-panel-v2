@@ -13,8 +13,8 @@
 // Add ?mobile=1 to preview the phone layout on a desktop.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-const STUDIO_W = 1040;
-const STUDIO_H = 700;
+const STUDIO_W = 960;
+const STUDIO_H = 660;
 const PHONE_W = 393;
 const PHONE_H = 852;
 const NARROW = 760;

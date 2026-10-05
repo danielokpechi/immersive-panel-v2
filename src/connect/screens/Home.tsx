@@ -25,7 +25,7 @@ export function Home() {
           </div>
           <button className="btn" style={{ width: 50, height: 34, padding: 0 }} aria-label="Expand chat" onClick={() => push({ name: 'fanChat' })}><Icon name="expand" /></button>
         </div>
-        <div className="col" style={{ gap: 14, padding: '16px 16px 4px', maxHeight: 260, overflow: 'hidden' }}>
+        <div className="col" style={{ gap: 14, padding: '16px 16px 4px', maxHeight: 300, overflow: 'hidden' }}>
           {recent.map((m) => <ChatLine key={m.id} m={m} />)}
         </div>
         <div style={{ padding: 12, borderTop: '1px solid var(--line)' }}><FanComposer onSend={(t) => d({ type: 'fanSend', text: t })} /></div>
@@ -36,9 +36,9 @@ export function Home() {
         <img src={A('stadium.png')} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(20,19,18,.94), rgba(20,19,18,.78) 55%, rgba(20,19,18,.35))' }} />
         <div style={{ position: 'absolute', left: 18, top: 16, right: 140 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, color: 'var(--gold)' }}>NEW · CREWS</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: 'var(--gold)' }}>NEW · CREWS</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: '#f3efe7', lineHeight: 1.3 }}>Find your crew</div>
-          <div style={{ fontSize: 12, color: '#bdb6aa' }}>Small fan groups that plan matchdays together.</div>
+          <div style={{ fontSize: 13.5, color: '#d9d2c6' }}>Small fan groups that plan matchdays together.</div>
         </div>
         <button className="btn gold" style={{ position: 'absolute', right: 16, bottom: 16, fontWeight: 700 }} onClick={() => push({ name: 'crews' })}>
           Join Crew<Icon name="right" size={15} stroke={2} />
@@ -49,7 +49,7 @@ export function Home() {
         {PRODUCTS.slice(0, 3).map((p) => (
           <div key={p.id} style={{ flex: '0 0 182px', background: 'var(--tile)', borderRadius: 14, padding: 11, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <img src={p.img} alt="" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 8, background: '#fff' }} />
-            <div style={{ fontSize: 12, minHeight: 36 }}>{p.name}</div>
+            <div style={{ fontSize: 13, minHeight: 36 }}>{p.name}</div>
             <div className="xs muted">★★★★ {p.reviews}</div>
             <div><span style={{ fontSize: 12 }}>£</span><span style={{ fontSize: 22, fontWeight: 500 }}>{p.price.toFixed(2)}</span></div>
             <button className="btn gold" onClick={() => toast('✓  Added to basket')}><Icon name="upright" size={15} />Buy now</button>

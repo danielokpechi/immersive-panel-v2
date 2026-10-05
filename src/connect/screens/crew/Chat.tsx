@@ -39,7 +39,7 @@ export function CrewChat({ crewId }: { crewId: string }) {
           <DateBlock e={pinned} size={34} />
           <span className="grow">
             <span className="row xs bold" style={{ gap: 4, color: 'var(--gold-dark)' }}><Icon name="pin" size={11} stroke={2.2} />Pinned event</span>
-            <span className="ellipsis" style={{ display: 'block', fontSize: 12 }}>{pinned.name} · {pinned.time}</span>
+            <span className="ellipsis" style={{ display: 'block', fontSize: 13 }}>{pinned.name} · {pinned.time}</span>
           </span>
           {pinned.rsvps[ME] === 'going'
             ? <span className="badge" style={{ height: 26, padding: '0 10px', borderRadius: 13, gap: 4 }}><Icon name="check" size={11} stroke={2.4} />Going</span>

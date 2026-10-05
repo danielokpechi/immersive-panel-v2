@@ -37,7 +37,7 @@ export function NewPanel({ draft, setDraft, editing, onCancel, onSave, onDraft }
           {STEPS.map((s, i) => (
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 9, color: i === step ? T.ink : i < step ? T.ink : T.muted, fontWeight: 600 }}>
-                <span style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, background: i <= step ? T.purple : 'transparent', color: i <= step ? '#fff' : T.muted, border: `1px solid ${i <= step ? T.purple : T.line2}` }}>{i < step ? <Ico name="check" size={14} w={2.4} /> : i + 1}</span>
+                <span style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, background: i <= step ? T.purple : 'transparent', color: i <= step ? '#fff' : T.muted, border: `1px solid ${i <= step ? T.purple : T.line2}` }}>{i < step ? <Ico name="check" size={14} w={2.4} /> : i + 1}</span>
                 {s}
               </span>
               {i < 3 && <span style={{ width: 54, height: 1, background: i < step ? T.purple : T.line, margin: '0 4px' }} />}
@@ -77,15 +77,15 @@ export function NewPanel({ draft, setDraft, editing, onCancel, onSave, onDraft }
                       style={{ fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderRadius: 16, background: on ? T.purpleSoft : T.surface, border: `1px solid ${on ? T.purple : T.line}` }}>
                       <span style={{ width: 38, height: 38, borderRadius: '50%', flex: 'none', background: on ? T.purple : T.surface2, display: 'flex', alignItems: 'center', justifyContent: 'center', color: on ? '#fff' : T.muted }}><Ico name={s.icon} size={18} /></span>
                       <span style={{ flex: 1 }}>
-                        <b style={{ display: 'block', fontSize: 14, color: T.ink }}>{s.label}</b>
-                        <span style={{ fontSize: 12, color: T.muted }}>{s.sub}</span>
+                        <b style={{ display: 'block', fontSize: 15, color: T.ink }}>{s.label}</b>
+                        <span style={{ fontSize: 13, color: T.muted }}>{s.sub}</span>
                       </span>
                       <Toggle on={on} />
                     </button>
                   );
                 })}
               </div>
-              <div style={{ color: T.muted, marginTop: 18, fontSize: 13 }}>{sectionsOn} of 8 sections on. Each one you add appears in the preview as fans will see it.</div>
+              <div style={{ color: T.muted, marginTop: 18, fontSize: 14 }}>{sectionsOn} of 8 sections on. Each one you add appears in the preview as fans will see it.</div>
             </StepScaffold>
           )}
           {step === 3 && <Details draft={draft} set={set} />}
@@ -93,7 +93,7 @@ export function NewPanel({ draft, setDraft, editing, onCancel, onSave, onDraft }
 
         {split && (
           <aside style={{ width: 340, flex: 'none', borderLeft: `1px solid ${T.line}`, padding: '20px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.muted, fontSize: 12, alignSelf: 'flex-end' }}><Ico name="eye" size={14} color={T.muted} />Fan view preview · {sectionsOn} sections</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.muted, fontSize: 13, alignSelf: 'flex-end' }}><Ico name="eye" size={14} color={T.muted} />Fan view preview · {sectionsOn} sections</div>
             <FanPreview title={draft.name || 'Arsenal at Home'} colors={draft.colors} sections={draft.sections} />
           </aside>
         )}
@@ -129,8 +129,8 @@ function SelectCard({ on, onClick, icon, swatch, label, sub }: { on: boolean; on
       {on && <span style={{ position: 'absolute', right: 16, top: 16, width: 22, height: 22, borderRadius: '50%', background: T.purple, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Ico name="check" size={13} w={2.6} /></span>}
       {icon && <span style={{ width: 42, height: 42, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? T.purple : T.surface2, color: on ? '#fff' : T.muted }}><Ico name={icon} size={20} /></span>}
       {swatch && <span style={{ display: 'flex', gap: 5 }}>{[swatch.primary, swatch.accent, swatch.bg].map((c, i) => <span key={i} style={{ width: 22, height: 22, borderRadius: 7, background: c, border: `1px solid ${T.line2}` }} />)}</span>}
-      <b style={{ display: 'block', fontSize: 15, marginTop: 14, color: T.ink }}>{label}</b>
-      <span style={{ display: 'block', fontSize: 12.5, color: T.muted, marginTop: 6, lineHeight: 1.5 }}>{sub}</span>
+      <b style={{ display: 'block', fontSize: 16, marginTop: 14, color: T.ink }}>{label}</b>
+      <span style={{ display: 'block', fontSize: 13.5, color: T.muted, marginTop: 6, lineHeight: 1.5 }}>{sub}</span>
     </button>
   );
 }
@@ -147,7 +147,7 @@ function Details({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => voi
   const c = draft.colors;
   const setColor = (k: keyof Colors, v: string) => set({ colors: { ...c, [k]: v } });
   const ratio = contrast(readable(c.accent), c.accent);
-  const label: React.CSSProperties = { fontSize: 13, color: T.ink, fontWeight: 600, marginBottom: 9 };
+  const label: React.CSSProperties = { fontSize: 14, color: T.ink, fontWeight: 600, marginBottom: 9 };
   const input: React.CSSProperties = { width: '100%', height: 44, padding: '0 14px', borderRadius: 10, background: T.surface, border: `1px solid ${T.line}`, color: T.ink, font: 'inherit', outline: 'none', boxSizing: 'border-box' };
   return (
     <>
@@ -156,7 +156,7 @@ function Details({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => voi
       <div style={{ maxWidth: 780, display: 'flex', flexDirection: 'column', gap: 22 }}>
         <div style={{ display: 'flex', gap: 18 }}>
           <label style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={label}>Panel name</span><span style={{ fontSize: 11, color: T.muted }}>{draft.name.length} / 60</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={label}>Panel name</span><span style={{ fontSize: 12, color: T.muted }}>{draft.name.length} / 60</span></div>
             <input value={draft.name} maxLength={60} onChange={(e) => set({ name: e.target.value })} placeholder="Arsenal at Home" style={input} />
           </label>
           <label style={{ flex: 1 }}>
@@ -172,13 +172,13 @@ function Details({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => voi
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={label}>Colours</span>
-            <button onClick={() => set({ colors: { ...PRESETS[0].colors } })} style={{ fontFamily: 'inherit', cursor: 'pointer', background: 'none', border: 0, color: T.purple, fontSize: 12, fontWeight: 600 }}>Reset to template</button>
+            <button onClick={() => set({ colors: { ...PRESETS[0].colors } })} style={{ fontFamily: 'inherit', cursor: 'pointer', background: 'none', border: 0, color: T.purple, fontSize: 13, fontWeight: 600 }}>Reset to template</button>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
             {PRESETS.map((pr) => {
               const on = pr.colors.primary === c.primary && pr.colors.accent === c.accent;
               return (
-                <button key={pr.key} onClick={() => set({ colors: { ...pr.colors } })} style={{ fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, height: 38, padding: '0 14px', borderRadius: 19, background: on ? T.purpleSoft : 'transparent', border: `1px solid ${on ? T.purple : T.line}`, color: T.ink, fontSize: 12.5, fontWeight: 600 }}>
+                <button key={pr.key} onClick={() => set({ colors: { ...pr.colors } })} style={{ fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, height: 38, padding: '0 14px', borderRadius: 19, background: on ? T.purpleSoft : 'transparent', border: `1px solid ${on ? T.purple : T.line}`, color: T.ink, fontSize: 13.5, fontWeight: 600 }}>
                   <span style={{ display: 'flex', gap: 3 }}>{[pr.colors.primary, pr.colors.accent, pr.colors.bg].map((x, i) => <span key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: x, border: `1px solid ${T.line2}` }} />)}</span>
                   {pr.label}
                 </button>
@@ -188,8 +188,8 @@ function Details({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => voi
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
             {([['primary', 'Primary', 'Header and hero'], ['accent', 'Accent', 'Buttons, badges, highlights'], ['bg', 'Background', 'Page behind the cards']] as const).map(([k, title, sub]) => (
               <div key={k} style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: 14, padding: 16 }}>
-                <b style={{ display: 'block', fontSize: 13 }}>{title}</b>
-                <span style={{ display: 'block', fontSize: 11, color: T.muted, marginBottom: 12 }}>{sub}</span>
+                <b style={{ display: 'block', fontSize: 14 }}>{title}</b>
+                <span style={{ display: 'block', fontSize: 12, color: T.muted, marginBottom: 12 }}>{sub}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <label style={{ width: 44, height: 44, borderRadius: '50%', background: c[k], border: `1px solid ${T.line2}`, cursor: 'pointer', flex: 'none', position: 'relative', overflow: 'hidden' }}>
                     <input type="color" value={c[k]} onChange={(e) => setColor(k, e.target.value.toUpperCase())} style={{ position: 'absolute', inset: -4, opacity: 0, cursor: 'pointer' }} />
@@ -199,7 +199,7 @@ function Details({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => voi
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, fontSize: 13, color: ratio >= 4.5 ? T.green : T.amber }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, fontSize: 14, color: ratio >= 4.5 ? T.green : T.amber }}>
             <Ico name={ratio >= 4.5 ? 'check' : 'spark'} size={15} w={2.2} />
             {ratio >= 4.5 ? 'Button text is easy to read on your accent' : 'Button text may be hard to read on your accent'} ( {ratio.toFixed(1)} :1 )
           </div>

@@ -17,14 +17,14 @@ export function FanPreview({ title, colors, sections }:
   return (
     <div style={{
       width: 248, borderRadius: 26, overflow: 'hidden', background: colors.bg, color: INK,
-      boxShadow: '0 20px 50px -20px rgba(0,0,0,.6), 0 0 0 7px #0b0a0f', fontSize: 11, lineHeight: 1.5,
+      boxShadow: '0 20px 50px -20px rgba(0,0,0,.6), 0 0 0 7px #0b0a0f', fontSize: 12, lineHeight: 1.5,
       fontFamily: "'Zen Kaku Gothic New',system-ui,sans-serif",
     }}>
       {/* hero */}
       <div style={{ height: 96, background: colors.primary, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, position: 'relative' }}>
         {on('iris') && (
-          <span style={{ position: 'absolute', left: 9, top: 9, display: 'inline-flex', alignItems: 'center', gap: 4, height: 18, padding: '0 8px', borderRadius: 9, background: 'rgba(255,255,255,0.92)', color: colors.primary, fontSize: 8, fontWeight: 700 }}>
-            <span style={{ fontSize: 8 }}>✦</span>Ask IRIS
+          <span style={{ position: 'absolute', left: 9, top: 9, display: 'inline-flex', alignItems: 'center', gap: 4, height: 18, padding: '0 8px', borderRadius: 9, background: 'rgba(255,255,255,0.92)', color: colors.primary, fontSize: 9, fontWeight: 700 }}>
+            <span style={{ fontSize: 9 }}>✦</span>Ask IRIS
           </span>
         )}
         <img src={A('crest.png')} alt="" style={{ width: 36, height: 36 }} />
@@ -36,16 +36,16 @@ export function FanPreview({ title, colors, sections }:
           <div style={card}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
               <span style={{ width: 14, height: 14, borderRadius: '50%', background: colors.accent }} />
-              <b style={{ fontSize: 11 }}>Fan Chat</b><span style={{ color: MUT, fontSize: 8.5 }}>7 fans active</span>
+              <b style={{ fontSize: 12 }}>Fan Chat</b><span style={{ color: MUT, fontSize: 9.5 }}>7 fans active</span>
             </div>
             {['Still buzzing from last week! 🥳', "Training's tough but worth it 🏆"].map((m, i) => (
               <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 5 }}>
                 <span style={{ width: 11, height: 11, borderRadius: '50%', background: i ? '#3aa17a' : '#c9a24a', flex: 'none' }} />
-                <span style={{ fontSize: 9.5 }}>{m}</span>
+                <span style={{ fontSize: 10.5 }}>{m}</span>
               </div>
             ))}
             <div style={{ display: 'flex', gap: 5, marginTop: 7 }}>
-              <span style={{ flex: 1, height: 18, borderRadius: 9, background: 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', padding: '0 8px', color: MUT, fontSize: 8.5 }}>Join the conversation…</span>
+              <span style={{ flex: 1, height: 18, borderRadius: 9, background: 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', padding: '0 8px', color: MUT, fontSize: 9.5 }}>Join the conversation…</span>
               <span style={{ width: 18, height: 18, borderRadius: 6, background: colors.accent }} />
             </div>
           </div>
@@ -53,11 +53,11 @@ export function FanPreview({ title, colors, sections }:
         {on('polls') && (
           <div style={card}>
             <div style={lbl}>Poll</div>
-            <div style={{ fontSize: 10, margin: '5px 0 7px' }}>Who will win the next match?</div>
+            <div style={{ fontSize: 11, margin: '5px 0 7px' }}>Who will win the next match?</div>
             {[['Arsenal', 62], ['Chelsea', 38]].map(([n, p]) => (
               <div key={n as string} style={{ position: 'relative', height: 17, borderRadius: 5, background: 'rgba(0,0,0,.05)', marginBottom: 5, overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', inset: 0, width: `${p}%`, background: colors.accent, opacity: 0.4 }} />
-                <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '0 7px', lineHeight: '17px', fontSize: 9 }}><span>{n}</span><span>{p}%</span></div>
+                <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '0 7px', lineHeight: '17px', fontSize: 10 }}><span>{n}</span><span>{p}%</span></div>
               </div>
             ))}
           </div>
@@ -65,32 +65,32 @@ export function FanPreview({ title, colors, sections }:
         {on('predictions') && (
           <div style={card}>
             <div style={lbl}>Pick &amp; Win</div>
-            <div style={{ fontSize: 10, margin: '5px 0 7px' }}>Who scores first for Arsenal?</div>
+            <div style={{ fontSize: 11, margin: '5px 0 7px' }}>Who scores first for Arsenal?</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 7 }}>
-              {['Saka', 'Havertz'].map((n) => <span key={n} style={{ flex: 1, height: 20, borderRadius: 6, background: 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: 9 }}>{n}</span>)}
+              {['Saka', 'Havertz'].map((n) => <span key={n} style={{ flex: 1, height: 20, borderRadius: 6, background: 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: 10 }}>{n}</span>)}
             </div>
-            <div style={{ height: 22, borderRadius: 7, background: colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 600, color: readable(colors.accent) }}>Enter your pick</div>
+            <div style={{ height: 22, borderRadius: 7, background: colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5, fontWeight: 600, color: readable(colors.accent) }}>Enter your pick</div>
           </div>
         )}
         {on('crews') && (
           <div style={{ ...card, background: '#17150f', color: '#efe9da' }}>
-            <div style={{ fontSize: 7.5, letterSpacing: '.08em', color: colors.accent }}>NEW · CREWS</div>
+            <div style={{ fontSize: 8.5, letterSpacing: '.08em', color: colors.accent }}>NEW · CREWS</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 3 }}>
-              <b style={{ fontSize: 11 }}>Find your crew</b>
-              <span style={{ height: 18, padding: '0 9px', borderRadius: 9, background: colors.accent, color: readable(colors.accent), fontSize: 8.5, display: 'flex', alignItems: 'center' }}>Join Crew</span>
+              <b style={{ fontSize: 12 }}>Find your crew</b>
+              <span style={{ height: 18, padding: '0 9px', borderRadius: 9, background: colors.accent, color: readable(colors.accent), fontSize: 9.5, display: 'flex', alignItems: 'center' }}>Join Crew</span>
             </div>
           </div>
         )}
         {on('rewards') && (
           <div style={card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5 }}><b>Your rewards</b><span>1,240 pts</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5 }}><b>Your rewards</b><span>1,240 pts</span></div>
             <div style={{ height: 7, borderRadius: 4, background: 'rgba(0,0,0,.06)', margin: '6px 0 4px', overflow: 'hidden' }}><div style={{ width: '62%', height: '100%', background: colors.accent }} /></div>
-            <div style={{ fontSize: 8, color: MUT }}>260 pts to a signed shirt</div>
+            <div style={{ fontSize: 9, color: MUT }}>260 pts to a signed shirt</div>
           </div>
         )}
         {on('shop') && (
           <div style={{ padding: '0 11px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, margin: '2px 0 7px' }}>Shop</div>
+            <div style={{ fontSize: 12, fontWeight: 700, margin: '2px 0 7px' }}>Shop</div>
             <div style={{ display: 'flex', gap: 7 }}>
               {[A('shirt.png'), A('cap.png')].map((src) => (
                 <div key={src} style={{ flex: 1, borderRadius: 8, background: 'rgba(0,0,0,.05)', padding: 6 }}>
@@ -102,10 +102,10 @@ export function FanPreview({ title, colors, sections }:
         )}
         {on('reads') && (
           <div style={{ ...card, marginTop: 9 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Reads</div>
+            <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Reads</div>
             <div style={{ display: 'flex', gap: 8 }}>
               <img src={A('read-match.png')} alt="" style={{ width: 66, height: 44, objectFit: 'cover', borderRadius: 6 }} />
-              <span style={{ fontSize: 9.5 }}>Calafiori hails defensive effort after win at Villa</span>
+              <span style={{ fontSize: 10.5 }}>Calafiori hails defensive effort after win at Villa</span>
             </div>
           </div>
         )}

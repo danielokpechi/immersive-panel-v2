@@ -23,7 +23,7 @@ export function Shop() {
                 <img src={p.img} alt="" style={{ width: '100%', height: 128, objectFit: 'cover', borderRadius: 8, background: '#fff' }} />
                 {p.badge && <span style={{ position: 'absolute', left: 8, top: 8, height: 20, padding: '0 8px', borderRadius: 10, background: 'var(--gold)', border: '1px solid var(--gold-dark)', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center' }}>{p.badge}</span>}
               </div>
-              <div style={{ fontSize: 12.5, lineHeight: 1.35, minHeight: 34 }}>{p.name}</div>
+              <div style={{ fontSize: 13.5, lineHeight: 1.35, minHeight: 36 }}>{p.name}</div>
               <div className="xs muted">★★★★ {p.reviews}</div>
               <div><span style={{ fontSize: 12 }}>£</span><span style={{ fontSize: 20, fontWeight: 500 }}>{p.price.toFixed(2)}</span></div>
               <button className="btn gold" onClick={() => add(p)}><Icon name="upright" size={15} />Buy now</button>
