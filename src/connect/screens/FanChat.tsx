@@ -115,8 +115,8 @@ function Poll({ onClose }: { onClose: () => void }) {
     <>
       <Top icon={<Spark size={15} />} label="Poll" onClose={onClose} />
       <div className="p">Who will win the next match?</div>
-      <Option label="Arsenal" lead={<img src={A('arsenal-crest.png')} alt="" width={22} height={22} />} pct={res?.[0]} selected={vote === 'ars'} onClick={() => setVote('ars')} disabled={!!vote} />
-      <Option label="Chelsea FC" lead={<img src={A('chelsea-crest.png')} alt="" width={22} height={22} />} pct={res?.[1]} selected={vote === 'che'} onClick={() => setVote('che')} disabled={!!vote} />
+      <Option label="Voltford" lead={<img src={A('crest.png')} alt="" width={22} height={22} />} pct={res?.[0]} selected={vote === 'ars'} onClick={() => setVote('ars')} disabled={!!vote} />
+      <Option label="Kingsmere City" lead={<img src={A('rival-crest.png')} alt="" width={22} height={22} />} pct={res?.[1]} selected={vote === 'che'} onClick={() => setVote('che')} disabled={!!vote} />
       {vote && <div className="xs muted" style={{ textAlign: 'center' }}>Thanks for voting · 1,284 votes</div>}
     </>
   )
@@ -128,7 +128,7 @@ function Quiz({ onClose }: { onClose: () => void }) {
   return (
     <>
       <Top icon={<Spark size={15} />} label="Quiz" onClose={onClose} />
-      <div className="p">When did Arsenal move to the Emirates Stadium?</div>
+      <div className="p">When did Voltford move to the Arc?</div>
       {['2004', '2006', '2008', '2010'].map((y) => {
         const state = pick && (y === right ? 'right' : y === pick ? 'wrong' : '')
         return (
@@ -150,14 +150,14 @@ function PickWin({ onClose }: { onClose: () => void }) {
   const [sel, setSel] = useState<string | null>(null)
   const [stage, setStage] = useState<'pick' | 'locked' | 'won'>('pick')
   useEffect(() => { if (stage === 'locked') { const t = setTimeout(() => setStage('won'), 3500); return () => clearTimeout(t) } }, [stage])
-  const players = ['Bukayo Saka', 'Kai Havertz']
+  const players = ['Jonah Reyes', 'Theo Lindqvist']
   const pct = [55, 45]
   return (
     <>
       <Top icon={<Badge16 />} label="Pick & Win" onClose={onClose} />
       <div>
-        <div className="p">{stage === 'won' ? 'You guessed it right! 🤩' : 'Who scores first for Arsenal?'}</div>
-        <div className="xs muted">{stage === 'won' ? 'Claim your signed shirt' : 'Choose an Arsenal player to win a signed jersey.'}</div>
+        <div className="p">{stage === 'won' ? 'You guessed it right! 🤩' : 'Who scores first for Voltford?'}</div>
+        <div className="xs muted">{stage === 'won' ? 'Claim your signed shirt' : 'Choose a Voltford player to win a signed jersey.'}</div>
       </div>
       {players.map((p, i) => (
         <Option key={p} label={p} selected={sel === p} pct={stage === 'pick' ? undefined : pct[i]} lead={stage === 'won' && sel === p ? <Badge16 /> : undefined}
@@ -181,19 +181,19 @@ function Sponsored({ onClose }: { onClose: () => void }) {
   return (
     <>
       <Top icon={<Icon name="flag" size={15} color="var(--muted)" />} label="Sponsored" onClose={onClose} />
-      <img src={A('emirates-sponsor.png')} alt="Emirates" style={{ width: '100%', height: 115, objectFit: 'cover', borderRadius: 10 }} />
-      <div className="h5" style={{ fontWeight: 500 }}>Exclusive offer from Emirates</div>
-      <div className="muted" style={{ marginTop: -6 }}>15% off flights to Arsenal away games. Limited time only!</div>
+      <img src={A('sponsor-air.jpg')} alt="Lumen Air" style={{ width: '100%', height: 115, objectFit: 'cover', borderRadius: 10 }} />
+      <div className="h5" style={{ fontWeight: 500 }}>Exclusive offer from Lumen Air</div>
+      <div className="muted" style={{ marginTop: -6 }}>15% off flights to Voltford away games. Limited time only!</div>
       <div className="xs muted" style={{ letterSpacing: 0.4 }}>OFFER ENDS IN</div>
       <div className="row" style={{ marginTop: -4 }} aria-live="off">
         {parts.map((p, i) => (
           <span key={i} className="row" style={{ gap: 10 }}>
-            <span style={{ width: 42, height: 36, borderRadius: 6, border: '1px solid #b5b0aa', background: 'var(--bubble)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, color: '#a8956a' }}>{p}</span>
+            <span style={{ width: 42, height: 36, borderRadius: 6, border: '1px solid #b5b0aa', background: 'var(--bubble)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, color: '#7b2fe2' }}>{p}</span>
             {i < 2 && <span className="muted">:</span>}
           </span>
         ))}
       </div>
-      <button className="btn gold" onClick={() => { toast('Offer code EMIRATES15 copied'); onClose() }}>Claim now</button>
+      <button className="btn gold" onClick={() => { toast('Offer code LUMEN15 copied'); onClose() }}>Claim now</button>
     </>
   )
 }

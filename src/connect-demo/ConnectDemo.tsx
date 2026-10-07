@@ -1,6 +1,6 @@
 // Connect demo — the "connect.boltos.ai" showcase. The BoltOS Studio operator
-// and the Arsenal fan view, both live in iframes, with one scripted cursor
-// gliding point-to-point and driving real clicks (and typing) — the Arsenal cut
+// and the fan view for Voltford Athletic (a fictional club), both live in iframes, with one scripted cursor
+// gliding point-to-point and driving real clicks (and typing) — the Connect cut
 // of the Man City matchday-operator demo. Mounted at /connect-demo.
 //
 // The tour runs the whole product start to finish: the operator creates a panel,
@@ -18,7 +18,7 @@ const STUDIO_H = 660;
 const PHONE_W = 393;
 const PHONE_H = 852;
 const NARROW = 760;
-const FAN_STORE_KEY = 'arsenal-fan-page-2:v1';
+const FAN_STORE_KEY = 'connect-fan:voltford:v1';
 
 // ---- the guided tour ----
 type Step = {
@@ -46,8 +46,8 @@ const STEPS: Step[] = [
   { f: 'studio', match: /^Continue$/, click: true, dwell: 750, note: 'Operator · next' },
   { f: 'studio', match: /^Predictions/, click: true, dwell: 900, note: 'Operator · choose what fans see' },
   { f: 'studio', match: /^Continue$/, click: true, dwell: 800, note: 'Operator · name it and set the look' },
-  { f: 'studio', sel: 'input[placeholder="Arsenal at Home"]', fill: 'Arsenal Virtual Tour', dwell: 600, note: 'Operator · name the panel' },
-  { f: 'studio', sel: 'textarea', fill: 'A 360° virtual tour of the Emirates — chat, Pick & Win, rewards and the shop.', dwell: 700, note: 'Operator · write the description' },
+  { f: 'studio', sel: 'input[placeholder="Voltford at Home"]', fill: 'Voltford Virtual Tour', dwell: 600, note: 'Operator · name the panel' },
+  { f: 'studio', sel: 'textarea', fill: 'A 360° virtual tour of the Arc — chat, Pick & Win, rewards and the shop.', dwell: 700, note: 'Operator · write the description' },
   { f: 'studio', match: /^Create panel$/, click: true, dwell: 1050, note: 'Operator · panel created' },
   // Start the session + go live
   { f: 'studio', match: /^Start session$/, click: true, dwell: 1050, note: 'Operator · start the live session' },
@@ -66,7 +66,7 @@ const STEPS: Step[] = [
   // ================= FAN — chat, crews, shop, reads =================
   // Live chat
   { f: 'fan', sel: 'button[aria-label="Expand chat"]', click: true, dwell: 950, note: 'Fan view · open live Fan Chat' },
-  { f: 'fan', chatSend: ['Up the Gunners! 🔴⚪', 'Who scores first today?'], dwell: 1050, note: 'Fan view · join the conversation' },
+  { f: 'fan', chatSend: ['Up the Volts! 💜⚡', 'Who scores first today?'], dwell: 1050, note: 'Fan view · join the conversation' },
   { f: 'fan', sel: 'button[aria-label="Collapse chat"]', click: true, dwell: 800, note: 'Fan view · back to the panel' },
   // Ask IRIS (AI assistant) — the button at the top of the hero
   { f: 'fan', sel: 'button[aria-label="Ask IRIS"]', click: true, dwell: 950, note: 'Fan view · ask IRIS, the AI assistant' },
@@ -80,7 +80,7 @@ const STEPS: Step[] = [
   { f: 'fan', sel: 'button[aria-label="Back to crews"]', click: true, dwell: 750, note: 'Fan view · back to Crews' },
   { f: 'fan', match: /^Join$/, scrollCenter: true, click: true, dwell: 950, note: 'Fan view · discover a new crew' },
   { f: 'fan', match: /^Join crew$/, click: true, dwell: 1050, note: 'Fan view · join the crew' },
-  { f: 'fan', chatSend: ['Buzzing to be here! ⚪🔴'], dwell: 950, note: 'Fan view · say hello' },
+  { f: 'fan', chatSend: ['Buzzing to be here! ⚡💜'], dwell: 950, note: 'Fan view · say hello' },
   { f: 'fan', sel: 'button[aria-label="Back to crews"]', click: true, dwell: 700, note: 'Fan view · back to Crews' },
   { f: 'fan', sel: 'button[aria-label="Back"]', click: true, dwell: 800, note: 'Fan view · back to the panel' },
   // Shop
@@ -88,7 +88,7 @@ const STEPS: Step[] = [
   { f: 'fan', match: /^Buy now$/, scrollCenter: true, click: true, dwell: 950, note: 'Fan view · add to basket' },
   { f: 'fan', sel: 'button[aria-label="Back"]', click: true, dwell: 700, note: 'Fan view · back to the panel' },
   // Reads
-  { f: 'fan', match: /Calafiori/, scrollCenter: true, click: true, dwell: 1300, note: 'Fan view · read a match report' },
+  { f: 'fan', match: /Rinaldi/, scrollCenter: true, click: true, dwell: 1300, note: 'Fan view · read a match report' },
   { f: 'fan', sel: 'button[aria-label="Back"]', click: true, dwell: 800, note: 'Fan view · back to the panel' },
   { f: 'fan', scrollTop: true, dwell: 1000, note: 'Fan view · the full matchday panel' },
 ];
@@ -99,7 +99,7 @@ const preview = typeof location !== 'undefined' && new URLSearchParams(location.
 // GitHub Pages sub-path (e.g. /immersive-panel-v2/arsenal/) alike.
 // Trailing slash so each resolves to a directory-index index.html on GitHub Pages
 // (no SPA fallback inside a subfolder); react-router matches the trailing slash.
-const SRC = { studio: import.meta.env.BASE_URL + 'cstudio/', fan: import.meta.env.BASE_URL + 'c/arsenal/' };
+const SRC = { studio: import.meta.env.BASE_URL + 'cstudio/', fan: import.meta.env.BASE_URL + 'c/voltford/' };
 
 export default function ConnectDemo() {
   const studioRef = useRef<HTMLIFrameElement | null>(null);
@@ -296,7 +296,7 @@ export default function ConnectDemo() {
     <div style={{ display: 'flex', alignItems: 'center', gap: narrow ? 9 : 13, minWidth: 0 }}>
       <span style={S.logoMark}>✦</span>
       <b style={{ fontSize: narrow ? 15 : 17, letterSpacing: -0.2 }}>BoltOS Connect</b>
-      {!narrow && <><span style={S.midDot} /><span style={{ color: '#9A98A6', fontSize: 14 }}>Arsenal · Matchday</span></>}
+      {!narrow && <><span style={S.midDot} /><span style={{ color: '#9A98A6', fontSize: 14 }}>Voltford · Matchday</span></>}
     </div>
   );
   const liveBadge = <span style={S.live}><span style={S.liveDot} />LIVE</span>;
@@ -316,12 +316,12 @@ export default function ConnectDemo() {
 
   const fanPhone = narrow ? (
     <div style={{ ...S.mPhone, borderRadius: preview ? 18 : 0, boxShadow: preview ? S.mPhone.boxShadow : 'none' }}>
-      <iframe ref={fanRef} src={SRC.fan} title="Arsenal fan view" style={{ width: '100%', height: '100%', border: 0, display: 'block' }} />
+      <iframe ref={fanRef} src={SRC.fan} title="Voltford fan view" style={{ width: '100%', height: '100%', border: 0, display: 'block' }} />
     </div>
   ) : (
     <div style={{ ...S.phone, padding: 6, borderRadius: Math.round(38 * scale) + 6 }}>
       <div style={{ width: Math.round(PHONE_W * scale), height: Math.round(PHONE_H * scale), borderRadius: Math.round(34 * scale), overflow: 'hidden', background: '#000' }}>
-        <iframe ref={fanRef} src={SRC.fan} title="Arsenal fan view"
+        <iframe ref={fanRef} src={SRC.fan} title="Voltford fan view"
           style={{ width: PHONE_W, height: PHONE_H, border: 0, display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }} />
       </div>
     </div>

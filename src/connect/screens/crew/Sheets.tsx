@@ -58,7 +58,7 @@ function Invite({ crewId }: { crewId: string }) {
   const crew = useCrew(crewId)
   const [invited, setInvited] = useState<string[]>([])
   if (!crew) return null
-  const link = `connect.arsenal.com/crew/${crew.inviteCode}`
+  const link = `connect.voltfordfc.com/crew/${crew.inviteCode}`
   const candidates = ['hw', 'cp', 'jk', 'fz', 'ma'].filter((id) => !crew.members.some((m) => m.userId === id)).slice(0, 3)
   const copy = async () => { try { await navigator.clipboard.writeText('https://' + link) } catch { /* clipboard blocked */ } toast('Invite link copied') }
   return (
@@ -259,7 +259,7 @@ function Code() {
         <label className="field"><span className="field-label">Enter the code from your invite link</span>
           <input className="input" autoFocus value={code} onChange={(e) => { setCode(e.target.value); setErr('') }} placeholder="e.g. ceb-4X9" /></label>
         {err && <span className="error">{err}</span>}
-        <div className="xs muted">Demo code: <b>ceb-4X9</b> (Clock End Book Club)</div>
+        <div className="xs muted">Demo code: <b>ceb-4X9</b> (Foundry End Book Club)</div>
         <button className="btn gold" disabled={!code.trim()}>Open invite</button>
       </form>
     </Sheet>

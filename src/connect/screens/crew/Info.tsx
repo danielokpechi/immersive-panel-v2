@@ -60,7 +60,7 @@ export function CrewInfo({ crewId }: { crewId: string }) {
   )
 }
 
-const COVERS = ['stadium.png', 'read-match.png', 'read-celebrate.png', 'membership.png']
+const COVERS = ['stadium.jpg', 'read-match.jpg', 'read-celebrate.jpg', 'membership.jpg']
 
 export function CrewForm({ crewId }: { crewId?: string }) {
   const { s, d, replace, back, open, toast } = useStore()
@@ -87,7 +87,7 @@ export function CrewForm({ crewId }: { crewId?: string }) {
   }
   const initials = f.name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('') || '?'
   return (
-    <Panel head={<BackHead title={crew ? 'Edit crew' : 'New crew'} sub="Arsenal" />}
+    <Panel head={<BackHead title={crew ? 'Edit crew' : 'New crew'} sub="Voltford" />}
       foot={<div className="col" style={{ gap: 8 }}>
         <button className="btn gold block" style={{ height: 48, fontWeight: 700 }} onClick={save}>{crew ? 'Save changes' : 'Create crew'}</button>
         {crew && isAdmin(crew) && <button className="btn" style={{ border: 0, color: 'var(--danger)', height: 28 }} onClick={() => open({ name: 'deleteCrew', crewId: crew.id })}>Delete crew</button>}
@@ -98,9 +98,9 @@ export function CrewForm({ crewId }: { crewId?: string }) {
           <button className="row" style={{ position: 'absolute', right: 10, top: 10, height: 28, padding: '0 10px', borderRadius: 14, border: 0, background: 'rgba(20,19,18,.7)', color: '#fff', fontSize: 11, gap: 5 }} onClick={cycleCover}>
             <Icon name="image" size={13} />Change cover</button>
         </div>
-        <div style={{ marginTop: -40, marginLeft: 14, width: 58, height: 58, borderRadius: '50%', border: '3px solid var(--card)', background: crew?.color ?? '#9E1B22', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, position: 'relative' }}>{initials}</div>
+        <div style={{ marginTop: -40, marginLeft: 14, width: 58, height: 58, borderRadius: '50%', border: '3px solid var(--card)', background: crew?.color ?? '#7B2FE2', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, position: 'relative' }}>{initials}</div>
         <label className="field"><span className="field-label">Crew name<small>{f.name.length} / 40</small></span>
-          <input className="input" maxLength={40} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="e.g. Clock End Regulars" />
+          <input className="input" maxLength={40} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="e.g. Foundry End Regulars" />
           {tried && nameErr && <span className="error">{nameErr}</span>}</label>
         <label className="field"><span className="field-label">Description<small>Optional</small></span>
           <textarea className="input" maxLength={160} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="What brings this crew together?" /></label>

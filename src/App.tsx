@@ -3,13 +3,13 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { PanelStudio } from './admin/PanelStudio';
 import { MatchdayFan } from './fan/MatchdayFan';
 
-// Connect fan view (ported "Arsenal Fan Page 2"). Lazy-loaded so its theme CSS
+// Connect fan view (fictional club Voltford Athletic). Lazy-loaded so its theme CSS
 // and assets only load on /c/:id, never on the operator or existing panel.
 const ConnectApp = lazy(() => import('./connect/ConnectApp'));
 // Connect Studio — the functional BoltOS operator (React). Assets are reused
 // from public/connect-studio/assets/. Lazy-loaded.
 const ConnectStudio = lazy(() => import('./cstudio/ConnectStudio'));
-// Connect demo — operator + Arsenal fan view side by side with a scripted cursor.
+// Connect demo — operator + fan view side by side with a scripted cursor.
 const ConnectDemo = lazy(() => import('./connect-demo/ConnectDemo'));
 
 // The admin (Panel Studio) is a self-contained 5-screen app; each route
@@ -25,7 +25,7 @@ export default function App() {
       <Route path="/control/:id" element={<PanelStudio start="control" />} />
       {/* Fan surface, the shareable link. The "Matchday Companion v4" design. */}
       <Route path="/p/:id" element={<MatchdayFan />} />
-      {/* Connect fan view (simple, Arsenal) — the new panel going to market. */}
+      {/* Connect fan view (fictional Voltford Athletic) — the new panel going to market. */}
       <Route path="/c/:id" element={<Suspense fallback={null}><ConnectApp /></Suspense>} />
       {/* Connect Studio — the functional BoltOS operator. */}
       <Route path="/cstudio" element={<Suspense fallback={null}><ConnectStudio /></Suspense>} />

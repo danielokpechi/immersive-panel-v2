@@ -10,7 +10,7 @@ export function Shop() {
   const { toast } = useStore()
   const add = (_p: Product) => toast('✓  Added to basket')
   return (
-    <Panel head={<BackHead title="Shop" sub="Official Arsenal store" />}>
+    <Panel head={<BackHead title="Shop" sub="Official Voltford store" />}>
       <div style={{ padding: '14px 16px 24px', fontFamily: 'var(--font-ui)' }}>
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
           <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-display)' }}>Matchday drop</div>

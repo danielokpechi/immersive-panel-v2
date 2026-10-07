@@ -55,7 +55,7 @@ export default function ConnectStudio() {
       const id = 'p-' + Math.random().toString(36).slice(2, 7);
       setPanels((ps) => [{
         id, title: d.name || 'Untitled panel', desc: d.desc || 'A new fan experience.', insight: 'New panel — insights appear after the first session.',
-        status: 'scheduled', type: d.type, template: d.template, typeLabel: typeLabelOf(d), image: A('stadium.png'),
+        status: 'scheduled', type: d.type, template: d.template, typeLabel: typeLabelOf(d), image: A('stadium.jpg'),
         footer: 'Not scheduled yet', sections: { ...d.sections }, colors: { ...d.colors },
       }, ...ps]);
       setActiveId(id); setView('ready');
@@ -96,7 +96,7 @@ export function TopBar({ theme, onToggleTheme, toast }: { theme: Theme; onToggle
           <span style={{ fontSize: 12, color: T.purple, fontWeight: 700, letterSpacing: 1 }}>STUDIO</span>
         </div>
         <button onClick={() => toast('Multi-club switching is coming soon')} style={{ fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px 0 6px', borderRadius: 999, border: `1px solid ${T.line}`, background: T.surface2, color: T.ink, fontSize: 14, fontWeight: 600 }}>
-          <img src={A('crest.png')} alt="" style={{ width: 26, height: 26 }} />Arsenal<Ico name="chev" size={12} w={2.2} color={T.muted} />
+          <img src={A('crest.png')} alt="" style={{ width: 26, height: 26 }} />Voltford<Ico name="chev" size={12} w={2.2} color={T.muted} />
         </button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -157,7 +157,7 @@ function PanelCard({ p, onControl, onStats, onEdit, onDelete }: { p: Panel; onCo
       <button onClick={() => onStats(p.id)} style={{ all: 'unset', cursor: 'pointer', position: 'relative', height: 112, display: 'block' }}>
         <img src={p.image} alt="" style={{ width: '100%', height: 112, objectFit: 'cover', display: 'block', opacity: p.dimImage ? 0.5 : 1 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(14,14,18,0) 30%, rgba(14,14,18,0.85) 100%)' }} />
-        <span style={{ position: 'absolute', left: 16, top: 12, display: 'inline-flex', alignItems: 'center', gap: 6, height: 24, padding: '0 10px', borderRadius: 12, background: st.fg + '22', color: st.fg, fontSize: 12, fontWeight: 600 }}>
+        <span style={{ position: 'absolute', left: 16, top: 12, display: 'inline-flex', alignItems: 'center', gap: 6, height: 24, padding: '0 10px', borderRadius: 12, background: 'rgba(14,14,18,0.78)', border: `1px solid ${st.fg}55`, color: st.fg, fontSize: 12, fontWeight: 600 }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: st.fg }} />{st.label}
         </span>
         <img src={A('crest.png')} alt="" style={{ position: 'absolute', left: 16, bottom: 10, width: 34, height: 34 }} />

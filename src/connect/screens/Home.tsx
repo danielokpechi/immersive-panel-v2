@@ -33,7 +33,7 @@ export function Home() {
 
       {/* Crew entry banner */}
       <section aria-label="Crews" style={{ position: 'relative', margin: '14px 13px 0', height: 150, borderRadius: 20, overflow: 'hidden', background: '#141312' }}>
-        <img src={A('stadium.png')} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
+        <img src={A('hero.jpg')} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(20,19,18,.94), rgba(20,19,18,.78) 55%, rgba(20,19,18,.35))' }} />
         <div style={{ position: 'absolute', left: 18, top: 16, right: 140 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: 'var(--gold)' }}>NEW · CREWS</div>
@@ -57,7 +57,7 @@ export function Home() {
         ))}
       </Carousel>
 
-      <img src={A('adidas.png')} alt="adidas: Boost your run" style={{ margin: '20px 13px 0', width: 'calc(100% - 26px)', height: 'auto', borderRadius: 4 }} />
+      <img src={A('sponsor-banner.jpg')} alt="Strata: Move faster" style={{ margin: '20px 13px 0', width: 'calc(100% - 26px)', height: 'auto', borderRadius: 4 }} />
 
       <Carousel title="Reads" refEl={reads} onTitle={() => push({ name: 'article', articleId: READS[0].id })} onPrev={() => scrollBy(reads.current, -1)} onNext={() => scrollBy(reads.current, 1)}>
         {READS.map((r) => (
@@ -73,7 +73,7 @@ export function Home() {
         ))}
       </Carousel>
 
-      <img src={A('membership.png')} alt="AMSC 2026-2027 membership now open" style={{ marginTop: 40, width: '100%', height: 'auto' }} />
+      <img src={A('membership.jpg')} alt="Volts 2026–27 membership now open" style={{ marginTop: 40, width: '100%', height: 'auto' }} />
       <div className="col" style={{ alignItems: 'center', gap: 14, padding: '18px 40px 26px', textAlign: 'center' }}>
         <div style={{ fontSize: 16 }}>Claim 30% off to your membership renewal!</div>
         <button className="btn gold" onClick={() => { setJoined(true); toast('Discount applied to your renewal') }} disabled={joined}>
@@ -81,7 +81,7 @@ export function Home() {
         </button>
       </div>
       <footer className="col" style={{ background: '#1c1b1a', alignItems: 'center', padding: '26px 0 40px', gap: 30 }}>
-        <img src={A('arsenal-crest.png')} alt="Arsenal crest" width={84} height={84} />
+        <img src={A('crest.png')} alt="Voltford Athletic crest" width={84} height={84} />
         <div className="row" style={{ gap: 14 }}>
           {[['facebook', 'Facebook'], ['x', 'X'], ['youtube', 'YouTube'], ['instagram', 'Instagram']].map(([f, l]) => (
             <a key={f} href="#" aria-label={l} onClick={(e) => e.preventDefault()}><img src={A(`${f}.png`)} alt="" width={30} height={30} /></a>

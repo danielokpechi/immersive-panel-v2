@@ -8,9 +8,9 @@ import { btn } from './ConnectStudio';
 
 const STEPS = ['Type', 'Template', 'Fan view', 'Details'];
 const PRESETS: { key: string; label: string; colors: Colors }[] = [
-  { key: 'home', label: 'Home colours', colors: { primary: '#DB0007', accent: '#B4A174', bg: '#EFEDEA' } },
-  { key: 'away', label: 'Away colours', colors: { primary: '#15284B', accent: '#F5D130', bg: '#EDEFF2' } },
-  { key: 'event', label: 'Event colours', colors: { primary: '#2E2A4F', accent: '#B4A174', bg: '#EFEDEA' } },
+  { key: 'home', label: 'Home colours', colors: { primary: '#7B2FE2', accent: '#D62086', bg: '#F7F7F5' } },
+  { key: 'away', label: 'Away colours', colors: { primary: '#101014', accent: '#35C7DF', bg: '#EEF3F5' } },
+  { key: 'event', label: 'Event colours', colors: { primary: '#2E2A4F', accent: '#35C7DF', bg: '#F7F7F5' } },
   { key: 'bolt', label: 'Bolt OS', colors: { primary: '#1C1A22', accent: '#8B3DF5', bg: '#FFFFFF' } },
 ];
 
@@ -94,7 +94,7 @@ export function NewPanel({ draft, setDraft, editing, onCancel, onSave, onDraft }
         {split && (
           <aside style={{ width: 340, flex: 'none', borderLeft: `1px solid ${T.line}`, padding: '20px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.muted, fontSize: 13, alignSelf: 'flex-end' }}><Ico name="eye" size={14} color={T.muted} />Fan view preview · {sectionsOn} sections</div>
-            <FanPreview title={draft.name || 'Arsenal at Home'} colors={draft.colors} sections={draft.sections} />
+            <FanPreview title={draft.name || 'Voltford at Home'} colors={draft.colors} sections={draft.sections} />
           </aside>
         )}
       </div>
@@ -157,7 +157,7 @@ function Details({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => voi
         <div style={{ display: 'flex', gap: 18 }}>
           <label style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={label}>Panel name</span><span style={{ fontSize: 12, color: T.muted }}>{draft.name.length} / 60</span></div>
-            <input value={draft.name} maxLength={60} onChange={(e) => set({ name: e.target.value })} placeholder="Arsenal at Home" style={input} />
+            <input value={draft.name} maxLength={60} onChange={(e) => set({ name: e.target.value })} placeholder="Voltford at Home" style={input} />
           </label>
           <label style={{ flex: 1 }}>
             <div style={label}>Runs</div>
@@ -166,7 +166,7 @@ function Details({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => voi
         </div>
         <label>
           <div style={label}>Description <span style={{ color: T.muted, fontWeight: 400 }}>· shown to fans under the panel title</span></div>
-          <textarea value={draft.desc} onChange={(e) => set({ desc: e.target.value })} rows={2} placeholder="Every home match at the Emirates: chat, predictions, polls and the shop." style={{ ...input, height: 70, padding: '12px 14px', resize: 'vertical', lineHeight: 1.5 }} />
+          <textarea value={draft.desc} onChange={(e) => set({ desc: e.target.value })} rows={2} placeholder="Every home match at the Arc: chat, predictions, polls and the shop." style={{ ...input, height: 70, padding: '12px 14px', resize: 'vertical', lineHeight: 1.5 }} />
         </label>
 
         <div>

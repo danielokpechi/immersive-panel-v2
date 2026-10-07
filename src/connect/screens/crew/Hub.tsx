@@ -19,7 +19,7 @@ export function CrewHub() {
   const { push, open, s } = useStore()
   const { mine, pending, discover } = useCrewLists()
   return (
-    <Panel head={<BackHead title="Crews" sub={`Arsenal · ${mine.length} joined`} right={
+    <Panel head={<BackHead title="Crews" sub={`Voltford · ${mine.length} joined`} right={
       <button className="btn xs" onClick={() => push({ name: 'crewForm' })}><Icon name="plus" size={14} stroke={2} />New crew</button>} />}>
       <div className="col" style={{ gap: 14, padding: '14px 16px 24px' }}>
         <button className="pill-input row" style={{ height: 44, gap: 10, color: 'var(--muted)', textAlign: 'left' }} onClick={() => push({ name: 'crewSearch' })}>

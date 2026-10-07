@@ -1,10 +1,11 @@
 /* ---------- Club theme tokens ----------
-   Connect is multi-tenant: swap these per club (Arsenal shown). Components only use the tokens. */
+   Connect is multi-tenant: swap these per club (fictional Voltford Athletic shown, BoltOS brand colours). Components only use the tokens. */
 :root {
-  --gold: #b4a174;
-  --gold-dark: #8f7e52;
-  --gold-soft: #cbbc93;
-  --title-gold: #b9a67b;
+  /* Club accent (the "gold" names are historical): BoltOS Ultra-Violet family */
+  --gold: #c4a8f7;
+  --gold-dark: #7b2fe2;
+  --gold-soft: #e4d8fc;
+  --title-gold: #d7c4ff;
   --cream: #efedea;
   --card: #efece8;
   --bubble: #dedbd7;
@@ -115,7 +116,7 @@ img { display: block; max-width: 100%; }
 .hero { position: relative; height: 284px; background: #141312; overflow: hidden; }
 .hero > img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .hero .title { position: absolute; left: 0; right: 0; top: 152px; text-align: center; font-family: var(--font-display);
-  font-weight: 700; font-size: 26px; color: var(--title-gold); text-shadow: 0 0 12px rgba(185,166,123,.35); }
+  font-weight: 700; font-size: 26px; color: var(--title-gold); text-shadow: 0 0 14px rgba(123,47,226,.5); }
 
 /* Panels (full-height surfaces that slide over the hero) */
 .panel {
@@ -188,7 +189,7 @@ button.tile { width: 100%; }
 
 /* Chat */
 .bubble { background: var(--bubble); border-radius: 16px; padding: 9px 14px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
-.bubble.me { background: var(--gold-soft); border: 1px solid #a9986c; }
+.bubble.me { background: var(--gold-soft); border: 1px solid #b08ef0; }
 .sys { align-self: center; padding: 4px 12px; border-radius: 12px; background: var(--bubble); font-size: var(--fs-xs); color: var(--muted); text-align: center; }
 
 /* Toggle */

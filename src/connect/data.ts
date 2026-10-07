@@ -52,11 +52,11 @@ export interface Crew {
 
 export const ME = 'me'
 // Images live in src/assets so Vite fingerprints them (and inlines them in the single-file build).
-const ASSETS = import.meta.glob('./assets/*.png', { eager: true, import: 'default' }) as Record<string, string>
+const ASSETS = import.meta.glob('./assets/*.{png,jpg}', { eager: true, import: 'default' }) as Record<string, string>
 export const A = (f: string) => ASSETS[`./assets/${f}`] ?? ''
 
 export const PEOPLE: Record<string, Person> = {
-  me: { id: 'me', name: 'You', initials: 'DO', color: '#B4A174', photo: A('user-avatar.png') },
+  me: { id: 'me', name: 'You', initials: 'DO', color: '#9B6BEA', photo: A('user-avatar.png') },
   oh: { id: 'oh', name: 'Olivia H.', initials: 'OH', color: '#E8C35C' },
   ta: { id: 'ta', name: 'Tom A.', initials: 'TA', color: '#2A9D8F' },
   em: { id: 'em', name: 'Ella M.', initials: 'EM', color: '#3B7BE0' },
@@ -91,8 +91,8 @@ const filler = (n: number, prefix: string) =>
 export function seedCrews(): Crew[] {
   return [
     {
-      id: 'nbc', name: 'North Bank Collective', initials: 'NB', color: '#9E1B22', cover: A('stadium.png'),
-      description: 'North Bank regulars. Pre-match pints, block 9 seats and post-match debriefs.',
+      id: 'nbc', name: 'East Stand Collective', initials: 'ES', color: '#7B2FE2', cover: A('stadium.jpg'),
+      description: 'East Stand regulars. Pre-match pints, block 9 seats and post-match debriefs.',
       visibility: 'private', memberLimit: 30, inviteCode: 'nbc-7Q2',
       members: [member(ME, 'admin', '2026-08-02'), member('oh', 'mod'), member('ta'), member('em'), member('ko'), ...filler(19, 'nbc')],
       requests: [
@@ -102,44 +102,44 @@ export function seedCrews(): Crew[] {
       ],
       pinnedEventId: 'ev_tol',
       events: [
-        { id: 'ev_tol', name: 'Pre-match at the Tollington', date: '2026-10-25', time: '13:00', location: 'The Tollington Arms, Hornsey Rd',
+        { id: 'ev_tol', name: 'Pre-match at the Lamplighter', date: '2026-10-25', time: '13:00', location: 'The Lamplighter, Arc Road',
           description: 'Corner table by the window. Leave for the ground at 14:15, seats in block 9. Bring your membership card.',
           repeat: 'home', createdBy: 'oh', rsvps: { me: 'going', oh: 'going', ta: 'going', em: 'maybe', ...fillRsvp(11, 'nbc', 'going'), ...fillRsvp(2, 'nbcm', 'maybe') } },
-        { id: 'ev_watch', name: 'Champions League watch party', date: '2026-10-22', time: '19:30', location: 'The Gunners, Blackstock Rd',
+        { id: 'ev_watch', name: 'European night watch party', date: '2026-10-22', time: '19:30', location: 'The Foundry Tap, Mill Lane',
           description: 'Big screen booked. Food from 7.', repeat: 'none', createdBy: 'ta', rsvps: { ta: 'going', ko: 'going', em: 'maybe', ...fillRsvp(9, 'nbcw', 'going') } },
-        { id: 'ev_che', name: 'Chelsea away: travel together', date: '2026-11-09', time: '10:30', location: 'Meet at Holloway Road station',
-          description: '10:52 train to Stamford Bridge. Pub first, then the away end.', repeat: 'none', createdBy: 'oh', rsvps: { oh: 'going', ...fillRsvp(7, 'nbcc', 'going'), ...fillRsvp(4, 'nbccm', 'maybe') } },
+        { id: 'ev_che', name: 'Kingsmere away: travel together', date: '2026-11-09', time: '10:30', location: 'Meet at Voltford Central',
+          description: '10:52 train to Kingsmere. Pub first, then the away end.', repeat: 'none', createdBy: 'oh', rsvps: { oh: 'going', ...fillRsvp(7, 'nbcc', 'going'), ...fillRsvp(4, 'nbccm', 'maybe') } },
       ],
       messages: [
-        { id: 'm1', authorId: 'oh', text: 'Who’s at the Tollington before kick-off? 🍻', at: m(70), kind: 'text' },
-        { id: 'm2', authorId: 'ta', text: 'Champions League watch party', at: m(60), kind: 'event', eventId: 'ev_watch' },
+        { id: 'm1', authorId: 'oh', text: 'Who’s at the Lamplighter before kick-off? 🍻', at: m(70), kind: 'text' },
+        { id: 'm2', authorId: 'ta', text: 'European night watch party', at: m(60), kind: 'event', eventId: 'ev_watch' },
         { id: 'm3', authorId: 'ta', text: 'In for Wednesday. I’ll grab the big table by the screen', at: m(40), kind: 'text' },
         { id: 'm4', authorId: 'system', text: 'Tom invited Katie O. to the crew', at: m(20), kind: 'system' },
-        { id: 'm5', authorId: 'ko', text: 'Thanks for the add! First time at the Emirates this season 🙌', at: m(6), kind: 'text' },
+        { id: 'm5', authorId: 'ko', text: 'Thanks for the add! First time at the Arc this season 🙌', at: m(6), kind: 'text' },
         { id: 'm6', authorId: 'em', text: 'Welcome Katie! You’re sitting with us in block 9', at: m(2), kind: 'text' },
       ],
     },
     {
-      id: 'adt', name: 'Away Day Travellers', initials: 'AD', color: '#2A9D8F', cover: A('read-match.png'),
+      id: 'adt', name: 'Away Day Travellers', initials: 'AD', color: '#2A9D8F', cover: A('coach.jpg'),
       description: 'Coaches, trains and tickets for every away trip.', visibility: 'public', inviteCode: 'adt-K81',
       members: [member('yr', 'admin'), member('ta', 'mod'), member(ME), ...filler(12, 'adt')], requests: [], events: [],
-      messages: [{ id: 'a1', authorId: 'ta', text: 'Coach leaves Holloway Rd at 8 sharp', at: m(18), kind: 'text' }],
+      messages: [{ id: 'a1', authorId: 'ta', text: 'Coach leaves Voltford Central at 8 sharp', at: m(18), kind: 'text' }],
     },
     {
-      id: 'tac', name: 'Tactics Board', initials: 'TB', color: '#3B7BE0', cover: A('read-match.png'),
+      id: 'tac', name: 'Tactics Board', initials: 'TB', color: '#3B7BE0', cover: A('read-match.jpg'),
       description: 'Shape, set pieces and transfer talk.', visibility: 'private', memberLimit: 50, inviteCode: 'tac-P20',
       members: [member('em', 'admin'), member(ME), ...filler(39, 'tac')], requests: [], events: [],
-      messages: [{ id: 't1', authorId: 'em', text: 'Rice in the 8 is working, leave him there', at: m(60), kind: 'text' }],
+      messages: [{ id: 't1', authorId: 'em', text: 'Hale in the 8 is working, leave him there', at: m(60), kind: 'text' }],
     },
-    pub('gil', 'London Gooners', 'LG', '#C9A13B', 'read-celebrate.png', 'Pub meetups and watch parties across London.', 32),
-    pub('wtw', 'Women’s Team Watch', 'WT', '#D9774B', 'read-match.png', 'Every AFC Women fixture, live together.', 19),
-    pub('yg', 'Young Guns', 'YG', '#4A7C59', 'read-celebrate.png', 'Following Hale End talent up through the ranks.', 11),
-    pub('aex', 'Away End Express', 'AE', '#6B5B95', 'stadium.png', 'Sharing trains, tickets and stories from every away end.', 28),
-    pub('fas', 'Five-a-side Gooners', 'FS', '#3B7BE0', 'stadium.png', 'Weekly kickabouts in Finsbury Park, all levels welcome.', 22),
+    pub('gil', 'Volts Pub Club', 'VP', '#D62086', 'read-celebrate.jpg', 'Pub meetups and watch parties across Voltford.', 32),
+    pub('wtw', 'Women’s Team Watch', 'WT', '#D9774B', 'read-match.jpg', 'Every Voltford Women fixture, live together.', 19),
+    pub('yg', 'Young Volts', 'YV', '#4A7C59', 'read-celebrate.jpg', 'Following academy talent up through the ranks.', 11),
+    pub('aex', 'Away End Express', 'AE', '#6B5B95', 'stadium.jpg', 'Sharing trains, tickets and stories from every away end.', 28),
+    pub('fas', 'Five-a-side Volts', 'FS', '#3B7BE0', 'stadium.jpg', 'Weekly kickabouts in Riverside Park, all levels welcome.', 22),
     // A private crew you are not in: used for the "opened invite link" flow.
     {
-      id: 'ceb', name: 'Clock End Book Club', initials: 'CB', color: '#7A5C3A', cover: A('read-celebrate.png'),
-      description: 'Arsenal books and pre-match coffee.', visibility: 'private', memberLimit: 20, inviteCode: 'ceb-4X9',
+      id: 'ceb', name: 'Foundry End Book Club', initials: 'FB', color: '#7A5C3A', cover: A('read-celebrate.jpg'),
+      description: 'Club history books and pre-match coffee.', visibility: 'private', memberLimit: 20, inviteCode: 'ceb-4X9',
       members: [member('sb', 'admin'), member('rn'), ...filler(10, 'ceb')], requests: [], events: [], messages: [],
     },
   ]
@@ -162,61 +162,58 @@ export interface FanMessage { id: string; authorId: string; text: string; at: nu
 export const seedFanChat = (): FanMessage[] => [
   { id: 'f1', authorId: 'jd', text: 'Counting down to kickoff! Let’s secure the win 🎉', at: m(58) },
   { id: 'f2', authorId: 'ls', text: 'Still buzzing from that last victory! 🥳', at: m(53) },
-  { id: 'f3', authorId: 'oh', text: 'Who else is at the Emirates today? 🔴⚪', at: m(49) },
+  { id: 'f3', authorId: 'oh', text: 'Who else is at the Arc today? 💜⚡', at: m(49) },
   { id: 'f4', authorId: 'ma', text: 'New signing looked sharp in training all week 💪', at: m(44) },
-  { id: 'f5', authorId: 'hw', text: 'Calling it now: 2-0, Saka with the opener 🎯', at: m(40) },
-  { id: 'f6', authorId: 'fz', text: 'Anyone meeting at the Tollington before? 🍻', at: m(35) },
-  { id: 'f7', authorId: 'kt', text: 'Rice has been absolutely immense this season 🙌', at: m(31) },
+  { id: 'f5', authorId: 'hw', text: 'Calling it now: 2-0, Reyes with the opener 🎯', at: m(40) },
+  { id: 'f6', authorId: 'fz', text: 'Anyone meeting at the Lamplighter before? 🍻', at: m(35) },
+  { id: 'f7', authorId: 'kt', text: 'Hale has been absolutely immense this season 🙌', at: m(31) },
   { id: 'f8', authorId: 'cp', text: 'Queuing for the shop — the new kit is 🔥', at: m(27) },
-  { id: 'f9', authorId: 'kl', text: 'Go Arsenal! Ready for the big clash 🔴⚪', at: m(22) },
+  { id: 'f9', authorId: 'kl', text: 'Go Volts! Ready for the big clash 💜⚡', at: m(22) },
   { id: 'f10', authorId: 'jk', text: 'Atmosphere already building out here 📣', at: m(18) },
-  { id: 'f11', authorId: 'lb', text: 'COYG!! up the Arsenal ❤️', at: m(14) },
-  { id: 'f12', authorId: 'gt', text: 'Traffic on Holloway Road is mad, leave early 🚗', at: m(11) },
+  { id: 'f11', authorId: 'lb', text: 'COYV!! up the Volts 💜', at: m(14) },
+  { id: 'f12', authorId: 'gt', text: 'Traffic on Arc Road is mad, leave early 🚗', at: m(11) },
   { id: 'f13', authorId: 'me', text: 'Squad announcement when?! 👀', at: m(9) },
-  { id: 'f14', authorId: 'em', text: 'Lineup’s out — Ødegaard captains 🙌', at: m(6) },
-  { id: 'f15', authorId: 'ta', text: 'Let’s gooo. North Bank in full voice 🎶', at: m(4) },
+  { id: 'f14', authorId: 'em', text: 'Lineup’s out — Brandt captains 🙌', at: m(6) },
+  { id: 'f15', authorId: 'ta', text: 'Let’s gooo. East Stand in full voice 🎶', at: m(4) },
   { id: 'f16', authorId: 'yr', text: 'On my way — hold me a seat, row J 🙏', at: m(2) },
   { id: 'f17', authorId: 'rn', text: 'One hour to kickoff!! nerves kicking in 😅', at: m(1) },
 ]
 
 export type Product = { id: string; name: string; price: number; reviews: number; img: string; badge?: string }
 export const PRODUCTS: Product[] = [
-  { id: 'p1', name: 'Arsenal adidas 26/27 Authentic Home Shirt', price: 120.99, reviews: 229, img: A('shirt.png'), badge: 'New in' },
-  { id: 'p2', name: 'Arsenal Kids 47 Red Crest Cap', price: 20.0, reviews: 42, img: A('cap.png') },
-  { id: 'p3', name: 'Arsenal 26/27 Home Shirt', price: 120.99, reviews: 229, img: A('shirt.png') },
-  { id: 'p4', name: 'Arsenal Matchday Cap — Red', price: 22.0, reviews: 86, img: A('cap.png') },
-  { id: 'p5', name: 'Arsenal adidas 26/27 Away Shirt', price: 120.99, reviews: 154, img: A('shirt.png'), badge: 'Away' },
-  { id: 'p6', name: 'Arsenal Crest Snapback Cap', price: 24.0, reviews: 61, img: A('cap.png') },
+  { id: 'p1', name: 'Voltford Strata 26/27 Authentic Home Shirt', price: 120.99, reviews: 229, img: A('shirt.jpg'), badge: 'New in' },
+  { id: 'p3', name: 'Voltford 26/27 Home Shirt', price: 84.99, reviews: 312, img: A('shirt.jpg') },
+  { id: 'p4', name: 'Voltford Kids 26/27 Home Shirt', price: 54.99, reviews: 86, img: A('shirt.jpg'), badge: 'Kids' },
 ]
 
 export type Read = { id: string; title: string; tag: string; ago: string; img?: string; author: string; dek: string; body: string[] }
 export const READS: Read[] = [
   {
-    id: 'r1', title: 'Calafiori hails defensive effort after win at Villa', tag: 'Match Report', ago: '2 days ago', img: A('read-match.png'),
-    author: 'Arsenal.com staff',
-    dek: 'The defender was full of praise for the back line after a hard-fought three points at Villa Park.',
+    id: 'r1', title: 'Rinaldi hails defensive effort after win at Harrow Vale', tag: 'Match Report', ago: '2 days ago', img: A('read-match.jpg'),
+    author: 'Voltford FC staff',
+    dek: 'The defender was full of praise for the back line after a hard-fought three points at Oakfield Park.',
     body: [
-      'Riccardo Calafiori was quick to credit his team-mates after Arsenal ground out a vital away win, pointing to the collective shift off the ball as the difference on the night.',
+      'Matteo Rinaldi was quick to credit his team-mates after Voltford ground out a vital away win, pointing to the collective shift off the ball as the difference on the night.',
       '“We defended as a unit from the front,” he said. “Everyone ran for each other — that’s what wins you these away games. The clean sheet belongs to all eleven, not just the back four.”',
-      'The result lifts the Gunners up the table ahead of a busy run of fixtures, with the manager rotating his squad to keep legs fresh for the derby to come.',
+      'The result lifts the Volts up the table ahead of a busy run of fixtures, with the manager rotating his squad to keep legs fresh for the derby to come.',
     ],
   },
   {
-    id: 'r2', title: '38 shots from a relentless away day', tag: 'Analysis', ago: '2 days ago', img: A('read-celebrate.png'),
+    id: 'r2', title: '38 shots from a relentless away day', tag: 'Analysis', ago: '2 days ago', img: A('read-celebrate.jpg'),
     author: 'Josh Wright',
     dek: 'A deep dive into the numbers behind one of the most dominant away performances of the season.',
     body: [
-      'Thirty-eight shots, nineteen of them on target, and an xG north of three. By almost every attacking metric, this was a statement away day for Arsenal.',
+      'Thirty-eight shots, nineteen of them on target, and an xG north of three. By almost every attacking metric, this was a statement away day for Voltford.',
       'The pressing numbers tell the same story: the front line forced turnovers high up the pitch again and again, turning defence into attack in a matter of seconds.',
       'If the finishing had matched the creation, this could have been a rout. As it was, three points and a growing sense that this side can win ugly as well as pretty.',
     ],
   },
   {
-    id: 'r3', title: 'Arteta proud of squad after win at Villa Park', tag: 'Club', ago: '3 days ago', img: A('stadium.png'),
-    author: 'Arsenal.com staff',
+    id: 'r3', title: 'Ferro proud of squad after win at Oakfield Park', tag: 'Club', ago: '3 days ago', img: A('stadium.jpg'),
+    author: 'Voltford FC staff',
     dek: 'The manager reflected on character, depth and the standards the group is setting for itself.',
     body: [
-      'Mikel Arteta reserved special praise for his squad’s mentality after a demanding evening in the Midlands, describing the performance as “exactly what the badge demands.”',
+      'Tomás Ferro reserved special praise for his squad’s mentality after a demanding evening at Harrow Vale, describing the performance as “exactly what the badge demands.”',
       '“I’m proud of them,” he said. “The way they fought for each other, the discipline without the ball — these are the nights that build a team.”',
       'Attention now turns to the next fixture, with the manager confirming the group came through the game without fresh injury concerns.',
     ],

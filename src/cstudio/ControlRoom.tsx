@@ -10,9 +10,9 @@ import { btn, iconBtn, type Toast } from './ConnectStudio';
 type Msg = { id: string; who: string; initials: string; color: string; text: string };
 type Act = { key: string; label: string; sub: string; icon: string };
 const SEED: Msg[] = [
-  { id: 'm1', who: 'Karim.L', initials: 'KL', color: '#5B8DEF', text: 'Go Arsenal! Ready for the big clash!' },
+  { id: 'm1', who: 'Karim.L', initials: 'KL', color: '#5B8DEF', text: 'Go Volts! Ready for the big clash!' },
   { id: 'm2', who: 'Mohamed A.', initials: 'MA', color: '#E0A43B', text: 'Our new signing is flying in training' },
-  { id: 'm3', who: 'Fatima Z.', initials: 'FZ', color: '#3AA17A', text: 'Anyone at the Emirates? Let’s meet up!' },
+  { id: 'm3', who: 'Fatima Z.', initials: 'FZ', color: '#3AA17A', text: 'Anyone at the Arc? Let’s meet up!' },
   { id: 'm5', who: 'Lina Smith', initials: 'LS', color: '#C98A2B', text: 'Still buzzing from last week!' },
 ];
 const NEW_TYPES = [
@@ -64,7 +64,7 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
               <b style={{ fontSize: 18 }}>{panel.title}</b>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 22, padding: '0 10px', borderRadius: 11, background: T.green + '22', color: T.green, fontSize: 12, fontWeight: 600 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green }} />Live</span>
             </div>
-            <div style={{ fontSize: 13, color: T.muted, marginTop: 2 }}>Control room · Session: v Chelsea · Sat 25 Oct</div>
+            <div style={{ fontSize: 13, color: T.muted, marginTop: 2 }}>Control room · Session: v Kingsmere · Sat 25 Oct</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -150,7 +150,7 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
               })}
             </div>
             <div style={{ fontSize: 13, color: T.muted, fontWeight: 600, marginBottom: 9 }}>Question</div>
-            <input autoFocus value={cq} onChange={(e) => setCq(e.target.value)} placeholder="e.g. Who scores first for Arsenal?" style={{ width: '100%', height: 44, padding: '0 14px', borderRadius: 10, background: T.bg, border: `1px solid ${T.line}`, color: T.ink, font: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+            <input autoFocus value={cq} onChange={(e) => setCq(e.target.value)} placeholder="e.g. Who scores first for Voltford?" style={{ width: '100%', height: 44, padding: '0 14px', borderRadius: 10, background: T.bg, border: `1px solid ${T.line}`, color: T.ink, font: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
               <button onClick={() => setComposer(false)} style={btn('ghost')}>Cancel</button>
               <button onClick={createActivity} style={btn('primary')}>Push to fans</button>

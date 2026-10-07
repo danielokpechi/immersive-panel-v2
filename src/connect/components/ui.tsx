@@ -41,15 +41,15 @@ export function Hero({ dim = false }: { dim?: boolean }) {
   const { push } = useStore()
   return (
     <div className="hero">
-      <img className="bg" src={A('stadium.png')} alt="" />
+      <img className="bg" src={A('hero.jpg')} alt="" />
       <button aria-label="Ask IRIS" onClick={() => push({ name: 'iris' })}
         style={{ position: 'absolute', left: 17, top: 66, width: 44, height: 44, padding: 0, border: 0, background: 'none' }}>
         <img src={A('iris-button.png')} alt="" width={44} height={44} />
       </button>
       {!dim && <span style={{ position: 'absolute', left: 17, top: 118, height: 22, padding: '0 10px', borderRadius: 11, background: '#f2f0ed',
         border: '1px solid #cfcac3', fontSize: 12, display: 'flex', alignItems: 'center' }}>Ask IRIS</span>}
-      <img src={A('arsenal-crest.png')} alt="Arsenal crest" style={{ position: 'absolute', left: 'calc(50% - 43px)', top: 44, width: 86, height: 86 }} />
-      <div className="title">Arsenal</div>
+      <img src={A('crest.png')} alt="Voltford Athletic crest" style={{ position: 'absolute', left: 'calc(50% - 43px)', top: 44, width: 86, height: 86 }} />
+      <div className="title">Voltford</div>
       <ShareButton dim={dim} />
     </div>
   )
@@ -58,7 +58,7 @@ export function Hero({ dim = false }: { dim?: boolean }) {
 function ShareButton({ dim }: { dim: boolean }) {
   const { toast } = useStore()
   const share = async () => {
-    const data = { title: 'Arsenal on Connect', url: location.href }
+    const data = { title: 'Voltford on Connect', url: location.href }
     try {
       if (navigator.share) await navigator.share(data)
       else { await navigator.clipboard.writeText(data.url); toast('Link copied') }

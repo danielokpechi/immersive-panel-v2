@@ -6,21 +6,21 @@ import { Avatar, Hero } from '../components/ui'
 import { FanComposer } from './FanChat'
 
 const SUGGESTIONS = [
-  'What are the latest updates on Arsenal?',
-  'How do I buy tickets for an Arsenal game?',
-  'Which Arsenal players should I watch closely?',
-  'When is the next Arsenal match?',
+  'What are the latest updates on Voltford?',
+  'How do I buy tickets for a Voltford game?',
+  'Which Voltford players should I watch closely?',
+  'When is the next Voltford match?',
 ]
 
 // Stand-in answers. In production IRIS calls the Connect assistant API.
 function answer(q: string) {
   const t = q.toLowerCase()
-  if (t.includes('ticket')) return 'Tickets are sold through arsenal.com/tickets. Members get priority windows, then general sale opens if seats remain. Crews can also share travel plans for away games.'
-  if (t.includes('next') || t.includes('match') || t.includes('fixture')) return 'Next up is Arsenal v Chelsea at the Emirates on Saturday 25 October, kick-off 15:00.'
-  if (t.includes('player') || t.includes('watch')) return 'Keep an eye on Bukayo Saka on the right, Declan Rice running the midfield, and the young full-backs pushing on.'
-  if (t.includes('concise') || t.includes('short')) return 'Arsenal: London club, Premier League, huge fanbase, rich history.'
+  if (t.includes('ticket')) return 'Tickets are sold through voltfordfc.com/tickets. Members get priority windows, then general sale opens if seats remain. Crews can also share travel plans for away games.'
+  if (t.includes('next') || t.includes('match') || t.includes('fixture')) return 'Next up is Voltford v Kingsmere City at the Arc on Saturday 25 October, kick-off 15:00.'
+  if (t.includes('player') || t.includes('watch')) return 'Keep an eye on Jonah Reyes on the right, Marcus Hale running the midfield, and the young full-backs pushing on.'
+  if (t.includes('concise') || t.includes('short')) return 'Voltford Athletic: founded 1898, plays at the Arc, loud fanbase, rich history.'
   if (t.includes('crew')) return 'Crews are small fan groups inside Connect. Join one from the banner on the club page, or start your own and plan events together.'
-  return 'Arsenal FC is a professional football club based in London, competing in the Premier League. They’re known for their passionate fans and rich history.'
+  return 'Voltford Athletic FC (“the Volts”) is a professional football club founded in 1898, playing at the Arc. They’re known for their passionate fans and rich history.'
 }
 
 interface Turn { from: 'me' | 'iris'; text: string }

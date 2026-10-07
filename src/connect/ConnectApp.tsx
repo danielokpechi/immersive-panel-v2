@@ -1,4 +1,4 @@
-// Connect fan view (Arsenal-themed) — ported as-is from the "Arsenal Fan Page 2"
+// Connect fan view (Voltford Athletic, a fictional club) — ported from the "Arsenal Fan Page 2"
 // prototype and mounted at /c/:id. Self-contained: its own store, theme and
 // screens. The club theme lives in theme.css (swap the :root tokens per club).
 import { StoreProvider, useStore } from './store';

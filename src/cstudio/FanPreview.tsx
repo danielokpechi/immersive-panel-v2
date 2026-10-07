@@ -54,7 +54,7 @@ export function FanPreview({ title, colors, sections }:
           <div style={card}>
             <div style={lbl}>Poll</div>
             <div style={{ fontSize: 11, margin: '5px 0 7px' }}>Who will win the next match?</div>
-            {[['Arsenal', 62], ['Chelsea', 38]].map(([n, p]) => (
+            {[['Voltford', 62], ['Kingsmere', 38]].map(([n, p]) => (
               <div key={n as string} style={{ position: 'relative', height: 17, borderRadius: 5, background: 'rgba(0,0,0,.05)', marginBottom: 5, overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', inset: 0, width: `${p}%`, background: colors.accent, opacity: 0.4 }} />
                 <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '0 7px', lineHeight: '17px', fontSize: 10 }}><span>{n}</span><span>{p}%</span></div>
@@ -65,9 +65,9 @@ export function FanPreview({ title, colors, sections }:
         {on('predictions') && (
           <div style={card}>
             <div style={lbl}>Pick &amp; Win</div>
-            <div style={{ fontSize: 11, margin: '5px 0 7px' }}>Who scores first for Arsenal?</div>
+            <div style={{ fontSize: 11, margin: '5px 0 7px' }}>Who scores first for Voltford?</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 7 }}>
-              {['Saka', 'Havertz'].map((n) => <span key={n} style={{ flex: 1, height: 20, borderRadius: 6, background: 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: 10 }}>{n}</span>)}
+              {['Reyes', 'Lindqvist'].map((n) => <span key={n} style={{ flex: 1, height: 20, borderRadius: 6, background: 'rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', padding: '0 8px', fontSize: 10 }}>{n}</span>)}
             </div>
             <div style={{ height: 22, borderRadius: 7, background: colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10.5, fontWeight: 600, color: readable(colors.accent) }}>Enter your pick</div>
           </div>
@@ -92,8 +92,8 @@ export function FanPreview({ title, colors, sections }:
           <div style={{ padding: '0 11px' }}>
             <div style={{ fontSize: 12, fontWeight: 700, margin: '2px 0 7px' }}>Shop</div>
             <div style={{ display: 'flex', gap: 7 }}>
-              {[A('shirt.png'), A('cap.png')].map((src) => (
-                <div key={src} style={{ flex: 1, borderRadius: 8, background: 'rgba(0,0,0,.05)', padding: 6 }}>
+              {[A('shirt.jpg'), A('shirt.jpg')].map((src, i) => (
+                <div key={i} style={{ flex: 1, borderRadius: 8, background: 'rgba(0,0,0,.05)', padding: 6 }}>
                   <img src={src} alt="" style={{ width: '100%', height: 54, objectFit: 'cover', borderRadius: 5, background: '#fff' }} />
                 </div>
               ))}
@@ -104,8 +104,8 @@ export function FanPreview({ title, colors, sections }:
           <div style={{ ...card, marginTop: 9 }}>
             <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Reads</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <img src={A('read-match.png')} alt="" style={{ width: 66, height: 44, objectFit: 'cover', borderRadius: 6 }} />
-              <span style={{ fontSize: 10.5 }}>Calafiori hails defensive effort after win at Villa</span>
+              <img src={A('read-match.jpg')} alt="" style={{ width: 66, height: 44, objectFit: 'cover', borderRadius: 6 }} />
+              <span style={{ fontSize: 10.5 }}>Rinaldi hails defensive effort after win at Harrow Vale</span>
             </div>
           </div>
         )}

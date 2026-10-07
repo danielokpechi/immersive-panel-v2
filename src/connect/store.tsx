@@ -14,7 +14,7 @@ export interface State {
   pending: string[] // private crews I have asked to join
 }
 
-const STORAGE_KEY = 'arsenal-fan-page-2:v1'
+const STORAGE_KEY = 'connect-fan:voltford:v1'
 
 function initial(): State {
   try {
@@ -104,7 +104,7 @@ function reducer(s: State, a: Action): State {
         id: a.id, name: d.name.trim(), description: d.description.trim(), visibility: d.visibility,
         memberLimit: d.visibility === 'private' ? d.memberLimit : undefined, cover: d.cover,
         initials: d.name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join(''),
-        color: '#9E1B22', inviteCode: `${a.id.slice(-6)}`,
+        color: '#7B2FE2', inviteCode: `${a.id.slice(-6)}`,
         members: [{ userId: ME, role: 'admin', joinedAt: today() }], requests: [], events: [],
         messages: [sys('You started the crew. Invite fans or post your first event.')],
       }

@@ -5,12 +5,12 @@ import { Ico } from './Ico';
 import { iconBtn } from './ConnectStudio';
 
 const SESSIONS = [
-  { s: 'v Chelsea', d: 'Sat 25 Oct', fans: 4812, dur: '2h 10m' },
+  { s: 'v Kingsmere', d: 'Sat 25 Oct', fans: 4812, dur: '2h 10m' },
   { s: 'v Spurs', d: 'Sun 19 Oct', fans: 5240, dur: '2h 20m' },
   { s: 'v Liverpool', d: 'Sat 11 Oct', fans: 4610, dur: '2h 05m' },
   { s: 'v Newcastle', d: 'Sat 4 Oct', fans: 3980, dur: '1h 58m' },
   { s: 'v West Ham', d: 'Sun 28 Sep', fans: 4120, dur: '2h 02m' },
-  { s: 'v Man City', d: 'Sat 21 Sep', fans: 5510, dur: '2h 24m' },
+  { s: 'v Ashford Rovers', d: 'Sat 21 Sep', fans: 5510, dur: '2h 24m' },
 ];
 const SPEND = [
   ['Fan chat', 38], ['Predictions', 24], ['Shop', 16], ['Polls', 13], ['Reads', 9],
@@ -37,7 +37,7 @@ export function Stats({ panel, onBack }: { panel: Panel; onBack: () => void }) {
       <main style={{ padding: '28px 40px 48px', maxWidth: 1200, margin: '0 auto', width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 16, color: T.purpleText }}>
           <span style={{ marginTop: 2 }}><Ico name="spark" size={17} w={2} color={T.purple} /></span>
-          <span>Arsenal at Home is up 18% on last month. Predictions are the busiest section after chat, and shop taps spike at half-time.</span>
+          <span>Voltford at Home is up 18% on last month. Predictions are the busiest section after chat, and shop taps spike at half-time.</span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>

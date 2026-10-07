@@ -77,9 +77,9 @@ export const TYPES: { key: PType; label: string; sub: string; icon: string }[] =
 ];
 
 export const TEMPLATES: { key: Template; label: string; sub: string; colors: Colors }[] = [
-  { key: 'home', label: 'Home game', sub: 'Your ground, your colours. Chat, predictions, polls and the shop.', colors: { primary: '#DB0007', accent: '#B4A174', bg: '#EFEDEA' } },
-  { key: 'away', label: 'Away game', sub: 'Travelling support: travel updates, fan chat and predictions.', colors: { primary: '#15284B', accent: '#F5D130', bg: '#EDEFF2' } },
-  { key: 'stadium', label: 'Stadium event', sub: 'Tours and club events: trivia, rewards and the shop.', colors: { primary: '#2E2A4F', accent: '#B4A174', bg: '#EFEDEA' } },
+  { key: 'home', label: 'Home game', sub: 'Your ground, your colours. Chat, predictions, polls and the shop.', colors: { primary: '#7B2FE2', accent: '#D62086', bg: '#F7F7F5' } },
+  { key: 'away', label: 'Away game', sub: 'Travelling support: travel updates, fan chat and predictions.', colors: { primary: '#101014', accent: '#35C7DF', bg: '#EEF3F5' } },
+  { key: 'stadium', label: 'Stadium event', sub: 'Tours and club events: trivia, rewards and the shop.', colors: { primary: '#2E2A4F', accent: '#35C7DF', bg: '#F7F7F5' } },
 ];
 
 export const SECTIONS: { key: SectionKey; label: string; sub: string; icon: string }[] = [
@@ -95,54 +95,54 @@ export const SECTIONS: { key: SectionKey; label: string; sub: string; icon: stri
 
 export const ACTIVITIES: { key: string; label: string; sub: string; icon: string }[] = [
   { key: 'poll', label: 'Poll', sub: 'Who will win the next match?', icon: 'poll' },
-  { key: 'quiz', label: 'Quiz', sub: 'When did Arsenal move to the Emirates?', icon: 'spark' },
-  { key: 'pick', label: 'Pick & Win', sub: 'Who scores first for Arsenal?', icon: 'target' },
-  { key: 'sponsored', label: 'Sponsored', sub: 'Emirates: 15% off away flights', icon: 'flag' },
+  { key: 'quiz', label: 'Quiz', sub: 'When did Voltford move to the Arc?', icon: 'spark' },
+  { key: 'pick', label: 'Pick & Win', sub: 'Who scores first for Voltford?', icon: 'target' },
+  { key: 'sponsored', label: 'Sponsored', sub: 'Lumen Air: 15% off away flights', icon: 'flag' },
   { key: 'summary', label: 'Chat summary', sub: 'AI summary of the last 10 minutes', icon: 'spark' },
 ];
 
 const ALL_ON: Record<SectionKey, boolean> = {
   fanChat: true, polls: true, predictions: true, rewards: true, shop: true, reads: true, crews: true, iris: false,
 };
-const ARSENAL: Colors = { primary: '#DB0007', accent: '#B4A174', bg: '#EFEDEA' };
+const CLUB: Colors = { primary: '#7B2FE2', accent: '#D62086', bg: '#F7F7F5' };
 
 export function seedPanels(): Panel[] {
   return [
     {
-      id: 'p-home', title: 'Arsenal at Home', desc: 'Every home match at the Emirates: chat, predictions, polls and the shop.',
+      id: 'p-home', title: 'Voltford at Home', desc: 'Every home match at the Arc: chat, predictions, polls and the shop.',
       insight: 'Up 18% on last month. Predictions are the busiest section after chat.',
-      status: 'live', type: 'inperson', template: 'home', typeLabel: 'In-person · Home game', image: A('stadium.png'),
-      footer: 'Live now · v Chelsea · 4,812 fans', live: true, sections: { ...ALL_ON }, colors: { ...ARSENAL },
+      status: 'live', type: 'inperson', template: 'home', typeLabel: 'In-person · Home game', image: A('stadium.jpg'),
+      footer: 'Live now · v Kingsmere · 4,812 fans', live: true, sections: { ...ALL_ON }, colors: { ...CLUB },
     },
     {
-      id: 'p-away', title: 'Arsenal Away Days', desc: 'Travel updates, fan chat and predictions for every away trip.',
+      id: 'p-away', title: 'Voltford Away Days', desc: 'Travel updates, fan chat and predictions for every away trip.',
       insight: 'Travel updates get 3x more taps on the day before a trip.',
-      status: 'scheduled', type: 'inperson', template: 'away', typeLabel: 'In-person · Away game', image: A('read-match.png'),
-      footer: 'Next session · Villa away · Sun 2 Nov', sections: { ...ALL_ON, shop: false }, colors: { ...ARSENAL },
+      status: 'scheduled', type: 'inperson', template: 'away', typeLabel: 'In-person · Away game', image: A('read-match.jpg'),
+      footer: 'Next session · Harrow Vale away · Sun 2 Nov', sections: { ...ALL_ON, shop: false }, colors: { ...CLUB },
     },
     {
-      id: 'p-tour', title: 'Arsenal Stadium Tour', desc: 'Guided tours of the Emirates with trivia, rewards and the shop.',
+      id: 'p-tour', title: 'Voltford Stadium Tour', desc: 'Guided tours of the Arc with trivia, rewards and the shop.',
       insight: 'Tour fans spend most time in trivia and the shop.',
-      status: 'scheduled', type: 'inperson', template: 'stadium', typeLabel: 'In-person · Stadium event', image: A('stadium.png'),
-      footer: 'Daily tours · next 10:00 tomorrow', sections: { ...ALL_ON, predictions: false }, colors: { ...ARSENAL },
+      status: 'scheduled', type: 'inperson', template: 'stadium', typeLabel: 'In-person · Stadium event', image: A('stadium.jpg'),
+      footer: 'Daily tours · next 10:00 tomorrow', sections: { ...ALL_ON, predictions: false }, colors: { ...CLUB },
     },
     {
-      id: 'p-women', title: 'Arsenal Women', desc: 'WSL and cup matches with fan chat and Pick & Win.',
+      id: 'p-women', title: 'Voltford Women', desc: 'WSL and cup matches with fan chat and Pick & Win.',
       insight: 'Pick & Win entries doubled since the start of the season.',
-      status: 'scheduled', type: 'inperson', template: 'home', typeLabel: 'In-person · Home game', image: A('read-celebrate.png'),
-      footer: 'Next session · v Man City · Sat 25 Oct', sections: { ...ALL_ON }, colors: { ...ARSENAL },
+      status: 'scheduled', type: 'inperson', template: 'home', typeLabel: 'In-person · Home game', image: A('read-celebrate.jpg'),
+      footer: 'Next session · v Harrow Vale · Sat 25 Oct', sections: { ...ALL_ON }, colors: { ...CLUB },
     },
     {
       id: 'p-press', title: 'Press & Media', desc: 'Press conferences and watch-alongs, streamed with chat and Q&A polls.',
       insight: 'Q&A polls lift chat activity by 40% during pressers.',
-      status: 'scheduled', type: 'stream', typeLabel: 'Online stream', image: A('read-match.png'),
-      footer: 'Next session · Arteta presser · Fri 24 Oct', sections: { ...ALL_ON, shop: false, crews: false }, colors: { ...ARSENAL },
+      status: 'scheduled', type: 'stream', typeLabel: 'Online stream', image: A('read-match.jpg'),
+      footer: 'Next session · Ferro presser · Fri 24 Oct', sections: { ...ALL_ON, shop: false, crews: false }, colors: { ...CLUB },
     },
     {
       id: 'p-review', title: 'Season Review 25/26', desc: 'On-demand highlights with chat replay and polls.',
-      insight: 'Most-watched: the North London derby recap.',
-      status: 'archived', type: 'vod', typeLabel: 'VOD', image: A('membership.png'), dimImage: true,
-      footer: '38 sessions · 1.2m views', sections: { ...ALL_ON, crews: false }, colors: { ...ARSENAL },
+      insight: 'Most-watched: the Kingsmere derby recap.',
+      status: 'archived', type: 'vod', typeLabel: 'VOD', image: A('membership.jpg'), dimImage: true,
+      footer: '38 sessions · 1.2m views', sections: { ...ALL_ON, crews: false }, colors: { ...CLUB },
     },
   ];
 }
@@ -154,6 +154,6 @@ export const emptyDraft = () => ({
   name: '',
   runs: '2026/27 season',
   desc: '',
-  colors: { ...ARSENAL } as Colors,
+  colors: { ...CLUB } as Colors,
 });
 export type Draft = ReturnType<typeof emptyDraft>;

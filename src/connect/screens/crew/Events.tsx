@@ -127,7 +127,7 @@ export function EventForm({ crewId, eventId }: { crewId: string; eventId?: strin
       foot={<button className="btn gold block" style={{ height: 48, fontWeight: 700 }} onClick={save}>{eventId ? 'Save changes' : 'Post event to crew'}</button>}>
       <div className="col" style={{ gap: 14, padding: '14px 16px 24px' }}>
         <label className="field"><span className="field-label">Event name</span>
-          <input className="input" value={f.name} onChange={set('name')} placeholder="e.g. Chelsea away: travel together" />
+          <input className="input" value={f.name} onChange={set('name')} placeholder="e.g. Kingsmere away: travel together" />
           {tried && errors.name && <span className="error">Give the event a name</span>}</label>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
           <label className="field"><span className="field-label">Date</span><input className="input" type="date" min={todayISO()} value={f.date} onChange={set('date')} />
