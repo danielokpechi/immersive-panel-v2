@@ -11,7 +11,17 @@ import { mediaFor } from './mediaSlots';
 import { media } from '../domain/media';
 // Autoplay demo mode (?autoplay=1) — isolated feature, inert unless enabled.
 import { useAutoplay } from '../autoplay/useAutoplay';
+import { FAN_TIMELINE } from '../autoplay/timeline';
 import { AutoChip } from '../autoplay/AutoChip';
+import { useAutoCursor } from '../autoplay/useAutoCursor';
+
+// Autoplay content: fan chatter + IRIS Q&A the loop cycles through (live only).
+const AUTO_MSGS = ['Come on City! 💙', 'What a start from the lads', 'Ref needs a word there 👀', 'Etihad is bouncing tonight 🔥', 'Get forward City!!'];
+const AUTO_IRIS: [string, string, string?, string?][] = [
+  ['How is Haaland playing?', 'Sharp — 1 goal from 3 shots, xG 0.34. He is stretching the Madrid line every time City break.', '1', 'GOALS'],
+  ['What is the score?', 'Man City lead 1–0, 38 minutes gone. On aggregate the tie is 3–2 to City.', '1–0', 'LIVE'],
+  ['Who is man of the match so far?', 'Phil Foden — 93% pass accuracy, the assist for the opener and two chances created.', '93%', 'PASS ACC'],
+];
 
 const Ms = ({ children, size = 18, color, style }: { children: string; size?: number; color?: string; style?: CSSProperties }) => (
   <span className="ms" style={{ fontSize: size, color, ...style }}>{children}</span>
@@ -63,6 +73,13 @@ const POOL = [
   { user: 'RAJ', text: 'Their keeper has been the best player on the pitch', t: 'n', tag: 'AT HOME' },
   { user: 'LUCY_C', text: 'Twenty more minutes like that and we are in Munich', t: 'h', tag: 'BLOCK 112' },
 ];
+
+// Profile photos for the live chat, so it reads like the Crews chat (same assets).
+const CHAT_AV: Record<string, string> = {
+  MARCUS_92: media.avMarcus, DECLAN_K: media.avDeclan, PRIYA_S: media.avPriya, HANNAH_M: media.avHannah,
+  TOMMY: media.avR1, JEAN_84: media.avR2, GAZ: media.avR3, LUCY_C: media.avPriya, AMARA_K: media.avHannah,
+  STEVO: media.avR1, RAJ: media.avR2, DAVE_SB: media.avR3, NEUTRAL_JO: media.avR1, BLOCK112: media.avR2,
+};
 const TEAM: Record<string, { bg: string; fg: string }> = { h: { bg: '#6CABDD', fg: '#fff' }, s: { bg: '#0C3A5E', fg: '#fff' }, n: { bg: '#C3B69A', fg: '#001838' } };
 const EV: Record<string, { icon: string; color: string }> = {
   GOAL: { icon: 'sports_soccer', color: '#6CABDD' }, YELLOW: { icon: '', color: '#F4C400' }, 'RED CARD': { icon: '', color: '#D6202A' },
@@ -196,7 +213,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
     chat: POOL.slice(0, 7).map((m, i) => ({ ...m, id: 's' + i, time: '20:' + pad(11 + i * 3), likes: 1 + (i % 4) })),
     draft: '', room: 'ALL FANS', likes: {}, votes: {}, pred: { h: 2, a: 1, s: 'Haaland', done: false },
     size: 'M', basket: [], ordered: false, food: {}, foodPlaced: false, foodEta: 6,
-    photos: 9, reels: {}, read: null, flash: null, flashOut: false, irisOut: false, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: 'light', quests: {}, toast: null, toastXp: '',
+    photos: 9, reels: {}, read: null, flash: null, flashOut: false, irisOut: false, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('theme') === 'dark') ? 'dark' : 'light', quests: {}, toast: null, toastXp: '',
     crewsJoined: { msb: true, kippax: true }, activeCrew: 'msb', crewDraft: '', crewMsgsExtra: {},
     navStack: [], customCrews: [], newCrewName: '', newCrewDesc: '', newCrewPrivacy: 'public', inviteSent: {},
     onboardingSkipped: false, crewsIntroSeen: false, forceCrewsIntro: false,
@@ -289,15 +306,18 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
     else if (kind === 'offside') fire('OFFSIDE', 'Vinícius Júnior', 44, 'Flag up · Madrid strike ruled out, tight one on the shoulder', 'REAL MADRID', 'a');
     else if (kind === 'drinks') fire('DRINKS BREAK', 'Two minutes', 33, 'Referee has paused play, 26°C at kick-off', 'HYDRATION', 'n');
   };
-  // Autoplay demo mode (?autoplay=1): scripts the timeline via the dispatch above.
-  // Inert (no timers, no listeners) unless the flag is present.
+  // Autoplay demo mode (?autoplay=1): pins the panel LIVE and loops fan actions
+  // (chat, IRIS, shop, food). Wired below, once the action fns exist. Inert
+  // (no timers, no listeners) unless the flag is present.
   const autoplay = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('autoplay') === '1';
-  const autoplayState = useAutoplay({ enabled: autoplay, applyState, applyEventCmd });
   // Follow the control room: apply commands from the panel's channel. Ref keeps
   // the listener bound to fresh closures without re-subscribing every render.
   const busRef = useRef<(m: any) => void>(() => {});
   busRef.current = (m) => {
     if (!m) return;
+    // In the marketing autoplay the panel is self-driving; ignore control-room
+    // broadcasts (they'd inject goals/cards + the flash-drop pop-up on top).
+    if (autoplay) return;
     if (m.cmd === 'state' && m.ms) applyState(m.ms);
     else if (m.cmd === 'event' && m.kind) applyEventCmd(m.kind);
     // Operator prompt: send fans straight to a screen (Crews, Spot Kick…).
@@ -323,6 +343,66 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
     set((sp) => ({ draft: '', chat: [...sp.chat, { id: 'me' + Date.now(), user: 'YOU', text: text.trim(), t: 'h', tag: 'BLOCK 112', me: true, time: '20:' + pad((44 + sp.n) % 60), likes: 0 }] }));
     award(2, 'MESSAGE POSTED', 'chat');
   };
+
+  // ── Autoplay: LIVE-pinned loop of real fan actions (see timeline.ts) ──────
+  const autoIdx = useRef({ post: 0, iris: 0 });
+  const cursor = useAutoCursor(autoplay);
+  // Glide the cursor to a target, then click + run the action once it arrives.
+  const curDo = (target: string | [number, number], fn: () => void) => {
+    cursor.point(target);
+    window.setTimeout(() => { cursor.click(); fn(); }, 720);
+  };
+  const autoAct = (name: string) => {
+    const A = autoIdx.current;
+    switch (name) {
+      case 'home': cursor.point([0.5, 0.42]); set({ route: 'home', iris: false, read: null, navStack: [] }); break;
+      case 'tour': { // browse the whole panel top-to-bottom, then back up — slowly,
+        // like a person swiping and reading, not one fast jump.
+        const el = document.querySelector('[data-fanscroll]') as HTMLElement | null;
+        if (!el) break;
+        const maxTop = () => Math.max(0, el.scrollHeight - el.clientHeight);
+        // ease scrollTop from current to `to` over `dur` ms, then run cb
+        const ease = (to: number, dur: number, cb?: () => void) => {
+          const from = el.scrollTop, delta = to - from; let t0 = 0;
+          const step = (ts: number) => {
+            if (!t0) t0 = ts;
+            const p = Math.min(1, (ts - t0) / dur);
+            el.scrollTop = from + delta * (1 - Math.pow(1 - p, 3));
+            if (p < 1) requestAnimationFrame(step); else if (cb) cb();
+          };
+          requestAnimationFrame(step);
+        };
+        const seq: Array<() => void> = [];
+        const swipe = (frac: number, curY: number, dur: number, pause: number) =>
+          seq.push(() => { cursor.point([0.5, curY]); ease(maxTop() * frac, dur, () => window.setTimeout(run, pause)); });
+        swipe(0.25, 0.74, 2000, 1600); // small swipe down, pause to read
+        swipe(0.50, 0.72, 2000, 1600);
+        swipe(0.75, 0.70, 2000, 1600);
+        swipe(1.00, 0.68, 2000, 2000); // reach the bottom, long dwell
+        swipe(0.50, 0.52, 2300, 1400); // ease back up
+        swipe(0.00, 0.42, 2500, 400);  // home to the top
+        let i = 0;
+        const run = () => { if (i < seq.length) seq[i++](); };
+        run();
+        break;
+      }
+      case 'chat': curDo([0.5, 0.52], () => go('chat')()); break;
+      case 'post': set({ iris: false }); curDo('[data-cur="send"]', () => post(AUTO_MSGS[A.post++ % AUTO_MSGS.length])); break;
+      case 'iris': curDo('[data-cur="iris"]', () => { const [q, a, stat, lab] = AUTO_IRIS[A.iris++ % AUTO_IRIS.length]; ask(q, a, stat, lab); }); break;
+      case 'back': set({ iris: false }); curDo('[data-cur="fanback"]', () => goBack()); break;
+      case 'shopOpen': curDo([0.5, 0.5], () => go('shop')()); break;
+      case 'shopAdd': curDo('[data-cur="shopadd"]', () => { set((sp) => (sp.basket.length ? {} : { basket: [{ name: 'Match shirt', price: 95 }], ordered: false })); award(10, 'SHIRT ADDED'); }); break;
+      case 'shopBuy': curDo('[data-cur="checkout"]', () => { set((sp) => (sp.ordered ? {} : { ordered: true })); award(30, 'ORDER CONFIRMED'); }); break;
+      case 'foodOpen': curDo([0.5, 0.5], () => go('food')()); break;
+      case 'foodAdd': curDo('[data-cur="foodadd"]', () => set((sp) => (sp.foodPlaced ? {} : { food: { pie: 1, chips: 1 } }))); break;
+      case 'foodBuy': curDo('[data-cur="fooddeliver"]', () => { set((sp) => (sp.foodPlaced ? {} : { foodPlaced: true, foodEta: 6 })); award(15, 'ORDER ON ITS WAY'); }); break;
+      case 'reset': set({ basket: [], ordered: false, food: {}, foodPlaced: false, route: 'home', iris: false, read: null, navStack: [] }); break;
+    }
+  };
+  // Pin the panel to LIVE (first half, 1–0) in dark mode, without firing the
+  // goal/flash-drop events — the loop should read as one fan calmly using the
+  // panel, not a stream of match alerts popping up.
+  const autoplayState = useAutoplay({ enabled: autoplay, steps: FAN_TIMELINE, act: autoAct, init: () => set({ ms: 'live', route: 'home', hs: 1, as: 0, flash: null, event: null, theme: 'dark' }) });
   // Toast with no XP badge (RSVP, share confirmations…).
   const notify = (label: string) => {
     window.clearTimeout(timers.current.toast);
@@ -524,7 +604,8 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
           </div>
 
           {autoplay && <AutoChip interacting={autoplayState.interacting} />}
-          <div style={s('position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:46px;padding-bottom:56px')}>
+          {cursor.node}
+          <div data-fanscroll style={s('position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:46px;padding-bottom:56px')}>
             {/* event lower-third */}
             {st.event && (() => { const e = st.event!; const color = EV[e.kind]?.color || '#6CABDD'; const isCard = e.kind === 'YELLOW' || e.kind === 'RED CARD'; const hasIcon = !!EV[e.kind]?.icon; return (
               <div style={s('position:sticky;top:0;z-index:45;overflow:hidden')}>
@@ -548,7 +629,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
             {/* score bug + header */}
             <div style={s('position:sticky;top:0;z-index:40;background:var(--panel)')}>
               <div style={s('display:flex;align-items:stretch;height:44px')}>
-                {isSub && <button onClick={goBack} className="fh" style={s("display:flex;align-items:center;gap:6px;padding:0 10px 0 15px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.14em;color:#8AA0B6")}><Ms size={15} color="inherit">arrow_back</Ms>{backLabel}</button>}
+                {isSub && <button data-cur="fanback" onClick={goBack} className="fh" style={s("display:flex;align-items:center;gap:6px;padding:0 10px 0 15px;font:800 10px/1 'Kippax','Archivo';letter-spacing:.14em;color:#8AA0B6")}><Ms size={15} color="inherit">arrow_back</Ms>{backLabel}</button>}
                 {inactive ? (<>
                   <div style={s('display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding-left:14px')}>
                     <span style={s('width:6px;height:18px;background:#6CABDD;transform:skewX(-8deg);display:inline-block')} />
@@ -633,7 +714,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
 
           {/* IRIS */}
           {!st.iris && (
-            <button onClick={() => set({ iris: true })} className="fh2" style={s('position:absolute;right:0;bottom:96px;z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px')}>
+            <button data-cur="iris" onClick={() => set({ iris: true })} className="fh2" style={s('position:absolute;right:0;bottom:96px;z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px')}>
               <span style={s('width:7px;height:7px;background:#6CABDD;animation:bgDot 1.6s ease-in-out infinite')} />
               <span style={s("font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.16em;color:var(--on-panel)")}>ASK IRIS</span>
             </button>
@@ -1658,7 +1739,7 @@ function Chat({ st, shown, set, post, chatRef }: any) {
           const me = !!m.me; const liked = !!st.likes[m.id];
           return (
             <div key={m.id} style={{ ...s('display:flex;gap:8px;animation:bgBubble .3s ease both'), justifyContent: me ? 'flex-end' : 'flex-start' }}>
-              {!me && <span style={{ ...s("width:28px;height:28px;flex:none;border-radius:50%;font:800 9.5px/28px 'Kippax','Archivo';text-align:center;margin-top:12px"), background: TEAM[m.t].bg, color: TEAM[m.t].fg }}>{m.user.slice(0, 2)}</span>}
+              {!me && <span style={{ ...s("width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;font:800 10px/32px 'Kippax','Archivo';text-align:center;margin-top:12px"), background: TEAM[m.t].bg, color: TEAM[m.t].fg }}>{CHAT_AV[m.user] ? <img src={CHAT_AV[m.user]} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : m.user.slice(0, 2)}</span>}
               <div style={s('max-width:74%')}>
                 <div style={{ ...s('display:flex;align-items:baseline;gap:7px;padding:0 3px 4px'), justifyContent: me ? 'flex-end' : 'flex-start' }}><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--label)")}>{me ? 'YOU' : m.user}</span></div>
                 <div style={{ ...s('padding:10px 12px'), background: me ? 'var(--panel)' : 'var(--sand)', borderRadius: me ? '14px 14px 3px 14px' : '3px 14px 14px 14px' }}>
@@ -1674,7 +1755,7 @@ function Chat({ st, shown, set, post, chatRef }: any) {
         <div style={s('display:flex;gap:6px;padding:9px 12px 0;overflow-x:auto')}>{['Come on City!', 'That’s never a foul', 'Anyone in 112?', 'Get it forward'].map((q) => <button key={q} onClick={() => post(q)} className="fs" style={s("flex:none;font:700 11px/1 'Kippax','Archivo';color:var(--ink);background:var(--sand);padding:9px 11px;border-radius:100px;white-space:nowrap")}>{q}</button>)}</div>
         <div style={s('display:flex;gap:8px;align-items:center;padding:9px 12px 14px')}>
           <div style={s('flex:1;display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.draft} onChange={(e: any) => set({ draft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') post(st.draft); }} placeholder="Say something to the terrace…" style={s("flex:1;min-width:0;font:500 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")} /><span style={s("font:700 8.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--label)")}>+2 XP</span></div>
-          <button onClick={() => post(st.draft)} style={{ ...s('width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%'), background: st.draft.trim() ? '#6CABDD' : '#001838' }}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
+          <button data-cur="send" onClick={() => post(st.draft)} style={{ ...s('width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%'), background: st.draft.trim() ? '#6CABDD' : '#001838' }}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
         </div>
       </div>
     </div>
@@ -1780,7 +1861,7 @@ function Polls({ st, ft, set, award }: any) {
 
 function Shop({ st, set, award }: any) {
   const sizes = ['S', 'M', 'L', 'XL', '2XL'];
-  const merch = [{ name: 'Semi-final scarf', price: 22 }, { name: 'Match programme', price: 5 }, { name: 'Terrace beanie', price: 18 }];
+  const merch = [{ name: 'Semi-final scarf', price: 22, icon: 'checkroom' }, { name: 'Match programme', price: 5, icon: 'menu_book' }, { name: 'Terrace beanie', price: 18, icon: 'ac_unit' }];
   const total = st.basket.reduce((a: number, b: any) => a + b.price, 0);
   const shirtIn = st.basket.some((b: any) => b.name.indexOf('shirt') > -1 || b.name === 'Match shirt');
   return (
@@ -1790,13 +1871,13 @@ function Shop({ st, set, award }: any) {
         <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>TONIGHT ONLY</span><span style={s("font:700 9.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--label)")}>FREE COLLECTION AT GATE 4</span></div>
         <div style={s("font:800 28px/.94 'KippaxCondensed','Archivo Black';color:var(--ink);margin-top:11px")}>Semi-final match shirt</div>
         <div style={s('display:flex;align-items:baseline;gap:10px;margin-top:8px')}><span style={s("font:800 20px/1 'Kippax','Archivo';color:var(--ink)")}>£95.00</span><span style={s("font:500 12.5px/1 'Kippax','Archivo';color:var(--label)")}>Match-day print included</span></div>
-        <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label);margin-top:16px")}>SIZE</div>
-        <div style={s('display:flex;gap:6px;margin-top:9px')}>{sizes.map((l) => { const on = st.size === l; return <button key={l} onClick={() => set({ size: l })} style={{ ...s("flex:1;font:800 12px/1 'Kippax','Archivo';padding:13px 0"), color: on ? 'var(--on-panel)' : 'var(--ink)', background: on ? 'var(--panel)' : 'var(--sand)' }}>{l}</button>; })}</div>
-        <button onClick={() => { if (!shirtIn) { set((sp: FSt) => ({ basket: [...sp.basket, { name: 'Match shirt', price: 95 }], ordered: false })); award(10, 'SHIRT ADDED'); } }} style={{ ...s("display:block;width:100%;margin-top:14px;padding:15px;font:800 12.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel)"), background: shirtIn ? '#6CABDD' : '#001838' }}>{shirtIn ? 'SHIRT IN BASKET · SIZE ' + st.size : 'ADD SHIRT · SIZE ' + st.size}</button>
+        <div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label);margin-top:18px")}>SIZE</div>
+        <div style={s('display:flex;gap:8px;margin-top:10px')}>{sizes.map((l) => { const on = st.size === l; return <button key={l} onClick={() => set({ size: l })} style={{ ...s("flex:1;height:48px;display:flex;align-items:center;justify-content:center;border-radius:11px;font:800 14px/1 'Kippax','Archivo';letter-spacing:.01em;transition:transform .1s ease"), color: on ? '#fff' : 'var(--ink)', background: on ? '#001838' : 'var(--sand)', boxShadow: on ? '0 7px 16px -9px rgba(0,24,56,.65)' : 'inset 0 0 0 1.5px var(--hair)' }}>{l}</button>; })}</div>
+        <button data-cur="shopadd" onClick={() => { if (!shirtIn) { set((sp: FSt) => ({ basket: [...sp.basket, { name: 'Match shirt', price: 95 }], ordered: false })); award(10, 'SHIRT ADDED'); } }} style={{ ...s("display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:16px;padding:16px;border-radius:12px;font:800 13px/1 'Kippax','Archivo';letter-spacing:.06em;color:#fff"), background: shirtIn ? '#6CABDD' : '#001838' }}><Ms size={18} color="#fff">{shirtIn ? 'check' : 'add_shopping_cart'}</Ms>{shirtIn ? 'IN BASKET · SIZE ' + st.size : 'ADD SHIRT · SIZE ' + st.size}</button>
       </div>
-      <div style={s('padding:22px 16px 0')}><div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>ALSO IN THE DROP</div><div style={s('margin-top:8px')}>{merch.map((m) => <div key={m.name} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('width:46px;height:46px;flex:none;background:repeating-linear-gradient(115deg,#D3C6AA 0 7px,#E4DACA 7px 14px);box-shadow:inset 0 0 0 1.5px #C3B69A')} /><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Kippax','Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:500 12px/1.3 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{money(m.price)}</span></span><button onClick={() => { set((sp: FSt) => ({ basket: [...sp.basket, { name: m.name, price: m.price }], ordered: false })); award(10, 'ADDED TO BASKET'); }} className="fp" style={s("font:800 10.5px/1 'Kippax','Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:11px 12px")}>ADD</button></div>)}</div></div>
+      <div style={s('padding:24px 16px 0')}><div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:var(--label)")}>ALSO IN THE DROP</div><div style={s('margin-top:10px')}>{merch.map((m, i) => <div key={m.name} style={{ ...s('display:flex;align-items:center;gap:13px;padding:13px 0'), borderTop: i === 0 ? 'none' : '1.5px solid var(--hair)' }}><span style={s('width:48px;height:48px;flex:none;border-radius:12px;background:var(--sand);display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#6CABDD">{m.icon}</Ms></span><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Kippax','Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:600 12.5px/1.3 'Kippax','Archivo';color:var(--label);margin-top:4px")}>{money(m.price)}</span></span><button onClick={() => { set((sp: FSt) => ({ basket: [...sp.basket, { name: m.name, price: m.price }], ordered: false })); award(10, 'ADDED TO BASKET'); }} className="fp" style={s("font:800 11px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--ink);background:var(--sand);padding:12px 17px;border-radius:100px;box-shadow:inset 0 0 0 1.5px var(--hair)")}>ADD</button></div>)}</div></div>
       {st.basket.length > 0 && (
-        <div style={s('position:sticky;bottom:0;margin-top:18px;padding:13px 16px 16px;background:var(--panel);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6")}>{st.basket.length} ITEMS</div><div style={s("font:800 17px/1 'Kippax','Archivo';color:var(--on-panel);margin-top:6px")}>{money(total)}</div></div><button onClick={() => { if (!st.ordered) { set({ ordered: true }); award(30, 'ORDER CONFIRMED'); } }} style={s("font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.08em;background:#6CABDD;padding:14px 16px;color:#fff")}>{st.ordered ? 'ORDER CONFIRMED ✓' : 'CHECKOUT'}</button></div>
+        <div style={s('position:sticky;bottom:0;margin-top:18px;padding:13px 16px 16px;background:var(--panel);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:#8AA0B6")}>{st.basket.length} ITEMS</div><div style={s("font:800 17px/1 'Kippax','Archivo';color:var(--on-panel);margin-top:6px")}>{money(total)}</div></div><button data-cur="checkout" onClick={() => { if (!st.ordered) { set({ ordered: true }); award(30, 'ORDER CONFIRMED'); } }} style={s("display:flex;align-items:center;gap:8px;font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.06em;background:#6CABDD;padding:15px 20px;border-radius:11px;color:#fff")}><Ms size={16} color="#fff">{st.ordered ? 'check_circle' : 'shopping_bag'}</Ms>{st.ordered ? 'ORDER CONFIRMED' : 'CHECKOUT'}</button></div>
       )}
     </div>
   );
@@ -1819,9 +1900,9 @@ function Food({ st, set, award, timers }: any) {
       {st.foodPlaced && (
         <div style={s('margin-top:14px;background:var(--panel);padding:16px')}><div style={s("font:800 9.5px/1 'Kippax','Archivo';letter-spacing:.18em;color:#6CABDD")}>ORDER PLACED · RUNNER ON THE WAY</div><div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:11px')}><span style={s("font:800 46px/.8 'KippaxCondensed','Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.foodEta}</span><span style={s("font:600 11.5px/1 'Kippax','Archivo';color:#8AA0B6;padding-bottom:5px")}>MIN AWAY</span></div><div style={s('height:6px;background:rgba(234,241,248,.18);margin-top:12px')}><span style={{ display: 'block', height: 6, width: ((6 - st.foodEta) / 6 * 100) + '%', background: '#6CABDD', transition: 'width 1s linear' }} /></div><div style={s("font:500 12.5px/1.5 'Kippax','Archivo';color:#8AA0B6;margin-top:12px")}>{summary || 'Order placed'} · paid with match wallet</div></div>
       )}
-      <div style={s('margin-top:16px')}>{menuDefs.map((m) => <div key={m.id} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Kippax','Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:500 12px/1.3 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{m.note} · {money(m.price)}</span></span><span style={s('display:flex;align-items:center;gap:8px')}><button onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: Math.max((sp.food[m.id] || 0) - 1, 0) } }))} className="fs" style={s("width:30px;height:30px;background:var(--sand);font:800 14px/1 'Kippax','Archivo';color:var(--ink)")}>−</button><span style={s("font:800 15px/1 'Kippax','Archivo';color:var(--ink);width:16px;text-align:center;font-variant-numeric:tabular-nums")}>{st.food[m.id] || 0}</span><button onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: (sp.food[m.id] || 0) + 1 } }))} className="fp" style={s("width:30px;height:30px;background:var(--panel);font:800 14px/1 'Kippax','Archivo';color:var(--on-panel)")}>+</button></span></div>)}</div>
+      <div style={s('margin-top:16px')}>{menuDefs.map((m) => <div key={m.id} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Kippax','Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:500 12px/1.3 'Kippax','Archivo';color:var(--label);margin-top:3px")}>{m.note} · {money(m.price)}</span></span><span style={s('display:flex;align-items:center;gap:8px')}><button onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: Math.max((sp.food[m.id] || 0) - 1, 0) } }))} className="fs" style={s("width:30px;height:30px;background:var(--sand);font:800 14px/1 'Kippax','Archivo';color:var(--ink)")}>−</button><span style={s("font:800 15px/1 'Kippax','Archivo';color:var(--ink);width:16px;text-align:center;font-variant-numeric:tabular-nums")}>{st.food[m.id] || 0}</span><button data-cur="foodadd" onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: (sp.food[m.id] || 0) + 1 } }))} className="fp" style={s("width:30px;height:30px;background:var(--panel);font:800 14px/1 'Kippax','Archivo';color:var(--on-panel)")}>+</button></span></div>)}</div>
       {count > 0 && (
-        <div style={s('position:sticky;bottom:0;margin-top:16px;padding:13px 0 4px;background:var(--ground);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--label)")}>{count} ITEMS</div><div style={s("font:800 17px/1 'Kippax','Archivo';color:var(--ink);margin-top:5px")}>{money(total)}</div></div><button onClick={place} className="fp" style={s("font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);background:var(--panel);padding:14px 16px")}>{st.foodPlaced ? 'ADD TO ORDER' : 'DELIVER TO 112–J'}</button></div>
+        <div style={s('position:sticky;bottom:0;margin-top:16px;padding:13px 0 4px;background:var(--ground);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Kippax','Archivo';letter-spacing:.12em;color:var(--label)")}>{count} ITEMS</div><div style={s("font:800 17px/1 'Kippax','Archivo';color:var(--ink);margin-top:5px")}>{money(total)}</div></div><button data-cur="fooddeliver" onClick={place} className="fp" style={s("font:800 11.5px/1 'Kippax','Archivo';letter-spacing:.08em;color:var(--on-panel);background:var(--panel);padding:14px 16px")}>{st.foodPlaced ? 'ADD TO ORDER' : 'DELIVER TO 112–J'}</button></div>
       )}
     </div>
   );

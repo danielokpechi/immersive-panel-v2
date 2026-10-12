@@ -1,24 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
-import { AUTOPLAY_TIMELINE, AUTOPLAY_IDLE_RESUME_MS, type AutoplayDispatch } from './timeline';
+
+// A generic scripted-loop driver for the marketing embed (?autoplay=1).
+// The caller supplies `steps` (each runs a named action, then waits `next` ms),
+// an `act` dispatcher that performs a named action, and an optional `init` that
+// runs once before the loop. Any user click / tap / scroll / key pauses it;
+// `idleResumeMs` of no interaction resumes it from where it left off. Fully
+// inert when !enabled, and nothing here mutates app state directly.
+export type AutoStep = { run: (act: (name: string) => void) => void; next: number };
 
 type Args = {
   enabled: boolean;
-  applyState: (ms: string) => void;
-  applyEventCmd: (kind: string) => void;
+  steps: AutoStep[];
+  act: (name: string) => void;
+  init?: () => void;
+  idleResumeMs?: number;
 };
 
-// Drives the scripted demo timeline through the panel's EXISTING operator
-// dispatch. Any user click / tap / scroll / key pauses it; 15s of no
-// interaction resumes it from where it left off. Fully inert when !enabled.
-export function useAutoplay({ enabled, applyState, applyEventCmd }: Args): { interacting: boolean } {
+export function useAutoplay({ enabled, steps, act, init, idleResumeMs = 15000 }: Args): { interacting: boolean } {
   const [interacting, setInteracting] = useState(false);
 
-  // Keep the latest dispatch closures so scheduled callbacks never go stale.
-  const dispatchRef = useRef<AutoplayDispatch>({ state: () => {}, event: () => {} });
-  dispatchRef.current = {
-    state: (ms) => applyState(ms),
-    event: (kind) => applyEventCmd(kind),
-  };
+  // Keep the latest closures so scheduled callbacks never go stale.
+  const actRef = useRef(act); actRef.current = act;
+  const initRef = useRef(init); initRef.current = init;
+  const stepsRef = useRef(steps); stepsRef.current = steps;
 
   useEffect(() => {
     if (!enabled) return;
@@ -29,6 +33,7 @@ export function useAutoplay({ enabled, applyState, applyEventCmd }: Args): { int
     let waitStart = 0;
     let waitMs = 0;
     let running = false;
+    const S = () => stepsRef.current;
 
     const schedule = (ms: number) => {
       waitStart = performance.now();
@@ -36,21 +41,21 @@ export function useAutoplay({ enabled, applyState, applyEventCmd }: Args): { int
       timer = window.setTimeout(advance, ms);
     };
     const advance = () => {
-      idx = (idx + 1) % AUTOPLAY_TIMELINE.length;
-      AUTOPLAY_TIMELINE[idx].run(dispatchRef.current);
-      schedule(AUTOPLAY_TIMELINE[idx].next);
+      idx = (idx + 1) % S().length;
+      S()[idx].run(actRef.current);
+      schedule(S()[idx].next);
     };
     const start = () => {
       running = true;
+      initRef.current?.();
       idx = 0;
-      AUTOPLAY_TIMELINE[0].run(dispatchRef.current);
-      schedule(AUTOPLAY_TIMELINE[0].next);
+      S()[0].run(actRef.current);
+      schedule(S()[0].next);
     };
     const pause = () => {
       if (!running) return;
       running = false;
       if (timer !== undefined) { window.clearTimeout(timer); timer = undefined; }
-      // Remember how much of the current wait remains, so resume continues it.
       waitMs = Math.max(0, waitMs - (performance.now() - waitStart));
     };
     const resume = () => {
@@ -66,7 +71,7 @@ export function useAutoplay({ enabled, applyState, applyEventCmd }: Args): { int
       idleTimer = window.setTimeout(() => {
         setInteracting(false);
         resume();
-      }, AUTOPLAY_IDLE_RESUME_MS);
+      }, idleResumeMs);
     };
 
     // scroll/wheel need capture (scroll doesn't bubble); pointer/touch/key don't.

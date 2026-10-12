@@ -1,4 +1,5 @@
 // Admin seed data for Panel Studio (Manchester City, one club, many panels).
+import { getAdmDark } from './s';
 
 export interface AdminModule { id: string; name: string; icon: string; blurb: string }
 export const MODULES: AdminModule[] = [
@@ -76,4 +77,6 @@ export const ACCENTS = ['#0C3A5E', '#6CABDD', '#201C17', '#C0473C'];
 export const PACKS = ['Stadium', 'Broadcast', 'Minimal'];
 
 export const clone = <T,>(o: T): T => JSON.parse(JSON.stringify(o));
-export const ring = (on: boolean) => (on ? 'inset 0 0 0 2px #201C17' : 'inset 0 0 0 1px rgba(32,28,23,.12)');
+export const ring = (on: boolean) => getAdmDark()
+  ? (on ? 'inset 0 0 0 2px #6CABDD' : 'inset 0 0 0 1px rgba(150,176,206,.18)')
+  : (on ? 'inset 0 0 0 2px #201C17' : 'inset 0 0 0 1px rgba(32,28,23,.12)');
