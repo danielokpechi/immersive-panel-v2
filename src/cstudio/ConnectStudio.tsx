@@ -87,7 +87,7 @@ function fromPanel(p: Panel): Draft {
 }
 
 // ---------------- Top bar ----------------
-export function TopBar({ theme, onToggleTheme, toast }: { theme: Theme; onToggleTheme: () => void; toast: Toast }) {
+function TopBar({ theme, onToggleTheme, toast }: { theme: Theme; onToggleTheme: () => void; toast: Toast }) {
   return (
     <header style={{ height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', borderBottom: `1px solid ${T.line}`, background: T.surface }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>

@@ -221,7 +221,7 @@ export const READS: Read[] = [
 ]
 
 // Simple stand-in for Connect's OpenAI-based moderation. Swap for the real API call.
-export const BLOCKED_WORDS = ['idiot', 'stupid', 'rubbish ref', 'scum', 'hate']
+const BLOCKED_WORDS = ['idiot', 'stupid', 'rubbish ref', 'scum', 'hate']
 export function moderate(text: string): boolean {
   const t = text.toLowerCase()
   return !BLOCKED_WORDS.some((w) => t.includes(w)) && !/\*{3,}/.test(text)

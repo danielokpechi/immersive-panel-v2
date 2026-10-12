@@ -1,4 +1,4 @@
-import { s } from '../../admin/s';
+import { s } from '../admin/s';
 
 // Small "AUTO" indicator, pinned top-right of the panel. Visible while the
 // scripted timeline is running; fades out while the user is interacting.

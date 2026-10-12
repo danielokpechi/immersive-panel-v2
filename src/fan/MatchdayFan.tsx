@@ -10,8 +10,8 @@ import { s } from '../admin/s';
 import { mediaFor } from './mediaSlots';
 import { media } from '../domain/media';
 // Autoplay demo mode (?autoplay=1) — isolated feature, inert unless enabled.
-import { useAutoplay } from '../features/autoplay/useAutoplay';
-import { AutoChip } from '../features/autoplay/AutoChip';
+import { useAutoplay } from '../autoplay/useAutoplay';
+import { AutoChip } from '../autoplay/AutoChip';
 
 const Ms = ({ children, size = 18, color, style }: { children: string; size?: number; color?: string; style?: CSSProperties }) => (
   <span className="ms" style={{ fontSize: size, color, ...style }}>{children}</span>
