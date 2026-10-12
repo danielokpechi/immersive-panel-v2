@@ -1,6 +1,8 @@
 // Central map of the media assets.
 // Referenced everywhere so a rebrand only swaps this one file.
-const base = import.meta.env.BASE_URL; // respects vite `base`
+import { BASE } from '../base';
+
+const base = BASE; // respects next.config basePath
 
 export const media = {
   cityCrest: `${base}media/man-city-transparent.png`,

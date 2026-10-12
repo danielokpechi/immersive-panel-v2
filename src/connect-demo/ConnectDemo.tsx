@@ -13,6 +13,7 @@
 // swipeable, tabbed single panel (Fan view / Operator) the cursor flips between.
 // Add ?mobile=1 to preview the phone layout on a desktop.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { BASE } from '../base';
 import { FEATURES } from '../features';
 
 const STUDIO_W = 960;
@@ -102,8 +103,8 @@ const preview = typeof location !== 'undefined' && new URLSearchParams(location.
 // Base-aware iframe sources so the embed works at the site root (dev) and under a
 // GitHub Pages sub-path (e.g. /immersive-panel-v2/arsenal/) alike.
 // Trailing slash so each resolves to a directory-index index.html on GitHub Pages
-// (no SPA fallback inside a subfolder); react-router matches the trailing slash.
-const SRC = { studio: import.meta.env.BASE_URL + 'cstudio/', fan: import.meta.env.BASE_URL + 'c/voltford/' };
+// (no SPA fallback inside a subfolder); next.config sets trailingSlash to match.
+const SRC = { studio: BASE + 'cstudio/', fan: BASE + 'c/voltford/' };
 
 export default function ConnectDemo() {
   const studioRef = useRef<HTMLIFrameElement | null>(null);

@@ -8,6 +8,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { s } from './s';
+import { BASE } from '../base';
 import { media } from '../domain/media';
 import {
   MODULES, SPORTS, PHASES, PHASE_COLOR, TRIGGERS, PANELS, SESSIONS,
@@ -22,7 +23,7 @@ const modOf = (id: string) => MODULES.find((m) => m.id === id) || { id, name: id
 const sportOf = (id: string) => SPORTS.find((x) => x.id === id) || { name: '', icon: 'shield', states: '' };
 const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 // The real fan panel (Matchday Companion v4) lives at /p/:id, open it for real.
-const fanUrl = (id: string) => `${import.meta.env.BASE_URL}p/${id.toLowerCase()}`;
+const fanUrl = (id: string) => `${BASE}p/${id.toLowerCase()}/`;
 const openFan = (id: string) => window.open(fanUrl(id), '_blank', 'noopener');
 // Map the studio's phases + triggers to the fan client's operator commands.
 const phaseToMs = (ph: string) => (ph === 'Live' ? 'live' : ph === 'Break' ? 'ht' : ph === 'Post' ? 'ft' : ph === 'Idle' ? 'inactive' : 'pre');

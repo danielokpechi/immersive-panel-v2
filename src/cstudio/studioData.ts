@@ -1,6 +1,7 @@
 // BoltOS Studio — tokens, seed data, and the section/activity catalogues.
 // Ported from the boltos-studio prototype; the React screens consume these.
 
+import { BASE } from '../base';
 import { FEATURES } from '../features';
 
 // Surface tokens are CSS variables so the light/dark toggle can swap them live.
@@ -38,9 +39,8 @@ export const THEME_VARS: Record<Theme, Record<string, string>> = {
   },
 };
 
-// Assets live in public/connect-studio/assets/ (BASE_URL-aware for sub-path deploys).
-export const A = (f: string) =>
-  (import.meta.env.BASE_URL || '/') + 'connect-studio/assets/' + f;
+// Assets live in public/connect-studio/assets/ (basePath-aware for sub-path deploys).
+export const A = (f: string) => BASE + 'connect-studio/assets/' + f;
 
 export type Status = 'live' | 'scheduled' | 'archived';
 export type PType = 'stream' | 'vod' | 'inperson';

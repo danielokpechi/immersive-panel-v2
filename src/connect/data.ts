@@ -1,4 +1,5 @@
 // Types and seed data. In production these come from the Connect API (one shared, multi-tenant DB).
+import { BASE } from '../base'
 
 export type Role = 'admin' | 'mod' | 'member'
 export type Rsvp = 'going' | 'maybe' | 'no'
@@ -51,9 +52,8 @@ export interface Crew {
 }
 
 export const ME = 'me'
-// Images live in src/assets so Vite fingerprints them (and inlines them in the single-file build).
-const ASSETS = import.meta.glob('./assets/*.{png,jpg}', { eager: true, import: 'default' }) as Record<string, string>
-export const A = (f: string) => ASSETS[`./assets/${f}`] ?? ''
+// Images live in public/connect-assets/ (basePath-aware for sub-path deploys).
+export const A = (f: string) => BASE + 'connect-assets/' + f
 
 export const PEOPLE: Record<string, Person> = {
   me: { id: 'me', name: 'You', initials: 'DO', color: '#9B6BEA', photo: A('user-avatar.png') },

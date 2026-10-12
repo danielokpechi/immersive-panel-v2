@@ -6,7 +6,6 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { useParams } from 'react-router-dom';
 import { s } from '../admin/s';
 import { mediaFor } from './mediaSlots';
 import { media } from '../domain/media';
@@ -186,7 +185,7 @@ interface FSt {
 const money = (n: number) => '£' + n.toFixed(2);
 const pad = (n: number) => String(n).padStart(2, '0');
 
-export function MatchdayFan() {
+export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   const [st, setSt] = useState<FSt>(() => ({
     route: 'home', ms: 'pre', hs: 0, as: 0, n: 6, rollY: 0, event: null, xp: 1240, tick: 0,
     iris: false, irisTyping: false, irisDraft: '',
@@ -206,7 +205,6 @@ export function MatchdayFan() {
   }));
   const set = (patch: Partial<FSt> | ((s: FSt) => Partial<FSt>)) => setSt((sPrev) => ({ ...sPrev, ...(typeof patch === 'function' ? patch(sPrev) : patch) }));
   const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number; sk?: number; di?: number; diBanner?: number }>({});
-  const { id = 'demo' } = useParams();
   // #2/#3, play an exit animation, then unmount (symmetric enter/exit).
   const closeIris = () => { set({ irisOut: true }); window.setTimeout(() => set({ iris: false, irisOut: false }), 260); };
   const closeFlash = () => { set((sp) => (sp.flash ? { flashOut: true } : {})); window.setTimeout(() => set({ flash: null, flashOut: false }), 200); };

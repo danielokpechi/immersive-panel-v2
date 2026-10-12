@@ -15,8 +15,8 @@ Manchester City (flagship fixture: City v Real Madrid, Champions League semi).
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # static build → dist/
+npm run dev        # http://localhost:3000
+npm run build      # static export → out/ (BASE_PATH=/sub/path for GitHub Pages)
 ```
 
 ## Notes
@@ -25,4 +25,4 @@ Realistic seeded data (no live backend yet) — a live score feed, real chat and
 auth plug in behind clean seams (`src/realtime`, `src/domain/seed.ts`). Club
 crests are trademarks of their respective clubs, used here for a prototype.
 
-Built with Vite + React + TypeScript.
+Built with Next.js (App Router, static export) + TypeScript. Routes live in `src/app/`.
