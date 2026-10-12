@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BoltOS Studio: panels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--p:#DB0007;--a:#B4A174;--b:#EFEDEA}
+html,body{margin:0;min-height:100%;background:#0E0E12}
+body{display:flex;justify-content:center}
+a{color:#F2F2F5}a:hover{color:#fff}
+button{cursor:pointer}
+</style>
+</head>
+<body>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #0E0E12; color: #F2F2F5; font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Zen Kaku Gothic New', system-ui, sans-serif; font-size: 13px; line-height: 1.5; overflow: hidden">
+<header style="height: 68px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; border-bottom: 1px solid #2C2C36; background: #16161C">
+<div style="display: flex; align-items: center; gap: 20px">
+<a href="index.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none"><img src="assets/boltos.png" alt="BOLT OS" style="width: 86px; height: 20px; filter: brightness(3)"><span style="font-size: 11px; color: #8B3DF5; font-weight: 700; letter-spacing: 1px">STUDIO</span></a>
+<button style="font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 6px; border-radius: 999px; border: 1px solid #2C2C36; background: #1E1E26; color: #F2F2F5; font-size: 13px; font-weight: 600"><img src="assets/crest.png" alt="" style="width: 26px; height: 26px">Arsenal<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9C9CA8" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+<div style="display: flex; align-items: center; gap: 12px">
+<button aria-label="Settings" style="font-family: inherit; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #4A4A55; background: transparent; display: flex; align-items: center; justify-content: center; color: #F2F2F5; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3"></path><path d="M12 19v3"></path><path d="M4.2 4.2l2.1 2.1"></path><path d="M17.7 17.7l2.1 2.1"></path><path d="M2 12h3"></path><path d="M19 12h3"></path><path d="M4.2 19.8l2.1-2.1"></path><path d="M17.7 6.3l2.1-2.1"></path></svg></button>
+<span title="Daniel O." style="width: 40px; height: 40px; border-radius: 50%; background: #8B3DF5; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700">DO</span>
+</div>
+</header><main style="flex: 1; min-height: 0; padding: 28px 40px; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+<div style="display: flex; align-items: flex-end; justify-content: space-between">
+<div><h1 style="margin: 0; font-size: 28px; font-weight: 700">Panels</h1><div style="color: #9C9CA8">Each panel is an ongoing fan experience. Start a session in it whenever it&#39;s happening.</div></div>
+<div style="display: flex; gap: 10px; align-items: center"><div style="display: flex; gap: 8px"><button style="font-family: inherit; cursor: pointer; height: 34px; padding: 0 14px; border-radius: 17px; border: 1px solid #8B3DF5; background: rgba(139,61,245,0.16); color: #F2F2F5; font-size: 13px; font-weight: 600">All <span style="color: #9C9CA8; font-weight: 500">6</span></button><button style="font-family: inherit; cursor: pointer; height: 34px; padding: 0 14px; border-radius: 17px; border: 1px solid #2C2C36; background: transparent; color: #9C9CA8; font-size: 13px; font-weight: 600">Live <span style="color: #9C9CA8; font-weight: 500">1</span></button><button style="font-family: inherit; cursor: pointer; height: 34px; padding: 0 14px; border-radius: 17px; border: 1px solid #2C2C36; background: transparent; color: #9C9CA8; font-size: 13px; font-weight: 600">Scheduled <span style="color: #9C9CA8; font-weight: 500">4</span></button><button style="font-family: inherit; cursor: pointer; height: 34px; padding: 0 14px; border-radius: 17px; border: 1px solid #2C2C36; background: transparent; color: #9C9CA8; font-size: 13px; font-weight: 600">Archived <span style="color: #9C9CA8; font-weight: 500">1</span></button></div><a href="new-panel-1-type.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; background: #8B3DF5; color: #fff; border: 1px solid #8B3DF5;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>New panel</a></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px"><div style="background: #16161C; border: 1px solid #8B3DF5; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column">
+<a href="panel-stats.html" style="position: relative; height: 112px; display: block">
+<img src="assets/stadium.png" alt="" style="width: 100%; height: 112px; object-fit: cover; display: block; opacity: 1">
+<div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,14,18,0) 30%, rgba(14,14,18,0.85) 100%)"></div>
+<div style="position: absolute; left: 16px; top: 12px"><span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 12px; background: #2BD47D22; color: #2BD47D; font-size: 11px; font-weight: 600"><span style="width: 7px; height: 7px; border-radius: 50%; background: #2BD47D"></span>Live</span></div>
+<img src="assets/crest.png" alt="" style="position: absolute; left: 16px; bottom: 10px; width: 34px; height: 34px">
+<span style="position: absolute; right: 14px; bottom: 12px; font-size: 11px; color: #D6D6DE">In-person · Home game</span>
+</a>
+<div style="padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1">
+<div style="font-size: 19px; font-weight: 700; line-height: 1.3">Arsenal at Home</div>
+<div style="font-size: 13px; color: #9C9CA8; line-height: 1.5">Every home match at the Emirates: chat, predictions, polls and the shop.</div>
+<div style="display: flex; gap: 8px; align-items: flex-start; font-size: 11px; color: #C9B6FF; line-height: 1.5"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B3DF5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"></path></svg><span>Up 18% on last month. Predictions are the busiest section after chat.</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #2C2C36">
+<span style="font-size: 11px; color: #9C9CA8"><span style="color: #2BD47D; font-weight: 700">Live now</span> · v Chelsea · 4,812 fans</span>
+<div style="display: flex; gap: 8px"><a href="panel-stats.html" aria-label="Stats for Arsenal at Home" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #4A4A55; background: transparent; display: flex; align-items: center; justify-content: center; color: #F2F2F5; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10"></path><path d="M12 20V4"></path><path d="M19 20v-7"></path></svg></a><a href="control-room.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 18px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; background: #8B3DF5; color: #fff; border: 1px solid #8B3DF5;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8"></path><path d="M12 16v4"></path></svg>Control room</a></div></div>
+</div>
+</div><div style="background: #16161C; border: 1px solid #2C2C36; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column">
+<a href="panel-stats.html" style="position: relative; height: 112px; display: block">
+<img src="assets/read-match.png" alt="" style="width: 100%; height: 112px; object-fit: cover; display: block; opacity: 1">
+<div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,14,18,0) 30%, rgba(14,14,18,0.85) 100%)"></div>
+<div style="position: absolute; left: 16px; top: 12px"><span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 12px; background: #F5A52422; color: #F5A524; font-size: 11px; font-weight: 600"><span style="width: 7px; height: 7px; border-radius: 50%; background: #F5A524"></span>Scheduled</span></div>
+<img src="assets/crest.png" alt="" style="position: absolute; left: 16px; bottom: 10px; width: 34px; height: 34px">
+<span style="position: absolute; right: 14px; bottom: 12px; font-size: 11px; color: #D6D6DE">In-person · Away game</span>
+</a>
+<div style="padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1">
+<div style="font-size: 19px; font-weight: 700; line-height: 1.3">Arsenal Away Days</div>
+<div style="font-size: 13px; color: #9C9CA8; line-height: 1.5">Travel updates, fan chat and predictions for every away trip.</div>
+<div style="display: flex; gap: 8px; align-items: flex-start; font-size: 11px; color: #C9B6FF; line-height: 1.5"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B3DF5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"></path></svg><span>Travel updates get 3x more taps on the day before a trip.</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #2C2C36">
+<span style="font-size: 11px; color: #9C9CA8">Next session · Villa away · Sun 2 Nov</span>
+<div style="display: flex; gap: 8px"><a href="panel-stats.html" aria-label="Stats for Arsenal Away Days" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #4A4A55; background: transparent; display: flex; align-items: center; justify-content: center; color: #F2F2F5; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10"></path><path d="M12 20V4"></path><path d="M19 20v-7"></path></svg></a><a href="new-panel-4-details.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 18px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; background: transparent; color: #F2F2F5; border: 1px solid #4A4A55;">Open</a></div></div>
+</div>
+</div><div style="background: #16161C; border: 1px solid #2C2C36; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column">
+<a href="panel-stats.html" style="position: relative; height: 112px; display: block">
+<img src="assets/stadium.png" alt="" style="width: 100%; height: 112px; object-fit: cover; display: block; opacity: 1">
+<div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,14,18,0) 30%, rgba(14,14,18,0.85) 100%)"></div>
+<div style="position: absolute; left: 16px; top: 12px"><span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 12px; background: #F5A52422; color: #F5A524; font-size: 11px; font-weight: 600"><span style="width: 7px; height: 7px; border-radius: 50%; background: #F5A524"></span>Scheduled</span></div>
+<img src="assets/crest.png" alt="" style="position: absolute; left: 16px; bottom: 10px; width: 34px; height: 34px">
+<span style="position: absolute; right: 14px; bottom: 12px; font-size: 11px; color: #D6D6DE">In-person · Stadium event</span>
+</a>
+<div style="padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1">
+<div style="font-size: 19px; font-weight: 700; line-height: 1.3">Arsenal Stadium Tour</div>
+<div style="font-size: 13px; color: #9C9CA8; line-height: 1.5">Guided tours of the Emirates with trivia, rewards and the shop.</div>
+<div style="display: flex; gap: 8px; align-items: flex-start; font-size: 11px; color: #C9B6FF; line-height: 1.5"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B3DF5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"></path></svg><span>Tour fans spend most time in trivia and the shop.</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #2C2C36">
+<span style="font-size: 11px; color: #9C9CA8">Daily tours · next 10:00 tomorrow</span>
+<div style="display: flex; gap: 8px"><a href="panel-stats.html" aria-label="Stats for Arsenal Stadium Tour" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #4A4A55; background: transparent; display: flex; align-items: center; justify-content: center; color: #F2F2F5; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10"></path><path d="M12 20V4"></path><path d="M19 20v-7"></path></svg></a><a href="new-panel-4-details.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 18px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; background: transparent; color: #F2F2F5; border: 1px solid #4A4A55;">Open</a></div></div>
+</div>
+</div><div style="background: #16161C; border: 1px solid #2C2C36; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column">
+<a href="panel-stats.html" style="position: relative; height: 112px; display: block">
+<img src="assets/read-celebrate.png" alt="" style="width: 100%; height: 112px; object-fit: cover; display: block; opacity: 1">
+<div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,14,18,0) 30%, rgba(14,14,18,0.85) 100%)"></div>
+<div style="position: absolute; left: 16px; top: 12px"><span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 12px; background: #F5A52422; color: #F5A524; font-size: 11px; font-weight: 600"><span style="width: 7px; height: 7px; border-radius: 50%; background: #F5A524"></span>Scheduled</span></div>
+<img src="assets/crest.png" alt="" style="position: absolute; left: 16px; bottom: 10px; width: 34px; height: 34px">
+<span style="position: absolute; right: 14px; bottom: 12px; font-size: 11px; color: #D6D6DE">In-person · Home game</span>
+</a>
+<div style="padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1">
+<div style="font-size: 19px; font-weight: 700; line-height: 1.3">Arsenal Women</div>
+<div style="font-size: 13px; color: #9C9CA8; line-height: 1.5">WSL and cup matches with fan chat and Pick &amp; Win.</div>
+<div style="display: flex; gap: 8px; align-items: flex-start; font-size: 11px; color: #C9B6FF; line-height: 1.5"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B3DF5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"></path></svg><span>Pick &amp; Win entries doubled since the start of the season.</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #2C2C36">
+<span style="font-size: 11px; color: #9C9CA8">Next session · v Man City · Sat 25 Oct</span>
+<div style="display: flex; gap: 8px"><a href="panel-stats.html" aria-label="Stats for Arsenal Women" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #4A4A55; background: transparent; display: flex; align-items: center; justify-content: center; color: #F2F2F5; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10"></path><path d="M12 20V4"></path><path d="M19 20v-7"></path></svg></a><a href="new-panel-4-details.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 18px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; background: transparent; color: #F2F2F5; border: 1px solid #4A4A55;">Open</a></div></div>
+</div>
+</div><div style="background: #16161C; border: 1px solid #2C2C36; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column">
+<a href="panel-stats.html" style="position: relative; height: 112px; display: block">
+<img src="assets/read-match.png" alt="" style="width: 100%; height: 112px; object-fit: cover; display: block; opacity: 1">
+<div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,14,18,0) 30%, rgba(14,14,18,0.85) 100%)"></div>
+<div style="position: absolute; left: 16px; top: 12px"><span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 12px; background: #F5A52422; color: #F5A524; font-size: 11px; font-weight: 600"><span style="width: 7px; height: 7px; border-radius: 50%; background: #F5A524"></span>Scheduled</span></div>
+<img src="assets/crest.png" alt="" style="position: absolute; left: 16px; bottom: 10px; width: 34px; height: 34px">
+<span style="position: absolute; right: 14px; bottom: 12px; font-size: 11px; color: #D6D6DE">Online stream</span>
+</a>
+<div style="padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1">
+<div style="font-size: 19px; font-weight: 700; line-height: 1.3">Press &amp; Media</div>
+<div style="font-size: 13px; color: #9C9CA8; line-height: 1.5">Press conferences and watch-alongs, streamed with chat and Q&amp;A polls.</div>
+<div style="display: flex; gap: 8px; align-items: flex-start; font-size: 11px; color: #C9B6FF; line-height: 1.5"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B3DF5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"></path></svg><span>Q&amp;A polls lift chat activity by 40% during pressers.</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #2C2C36">
+<span style="font-size: 11px; color: #9C9CA8">Next session · Arteta presser · Fri 24 Oct</span>
+<div style="display: flex; gap: 8px"><a href="panel-stats.html" aria-label="Stats for Press &amp; Media" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #4A4A55; background: transparent; display: flex; align-items: center; justify-content: center; color: #F2F2F5; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10"></path><path d="M12 20V4"></path><path d="M19 20v-7"></path></svg></a><a href="new-panel-4-details.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 18px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; background: transparent; color: #F2F2F5; border: 1px solid #4A4A55;">Open</a></div></div>
+</div>
+</div><div style="background: #16161C; border: 1px solid #2C2C36; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column">
+<a href="panel-stats.html" style="position: relative; height: 112px; display: block">
+<img src="assets/membership.png" alt="" style="width: 100%; height: 112px; object-fit: cover; display: block; opacity: 0.5">
+<div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,14,18,0) 30%, rgba(14,14,18,0.85) 100%)"></div>
+<div style="position: absolute; left: 16px; top: 12px"><span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 12px; background: #9C9CA822; color: #9C9CA8; font-size: 11px; font-weight: 600"><span style="width: 7px; height: 7px; border-radius: 50%; background: #9C9CA8"></span>Archived</span></div>
+<img src="assets/crest.png" alt="" style="position: absolute; left: 16px; bottom: 10px; width: 34px; height: 34px">
+<span style="position: absolute; right: 14px; bottom: 12px; font-size: 11px; color: #D6D6DE">VOD</span>
+</a>
+<div style="padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1">
+<div style="font-size: 19px; font-weight: 700; line-height: 1.3">Season Review 25/26</div>
+<div style="font-size: 13px; color: #9C9CA8; line-height: 1.5">On-demand highlights with chat replay and polls.</div>
+<div style="display: flex; gap: 8px; align-items: flex-start; font-size: 11px; color: #C9B6FF; line-height: 1.5"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B3DF5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"></path></svg><span>Most-watched: the North London derby recap.</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #2C2C36">
+<span style="font-size: 11px; color: #9C9CA8">38 sessions · 1.2m views</span>
+<div style="display: flex; gap: 8px"><a href="panel-stats.html" aria-label="Stats for Season Review 25/26" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #4A4A55; background: transparent; display: flex; align-items: center; justify-content: center; color: #F2F2F5; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10"></path><path d="M12 20V4"></path><path d="M19 20v-7"></path></svg></a><button style="font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 18px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; background: transparent; color: #F2F2F5; border: 1px solid #4A4A55;">View</button></div></div>
+</div>
+</div></div>
+</main>
+</div>
+
+</body>
+</html>

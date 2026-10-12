@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,18566,(e,t,o)=>{t.exports=e.r(76562)},51630,e=>{"use strict";var t=e.i(71645),o=e.i(18566);e.s(["RedirectHome",0,function(){let e=(0,o.useRouter)();return(0,t.useEffect)(()=>{e.replace("/studio/")},[e]),null}])}]);
