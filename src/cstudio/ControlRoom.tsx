@@ -75,7 +75,7 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
 
       <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
         {/* fan chat */}
-        <div style={{ width: 320, flex: 'none', borderRight: `1px solid ${T.line}`, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: 'clamp(250px, 26%, 320px)', flex: 'none', borderRight: `1px solid ${T.line}`, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
             <b style={{ fontSize: 15 }}>Fan chat</b>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: T.muted }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: T.purple }} />AI moderation on</span>
@@ -95,7 +95,7 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
         </div>
 
         {/* push to fans */}
-        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '20px 28px' }}>
+        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '20px 22px' }}>
           <div style={{ display: 'flex', gap: 14, marginBottom: 24 }}>
             {stat('Fans in panel', '4,812')}{stat('Poll votes', '1,284')}{stat('Messages / min', '312')}
           </div>
@@ -128,7 +128,7 @@ export function ControlRoom({ panel, toast, onBack, onSettings }: { panel: Panel
         </div>
 
         {/* preview */}
-        <aside style={{ width: 300, flex: 'none', borderLeft: `1px solid ${T.line}`, padding: '20px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, overflowY: 'auto' }}>
+        <aside style={{ width: 284, flex: 'none', borderLeft: `1px solid ${T.line}`, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, overflowY: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.muted, fontSize: 13, alignSelf: 'flex-end' }}><Ico name="eye" size={14} color={T.muted} />Fan view preview</div>
           <FanPreview title={panel.title} colors={panel.colors} sections={panel.sections} />
         </aside>

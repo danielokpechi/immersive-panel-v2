@@ -24,7 +24,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Connect fan view (/c/:id) stand-in fonts (Manrope, Zen Kaku Gothic New) */}
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body>
+      {/* Browser extensions (e.g. ColorZilla) add attributes to <body> before React loads. */}
+      <body suppressHydrationWarning>
         <div id="root">{children}</div>
       </body>
     </html>

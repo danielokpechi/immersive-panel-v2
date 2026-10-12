@@ -17,6 +17,7 @@ import { BASE } from '../base';
 import { FEATURES } from '../features';
 
 const STUDIO_W = 960;
+const STUDIO_W_MAX = 1240;
 const STUDIO_H = 660;
 const PHONE_W = 393;
 const PHONE_H = 852;
@@ -127,7 +128,9 @@ export default function ConnectDemo() {
   const [studioH, setStudioH] = useState(STUDIO_H); // Studio iframe height, stretched to match the phone
   const [note, setNote] = useState('Live embed — the operator and the fan panel, both running now');
   const [narrow, setNarrow] = useState(() => preview || (typeof window !== 'undefined' && window.innerWidth < NARROW));
-  const SW = STUDIO_W; // the Studio only renders on wide screens now
+  // Studio virtual width: at least STUDIO_W, wider when there is spare room so its
+  // three-column screens (e.g. the control room) never squeeze their text.
+  const [SW, setSW] = useState(STUDIO_W);
   const narrowRef = useRef(narrow); narrowRef.current = narrow;
 
   // Layout from the content box's own width → identical on a real phone.
@@ -147,10 +150,13 @@ export default function ConnectDemo() {
       const cs = getComputedStyle(el);
       const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
       const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-      const byW = (w - COL_GAP - 2 * PHONE_PAD - 2) / (SW + PHONE_W);
+      const byW = (w - COL_GAP - 2 * PHONE_PAD - 2) / (STUDIO_W + PHONE_W);
       const byH = (h - LABEL_H - 2 * PHONE_PAD) / PHONE_H;
       const sc = Math.max(0.3, Math.min(byW, byH));
       setScale(sc);
+      // Give the Studio whatever width is left beside the phone (up to a cap).
+      const room = (w - COL_GAP - 2 * PHONE_PAD - 2 - PHONE_W * sc) / sc;
+      setSW(Math.round(Math.min(STUDIO_W_MAX, Math.max(STUDIO_W, room))));
       // The phone keeps true phone proportions; the Studio window (a web app
       // that fills whatever height it gets) stretches to stand as tall as it.
       setStudioH(Math.max(STUDIO_H, (PHONE_H * sc + 2 * PHONE_PAD - OP_CHROME_H - 2) / sc));
@@ -158,7 +164,7 @@ export default function ConnectDemo() {
     fit();
     const ro = new ResizeObserver(fit); ro.observe(el);
     return () => ro.disconnect();
-  }, [narrow, SW]);
+  }, [narrow]);
 
   // The cursor engine. Starts once both iframes have their apps mounted.
   useEffect(() => {
