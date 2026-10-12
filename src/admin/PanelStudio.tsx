@@ -18,27 +18,46 @@ import {
 import { useAutoplay, type AutoStep } from '../autoplay/useAutoplay';
 import { useAutoCursor } from '../autoplay/useAutoCursor';
 
-// Autoplay demo loop (?autoplay=1): show the operator actually building. Open
-// the dashboard, start a new panel, step through the create wizard (experience,
-// competition, template, arrange blocks/states, name & brand), open the builder
-// to arrange modules, then go live and push a trigger — then reset and repeat.
+// Autoplay demo loop (?autoplay=1): show the operator actually building, at a
+// calm, human pace. Open the dashboard, start a new panel, step through the
+// create wizard deciding each choice, TYPE the panel name + tweak the palette,
+// build it, play around in the settings/builder, take it live and drive the
+// control room (mode, countdown, triggers, sessions, a crew push), then read
+// the stats — then reset and repeat. Longer `next` waits + a slower cursor make
+// each decision legible instead of rushed.
 const ADMIN_TIMELINE: AutoStep[] = [
-  { run: (a) => a('dash'),     next: 5200 }, // the club's panels
-  { run: (a) => a('create'),   next: 3800 }, // + Create new panel → wizard
-  { run: (a) => a('pickExp'),  next: 3400 }, // choose how fans watch
-  { run: (a) => a('next'),     next: 3000 }, // → competition
-  { run: (a) => a('pickComp'), next: 3400 }, // choose the competition
-  { run: (a) => a('next'),     next: 3000 }, // → template
-  { run: (a) => a('pickTmpl'), next: 3400 }, // pick a City template
-  { run: (a) => a('next'),     next: 3000 }, // → blocks & states
-  { run: (a) => a('mod1'),     next: 2900 }, // add a block
-  { run: (a) => a('mod2'),     next: 2900 }, // add another
-  { run: (a) => a('mod3'),     next: 2900 }, // toggle one
-  { run: (a) => a('next'),     next: 3000 }, // → details & brand
-  { run: (a) => a('builder'),  next: 5200 }, // build → arrange in the builder
-  { run: (a) => a('control'),  next: 3800 }, // go live
-  { run: (a) => a('fire'),     next: 4600 }, // push a trigger
-  { run: (a) => a('reset'),    next: 3600 }, // back to the dashboard, loop
+  // ── the club's panels, then into the create wizard ──
+  { run: (a) => a('dash'),        next: 5200 }, // the club's panels
+  { run: (a) => a('create'),      next: 4200 }, // + Create new panel → wizard
+  { run: (a) => a('pickExp'),     next: 4200 }, // decide: how fans watch
+  { run: (a) => a('next'),        next: 3800 }, // → competition
+  { run: (a) => a('pickComp'),    next: 4600 }, // decide: it's the FA Cup
+  { run: (a) => a('next'),        next: 3800 }, // → template
+  { run: (a) => a('pickTmpl'),    next: 4400 }, // decide: a City template
+  { run: (a) => a('next'),        next: 3800 }, // → blocks & states
+  { run: (a) => a('mod1'),        next: 3400 }, // add a block
+  { run: (a) => a('mod2'),        next: 3400 }, // add another
+  { run: (a) => a('mod3'),        next: 3400 }, // and one more
+  { run: (a) => a('next'),        next: 3800 }, // → details & brand
+  // ── the bit worth slowing down for: name it, tweak it ──
+  { run: (a) => a('typeName'),    next: 4800 }, // type the panel name in
+  { run: (a) => a('typeDesc'),    next: 5400 }, // type a short description
+  { run: (a) => a('pickPrimary'), next: 4000 }, // adjust the primary colour
+  { run: (a) => a('build'),       next: 5400 }, // Build sessions → panel created
+  // ── settings (builder): play with the module library ──
+  { run: (a) => a('bMod1'),       next: 3800 }, // switch a module on
+  { run: (a) => a('bMod2'),       next: 3800 }, // and another
+  { run: (a) => a('goLive'),      next: 5400 }, // Save & go live → control room
+  // ── control room: actually drive it ──
+  { run: (a) => a('ctlAuto'),     next: 4000 }, // flip to Auto mode
+  { run: (a) => a('ctlCountdown'),next: 4200 }, // set a kickoff countdown
+  { run: (a) => a('fire'),        next: 4600 }, // push a match event
+  { run: (a) => a('fire'),        next: 4600 }, // push another
+  { run: (a) => a('advance'),     next: 4600 }, // advance the session
+  { run: (a) => a('crew'),        next: 4800 }, // push a crew mini-game
+  // ── stats, then loop ──
+  { run: (a) => a('stats'),       next: 6200 }, // read the last-event stats
+  { run: (a) => a('reset'),       next: 4200 }, // back to the dashboard, loop
 ];
 
 const Ms = ({ children, size = 18, color, style }: { children: string; size?: number; color?: string; style?: CSSProperties }) => (
@@ -115,14 +134,38 @@ export function PanelStudio({ start = 'dash' }: { start?: string }) {
   const autoplay = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('autoplay') === '1';
   const autoFire = useRef(0);
   const cursor = useAutoCursor(autoplay);
+  // Glide the cursor to a target, let it settle, then click + act. The dwell is
+  // a touch longer than the cursor's own glide (.78s) so the click lands after
+  // it arrives, not mid-flight — reads as deliberate rather than rushed.
   const curDo = (target: string | [number, number], fn: () => void) => {
     cursor.point(target);
-    window.setTimeout(() => { cursor.click(); fn(); }, 720);
+    window.setTimeout(() => { cursor.click(); fn(); }, 1000);
   };
+  // Type a string into a draft field one character at a time, so the demo shows
+  // the operator actually naming the panel instead of it appearing at once.
+  const typeTimers = useRef<number[]>([]);
+  const clearTyping = () => { typeTimers.current.forEach((t) => window.clearTimeout(t)); typeTimers.current = []; };
+  const typeInto = (field: 'name' | 'desc', text: string, cps = 22) => {
+    clearTyping();
+    const per = 1000 / cps;
+    for (let i = 1; i <= text.length; i++) {
+      typeTimers.current.push(window.setTimeout(
+        () => setState((s) => ({ draft: { ...s.draft, [field]: text.slice(0, i) } })),
+        Math.round(per * i),
+      ));
+    }
+  };
+  useEffect(() => clearTyping, []); // cancel any in-flight typing on unmount
   // Toggle a block in the current state's stack (the "click / unclick" in step 3).
   const toggleMod = (id: string) => setState((s) => ({
     draft: { ...s.draft, sessions: mutSess(s.draft.sessions, s.draft.editIdx, (arr) => { const k = arr.indexOf(id); if (k > -1) arr.splice(k, 1); else arr.push(id); }) },
   }));
+  // Toggle a module on the current panel (used when playing in the builder).
+  const togglePanelMod = (id: string) => setState((s) => {
+    const n = clone(s.panels); const p = n[s.cur];
+    if (p) { const k = p.mods.indexOf(id); if (k > -1) p.mods.splice(k, 1); else p.mods.push(id); }
+    return { panels: n };
+  });
   const adminAct = (name: string) => {
     switch (name) {
       case 'dash': cursor.point([0.5, 0.28]); setState({ screen: 'dash' }); break;
@@ -135,10 +178,35 @@ export function PanelStudio({ start = 'dash' }: { start?: string }) {
       case 'mod2': curDo('[data-cur="mod-photos"]', () => toggleMod('photos')); break;
       case 'mod3': curDo('[data-cur="mod-polls"]', () => toggleMod('polls')); break;
       case 'next': curDo('[data-cur="next"]', () => setState((s) => ({ step: Math.min(4, s.step + 1) }))); break;
-      case 'builder': curDo('[data-cur="next"]', () => setState((s) => ({ screen: 'builder', cur: 0, draft: { ...s.draft, name: 'FA Cup · Wembley semi' } }))); break;
-      case 'control': cursor.point([0.5, 0.22]); setState({ screen: 'control', playing: true, sync: 'live' }); break;
-      case 'fire': cursor.point([0.3, 0.5]); { const t = TRIGGERS[autoFire.current++ % 6]; broadcast({ name: t.name, blurb: t.blurb, icon: t.icon, color: t.color }); } break;
-      case 'reset': cursor.point([0.5, 0.28]); setState((s) => ({ screen: 'dash', step: 0, cur: 0, draft: { ...s.draft, name: '', preset: 0, editIdx: 1, experience: 'IN-PERSON', sport: 'ucl' } })); break;
+      // ── details & brand: type the name, a description, adjust the palette ──
+      case 'typeName': curDo('[data-cur="name"]', () => typeInto('name', 'FA Cup · Wembley semi')); break;
+      case 'typeDesc': curDo('[data-cur="desc"]', () => typeInto('desc', 'Scan at Wembley for the live semi-final companion')); break;
+      case 'pickPrimary': curDo('[data-cur="primary-2"]', () => setState((s) => ({ draft: { ...s.draft, primary: PRIMARIES[2] } }))); break;
+      // Build sessions: create the panel from the draft (as the wizard does) and
+      // open the builder editing the real new panel at the top of the list.
+      case 'build': curDo('[data-cur="next"]', () => { setState((s) => {
+        const d = s.draft;
+        const mods = ([] as string[]).concat(...d.sessions.map((x) => x.stack)).filter((v, i, a) => a.indexOf(v) === i);
+        const np: AdminPanel = { id: 'PNL-' + (4500 + s.panels.length), title: d.name || 'Untitled panel', club: sportOf(d.sport).name, abbr: 'MCI', venue: d.experience === 'IN-PERSON' ? 'HOME' : 'AWAY', venueIcon: d.experience === 'IN-PERSON' ? 'stadium' : 'flight', sport: d.sport, experience: d.experience, primary: d.primary, accent: d.accent, desc: d.desc || 'Authored in the studio, not yet deployed.', live: false, fans: 0, mods, updated: 'Updated just now' };
+        return { panels: [np, ...s.panels], cur: 0, screen: 'builder', sessions: clone(d.sessions), previewIdx: Math.min(1, d.sessions.length - 1) };
+      }); say('Panel created, author the sessions', 'check_circle'); }); break;
+      // ── settings (builder): flip a couple of modules on the new panel ──
+      case 'bMod1': curDo('[data-cur="bmod-highlights"]', () => togglePanelMod('highlights')); break;
+      case 'bMod2': curDo('[data-cur="bmod-shop"]', () => togglePanelMod('shop')); break;
+      case 'goLive': curDo('[data-cur="golive"]', () => { setState((s) => { const n = clone(s.panels); if (n[s.cur]) { n[s.cur].live = true; n[s.cur].fans = 0.4; n[s.cur].updated = 'Updated just now'; } return { panels: n, screen: 'control', sync: 'live', playing: true }; }); say('Panel deployed, control room open', 'rocket_launch'); }); break;
+      // ── control room: mode, countdown, events, sessions, a crew push ──
+      case 'ctlAuto': curDo('[data-cur="mode-auto"]', () => { setState({ mode: 'auto' }); say('Auto mode', 'autoplay'); }); break;
+      case 'ctlCountdown': curDo('[data-cur="cd-120"]', () => { setState({ countdown: 120 }); say('Countdown set to 2:00', 'timer'); }); break;
+      case 'fire': { const t = TRIGGERS[autoFire.current++ % 6]; curDo('[data-cur="trig-' + t.id + '"]', () => broadcast({ name: t.name, blurb: t.blurb, icon: t.icon, color: t.color })); } break;
+      case 'advance': curDo('[data-cur="advance"]', () => { setState((s) => ({ liveIdx: Math.min(s.liveIdx + 1, s.sessions.length - 1) })); say('Advanced to the next session', 'arrow_forward'); }); break;
+      case 'crew': curDo('[data-cur="crew-spotkick"]', () => say('Spot Kick pushed to devices', 'sports_soccer')); break;
+      // ── stats, then reset the whole loop (restore seed data so it never grows) ──
+      case 'stats': cursor.point([0.5, 0.2]); setState({ screen: 'stats' }); break;
+      case 'reset': clearTyping(); cursor.point([0.5, 0.28]); setState({
+        screen: 'dash', step: 0, cur: 0, panels: clone(PANELS), sessions: clone(SESSIONS), log: [],
+        liveIdx: 2, clock: 38 * 60 + 12, countdown: 0, mode: 'manual', playing: true, previewIdx: 2,
+        draft: { experience: 'IN-PERSON', sport: 'ucl', preset: 0, mods: ['timeline', 'chat', 'intel', 'predict'], name: '', desc: '', primary: '#6CABDD', accent: '#6CABDD', sessions: clone(SESSIONS), editIdx: 1 },
+      }); break;
     }
   };
   useAutoplay({ enabled: autoplay, steps: ADMIN_TIMELINE, act: adminAct, init: () => setState({ screen: 'dash' }) });
@@ -450,9 +518,9 @@ function Wizard({ st, setState, say }: Props) {
 
             {st.step === 4 && (
               <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px')}>
-                <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.12em;color:#6E8299")}>PANEL NAME</div><input value={d.name} onChange={(e) => setDraft({ name: e.target.value })} placeholder="Etihad Matchday Companion" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#E9EFF6;font:600 15px/1.2 'Kippax','Archivo';color:#001838")} /></div>
-                <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.12em;color:#6E8299")}>DESCRIPTION</div><input value={d.desc} onChange={(e) => setDraft({ desc: e.target.value })} placeholder="What fans get when they scan the QR" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#E9EFF6;font:400 14px/1.2 'Kippax','Archivo';color:#001838")} /></div>
-                <div><div style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.12em;color:#6E8299")}>PRIMARY COLOUR</div><div style={s('display:flex;gap:8px;margin-top:9px')}>{PRIMARIES.map((hex) => <button key={hex} onClick={() => setDraft({ primary: hex })} style={dk({ ...s('flex:1;height:46px;border-radius:12px'), background: hex, boxShadow: ring(d.primary === hex) })} />)}</div><div style={s("font:500 11.5px/1 'Kippax','Archivo';color:#6E8299;margin-top:9px;font-variant-numeric:tabular-nums")}>{d.primary}</div></div>
+                <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.12em;color:#6E8299")}>PANEL NAME</div><input data-cur="name" value={d.name} onChange={(e) => setDraft({ name: e.target.value })} placeholder="Etihad Matchday Companion" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#E9EFF6;font:600 15px/1.2 'Kippax','Archivo';color:#001838")} /></div>
+                <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.12em;color:#6E8299")}>DESCRIPTION</div><input data-cur="desc" value={d.desc} onChange={(e) => setDraft({ desc: e.target.value })} placeholder="What fans get when they scan the QR" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#E9EFF6;font:400 14px/1.2 'Kippax','Archivo';color:#001838")} /></div>
+                <div><div style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.12em;color:#6E8299")}>PRIMARY COLOUR</div><div style={s('display:flex;gap:8px;margin-top:9px')}>{PRIMARIES.map((hex, i) => <button key={hex} data-cur={'primary-' + i} onClick={() => setDraft({ primary: hex })} style={dk({ ...s('flex:1;height:46px;border-radius:12px'), background: hex, boxShadow: ring(d.primary === hex) })} />)}</div><div style={s("font:500 11.5px/1 'Kippax','Archivo';color:#6E8299;margin-top:9px;font-variant-numeric:tabular-nums")}>{d.primary}</div></div>
                 <div><div style={s("font:600 11px/1 'Kippax','Archivo';letter-spacing:.12em;color:#6E8299")}>ACCENT COLOUR</div><div style={s('display:flex;gap:8px;margin-top:9px')}>{ACCENTS.map((hex) => <button key={hex} onClick={() => setDraft({ accent: hex })} style={dk({ ...s('flex:1;height:46px;border-radius:12px'), background: hex, boxShadow: ring(d.accent === hex) })} />)}</div><div style={s("font:500 11.5px/1 'Kippax','Archivo';color:#6E8299;margin-top:9px;font-variant-numeric:tabular-nums")}>{d.accent}</div></div>
               </div>
             )}
@@ -501,7 +569,7 @@ function Builder({ st, setState, say }: Props) {
         </div>
         <div style={s('display:flex;align-items:center;gap:9px;margin-left:auto')}>
           <button className="ah" onClick={() => say('Draft saved', 'save')} style={s("display:flex;align-items:center;gap:7px;padding:11px 15px;border-radius:11px;font:600 12.5px/1 'Kippax','Archivo';color:#001838;box-shadow:inset 0 0 0 1px rgba(0,24,56,.14)")}><Ms size={16} color={ctx('#001838')}>save</Ms>Save draft</button>
-          <button className="ah-ink-btn" onClick={() => { setPanel((pl) => { pl.live = true; pl.fans = 0.4; pl.updated = 'Updated just now'; }); setState({ screen: 'control', sync: 'connecting' }); say('Panel deployed, control room open', 'rocket_launch'); window.setTimeout(() => setState({ sync: 'live' }), 1400); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#001838;font:600 12.5px/1 'Kippax','Archivo';color:#EEF3F9")}>Save &amp; go live<Ms size={16} color={ctx('#EEF3F9')}>arrow_forward</Ms></button>
+          <button data-cur="golive" className="ah-ink-btn" onClick={() => { setPanel((pl) => { pl.live = true; pl.fans = 0.4; pl.updated = 'Updated just now'; }); setState({ screen: 'control', sync: 'connecting' }); say('Panel deployed, control room open', 'rocket_launch'); window.setTimeout(() => setState({ sync: 'live' }), 1400); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#001838;font:600 12.5px/1 'Kippax','Archivo';color:#EEF3F9")}>Save &amp; go live<Ms size={16} color={ctx('#EEF3F9')}>arrow_forward</Ms></button>
         </div>
       </header>
 
@@ -522,7 +590,7 @@ function Builder({ st, setState, say }: Props) {
             <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#001838')}>widgets</Ms><span style={s("font:700 16px/1 'Kippax','Archivo';letter-spacing:-.012em")}>Module library</span><span style={s("font:500 11.5px/1 'Kippax','Archivo';color:#6E8299;margin-left:auto")}>{enabled.length} of {MODULES.length} modules enabled</span></div>
             <div style={s('display:flex;flex-wrap:wrap;gap:8px;margin-top:18px')}>
               {MODULES.map((m) => { const on = p.mods.indexOf(m.id) > -1; return (
-                <button key={m.id} className="ah" onClick={() => setPanel((pl) => { const j = pl.mods.indexOf(m.id); if (j > -1) pl.mods.splice(j, 1); else pl.mods.push(m.id); })} style={dk({ ...s('display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px'), background: on ? '#E9EFF6' : '#FFFFFF', boxShadow: ring(on) })}>
+                <button key={m.id} data-cur={'bmod-' + m.id} className="ah" onClick={() => setPanel((pl) => { const j = pl.mods.indexOf(m.id); if (j > -1) pl.mods.splice(j, 1); else pl.mods.push(m.id); })} style={dk({ ...s('display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px'), background: on ? '#E9EFF6' : '#FFFFFF', boxShadow: ring(on) })}>
                   <Ms size={17} color={on ? '#001838' : '#6E8299'}>{m.icon}</Ms><span style={s("font:600 12.5px/1 'Kippax','Archivo';color:#001838")}>{m.name}</span><Ms size={16} color={on ? '#6CABDD' : '#6E8299'}>{on ? 'check_circle' : 'add_circle'}</Ms>
                 </button>
               ); })}
@@ -728,7 +796,7 @@ function Control({ st, setState, say, broadcast }: Props) {
             <Card>
               <span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>MODE</span>
               <div style={s('display:flex;align-items:center;gap:12px;margin-top:16px')}>
-                <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#E9EFF6')}>{[{ k: 'auto', name: 'Auto', icon: 'autoplay' }, { k: 'manual', name: 'Manual', icon: 'sports_esports' }].map((m) => { const on = st.mode === m.k; return <button key={m.k} onClick={() => { setState({ mode: m.k }); say(`${m.name} mode`, m.icon); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:10px 15px;border-radius:9px;font:600 12px/1 'Kippax','Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#001838' : '#3E5266' })}><Ms size={16} color="inherit">{m.icon}</Ms>{m.name}</button>; })}</div>
+                <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#E9EFF6')}>{[{ k: 'auto', name: 'Auto', icon: 'autoplay' }, { k: 'manual', name: 'Manual', icon: 'sports_esports' }].map((m) => { const on = st.mode === m.k; return <button key={m.k} data-cur={'mode-' + m.k} onClick={() => { setState({ mode: m.k }); say(`${m.name} mode`, m.icon); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:10px 15px;border-radius:9px;font:600 12px/1 'Kippax','Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#001838' : '#3E5266' })}><Ms size={16} color="inherit">{m.icon}</Ms>{m.name}</button>; })}</div>
                 <button onClick={() => { setState({ playing: !st.playing }); say(st.playing ? 'Clock held' : 'Clock running', st.playing ? 'pause' : 'play_arrow'); }} style={dk({ ...s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Kippax','Archivo'"), background: st.playing ? '#FFFFFF' : '#001838', color: st.playing ? '#001838' : '#EEF3F9', boxShadow: st.playing ? 'inset 0 0 0 1px rgba(0,24,56,.14)' : 'none' })}><Ms size={17} color="inherit">{st.playing ? 'pause' : 'play_arrow'}</Ms>{st.playing ? 'Pause' : 'Play'}</button>
                 <button className="ah" onClick={() => { setState({ clock: 0, liveIdx: 0, log: [] }); say('Panel restarted for all devices', 'restart_alt'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Kippax','Archivo';color:#001838;box-shadow:inset 0 0 0 1px rgba(0,24,56,.14)")}><Ms size={17} color="inherit">restart_alt</Ms>Restart</button>
                 <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#E9EFF6;margin-left:auto')}>{['1×', '2×', '5×', '10×'].map((x) => { const on = st.speed === x; return <button key={x} onClick={() => setState({ speed: x })} style={dk({ ...s("padding:9px 12px;border-radius:9px;font:600 11.5px/1 'Kippax','Archivo';font-variant-numeric:tabular-nums"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#001838' : '#3E5266' })}>{x}</button>; })}</div>
@@ -747,13 +815,13 @@ function Control({ st, setState, say, broadcast }: Props) {
                   </button>
                 ); })}
               </div>
-              <button className="ah-ink-btn" onClick={() => { const n = Math.min(st.liveIdx + 1, sess.length - 1); setState({ liveIdx: n }); send({ cmd: 'state', ms: phaseToMs((sess[n] || {}).phase) }); say(`Advanced to “${(sess[n] || {}).name}”`, 'arrow_forward'); }} style={s("display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:16px;padding:16px;border-radius:12px;background:#001838;font:700 13.5px/1 'Kippax','Archivo';color:#EEF3F9")}>Advance to next session<Ms size={18} color={ctx('#EEF3F9')}>arrow_forward</Ms></button>
+              <button data-cur="advance" className="ah-ink-btn" onClick={() => { const n = Math.min(st.liveIdx + 1, sess.length - 1); setState({ liveIdx: n }); send({ cmd: 'state', ms: phaseToMs((sess[n] || {}).phase) }); say(`Advanced to “${(sess[n] || {}).name}”`, 'arrow_forward'); }} style={s("display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:16px;padding:16px;border-radius:12px;background:#001838;font:700 13.5px/1 'Kippax','Archivo';color:#EEF3F9")}>Advance to next session<Ms size={18} color={ctx('#EEF3F9')}>arrow_forward</Ms></button>
             </Card>
 
             <Card>
               <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>KICKOFF COUNTDOWN</span><span style={s("font:800 34px/.9 'KippaxCondensed','Archivo Black';margin-left:auto;font-variant-numeric:tabular-nums")}>{st.countdown > 0 ? fmt(st.countdown) : '–'}</span></div>
               <div style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px')}>
-                {[{ n: '0:30', v: 30 }, { n: '2:00', v: 120 }, { n: '5:00', v: 300 }, { n: '15:00', v: 900 }, { n: 'Clear', v: 0 }].map((c) => { const on = st.countdown === c.v && c.v > 0; return <button key={c.n} onClick={() => { setState({ countdown: c.v }); say(c.v ? `Countdown set to ${c.n}` : 'Countdown cleared', 'timer'); }} style={dk({ ...s("padding:13px 0;border-radius:12px;font:600 12px/1 'Kippax','Archivo';text-align:center;font-variant-numeric:tabular-nums"), background: on ? '#001838' : '#E9EFF6', color: on ? '#EEF3F9' : '#001838', boxShadow: on ? 'none' : 'inset 0 0 0 1px rgba(0,24,56,.1)' })}>{c.n}</button>; })}
+                {[{ n: '0:30', v: 30 }, { n: '2:00', v: 120 }, { n: '5:00', v: 300 }, { n: '15:00', v: 900 }, { n: 'Clear', v: 0 }].map((c) => { const on = st.countdown === c.v && c.v > 0; return <button key={c.n} data-cur={'cd-' + c.v} onClick={() => { setState({ countdown: c.v }); say(c.v ? `Countdown set to ${c.n}` : 'Countdown cleared', 'timer'); }} style={dk({ ...s("padding:13px 0;border-radius:12px;font:600 12px/1 'Kippax','Archivo';text-align:center;font-variant-numeric:tabular-nums"), background: on ? '#001838' : '#E9EFF6', color: on ? '#EEF3F9' : '#001838', boxShadow: on ? 'none' : 'inset 0 0 0 1px rgba(0,24,56,.1)' })}>{c.n}</button>; })}
               </div>
             </Card>
 
@@ -761,7 +829,7 @@ function Control({ st, setState, say, broadcast }: Props) {
               <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>TRIGGER EVENT</span><span style={s("display:flex;align-items:center;gap:7px;margin-left:auto;font:600 11.5px/1 'Kippax','Archivo';color:#C0473C")}><Ms size={15} color={ctx('#C0473C')}>bolt</Ms>Fires instantly to {st.devices.toLocaleString()} devices</span></div>
               <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
                 {TRIGGERS.map((t) => (
-                  <button key={t.id} className="ah2" onClick={() => { broadcast?.(t); const k = trigToKind[t.id]; if (k) send({ cmd: 'event', kind: k }); }} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#E9EFF6;box-shadow:inset 0 0 0 1px rgba(0,24,56,.08)')}>
+                  <button key={t.id} data-cur={'trig-' + t.id} className="ah2" onClick={() => { broadcast?.(t); const k = trigToKind[t.id]; if (k) send({ cmd: 'event', kind: k }); }} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#E9EFF6;box-shadow:inset 0 0 0 1px rgba(0,24,56,.08)')}>
                     <Ms size={21} color={t.color}>{t.icon}</Ms>
                     <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Kippax','Archivo';color:#001838")}>{t.name}</span><span style={s("display:block;font:400 11px/1.3 'Kippax','Archivo';color:#3E5266;margin-top:5px")}>{t.blurb}</span></span>
                   </button>
@@ -779,7 +847,7 @@ function Control({ st, setState, say, broadcast }: Props) {
                   { id: 'dropin-end', name: 'End drop-in', blurb: 'Close the player window on all devices', icon: 'stop_circle', color: '#C0473C', act: () => { send({ cmd: 'dropin', action: 'end' }); say('Drop-in ended', 'stop_circle'); } },
                   { id: 'player-post', name: 'Player post', blurb: 'Haaland posts a photo to Moss Side Blues', icon: 'photo_camera', color: '#6CABDD', act: () => { send({ cmd: 'player-post', crewId: 'msb', player: 'Erling Haaland', type: 'image' }); say('Haaland posted to the Crew', 'photo_camera'); } },
                 ].map((t) => (
-                  <button key={t.id} className="ah2" onClick={t.act} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#E9EFF6;box-shadow:inset 0 0 0 1px rgba(0,24,56,.08)')}>
+                  <button key={t.id} data-cur={'crew-' + t.id} className="ah2" onClick={t.act} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#E9EFF6;box-shadow:inset 0 0 0 1px rgba(0,24,56,.08)')}>
                     <Ms size={21} color={t.color}>{t.icon}</Ms>
                     <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Kippax','Archivo';color:#001838")}>{t.name}</span><span style={s("display:block;font:400 11px/1.3 'Kippax','Archivo';color:#3E5266;margin-top:5px")}>{t.blurb}</span></span>
                   </button>
