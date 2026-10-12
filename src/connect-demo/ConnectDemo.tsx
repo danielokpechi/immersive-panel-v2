@@ -99,7 +99,16 @@ const ALL_STEPS: Step[] = [
 const STEPS = ALL_STEPS.filter((st) => FEATURES.crews || !st.crews);
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-const preview = typeof location !== 'undefined' && new URLSearchParams(location.search).get('mobile') === '1';
+const qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
+const preview = qs?.get('mobile') === '1';
+// Embedded (e.g. on the BoltOS site, which draws its own browser frame): drop our
+// own window chrome so there is only one frame. ?embed=1 previews it standalone.
+const embedded = typeof window !== 'undefined' && (window.self !== window.top || qs?.get('embed') === '1');
+// Fixed bits of the wide layout, used to fit both apps into the viewport.
+const LABEL_H = 28;      // column label + gap above each app
+const PHONE_PAD = 6;     // phone bezel
+const COL_GAP = 26;
+const OP_CHROME_H = embedded ? 0 : 36;
 // Base-aware iframe sources so the embed works at the site root (dev) and under a
 // GitHub Pages sub-path (e.g. /immersive-panel-v2/arsenal/) alike.
 // Trailing slash so each resolves to a directory-index index.html on GitHub Pages
@@ -110,10 +119,12 @@ export default function ConnectDemo() {
   const studioRef = useRef<HTMLIFrameElement | null>(null);
   const fanRef = useRef<HTMLIFrameElement | null>(null);
   const boxRef = useRef<HTMLDivElement | null>(null);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
   const cursorRef = useRef<HTMLDivElement | null>(null);
   const rippleRef = useRef<HTMLDivElement | null>(null);
 
   const [scale, setScale] = useState(0.5);
+  const [phoneH, setPhoneH] = useState(PHONE_H); // fan iframe height, trimmed to match the Studio
   const [note, setNote] = useState('Live embed — the operator and the fan panel, both running now');
   const [narrow, setNarrow] = useState(() => preview || (typeof window !== 'undefined' && window.innerWidth < NARROW));
   const SW = STUDIO_W; // the Studio only renders on wide screens now
@@ -128,14 +139,26 @@ export default function ConnectDemo() {
     return () => ro.disconnect();
   }, []);
 
-  // Fit the Studio iframe to its frame.
+  // Fit the Studio and the phone side by side inside the body, by width *and*
+  // height, so the whole demo is always on screen with no scrolling.
   useLayoutEffect(() => {
-    const el = studioRef.current?.parentElement; if (!el) return;
-    const fit = () => setScale((el.clientWidth || SW) / SW);
+    const el = bodyRef.current; if (!el || narrow) return;
+    const fit = () => {
+      const cs = getComputedStyle(el);
+      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      const byW = (w - COL_GAP - 2 * PHONE_PAD - 2) / (SW + PHONE_W);
+      const byH = (h - LABEL_H - OP_CHROME_H - 2) / STUDIO_H;
+      const sc = Math.max(0.3, Math.min(byW, byH));
+      setScale(sc);
+      // The phone stands exactly as tall as the Studio window; the fan app
+      // scrolls inside it, so its height can flex.
+      setPhoneH(Math.min(PHONE_H, (STUDIO_H * sc + OP_CHROME_H + 2 - 2 * PHONE_PAD) / sc));
+    };
     fit();
     const ro = new ResizeObserver(fit); ro.observe(el);
     return () => ro.disconnect();
-  }, [narrow]);
+  }, [narrow, SW]);
 
   // The cursor engine. Starts once both iframes have their apps mounted.
   useEffect(() => {
@@ -308,10 +331,12 @@ export default function ConnectDemo() {
 
   const studioFrame = (
     <div style={S.opFrame}>
-      <div style={S.opChrome}>
-        <span style={{ ...S.dotSm, background: '#ff5f57' }} /><span style={{ ...S.dotSm, background: '#febc2e' }} /><span style={{ ...S.dotSm, background: '#28c840' }} />
-        <span style={S.urlSm}>studio.boltos.ai</span>
-      </div>
+      {!embedded && (
+        <div style={S.opChrome}>
+          <span style={{ ...S.dotSm, background: '#ff5f57' }} /><span style={{ ...S.dotSm, background: '#febc2e' }} /><span style={{ ...S.dotSm, background: '#28c840' }} />
+          <span style={S.urlSm}>studio.boltos.ai</span>
+        </div>
+      )}
       <div style={{ ...S.opScreen, height: STUDIO_H * scale }}>
         <iframe ref={studioRef} src={SRC.studio} title="BoltOS Studio"
           style={{ width: SW, height: STUDIO_H, border: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }} />
@@ -324,19 +349,19 @@ export default function ConnectDemo() {
       <iframe ref={fanRef} src={SRC.fan} title="Voltford fan view" style={{ width: '100%', height: '100%', border: 0, display: 'block' }} />
     </div>
   ) : (
-    <div style={{ ...S.phone, padding: 6, borderRadius: Math.round(38 * scale) + 6 }}>
-      <div style={{ width: Math.round(PHONE_W * scale), height: Math.round(PHONE_H * scale), borderRadius: Math.round(34 * scale), overflow: 'hidden', background: '#000' }}>
+    <div style={{ ...S.phone, padding: PHONE_PAD, borderRadius: Math.round(38 * scale) + 6 }}>
+      <div style={{ width: Math.round(PHONE_W * scale), height: Math.round(phoneH * scale), borderRadius: Math.round(34 * scale), overflow: 'hidden', background: '#000' }}>
         <iframe ref={fanRef} src={SRC.fan} title="Voltford fan view"
-          style={{ width: PHONE_W, height: PHONE_H, border: 0, display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }} />
+          style={{ width: PHONE_W, height: phoneH, border: 0, display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }} />
       </div>
     </div>
   );
 
   return (
-    <div style={{ ...S.stage, padding: preview ? 20 : narrow ? 0 : 'clamp(12px,3vw,40px)' }}>
+    <div style={{ ...S.stage, padding: preview ? 20 : narrow || embedded ? 0 : 'clamp(12px,3vw,40px)' }}>
       <style>{CSS}</style>
 
-      <div ref={boxRef} style={narrow ? S.boxMobile : S.box}>
+      <div ref={boxRef} style={narrow ? S.boxMobile : embedded ? S.boxEmbed : S.box}>
         {narrow ? (
           /* ---------- phone: the fan experience, full-screen ---------- */
           <>
@@ -349,22 +374,26 @@ export default function ConnectDemo() {
           </>
         ) : (
           <>
-            <div style={S.chrome}>
-              <span style={{ ...S.dot, background: '#ff5f57' }} /><span style={{ ...S.dot, background: '#febc2e' }} /><span style={{ ...S.dot, background: '#28c840' }} />
-              <span style={S.url}>connect.boltos.ai</span>
+            {!embedded && (
+              <div style={S.chrome}>
+                <span style={{ ...S.dot, background: '#ff5f57' }} /><span style={{ ...S.dot, background: '#febc2e' }} /><span style={{ ...S.dot, background: '#28c840' }} />
+                <span style={S.url}>connect.boltos.ai</span>
+              </div>
+            )}
+            <div style={{ ...S.header, padding: embedded ? '14px 24px 8px' : S.header.padding }}>{brand}{liveBadge}</div>
+            <div ref={bodyRef} style={S.body}>
+              <div style={S.row}>
+                <section style={{ ...S.colLeft, width: Math.floor(SW * scale) + 2 }}>
+                  <div style={S.label}><span style={S.half} />OPERATOR <span style={S.labelMut}>— MATCHDAY STUDIO (WEB)</span></div>
+                  {studioFrame}
+                </section>
+                <section style={{ ...S.colRight, width: Math.round(PHONE_W * scale) + 2 * PHONE_PAD }}>
+                  <div style={S.label}><span style={S.half} />FAN VIEW <span style={S.labelMut}>— SUPPORTERS</span></div>
+                  {fanPhone}
+                </section>
+              </div>
             </div>
-            <div style={S.header}>{brand}{liveBadge}</div>
-            <div style={S.body}>
-              <section style={S.colLeft}>
-                <div style={S.label}><span style={S.half} />OPERATOR <span style={S.labelMut}>— MATCHDAY STUDIO (WEB)</span></div>
-                {studioFrame}
-              </section>
-              <section style={S.colRight}>
-                <div style={S.label}><span style={S.half} />FAN VIEW <span style={S.labelMut}>— SUPPORTERS</span></div>
-                {fanPhone}
-              </section>
-            </div>
-            <div style={S.footer}>{note}</div>
+            <div style={{ ...S.footer, padding: embedded ? '2px 20px 12px' : S.footer.padding }}>{note}</div>
           </>
         )}
       </div>
@@ -388,15 +417,18 @@ const CSS = `
 
 const S: Record<string, React.CSSProperties> = {
   stage: {
-    minHeight: '100dvh', width: '100%', boxSizing: 'border-box',
+    height: '100dvh', width: '100%', boxSizing: 'border-box',
     background: 'radial-gradient(1200px 700px at 50% -10%, #15151f 0%, #0a0a0f 55%, #060609 100%)',
-    display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: preview ? 20 : 'clamp(12px,3vw,40px)',
-    overflow: 'auto', fontFamily: "'Manrope',system-ui,-apple-system,sans-serif", color: '#F3F2F7',
+    display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: preview ? 20 : 'clamp(12px,3vw,40px)',
+    overflow: 'hidden', fontFamily: "'Manrope',system-ui,-apple-system,sans-serif", color: '#F3F2F7',
   },
   box: {
-    width: 'min(1320px, 100%)', margin: 'auto', background: '#0E0E15', border: '1px solid rgba(255,255,255,0.08)',
+    width: 'min(1320px, 100%)', margin: '0 auto', background: '#0E0E15', border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 20, overflow: 'hidden', boxShadow: '0 50px 120px -30px rgba(0,0,0,0.85)',
+    display: 'flex', flexDirection: 'column', minHeight: 0,
   },
+  // Inside a host page's frame: no border, shadow or chrome of our own.
+  boxEmbed: { width: '100%', background: '#0E0E15', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 },
   boxMobile: {
     // A *definite* height is required so the fan iframe (height:100%) fills it —
     // otherwise the iframe collapses to its 150px default.
@@ -408,24 +440,25 @@ const S: Record<string, React.CSSProperties> = {
   chrome: { height: 46, display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'relative' },
   dot: { width: 12, height: 12, borderRadius: '50%', flex: 'none' },
   url: { position: 'absolute', left: '50%', transform: 'translateX(-50%)', fontSize: 12.5, color: '#7D7B88', background: 'rgba(255,255,255,0.05)', padding: '5px 16px', borderRadius: 8, fontFamily: 'ui-monospace,monospace' },
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px 16px' },
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px 16px', flex: 'none' },
   logoMark: { width: 30, height: 30, borderRadius: 8, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(145deg,#8B3DF5,#5B1FB0)', color: '#fff', fontSize: 15 },
   midDot: { width: 4, height: 4, borderRadius: '50%', background: '#44424E' },
   live: { display: 'inline-flex', alignItems: 'center', gap: 8, height: 30, padding: '0 14px', borderRadius: 999, flex: 'none', border: '1px solid rgba(45,200,120,0.4)', color: '#5EE0A0', fontSize: 12, fontWeight: 700, letterSpacing: 0.4 },
   liveDot: { width: 7, height: 7, borderRadius: '50%', background: '#2DC878', boxShadow: '0 0 10px #2DC878' },
-  body: { display: 'flex', gap: 26, padding: '6px 28px 20px', alignItems: 'stretch' },
-  colLeft: { flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 },
-  colRight: { flex: '0 0 340px', width: 340, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' },
-  label: { fontSize: 11, fontWeight: 700, letterSpacing: 1.4, color: '#C9C7D4', display: 'flex', alignItems: 'center', gap: 9, textTransform: 'uppercase' },
+  body: { flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px 24px 10px', overflow: 'hidden' },
+  row: { display: 'flex', gap: COL_GAP, alignItems: 'flex-start' },
+  colLeft: { flex: 'none', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 },
+  colRight: { flex: 'none', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' },
+  label: { height: LABEL_H - 12, whiteSpace: 'nowrap', fontSize: 11, fontWeight: 700, letterSpacing: 1.4, color: '#C9C7D4', display: 'flex', alignItems: 'center', gap: 9, textTransform: 'uppercase' },
   labelMut: { color: '#6E6C7A', fontWeight: 600 },
   half: { width: 12, height: 12, borderRadius: '50%', background: 'linear-gradient(90deg,#C9C7D4 50%, transparent 50%)', border: '1.5px solid #C9C7D4', boxSizing: 'border-box' },
-  opFrame: { width: '100%', background: '#0B0B12', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden' },
+  opFrame: { width: '100%', boxSizing: 'border-box', background: '#0B0B12', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden' },
   opChrome: { height: 36, display: 'flex', alignItems: 'center', gap: 7, padding: '0 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'relative' },
   dotSm: { width: 9, height: 9, borderRadius: '50%', flex: 'none' },
   urlSm: { position: 'absolute', left: '50%', transform: 'translateX(-50%)', fontSize: 11, color: '#6E6C7A', fontFamily: 'ui-monospace,monospace' },
   opScreen: { width: '100%', overflow: 'hidden' },
   phone: { padding: 8, borderRadius: 46, background: 'linear-gradient(160deg,#2a2a33,#111118)', boxShadow: '0 30px 70px -24px rgba(0,0,0,0.9), inset 0 0 0 1.5px rgba(255,255,255,0.06)' },
-  footer: { textAlign: 'center', color: '#6E6C7A', fontSize: 12.5, padding: '4px 20px 20px' },
+  footer: { flex: 'none', textAlign: 'center', color: '#6E6C7A', fontSize: 12.5, padding: '4px 20px 16px' },
   mHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', flex: 'none' },
   fanArea: { flex: 1, minHeight: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', padding: 12, boxSizing: 'border-box', background: '#060609' },
   // Capped ≤480 so the fan view is always in its frameless mode (≤520px), on
