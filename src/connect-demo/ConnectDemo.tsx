@@ -6,12 +6,14 @@
 // The tour runs the whole product start to finish: the operator creates a panel,
 // starts a live session, moderates & pushes to fans, edits it and views stats;
 // the fan chats live, opens Crews, messages a crew, joins a new one, shops and
-// reads. Both apps reset between loops so nothing piles up.
+// reads. Both apps reset between loops so nothing piles up. Crews is paused for
+// now, so its steps are skipped (see src/features.ts).
 //
 // Responsive: wide screens show the two side by side; phone-width becomes a
 // swipeable, tabbed single panel (Fan view / Operator) the cursor flips between.
 // Add ?mobile=1 to preview the phone layout on a desktop.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { FEATURES } from '../features';
 
 const STUDIO_W = 960;
 const STUDIO_H = 660;
@@ -33,8 +35,9 @@ type Step = {
   click?: boolean;
   dwell: number;
   note: string;
+  crews?: boolean;         // Crews step: skipped while Crews is paused (src/features.ts)
 };
-const STEPS: Step[] = [
+const ALL_STEPS: Step[] = [
   // ================= OPERATOR — the full panel lifecycle =================
   { f: 'studio', match: /^Live\s+\d/, click: true, dwell: 950, note: 'Operator · filter to the live panels' },
   { f: 'studio', match: /^All\s+\d/, click: true, dwell: 800, note: 'Operator · every panel, authored once' },
@@ -74,15 +77,15 @@ const STEPS: Step[] = [
   { f: 'fan', sel: 'button[aria-label="Back"], button[aria-label="Close"]', click: true, dwell: 600, note: 'Fan view · done with IRIS' },
   { f: 'fan', sel: 'button[aria-label="Back"], button[aria-label="Close"]', click: true, dwell: 800, note: 'Fan view · back to the panel' },
   // Crews
-  { f: 'fan', match: /^Join Crew$/, scrollCenter: true, click: true, dwell: 950, note: 'Fan view · open Crews' },
-  { f: 'fan', sel: 'button.tile', click: true, dwell: 950, note: 'Fan view · open a crew' },
-  { f: 'fan', chatSend: ["Who's travelling Saturday? 🚆", 'Save me a seat!'], dwell: 1050, note: 'Fan view · chat with your crew' },
-  { f: 'fan', sel: 'button[aria-label="Back to crews"]', click: true, dwell: 750, note: 'Fan view · back to Crews' },
-  { f: 'fan', match: /^Join$/, scrollCenter: true, click: true, dwell: 950, note: 'Fan view · discover a new crew' },
-  { f: 'fan', match: /^Join crew$/, click: true, dwell: 1050, note: 'Fan view · join the crew' },
-  { f: 'fan', chatSend: ['Buzzing to be here! ⚡💜'], dwell: 950, note: 'Fan view · say hello' },
-  { f: 'fan', sel: 'button[aria-label="Back to crews"]', click: true, dwell: 700, note: 'Fan view · back to Crews' },
-  { f: 'fan', sel: 'button[aria-label="Back"]', click: true, dwell: 800, note: 'Fan view · back to the panel' },
+  { crews: true, f: 'fan', match: /^Join Crew$/, scrollCenter: true, click: true, dwell: 950, note: 'Fan view · open Crews' },
+  { crews: true, f: 'fan', sel: 'button.tile', click: true, dwell: 950, note: 'Fan view · open a crew' },
+  { crews: true, f: 'fan', chatSend: ["Who's travelling Saturday? 🚆", 'Save me a seat!'], dwell: 1050, note: 'Fan view · chat with your crew' },
+  { crews: true, f: 'fan', sel: 'button[aria-label="Back to crews"]', click: true, dwell: 750, note: 'Fan view · back to Crews' },
+  { crews: true, f: 'fan', match: /^Join$/, scrollCenter: true, click: true, dwell: 950, note: 'Fan view · discover a new crew' },
+  { crews: true, f: 'fan', match: /^Join crew$/, click: true, dwell: 1050, note: 'Fan view · join the crew' },
+  { crews: true, f: 'fan', chatSend: ['Buzzing to be here! ⚡💜'], dwell: 950, note: 'Fan view · say hello' },
+  { crews: true, f: 'fan', sel: 'button[aria-label="Back to crews"]', click: true, dwell: 700, note: 'Fan view · back to Crews' },
+  { crews: true, f: 'fan', sel: 'button[aria-label="Back"]', click: true, dwell: 800, note: 'Fan view · back to the panel' },
   // Shop
   { f: 'fan', match: /^Shop/, scrollCenter: true, click: true, dwell: 1050, note: 'Fan view · open the Shop' },
   { f: 'fan', match: /^Buy now$/, scrollCenter: true, click: true, dwell: 950, note: 'Fan view · add to basket' },
@@ -92,6 +95,7 @@ const STEPS: Step[] = [
   { f: 'fan', sel: 'button[aria-label="Back"]', click: true, dwell: 800, note: 'Fan view · back to the panel' },
   { f: 'fan', scrollTop: true, dwell: 1000, note: 'Fan view · the full matchday panel' },
 ];
+const STEPS = ALL_STEPS.filter((st) => FEATURES.crews || !st.crews);
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const preview = typeof location !== 'undefined' && new URLSearchParams(location.search).get('mobile') === '1';

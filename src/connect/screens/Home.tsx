@@ -4,6 +4,7 @@ import { useStore } from '../store'
 import { Icon } from '../components/Icon'
 import { Hero } from '../components/ui'
 import { ChatLine, FanComposer } from './FanChat'
+import { FEATURES } from '../../features'
 
 export function Home() {
   const { s, push, d, toast } = useStore()
@@ -31,19 +32,21 @@ export function Home() {
         <div style={{ padding: 12, borderTop: '1px solid var(--line)' }}><FanComposer onSend={(t) => d({ type: 'fanSend', text: t })} /></div>
       </section>
 
-      {/* Crew entry banner */}
-      <section aria-label="Crews" style={{ position: 'relative', margin: '14px 13px 0', height: 150, borderRadius: 20, overflow: 'hidden', background: '#141312' }}>
-        <img src={A('hero.jpg')} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(20,19,18,.94), rgba(20,19,18,.78) 55%, rgba(20,19,18,.35))' }} />
-        <div style={{ position: 'absolute', left: 18, top: 16, right: 140 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: 'var(--gold)' }}>NEW · CREWS</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#f3efe7', lineHeight: 1.3 }}>Find your crew</div>
-          <div style={{ fontSize: 13.5, color: '#d9d2c6' }}>Small fan groups that plan matchdays together.</div>
-        </div>
-        <button className="btn gold" style={{ position: 'absolute', right: 16, bottom: 16, fontWeight: 700 }} onClick={() => push({ name: 'crews' })}>
-          Join Crew<Icon name="right" size={15} stroke={2} />
-        </button>
-      </section>
+      {/* Crew entry banner (Crews paused: see src/features.ts) */}
+      {FEATURES.crews && (
+        <section aria-label="Crews" style={{ position: 'relative', margin: '14px 13px 0', height: 150, borderRadius: 20, overflow: 'hidden', background: '#141312' }}>
+          <img src={A('hero.jpg')} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(20,19,18,.94), rgba(20,19,18,.78) 55%, rgba(20,19,18,.35))' }} />
+          <div style={{ position: 'absolute', left: 18, top: 16, right: 140 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: 'var(--gold)' }}>NEW · CREWS</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#f3efe7', lineHeight: 1.3 }}>Find your crew</div>
+            <div style={{ fontSize: 13.5, color: '#d9d2c6' }}>Small fan groups that plan matchdays together.</div>
+          </div>
+          <button className="btn gold" style={{ position: 'absolute', right: 16, bottom: 16, fontWeight: 700 }} onClick={() => push({ name: 'crews' })}>
+            Join Crew<Icon name="right" size={15} stroke={2} />
+          </button>
+        </section>
+      )}
 
       <Carousel title="Shop" refEl={shop} onTitle={() => push({ name: 'shop' })} onPrev={() => scrollBy(shop.current, -1)} onNext={() => scrollBy(shop.current, 1)}>
         {PRODUCTS.slice(0, 3).map((p) => (

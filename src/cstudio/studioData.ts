@@ -1,6 +1,8 @@
 // BoltOS Studio — tokens, seed data, and the section/activity catalogues.
 // Ported from the boltos-studio prototype; the React screens consume these.
 
+import { FEATURES } from '../features';
+
 // Surface tokens are CSS variables so the light/dark toggle can swap them live.
 // Accent colours stay fixed (they read fine on both themes).
 export const T = {
@@ -82,7 +84,8 @@ export const TEMPLATES: { key: Template; label: string; sub: string; colors: Col
   { key: 'stadium', label: 'Stadium event', sub: 'Tours and club events: trivia, rewards and the shop.', colors: { primary: '#2E2A4F', accent: '#35C7DF', bg: '#F7F7F5' } },
 ];
 
-export const SECTIONS: { key: SectionKey; label: string; sub: string; icon: string }[] = [
+// Crews is hidden while paused (src/features.ts).
+export const SECTIONS: { key: SectionKey; label: string; sub: string; icon: string }[] = ([
   { key: 'fanChat', label: 'Fan chat', sub: 'Live chat with moderation', icon: 'chat' },
   { key: 'polls', label: 'Polls', sub: 'Quick votes pushed into chat', icon: 'poll' },
   { key: 'predictions', label: 'Predictions', sub: 'Pick & Win before and during the match', icon: 'target' },
@@ -91,7 +94,7 @@ export const SECTIONS: { key: SectionKey; label: string; sub: string; icon: stri
   { key: 'reads', label: 'Reads', sub: 'Club news and articles', icon: 'book' },
   { key: 'crews', label: 'Crews', sub: 'Small fan groups (trial module)', icon: 'users' },
   { key: 'iris', label: 'IRIS', sub: 'AI assistant for fan questions', icon: 'spark' },
-];
+] satisfies { key: SectionKey; label: string; sub: string; icon: string }[]).filter((x) => FEATURES.crews || x.key !== 'crews');
 
 export const ACTIVITIES: { key: string; label: string; sub: string; icon: string }[] = [
   { key: 'poll', label: 'Poll', sub: 'Who will win the next match?', icon: 'poll' },
@@ -102,7 +105,7 @@ export const ACTIVITIES: { key: string; label: string; sub: string; icon: string
 ];
 
 const ALL_ON: Record<SectionKey, boolean> = {
-  fanChat: true, polls: true, predictions: true, rewards: true, shop: true, reads: true, crews: true, iris: false,
+  fanChat: true, polls: true, predictions: true, rewards: true, shop: true, reads: true, crews: FEATURES.crews, iris: false,
 };
 const CLUB: Colors = { primary: '#7B2FE2', accent: '#D62086', bg: '#F7F7F5' };
 
