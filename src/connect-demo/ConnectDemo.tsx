@@ -124,7 +124,7 @@ export default function ConnectDemo() {
   const rippleRef = useRef<HTMLDivElement | null>(null);
 
   const [scale, setScale] = useState(0.5);
-  const [phoneH, setPhoneH] = useState(PHONE_H); // fan iframe height, trimmed to match the Studio
+  const [studioH, setStudioH] = useState(STUDIO_H); // Studio iframe height, stretched to match the phone
   const [note, setNote] = useState('Live embed — the operator and the fan panel, both running now');
   const [narrow, setNarrow] = useState(() => preview || (typeof window !== 'undefined' && window.innerWidth < NARROW));
   const SW = STUDIO_W; // the Studio only renders on wide screens now
@@ -148,12 +148,12 @@ export default function ConnectDemo() {
       const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
       const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
       const byW = (w - COL_GAP - 2 * PHONE_PAD - 2) / (SW + PHONE_W);
-      const byH = (h - LABEL_H - OP_CHROME_H - 2) / STUDIO_H;
+      const byH = (h - LABEL_H - 2 * PHONE_PAD) / PHONE_H;
       const sc = Math.max(0.3, Math.min(byW, byH));
       setScale(sc);
-      // The phone stands exactly as tall as the Studio window; the fan app
-      // scrolls inside it, so its height can flex.
-      setPhoneH(Math.min(PHONE_H, (STUDIO_H * sc + OP_CHROME_H + 2 - 2 * PHONE_PAD) / sc));
+      // The phone keeps true phone proportions; the Studio window (a web app
+      // that fills whatever height it gets) stretches to stand as tall as it.
+      setStudioH(Math.max(STUDIO_H, (PHONE_H * sc + 2 * PHONE_PAD - OP_CHROME_H - 2) / sc));
     };
     fit();
     const ro = new ResizeObserver(fit); ro.observe(el);
@@ -337,9 +337,9 @@ export default function ConnectDemo() {
           <span style={S.urlSm}>studio.boltos.ai</span>
         </div>
       )}
-      <div style={{ ...S.opScreen, height: STUDIO_H * scale }}>
+      <div style={{ ...S.opScreen, height: studioH * scale }}>
         <iframe ref={studioRef} src={SRC.studio} title="BoltOS Studio"
-          style={{ width: SW, height: STUDIO_H, border: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }} />
+          style={{ width: SW, height: studioH, border: 0, transform: `scale(${scale})`, transformOrigin: 'top left' }} />
       </div>
     </div>
   );
@@ -350,9 +350,9 @@ export default function ConnectDemo() {
     </div>
   ) : (
     <div style={{ ...S.phone, padding: PHONE_PAD, borderRadius: Math.round(38 * scale) + 6 }}>
-      <div style={{ width: Math.round(PHONE_W * scale), height: Math.round(phoneH * scale), borderRadius: Math.round(34 * scale), overflow: 'hidden', background: '#000' }}>
+      <div style={{ width: Math.round(PHONE_W * scale), height: Math.round(PHONE_H * scale), borderRadius: Math.round(34 * scale), overflow: 'hidden', background: '#000' }}>
         <iframe ref={fanRef} src={SRC.fan} title="Voltford fan view"
-          style={{ width: PHONE_W, height: phoneH, border: 0, display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }} />
+          style={{ width: PHONE_W, height: PHONE_H, border: 0, display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }} />
       </div>
     </div>
   );
