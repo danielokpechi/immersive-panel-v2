@@ -4,4 +4,4 @@ services:
     container_name: immersive-panel-v2
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "7778:7778"
