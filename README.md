@@ -25,13 +25,13 @@ The app is a static export, served by a small Node `serve` container (no nginx).
 Put your own reverse proxy in front of it.
 
 ```bash
-docker compose up -d --build   # builds and serves on http://localhost:3000
+docker compose up -d --build   # builds and serves on http://localhost:7778
 docker compose logs -f         # follow logs
 docker compose down            # stop
 ```
 
-Proxy your domain to `127.0.0.1:3000`. To bind only to the host, change the
-port mapping in `docker-compose.yml` to `"127.0.0.1:3000:3000"`. The app is
+Proxy your domain to `127.0.0.1:7778`. To bind only to the host, change the
+port mapping in `docker-compose.yml` to `"127.0.0.1:7778:7778"`. The app is
 served from the root path; set `BASE_PATH` at build time for a sub-path.
 
 ## Notes

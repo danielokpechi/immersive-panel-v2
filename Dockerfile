@@ -10,5 +10,5 @@ WORKDIR /app
 RUN npm install -g serve
 COPY --from=build /app/out ./out
 ENV NODE_ENV=production
-EXPOSE 3000
-CMD ["serve", "out", "-l", "3000", "--no-clipboard"]
+EXPOSE 7778
+CMD ["serve", "out", "-l", "7778", "--no-clipboard"]
