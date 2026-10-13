@@ -1,0 +1,7 @@
+services:
+  immersive-panel:
+    build: .
+    container_name: immersive-panel-v2
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
