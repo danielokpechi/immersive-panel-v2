@@ -27,14 +27,16 @@ const Ms = ({ children, size = 18, color, style }: { children: string; size?: nu
   <span className="ms" style={{ fontSize: size, color, ...style }}>{children}</span>
 );
 
-// Real club crest, on a white disc so it reads on any club-colour ground.
+// Club crest. Both clubs use shield crests, which read cramped inside City's
+// white disc, so the crest sits bare with a soft shadow to lift it off the ground.
 const CREST: Record<string, string> = { home: media.clubBadge, away: media.rivalBadge };
+// Narrow embeds (the Studio's 308px live monitor) can't fit the one-word club
+// names beside the giant score, so heroes step their type down below 380px.
+const NARROW = typeof window !== 'undefined' && window.innerWidth < 380;
 const Badge = ({ club, size = 38, bare = false }: { club: 'home' | 'away'; size?: number; bare?: boolean }) => (
   bare
     ? <img src={CREST[club]} alt="" style={{ width: size, height: size, objectFit: 'contain', flex: 'none' }} />
-    : <span style={{ width: size, height: size, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flex: 'none', boxShadow: '0 1px 3px rgba(27,11,45,.18)' }}>
-        <img src={CREST[club]} alt="" style={{ width: Math.round(size * 0.76), height: Math.round(size * 0.76), objectFit: 'contain' }} />
-      </span>
+    : <img src={CREST[club]} alt="" style={{ width: size, height: size, objectFit: 'contain', flex: 'none', filter: 'drop-shadow(0 2px 6px rgba(13,5,23,.45))' }} />
 );
 function Slot({ id, label }: { id: string; label: string }) {
   const src = mediaFor(id);
@@ -535,7 +537,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   const shown = st.chat;
   const previewMsgs = st.chat.filter((m) => !m.ev).slice(-5).map((m) => ({ user: m.me ? 'YOU' : m.user, text: m.text, initials: m.me ? 'YO' : m.user.slice(0, 2), avBg: TEAM[m.t].bg, avFg: TEAM[m.t].fg }));
 
-  const statusLabel = inactive ? 'NEXT: SAT 08 AUG, 17:30' : pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
+  const statusLabel = inactive ? (NARROW ? 'SAT 08 AUG · 17:30' : 'NEXT: SAT 08 AUG, 17:30') : pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
   const myCrewCount = ALL_CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).length;
   const crewGatedLocked = activeCrewData.gated && !st.boxUnlocked;
   const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'VOLTFORD STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), createCrew: 'START A CREW', crewSettings: 'CREW SETTINGS', invite: 'INVITE', room: 'ROOM', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
@@ -633,7 +635,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
                 {inactive ? (<>
                   <div style={s('display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding-left:14px')}>
                     <span style={s('width:6px;height:18px;background:#8B3DF5;transform:skewX(-8deg);display:inline-block')} />
-                    <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 10px")}>VOLTFORD</span>
+                    {NARROW ? <Badge club="home" size={22} bare /> : <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 10px")}>VOLTFORD</span>}
                   </div>
                   <div style={s('display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--chrome)')}>
                     <Ms size={14} color="#9F8AB6">event</Ms>
@@ -642,11 +644,11 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
                 </>) : (<>
                   <div style={s('display:flex;align-items:center;flex:1;min-width:0;padding-left:14px;overflow:hidden')}>
                     <Badge club="home" size={22} bare />
-                    {!isSub && <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>VOL</span>}
+                    {!isSub && !NARROW && <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>VOL</span>}
                     <span style={s("font:800 19px/1 'Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums;padding-left:" + (isSub ? '8px' : '0'))}>{st.hs}</span>
                     <span style={s("font:700 13px/1 'Archivo';color:var(--label);padding:0 6px")}>–</span>
                     <span style={s("font:800 19px/1 'Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums;padding-right:" + (isSub ? '8px' : '0'))}>{st.as}</span>
-                    {!isSub && <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>KGM</span>}
+                    {!isSub && !NARROW && <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>KGM</span>}
                     <Badge club="away" size={22} bare />
                   </div>
                   <div style={{ ...s('display:flex;align-items:center;gap:6px;padding:0 12px'), background: live ? '#D6202A' : 'rgba(242,242,240,.14)' }}>
@@ -945,16 +947,16 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
               <div style={s('display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-top:16px')}>
                 <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
                   <Badge club="home" size={46} />
-                  <span style={s("font:800 15px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>VOLTFORD</span>
+                  <span style={s("font:800 " + (NARROW ? 11 : 15) + "px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>VOLTFORD</span>
                 </div>
-                <div key={'s' + st.hs + st.as} style={s('display:flex;align-items:center;justify-content:center;gap:13px;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both')}>
-                  <span style={s("font:800 76px/.76 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(13,5,23,.6)")}>{st.hs}</span>
+                <div key={'s' + st.hs + st.as} style={s('display:flex;align-items:center;justify-content:center;gap:' + (NARROW ? 9 : 13) + 'px;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both')}>
+                  <span style={s("font:800 " + (NARROW ? 56 : 76) + "px/.76 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(13,5,23,.6)")}>{st.hs}</span>
                   <span style={s('width:15px;height:3px;background:#8B3DF5')} />
-                  <span style={s("font:800 76px/.76 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(13,5,23,.6)")}>{st.as}</span>
+                  <span style={s("font:800 " + (NARROW ? 56 : 76) + "px/.76 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(13,5,23,.6)")}>{st.as}</span>
                 </div>
                 <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
                   <Badge club="away" size={46} />
-                  <span style={s("font:800 15px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>KINGSMERE</span>
+                  <span style={s("font:800 " + (NARROW ? 11 : 15) + "px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>KINGSMERE</span>
                 </div>
               </div>
               <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:13px;font:500 11px/1.45 'Archivo';color:#B09DC6")}>
@@ -1004,19 +1006,19 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
               <div style={s('display:flex;align-items:center;justify-content:center')}>
                 <span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#fff;background:#D6202A;padding:7px 11px")}>FULL-TIME</span>
               </div>
-              <div style={s('display:flex;align-items:center;justify-content:center;gap:15px;margin-top:16px')}>
+              <div style={s('display:flex;align-items:center;justify-content:center;gap:' + (NARROW ? 8 : 15) + 'px;margin-top:16px')}>
                 <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
                   <Badge club="home" size={50} />
-                  <span style={s("font:800 15px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>VOLTFORD</span>
+                  <span style={s("font:800 " + (NARROW ? 11 : 15) + "px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>VOLTFORD</span>
                 </div>
-                <div style={s('display:flex;align-items:center;gap:13px')}>
-                  <span style={s("font:800 82px/.74 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(13,5,23,.6)")}>2</span>
+                <div style={s('display:flex;align-items:center;gap:' + (NARROW ? 9 : 13) + 'px')}>
+                  <span style={s("font:800 " + (NARROW ? 58 : 82) + "px/.74 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(13,5,23,.6)")}>2</span>
                   <span style={s('width:16px;height:3px;background:#8B3DF5')} />
-                  <span style={s("font:800 82px/.74 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(13,5,23,.6)")}>1</span>
+                  <span style={s("font:800 " + (NARROW ? 58 : 82) + "px/.74 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(13,5,23,.6)")}>1</span>
                 </div>
                 <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
                   <Badge club="away" size={50} />
-                  <span style={s("font:800 15px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>KINGSMERE</span>
+                  <span style={s("font:800 " + (NARROW ? 11 : 15) + "px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>KINGSMERE</span>
                 </div>
               </div>
               <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:14px;font:500 11px/1.5 'Archivo';color:#B09DC6")}><span>Brink 23’ · Marsh 71’</span><span style={s('text-align:right')}>Montes 58’</span></div>
