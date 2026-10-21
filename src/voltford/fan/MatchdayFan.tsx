@@ -1,0 +1,2176 @@
+// ═══════════════════════════════════════════════════════════════════════
+// MatchdayFan, the mobile web fan panel.
+// Voltford v Kingsmere City (CL semi, 2nd leg) across four operator-driven
+// states (PRE/LIVE/HT/FT) and eleven screens, themed light + dark via CSS
+// variables, with a broadcast aesthetic (score bug, lower thirds).
+// ═══════════════════════════════════════════════════════════════════════
+
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { s } from '../admin/s';
+import { mediaFor } from './mediaSlots';
+import { media } from '../domain/media';
+// Autoplay demo mode (?autoplay=1) — isolated feature, inert unless enabled.
+import { useAutoplay } from '../autoplay/useAutoplay';
+import { FAN_TIMELINE } from '../autoplay/timeline';
+import { AutoChip } from '../autoplay/AutoChip';
+import { useAutoCursor } from '../autoplay/useAutoCursor';
+
+// Autoplay content: fan chatter + IRIS Q&A the loop cycles through (live only).
+const AUTO_MSGS = ['Come on Volts! 💜', 'What a start from the lads', 'Ref needs a word there 👀', 'The Arc is bouncing tonight 🔥', 'Get forward Volts!!'];
+const AUTO_IRIS: [string, string, string?, string?][] = [
+  ['How is Brink playing?', 'Sharp — 1 goal from 3 shots, xG 0.34. He is stretching the Kingsmere line every time Voltford break.', '1', 'GOALS'],
+  ['What is the score?', 'Voltford lead 1–0, 38 minutes gone. On aggregate the tie is 3–2 to Voltford.', '1–0', 'LIVE'],
+  ['Who is man of the match so far?', 'Theo Marsh — 93% pass accuracy, the assist for the opener and two chances created.', '93%', 'PASS ACC'],
+];
+
+const Ms = ({ children, size = 18, color, style }: { children: string; size?: number; color?: string; style?: CSSProperties }) => (
+  <span className="ms" style={{ fontSize: size, color, ...style }}>{children}</span>
+);
+
+// Real club crest, on a white disc so it reads on any club-colour ground.
+const CREST: Record<string, string> = { home: media.clubBadge, away: media.rivalBadge };
+const Badge = ({ club, size = 38, bare = false }: { club: 'home' | 'away'; size?: number; bare?: boolean }) => (
+  bare
+    ? <img src={CREST[club]} alt="" style={{ width: size, height: size, objectFit: 'contain', flex: 'none' }} />
+    : <span style={{ width: size, height: size, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flex: 'none', boxShadow: '0 1px 3px rgba(27,11,45,.18)' }}>
+        <img src={CREST[club]} alt="" style={{ width: Math.round(size * 0.76), height: Math.round(size * 0.76), objectFit: 'contain' }} />
+      </span>
+);
+function Slot({ id, label }: { id: string; label: string }) {
+  const src = mediaFor(id);
+  if (src) return <img src={src} alt={label} loading="lazy" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />;
+  return <span style={s("position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{label}</span>;
+}
+
+// Cinematic matchday backdrop: Voltford crowd, floodlight grade + vignette, one-shot sweep.
+// Shared by the PRE/LIVE/HT/FT hero heads so every match state feels like one broadcast.
+function HeroBg({ pos = '50% 8%', glow = 'rgba(139,61,245,.46)', sweep = true }: { pos?: string; glow?: string; sweep?: boolean }) {
+  return (
+    <>
+      <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:' + pos)} />
+      <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,9,37,.46) 0%,rgba(22,9,37,.62) 24%,rgba(18,7,31,.9) 52%,#160925 88%)')} />
+      <div style={{ ...s('position:absolute;inset:0'), background: 'radial-gradient(120% 72% at 50% -14%,' + glow + ',transparent 56%)', animation: 'bgFloods 5s ease-in-out infinite' }} />
+      <div style={s('position:absolute;inset:0;background:radial-gradient(140% 88% at 50% 26%,transparent 42%,rgba(14,6,24,.5))')} />
+      {sweep && <div style={s('position:absolute;top:0;bottom:0;left:-45%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);transform:skewX(-12deg);animation:bgSweep 1.6s cubic-bezier(.3,.7,.3,1) .3s both;pointer-events:none')} />}
+    </>
+  );
+}
+
+// seeded match chatter
+const POOL = [
+  { user: 'MARCUS_92', text: 'The Arc is loud tonight. Genuinely loud.', t: 'h', tag: 'BLOCK 108' },
+  { user: 'DECLAN_K', text: 'Varela back in the middle changes everything', t: 's', tag: 'SOUTH STAND' },
+  { user: 'BLOCK112', text: 'Anyone else in 112, we standing for the anthem?', t: 'h', tag: 'BLOCK 112' },
+  { user: 'PRIYA_S', text: 'Marsh on the left again? Interesting call', t: 'h', tag: 'BLOCK 231' },
+  { user: 'TOMMY', text: 'First goal wins this. Watch.', t: 'n', tag: 'AT HOME' },
+  { user: 'JEAN_84', text: 'Twenty-two years in the South Stand and this is the loudest', t: 's', tag: 'SOUTH STAND' },
+  { user: 'HANNAH_M', text: 'The noise when that hit the net. Chills.', t: 'h', tag: 'BLOCK 108' },
+  { user: 'GAZ', text: 'Pie ordered to my seat. Living in the future.', t: 'h', tag: 'BLOCK 112' },
+  { user: 'STEVO', text: 'That was a foul. Every single time.', t: 's', tag: 'SOUTH STAND' },
+  { user: 'NEUTRAL_JO', text: 'Watching from the pub, no dog in this fight', t: 'n', tag: 'AT HOME' },
+  { user: 'AMARA_K', text: 'Keep the ball. Just keep the ball.', t: 'h', tag: 'BLOCK 231' },
+  { user: 'DAVE_SB', text: 'Season ticket since 98 and I still cannot watch these', t: 's', tag: 'SEASON TICKETS' },
+  { user: 'RAJ', text: 'Their keeper has been the best player on the pitch', t: 'n', tag: 'AT HOME' },
+  { user: 'LUCY_C', text: 'Twenty more minutes like that and we are in Munich', t: 'h', tag: 'BLOCK 112' },
+];
+
+// Profile photos for the live chat, so it reads like the Crews chat (same assets).
+const CHAT_AV: Record<string, string> = {
+  MARCUS_92: media.avMarcus, DECLAN_K: media.avDeclan, PRIYA_S: media.avPriya, HANNAH_M: media.avHannah,
+  TOMMY: media.avR1, JEAN_84: media.avR2, GAZ: media.avR3, LUCY_C: media.avPriya, AMARA_K: media.avHannah,
+  STEVO: media.avR1, RAJ: media.avR2, DAVE_SB: media.avR3, NEUTRAL_JO: media.avR1, BLOCK112: media.avR2,
+};
+const TEAM: Record<string, { bg: string; fg: string }> = { h: { bg: '#8B3DF5', fg: '#fff' }, s: { bg: '#331C4E', fg: '#fff' }, n: { bg: '#C3B69A', fg: '#1B0B2D' } };
+const EV: Record<string, { icon: string; color: string }> = {
+  GOAL: { icon: 'sports_soccer', color: '#8B3DF5' }, YELLOW: { icon: '', color: '#F4C400' }, 'RED CARD': { icon: '', color: '#D6202A' },
+  'VAR CHECK': { icon: 'videocam', color: '#8B3DF5' }, 'NO PENALTY': { icon: 'gavel', color: '#F2F2F0' }, PENALTY: { icon: 'gavel', color: '#8B3DF5' }, OFFSIDE: { icon: 'flag', color: '#F4C400' },
+  SUBSTITUTION: { icon: 'swap_vert', color: '#F2F2F0' }, 'DRINKS BREAK': { icon: 'local_drink', color: '#9F8AB6' }, CHANCE: { icon: 'crisis_alert', color: '#9F8AB6' },
+  PLAYER: { icon: 'verified', color: '#8B3DF5' },
+};
+const ARTICLES = [
+  { kicker: 'TACTICAL READ', title: 'Why Voltford keep the line high, and what it costs them', meta: 'Sam Whitfield · 6 min read', slot: 'read-1', body: ['Voltford have not dropped their defensive line below the halfway mark in a home European tie since November. It is a deliberate bet: squeeze the game into forty metres, win the ball back inside six seconds, and make the opposition defend a full half.', 'Kingsmere are the one side left in the competition built to punish it. Six of their goals in this campaign have come from counters starting inside their own half, and every one of them went through the left channel.', 'The compromise both managers are making tonight is the same, from opposite directions: Voltford accept two clear chances against to create six, Kingsmere accept sixty minutes without the ball to get those two.', 'Watch the first fifteen minutes. If Voltford press and Kingsmere clear long twice in a row, the game will be played in one half all night.'] },
+  { kicker: 'PLAYER FOCUS', title: 'The Varela effect, in one number: 71%', meta: 'Priya Anand · 4 min read', slot: 'read-2', body: ['Voltford win 71% of matches Varela starts and completes. Without him on the pitch for the full ninety, that figure falls to 54% across three seasons.', 'It is not tackles. It is the tempo he sets when Voltford are ahead, the pass count in the fifteen minutes after a Voltford goal rises by a fifth when he is on.', 'He is also one booking from missing a final. Everything about tonight for him is a calculation.'] },
+  { kicker: 'AWAY VIEW', title: 'What Kingsmere fans actually expect tonight', meta: 'Elena Ruiz · 5 min read', slot: 'read-3', body: ['Ask the away end and nobody predicts a comfortable night. They predict a late one. That is not bravado, it is a pattern half of Kingsmere’s goals this season have come after the seventieth minute.', 'The travelling support has learned to treat the first hour as something to survive. They will sing through it either way.', 'If the tie is level at eighty minutes, every Kingsmere fan in this stadium will believe. History has earned them that.'] },
+  { kicker: 'THE NUMBERS', title: 'First goal, first leg, and the aggregate maths', meta: 'Data desk · 3 min read', slot: 'read-4', body: ['Voltford lead 2–1 from the first leg. A 0–0 tonight sends them through; a single Kingsmere goal without reply forces extra time.', 'Nine of Voltford’s last ten home wins have followed them scoring first, and they have won all nine.', 'Kingsmere have conceded the opening goal only twice in the competition. Both times they came back to draw.'] },
+];
+
+// ── Crews layer (a persistent social layer; The Box is now a gated Crew) ──
+type CrewMsg = { user: string; initials: string; avBg: string; photo?: string; verified?: boolean; isText?: boolean; text?: string; isImage?: boolean; id?: string; caption?: string; isVoice?: boolean; dur?: string; wave?: number[]; isSocial?: boolean; socialIcon?: string; socialTitle?: string; socialSub?: string; isCall?: boolean; callPlayer?: string; callTitle?: string; callSub?: string; replyToId?: string; baseReactions?: Record<string, number> };
+const REACTION_EMOJIS = ['❤️', '😂', '🔥'];
+// Circular avatar: a real photo when we have one, else the initials disc.
+const Avatar = ({ src, initials, bg, size = 26, style }: { src?: string; initials?: string; bg?: string; size?: number; style?: CSSProperties }) => (
+  src
+    ? <img src={src} alt="" loading="lazy" style={{ width: size, height: size, flex: 'none', borderRadius: '50%', objectFit: 'cover', ...style }} />
+    : <span style={{ width: size, height: size, flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg || '#8B3DF5', color: '#fff', fontFamily: "'Archivo'", fontWeight: 800, fontSize: Math.round(size * 0.34), lineHeight: 1, ...style }}>{initials}</span>
+);
+type CrewRec = { id: string; name: string; initials: string; members: number; official: boolean; gated: boolean; unlockHint: string; latest: string; isCustom?: boolean; rules?: string; privacy?: string; status?: 'pending' | 'approved' };
+const CREWS: CrewRec[] = [
+  { id: 'msb', name: 'Arcside Volts', initials: 'AV', members: 1842, official: false, gated: false, unlockHint: '', latest: '"Anyone getting picked up in Kettlebridge?"' },
+  { id: 'northtier', name: 'The North Tier', initials: 'NT', members: 340, official: false, gated: false, unlockHint: '', latest: '"See you at the usual spot"' },
+  { id: 'academy', name: 'Academy Watch', initials: 'AW', members: 612, official: true, gated: false, unlockHint: '', latest: '"Youth highlights are up"' },
+  { id: 'seasontix', name: 'Season Ticket Holders', initials: 'ST', members: 0, official: true, gated: true, unlockHint: 'Open to season-ticket holders, 760 XP from unlocking', latest: '' },
+];
+const DISCOVER_CREWS = [
+  { id: 'voltheads', name: 'Voltheads', members: 2210, official: false },
+  { id: 'boltchoir', name: 'The Bolt Choir', members: 4102, official: true },
+  { id: 'family', name: 'Family Stand', members: 980, official: true },
+];
+// Per-Crew rules shown on the Crew Settings screen.
+const CREW_RULES: Record<string, string> = {
+  msb: 'Be civil, no ticket touting, keep away-day logistics pinned at the top.',
+  northtier: 'Matchday banter only, no spoilers for highlights before 11pm.',
+  academy: 'Youth and academy talk, keep transfer rumours to the main Crew.',
+  seasontix: 'Season-ticket holders only. Early access info stays inside this Crew.',
+};
+// Real photos for the recurring Crew members + roster fill (from the handoff).
+const MEMBER_PHOTO: Record<string, string> = { MARCUS_92: media.avMarcus, PRIYA_S: media.avPriya, DECLAN_K: media.avDeclan, HANNAH_M: media.avHannah };
+const ROSTER_PHOTOS = [media.avR1, media.avR2, media.avR3, media.avMarcus, media.avPriya, media.avDeclan, media.avHannah];
+const CREW_MSGS: CrewMsg[] = [
+  { id: 'cm1', user: 'MARCUS_92', text: 'Coach seats are filling fast, get in now, who else is in?', avBg: '#8B3DF5', initials: 'MA', photo: media.avMarcus, isText: true },
+  { id: 'cm2', user: 'PRIYA_S', text: 'Anyone know if the Copper Kettle takes bookings?', avBg: '#331C4E', initials: 'PR', photo: media.avPriya, isText: true },
+  { id: 'cm3', user: 'DECLAN_K', text: 'Saved you a seat on the coach mate', avBg: '#8B3DF5', initials: 'DE', photo: media.avDeclan, isText: true, replyToId: 'cm1', baseReactions: { '❤️': 3 } },
+  { id: 'cm4', user: 'HANNAH_M', text: 'Away hotel prices are criminal right now', avBg: '#331C4E', initials: 'HA', photo: media.avHannah, isText: true },
+  { id: 'cm5', user: 'MARCUS_92', text: 'Yeah booked mine last week, prices only go up from here', avBg: '#8B3DF5', initials: 'MA', photo: media.avMarcus, isText: true, replyToId: 'cm4' },
+  { id: 'cm6', user: 'TOMMY_R', text: 'Kids strip finally arrived, my lad is buzzing', avBg: '#8B3DF5', initials: 'TO', photo: media.avR1, isText: true },
+  { id: 'cm7', user: 'PRIYA_S', text: 'Can we get a group order in for the away scarves?', avBg: '#331C4E', initials: 'PR', photo: media.avPriya, isText: true },
+  { id: 'cm8', user: 'DECLAN_K', text: 'Count me in for two', avBg: '#8B3DF5', initials: 'DE', photo: media.avDeclan, isText: true, replyToId: 'cm7' },
+  { id: 'cm9', user: 'HANNAH_M', text: 'Same, put me down for one', avBg: '#331C4E', initials: 'HA', photo: media.avHannah, isText: true, replyToId: 'cm7' },
+  { id: 'cm10', user: 'SAM_W', text: 'Anyone watching the reserves on Tuesday?', avBg: '#8B3DF5', initials: 'SA', photo: media.avR2, isText: true },
+  { id: 'cm11', user: 'MARCUS_92', text: 'Yeah, streaming it from the usual spot', avBg: '#8B3DF5', initials: 'MA', photo: media.avMarcus, isText: true, replyToId: 'cm10' },
+  { id: 'cm12', user: 'TOMMY_R', text: 'This Crew is more active than my actual group chat', avBg: '#8B3DF5', initials: 'TO', photo: media.avR1, isText: true, baseReactions: { '😂': 5 } },
+];
+const PLAYER_INIT: Record<string, string> = { 'Kasper Brink': 'KB', 'Theo Marsh': 'TM', 'Nico Adebayo': 'NA', 'Sami Haddad': 'SH' };
+const PLAYER_PHOTO: Record<string, string> = { 'Kasper Brink': media.playerBrink, 'Theo Marsh': media.playerMarsh, 'Nico Adebayo': media.playerAdebayo, 'Sami Haddad': media.playerHaddad };
+// Verified player content already sitting in a Crew's permanent thread.
+const PLAYER_MSGS: Record<string, CrewMsg[]> = {
+  msb: [
+    { id: 'pp-brink-tunnel', user: 'Kasper Brink', initials: 'KB', avBg: '#8B3DF5', photo: media.playerBrink, verified: true, isImage: true, caption: 'Ready for tonight. See you out there, Arcside.', baseReactions: { '❤️': 42, '🔥': 18 } },
+    { id: 'pp-marsh-voice', user: 'Theo Marsh', initials: 'TM', avBg: '#8B3DF5', photo: media.playerMarsh, verified: true, isVoice: true, dur: '0:18', wave: [8, 14, 10, 18, 12, 20, 9, 16, 11, 19, 13, 8, 15, 10] },
+    { id: 'pp-adebayo-social', user: 'Nico Adebayo', initials: 'NA', avBg: '#8B3DF5', photo: media.playerAdebayo, verified: true, isSocial: true, socialIcon: 'photo_camera', socialTitle: 'Posted to Instagram', socialSub: 'Matchday boots, fresh out the box' },
+    { id: 'pp-brink-room', user: 'Kasper Brink', initials: 'KB', avBg: '#8B3DF5', photo: media.playerBrink, verified: true, isCall: true, callPlayer: 'Kasper Brink', callTitle: 'Kasper started a Room', callSub: 'Live now · tap to join', baseReactions: { '🔥': 21 } },
+  ],
+};
+const LB_CREW = [
+  { name: 'Marcus_92', score: 5, initials: 'MA', bg: '#8B3DF5' },
+  { name: 'You', score: 4, initials: 'YO', bg: '#1B0B2D', me: true },
+  { name: 'Priya_S', score: 4, initials: 'PR', bg: '#331C4E' },
+  { name: 'Declan_K', score: 3, initials: 'DE', bg: '#8B3DF5' },
+  { name: 'Hannah_M', score: 3, initials: 'HA', bg: '#331C4E' },
+];
+const LB_GLOBAL = [
+  { name: 'kylerm', score: 5, initials: 'KY', bg: '#1E3A6E' },
+  { name: 'Marcus_92', score: 5, initials: 'MA', bg: '#8B3DF5' },
+  { name: 'sofia_rm', score: 5, initials: 'SO', bg: '#1E3A6E' },
+  { name: 'You', score: 4, initials: 'YO', bg: '#1B0B2D', me: true },
+  { name: 'gaz', score: 4, initials: 'GA', bg: '#8B3DF5' },
+  { name: 'jean_84', score: 3, initials: 'JE', bg: '#8B3DF5' },
+];
+// 6 goal zones (2 rows × 3 cols); keeper dives to the zone's column.
+const SK_ZONES = [
+  { x: '8%', y: '14%', w: '28%', h: '24%' }, { x: '36%', y: '14%', w: '28%', h: '24%' }, { x: '64%', y: '14%', w: '28%', h: '24%' },
+  { x: '8%', y: '38%', w: '28%', h: '24%' }, { x: '36%', y: '38%', w: '28%', h: '24%' }, { x: '64%', y: '38%', w: '28%', h: '24%' },
+];
+
+interface FSt {
+  route: string; ms: string; hs: number; as: number; n: number; rollY: number;
+  event: { kind: string; who: string; minute: number; note: string; team: string; side: string } | null;
+  xp: number; tick: number; iris: boolean; irisTyping: boolean; irisDraft: string;
+  thread: { me: boolean; text: string; stat?: string; statLabel?: string }[];
+  chat: { id: string; user: string; text: string; t: string; tag: string; me?: boolean; time: string; likes: number; ev?: { kind: string; color: string; detail?: string; minute?: number } }[];
+  draft: string; room: string; likes: Record<string, boolean>; votes: Record<string, string>;
+  flash: { title: string; sub: string } | null;
+  flashOut: boolean; irisOut: boolean;
+  pred: { h: number; a: number; s: string; done: boolean };
+  size: string; basket: { name: string; price: number }[]; ordered: boolean;
+  food: Record<string, number>; foodPlaced: boolean; foodEta: number;
+  photos: number; reels: Record<string, string | boolean>; read: number | null;
+  routeOn: boolean; prefs: Record<string, boolean>; theme: string; quests: Record<string, boolean>;
+  toast: string | null; toastXp: string;
+  crewsJoined: Record<string, boolean>; activeCrew: string; crewDraft: string;
+  crewMsgsExtra: Record<string, CrewMsg[]>;
+  navStack: string[];
+  customCrews: CrewRec[];
+  newCrewName: string; newCrewDesc: string; newCrewPrivacy: string;
+  inviteSent: Record<string, boolean>;
+  onboardingSkipped: boolean; crewsIntroSeen: boolean; forceCrewsIntro: boolean;
+  boxUnlocked: boolean; lbScope: string;
+  sk: { kick: number; goals: number; phase: string; flash: string | null; keeperZone: number | null };
+  dropIn: { active: boolean; crewId: string | null; player: string | null; endsAt: number | null; duration: number; queue: { id: number; user: string; text: string }[]; approved: { id: number; user: string; text: string; reply: string }[]; picked: { crewId: string; player: string; duration: number }; qDraft: string };
+  presenceStamps: Record<string, number>;
+  playerPost: { crewId: string; player: string; type: string };
+  playingVoice: string | null;
+  call: { active: boolean; player: string; joined: boolean };
+  reactions: Record<string, number>; replyDraftId: string | null;
+}
+const money = (n: number) => '£' + n.toFixed(2);
+const pad = (n: number) => String(n).padStart(2, '0');
+
+export function MatchdayFan({ id = 'demo' }: { id?: string }) {
+  const [st, setSt] = useState<FSt>(() => ({
+    route: 'home', ms: 'pre', hs: 0, as: 0, n: 6, rollY: 0, event: null, xp: 1240, tick: 0,
+    iris: false, irisTyping: false, irisDraft: '',
+    thread: [{ me: false, text: 'I’m IRIS. Tonight’s briefing is already written, ask me anything from it, or open the full intel.' }],
+    chat: POOL.slice(0, 7).map((m, i) => ({ ...m, id: 's' + i, time: '20:' + pad(11 + i * 3), likes: 1 + (i % 4) })),
+    draft: '', room: 'ALL FANS', likes: {}, votes: {}, pred: { h: 2, a: 1, s: 'Brink', done: false },
+    size: 'M', basket: [], ordered: false, food: {}, foodPlaced: false, foodEta: 6,
+    photos: 9, reels: {}, read: null, flash: null, flashOut: false, irisOut: false, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('theme') === 'dark') ? 'dark' : 'light', quests: {}, toast: null, toastXp: '',
+    crewsJoined: { msb: true, northtier: true }, activeCrew: 'msb', crewDraft: '', crewMsgsExtra: {},
+    navStack: [], customCrews: [], newCrewName: '', newCrewDesc: '', newCrewPrivacy: 'public', inviteSent: {},
+    onboardingSkipped: false, crewsIntroSeen: false, forceCrewsIntro: false,
+    boxUnlocked: false, lbScope: 'crew', sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null },
+    dropIn: { active: false, crewId: null, player: null, endsAt: null, duration: 10, queue: [], approved: [], picked: { crewId: 'seasontix', player: 'Kasper Brink', duration: 10 }, qDraft: '' },
+    presenceStamps: {}, playerPost: { crewId: 'msb', player: 'Kasper Brink', type: 'image' }, playingVoice: null,
+    call: { active: false, player: 'Kasper Brink', joined: false },
+    reactions: {}, replyDraftId: null,
+  }));
+  const set = (patch: Partial<FSt> | ((s: FSt) => Partial<FSt>)) => setSt((sPrev) => ({ ...sPrev, ...(typeof patch === 'function' ? patch(sPrev) : patch) }));
+  const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number; sk?: number; di?: number; diBanner?: number }>({});
+  // #2/#3, play an exit animation, then unmount (symmetric enter/exit).
+  const closeIris = () => { set({ irisOut: true }); window.setTimeout(() => set({ iris: false, irisOut: false }), 260); };
+  const closeFlash = () => { set((sp) => (sp.flash ? { flashOut: true } : {})); window.setTimeout(() => set({ flash: null, flashOut: false }), 200); };
+
+  // chat arrival + clock
+  useEffect(() => {
+    const ci = window.setInterval(() => {
+      setSt((sPrev) => {
+        const m = POOL[sPrev.n % POOL.length];
+        return { ...sPrev, n: sPrev.n + 1, rollY: 30, chat: [...sPrev.chat, { ...m, id: 'a' + sPrev.n, time: '20:' + pad((11 + sPrev.n * 3) % 60), likes: 0 }].slice(-40) };
+      });
+      timers.current.roll = window.setTimeout(() => set({ rollY: 0 }), 30);
+    }, 3400);
+    const tk = window.setInterval(() => set((sp) => ({ tick: sp.tick + 1 })), 1000);
+    return () => { window.clearInterval(ci); window.clearInterval(tk); window.clearInterval(timers.current.food); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // theme
+  useEffect(() => {
+    const root = document.documentElement;
+    if (st.theme === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', st.theme);
+    return () => root.removeAttribute('data-theme');
+  }, [st.theme]);
+
+  // pin chat + iris threads to bottom
+  const chatRef = useRef<HTMLDivElement>(null);
+  const irisRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [st.chat.length, st.room, st.route]);
+  useEffect(() => { if (irisRef.current) irisRef.current.scrollTop = irisRef.current.scrollHeight; }, [st.thread.length, st.iris]);
+
+  const award = (xp: number, label: string, quest?: string) => {
+    window.clearTimeout(timers.current.toast);
+    set((sp) => ({ xp: sp.xp + xp, toast: label, toastXp: '+' + xp, quests: quest ? { ...sp.quests, [quest]: true } : sp.quests }));
+    timers.current.toast = window.setTimeout(() => set({ toast: null }), 2400);
+  };
+  const fire = (kind: string, who: string, minute: number, note: string, team: string, side: string, hold?: boolean) => {
+    window.clearTimeout(timers.current.ev);
+    const evId = 'ev' + Date.now();
+    set((sp) => ({
+      event: { kind, who, minute, note, team, side },
+      hs: kind === 'GOAL' && side === 'h' ? sp.hs + 1 : sp.hs,
+      as: kind === 'GOAL' && side === 'a' ? sp.as + 1 : sp.as,
+      // Match moments drop into the chat feed as a transient card…
+      chat: [...sp.chat, { id: evId, user: '', text: who, t: 'n', tag: '', time: '', likes: 0, ev: { kind, color: EV[kind]?.color || '#8B3DF5', detail: note, minute } }].slice(-40),
+    }));
+    if (!hold) timers.current.ev = window.setTimeout(() => set({ event: null }), 4600);
+    // …then they clear themselves out of the chat.
+    window.setTimeout(() => set((sp) => ({ chat: sp.chat.filter((m) => m.id !== evId) })), 8500);
+    // A goal triggers a dismissible flash drop in the shop.
+    if (kind === 'GOAL') {
+      window.clearTimeout(timers.current.flash);
+      set({ flash: { title: '20% off the Brink home shirt', sub: 'Goal drop · collect at Gate 4 on the way out' }, flashOut: false });
+      timers.current.flash = window.setTimeout(() => closeFlash(), 15000);
+    }
+  };
+  const varCheck = () => {
+    const min = st.ms === 'live' ? 38 : 71;
+    fire('VAR CHECK', 'Possible handball', min, 'Referee reviewing, Varela, Voltford penalty area', 'KINGSMERE CITY APPEAL', 'a', true);
+    window.clearTimeout(timers.current.varT);
+    timers.current.varT = window.setTimeout(() => fire('NO PENALTY', 'Ball struck the shoulder', min, 'On-field decision stands · play restarts with a Voltford free-kick', 'VAR DECISION', 'a'), 3600);
+  };
+  // Shared operator actions, used by the local demo strip AND by the control
+  // room over the realtime bus, so an operator drives this exact fan client.
+  const applyState = (m: string) => {
+    if (m === 'inactive') set({ ms: 'inactive', route: 'home', event: null, hs: 0, as: 0 });
+    else if (m === 'pre') set({ ms: 'pre', route: 'home', event: null, hs: 0, as: 0 });
+    else if (m === 'live') { set({ ms: 'live', route: 'home', hs: 0, as: 0 }); fire('GOAL', 'Brink', 23, 'Assist Brandt · xG 0.34', 'VOLTFORD', 'h'); }
+    else if (m === 'ht') set({ ms: 'ht', route: 'home', event: null, hs: 1, as: 1 });
+    else if (m === 'ft') set({ ms: 'ft', route: 'home', event: null, hs: 2, as: 1 });
+  };
+  const applyEventCmd = (kind: string) => {
+    // Events fire in place (the lower-third shows on every screen) so a moment
+    // in the game surfaces right where the fan is, including in the chat.
+    if (kind === 'goal') { if (st.ms === 'pre') set({ ms: 'live', route: 'home', hs: 0, as: 0 }); fire('GOAL', 'Marsh', 71, 'Assist Brink · xG 0.19', 'VOLTFORD', 'h'); }
+    else if (kind === 'card') fire('YELLOW', 'Moreau', 31, 'Late on Marsh · second booking of the tie', 'KINGSMERE CITY', 'a');
+    else if (kind === 'red') fire('RED CARD', 'Moreau', 64, 'Second yellow · Kingsmere down to ten', 'KINGSMERE CITY', 'a');
+    else if (kind === 'var') varCheck();
+    else if (kind === 'sub') fire('SUBSTITUTION', 'Adebayo on', 68, 'Ellery off · 68 minutes played, 3 chances created', 'VOLTFORD', 'h');
+    else if (kind === 'offside') fire('OFFSIDE', 'Dario Montes', 44, 'Flag up · Kingsmere strike ruled out, tight one on the shoulder', 'KINGSMERE CITY', 'a');
+    else if (kind === 'drinks') fire('DRINKS BREAK', 'Two minutes', 33, 'Referee has paused play, 26°C at kick-off', 'HYDRATION', 'n');
+  };
+  // Autoplay demo mode (?autoplay=1): pins the panel LIVE and loops fan actions
+  // (chat, IRIS, shop, food). Wired below, once the action fns exist. Inert
+  // (no timers, no listeners) unless the flag is present.
+  const autoplay = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('autoplay') === '1';
+  // Follow the control room: apply commands from the panel's channel. Ref keeps
+  // the listener bound to fresh closures without re-subscribing every render.
+  const busRef = useRef<(m: any) => void>(() => {});
+  busRef.current = (m) => {
+    if (!m) return;
+    // In the marketing autoplay the panel is self-driving; ignore control-room
+    // broadcasts (they'd inject goals/cards + the flash-drop pop-up on top).
+    if (autoplay) return;
+    if (m.cmd === 'state' && m.ms) applyState(m.ms);
+    else if (m.cmd === 'event' && m.kind) applyEventCmd(m.kind);
+    // Operator prompt: send fans straight to a screen (Crews, Spot Kick…).
+    else if (m.cmd === 'nav' && m.route) { if (m.route === 'spotkick') startSpotkick(); else set((sp) => ({ route: m.route, navStack: sp.route === m.route ? sp.navStack : [...sp.navStack, sp.route], iris: false, read: null })); }
+    // Operator fires a player into a Crew, ends it, or posts verified content.
+    else if (m.cmd === 'dropin' && m.action === 'start') startDropInWith(m.crewId || 'seasontix', m.player || 'Kasper Brink', m.duration || 10);
+    else if (m.cmd === 'dropin' && m.action === 'end') endDropIn();
+    else if (m.cmd === 'player-post') postPlayerContentWith(m.crewId || 'msb', m.player || 'Kasper Brink', m.type || 'image');
+  };
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const ch = new BroadcastChannel('voltford-panel:' + id);
+    ch.onmessage = (e) => busRef.current(e.data);
+    return () => ch.close();
+  }, [id]);
+  const ask = (q: string, a: string, stat?: string, statLabel?: string) => {
+    window.clearTimeout(timers.current.iris);
+    set((sp) => ({ iris: true, irisTyping: true, irisDraft: '', thread: [...sp.thread, { me: true, text: q }] }));
+    timers.current.iris = window.setTimeout(() => set((sp) => ({ irisTyping: false, thread: [...sp.thread, { me: false, text: a, stat, statLabel }] })), 750);
+  };
+  const post = (text: string) => {
+    if (!text.trim()) return;
+    set((sp) => ({ draft: '', chat: [...sp.chat, { id: 'me' + Date.now(), user: 'YOU', text: text.trim(), t: 'h', tag: 'BLOCK 112', me: true, time: '20:' + pad((44 + sp.n) % 60), likes: 0 }] }));
+    award(2, 'MESSAGE POSTED', 'chat');
+  };
+
+  // ── Autoplay: LIVE-pinned loop of real fan actions (see timeline.ts) ──────
+  const autoIdx = useRef({ post: 0, iris: 0 });
+  const cursor = useAutoCursor(autoplay);
+  // Glide the cursor to a target, then click + run the action once it arrives.
+  const curDo = (target: string | [number, number], fn: () => void) => {
+    cursor.point(target);
+    window.setTimeout(() => { cursor.click(); fn(); }, 720);
+  };
+  const autoAct = (name: string) => {
+    const A = autoIdx.current;
+    switch (name) {
+      case 'home': cursor.point([0.5, 0.42]); set({ route: 'home', iris: false, read: null, navStack: [] }); break;
+      case 'tour': { // browse the whole panel top-to-bottom, then back up — slowly,
+        // like a person swiping and reading, not one fast jump.
+        const el = document.querySelector('[data-fanscroll]') as HTMLElement | null;
+        if (!el) break;
+        const maxTop = () => Math.max(0, el.scrollHeight - el.clientHeight);
+        // ease scrollTop from current to `to` over `dur` ms, then run cb
+        const ease = (to: number, dur: number, cb?: () => void) => {
+          const from = el.scrollTop, delta = to - from; let t0 = 0;
+          const step = (ts: number) => {
+            if (!t0) t0 = ts;
+            const p = Math.min(1, (ts - t0) / dur);
+            el.scrollTop = from + delta * (1 - Math.pow(1 - p, 3));
+            if (p < 1) requestAnimationFrame(step); else if (cb) cb();
+          };
+          requestAnimationFrame(step);
+        };
+        const seq: Array<() => void> = [];
+        const swipe = (frac: number, curY: number, dur: number, pause: number) =>
+          seq.push(() => { cursor.point([0.5, curY]); ease(maxTop() * frac, dur, () => window.setTimeout(run, pause)); });
+        swipe(0.25, 0.74, 2000, 1600); // small swipe down, pause to read
+        swipe(0.50, 0.72, 2000, 1600);
+        swipe(0.75, 0.70, 2000, 1600);
+        swipe(1.00, 0.68, 2000, 2000); // reach the bottom, long dwell
+        swipe(0.50, 0.52, 2300, 1400); // ease back up
+        swipe(0.00, 0.42, 2500, 400);  // home to the top
+        let i = 0;
+        const run = () => { if (i < seq.length) seq[i++](); };
+        run();
+        break;
+      }
+      case 'chat': curDo([0.5, 0.52], () => go('chat')()); break;
+      case 'post': set({ iris: false }); curDo('[data-cur="send"]', () => post(AUTO_MSGS[A.post++ % AUTO_MSGS.length])); break;
+      case 'iris': curDo('[data-cur="iris"]', () => { const [q, a, stat, lab] = AUTO_IRIS[A.iris++ % AUTO_IRIS.length]; ask(q, a, stat, lab); }); break;
+      case 'back': set({ iris: false }); curDo('[data-cur="fanback"]', () => goBack()); break;
+      case 'shopOpen': curDo([0.5, 0.5], () => go('shop')()); break;
+      case 'shopAdd': curDo('[data-cur="shopadd"]', () => { set((sp) => (sp.basket.length ? {} : { basket: [{ name: 'Match shirt', price: 95 }], ordered: false })); award(10, 'SHIRT ADDED'); }); break;
+      case 'shopBuy': curDo('[data-cur="checkout"]', () => { set((sp) => (sp.ordered ? {} : { ordered: true })); award(30, 'ORDER CONFIRMED'); }); break;
+      case 'foodOpen': curDo([0.5, 0.5], () => go('food')()); break;
+      case 'foodAdd': curDo('[data-cur="foodadd"]', () => set((sp) => (sp.foodPlaced ? {} : { food: { pie: 1, chips: 1 } }))); break;
+      case 'foodBuy': curDo('[data-cur="fooddeliver"]', () => { set((sp) => (sp.foodPlaced ? {} : { foodPlaced: true, foodEta: 6 })); award(15, 'ORDER ON ITS WAY'); }); break;
+      case 'reset': set({ basket: [], ordered: false, food: {}, foodPlaced: false, route: 'home', iris: false, read: null, navStack: [] }); break;
+    }
+  };
+  // Pin the panel to LIVE (first half, 1–0) in dark mode, without firing the
+  // goal/flash-drop events — the loop should read as one fan calmly using the
+  // panel, not a stream of match alerts popping up.
+  const autoplayState = useAutoplay({ enabled: autoplay, steps: FAN_TIMELINE, act: autoAct, init: () => set({ ms: 'live', route: 'home', hs: 1, as: 0, flash: null, event: null, theme: 'dark' }) });
+  // Toast with no XP badge (RSVP, share confirmations…).
+  const notify = (label: string) => {
+    window.clearTimeout(timers.current.toast);
+    set({ toast: label, toastXp: '' });
+    timers.current.toast = window.setTimeout(() => set({ toast: null }), 2400);
+  };
+  const postCrew = (text: string) => {
+    if (!text.trim()) return;
+    const crewId = st.activeCrew;
+    set((sp) => {
+      const msg: CrewMsg = { id: 'you-' + Date.now(), user: 'YOU', text: text.trim(), avBg: '#1B0B2D', initials: 'YO', isText: true, ...(sp.replyDraftId ? { replyToId: sp.replyDraftId } : {}) };
+      return { crewDraft: '', replyDraftId: null, crewMsgsExtra: { ...sp.crewMsgsExtra, [crewId]: [...(sp.crewMsgsExtra[crewId] || []), msg] } };
+    });
+  };
+  // Crew thread: toggle a reaction on a message, or start/cancel a reply.
+  const toggleReaction = (msgId: string, emoji: string) => set((sp) => { const key = msgId + ':' + emoji; return { reactions: { ...sp.reactions, [key]: sp.reactions[key] ? 0 : 1 } }; });
+  const setReply = (msgId: string) => set({ replyDraftId: msgId });
+  const cancelReply = () => set({ replyDraftId: null });
+  // Verified player content dropped straight into a Crew's thread (operator-authored).
+  const postPlayerContentWith = (crewId: string, player: string, type: string) => {
+    const initials = PLAYER_INIT[player] || '??';
+    let msg: CrewMsg = { user: player, initials, avBg: '#8B3DF5', photo: PLAYER_PHOTO[player], verified: true };
+    if (type === 'image') msg = { ...msg, isImage: true, id: 'pp-' + Date.now(), caption: player.split(' ')[0] + ' shares a moment from today' };
+    else if (type === 'voice') msg = { ...msg, isVoice: true, dur: '0:' + (12 + Math.floor(Math.random() * 20)), wave: Array.from({ length: 14 }, () => 6 + Math.floor(Math.random() * 16)) };
+    else msg = { ...msg, isSocial: true, socialIcon: 'photo_camera', socialTitle: player.split(' ')[0] + ' posted to Instagram', socialSub: 'Just now, ahead of kick-off' };
+    set((sp) => ({ crewMsgsExtra: { ...sp.crewMsgsExtra, [crewId]: [...(sp.crewMsgsExtra[crewId] || []), msg] } }));
+    notify(player.split(' ')[0].toUpperCase() + ' POSTED TO THE CREW');
+  };
+  // Player drop-in: a timed window where a player answers moderated questions in a Crew.
+  const askDropIn = (text: string) => {
+    if (!text.trim()) return;
+    set((sp) => ({ dropIn: { ...sp.dropIn, qDraft: '', queue: [...sp.dropIn.queue, { id: Date.now(), user: 'YOU', text: text.trim() }] } }));
+    notify('QUESTION SENT TO MODERATOR');
+  };
+  const startDropInWith = (crewId: string, player: string, duration: number) => {
+    const crew = CREWS.find((c) => c.id === crewId);
+    set((sp) => ({ dropIn: { ...sp.dropIn, active: true, crewId, player, duration, endsAt: Date.now() + duration * 60000, queue: [], approved: [], picked: { crewId, player, duration } } }));
+    fire('PLAYER', player, 0, player + ' has joined ' + (crew ? crew.name : 'the Crew') + '.', 'VOLTFORD', 'h', true);
+    window.clearTimeout(timers.current.diBanner);
+    timers.current.diBanner = window.setTimeout(() => set({ event: null }), 5200);
+    window.clearTimeout(timers.current.di);
+    timers.current.di = window.setTimeout(() => endDropIn(), duration * 60000);
+  };
+  const endDropIn = () => {
+    window.clearTimeout(timers.current.di);
+    const wasCrew = st.dropIn.crewId;
+    set((sp) => {
+      const stamped = { ...sp.presenceStamps };
+      if (sp.dropIn.crewId) stamped[sp.dropIn.crewId] = (stamped[sp.dropIn.crewId] || 0) + 1;
+      return { presenceStamps: stamped, dropIn: { ...sp.dropIn, active: false, queue: [], endsAt: null } };
+    });
+    if (wasCrew === st.activeCrew) award(80, 'PROOF OF PRESENCE');
+  };
+  // Spot Kick: tap a zone; keeper dives to a random zone; miss it to score.
+  const shootZone = (zone: number) => {
+    if (st.sk.phase !== 'idle') return;
+    const keeperZone = Math.floor(Math.random() * 6);
+    const goal = zone !== keeperZone;
+    set((sp) => ({ sk: { ...sp.sk, phase: 'flash', keeperZone, flash: goal ? 'GOAL' : 'SAVED' } }));
+    if (goal) award(20, 'GOAL! SPOT KICK');
+    window.clearTimeout(timers.current.sk);
+    timers.current.sk = window.setTimeout(() => {
+      set((sp) => {
+        const kick = sp.sk.kick + 1, goals = sp.sk.goals + (goal ? 1 : 0);
+        if (kick >= 5) return { sk: { kick, goals, phase: 'idle', flash: null, keeperZone: null }, route: 'spotkickResult' };
+        return { sk: { kick, goals, phase: 'idle', flash: null, keeperZone: null } };
+      });
+    }, 950);
+  };
+  const startSpotkick = () => set((sp) => ({ sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null }, route: 'spotkick', navStack: sp.route === 'spotkick' ? sp.navStack : [...sp.navStack, sp.route], iris: false }));
+  // Navigate forward: push the current route so back returns to the actual previous screen.
+  const go = (r: string) => () => set((sp) => ({ route: r, navStack: sp.route === r ? sp.navStack : [...sp.navStack, sp.route], iris: false, read: null }));
+  // Navigate back: pop the stack (empties to Home).
+  const goBack = () => set((sp) => { const stack = sp.navStack.slice(); const prev = stack.pop(); return { route: prev || 'home', navStack: stack, iris: false, read: null }; });
+  const openCrew = (crewId: string) => set((sp) => ({ route: 'crew', activeCrew: crewId, navStack: [...sp.navStack, sp.route], iris: false, read: null }));
+  // Create a Crew: append it, auto-join, open it (with Crews pushed for back).
+  const createCrew = () => {
+    const name = st.newCrewName.trim();
+    if (!name) return;
+    const cid = 'custom-' + Date.now();
+    set((sp) => ({
+      customCrews: [...sp.customCrews, { id: cid, name, initials: name.slice(0, 2).toUpperCase(), members: 1, official: false, gated: false, unlockHint: '', latest: 'Submitted for review', rules: sp.newCrewDesc.trim() || 'No rules yet, set the tone.', privacy: sp.newCrewPrivacy, isCustom: true, status: 'pending' }],
+      crewsJoined: { ...sp.crewsJoined, [cid]: true }, activeCrew: cid,
+      newCrewName: '', newCrewDesc: '', newCrewPrivacy: 'public',
+      route: 'crew', navStack: [...sp.navStack, 'community'],
+    }));
+    notify('SUBMITTED FOR REVIEW');
+  };
+  // Voltford clears a pending Crew (demo shortcut for the club-validation step).
+  const approveCrew = (cid: string) => { set((sp) => ({ customCrews: sp.customCrews.map((c) => c.id === cid ? { ...c, status: 'approved', latest: 'Approved by Voltford · live now' } : c) })); notify('CREW APPROVED'); };
+  const inviteContact = (name: string) => { set((sp) => ({ inviteSent: { ...sp.inviteSent, [name]: true } })); notify('INVITE SENT TO ' + name.toUpperCase()); };
+  const pickOnboarding = (crewId: string) => { set((sp) => ({ crewsJoined: { ...sp.crewsJoined, [crewId]: true } })); notify('JOINED'); };
+  const skipOnboarding = () => set({ onboardingSkipped: true });
+  const dismissCrewsIntro = () => set({ crewsIntroSeen: true, forceCrewsIntro: false });
+  // Rooms (group video call): a player on the main stage, the Crew in thumbnails.
+  const openRoom = (player = 'Kasper Brink') => set((sp) => ({ call: { active: true, player, joined: false }, route: 'room', navStack: sp.route === 'room' ? sp.navStack : [...sp.navStack, sp.route], iris: false, read: null }));
+  const joinRoom = () => set((sp) => ({ call: { ...sp.call, joined: true } }));
+  const leaveRoom = () => { set((sp) => ({ call: { ...sp.call, active: false } })); goBack(); };
+
+  // ── derived ──
+  const { ms } = st;
+  const pre = ms === 'pre', live = ms === 'live', ht = ms === 'ht', ft = ms === 'ft';
+  const inactive = ms === 'inactive';
+  const isCommunityLead = inactive;            // Crews leads Home only off-matchday
+  const showCommunityBlock = !isCommunityLead; // receded card mid-Home during pre/live/ht/ft (below the score)
+  const showSpotkickTile = ms !== 'live';      // hidden only during live play
+  const ALL_CREWS: CrewRec[] = [...CREWS, ...st.customCrews];
+  const activeCrewData = ALL_CREWS.find((c) => c.id === st.activeCrew) || CREWS[0];
+  const minute = live ? 38 : ht ? 45 : 90;
+  const cd = Math.max(3 * 3600 + 16 * 60 + 40 - st.tick, 0);
+  const filled = Math.round(Math.min(st.xp / 2000, 1) * 20);
+
+  const evs: [number, string, string, string, string][] = live ? [
+    [36, 'VAR CHECK', 'Possible handball', 'a', 'No penalty, ball struck the shoulder'], [33, 'DRINKS BREAK', 'Two minutes', 'n', '26°C at kick-off'],
+    [31, 'YELLOW', 'Moreau', 'a', 'Late on Marsh'], [23, 'GOAL', 'Brink', 'h', 'Assist Brandt · xG 0.34'],
+  ] : ht ? [
+    [45, 'GOAL', 'Dario Montes', 'a', 'Counter from a Voltford corner'], [41, 'SUBSTITUTION', 'Adebayo on', 'h', 'Ellery off, hamstring'],
+    [38, 'YELLOW', 'Varela', 'h', 'One booking from a final ban'], [33, 'DRINKS BREAK', 'Two minutes', 'n', '26°C at kick-off'], [23, 'GOAL', 'Brink', 'h', 'Assist Brandt · xG 0.34'],
+  ] : [
+    [71, 'GOAL', 'Marsh', 'h', 'Assist Brink · xG 0.19'], [68, 'SUBSTITUTION', 'Adebayo on', 'h', 'Ellery off, 3 chances created'], [64, 'RED CARD', 'Moreau', 'a', 'Second yellow · Kingsmere down to ten'],
+    [58, 'GOAL', 'Dario Montes', 'a', 'VAR checked for offside, goal stands'], [36, 'VAR CHECK', 'Possible handball', 'a', 'No penalty given'], [23, 'GOAL', 'Brink', 'h', 'Assist Brandt · xG 0.34'],
+  ];
+  const timeline = evs.map(([min, kind, who, side, detail]) => ({
+    min, kind, who, detail, isCard: kind === 'YELLOW' || kind === 'RED CARD', cardColor: kind === 'RED CARD' ? '#D6202A' : '#F4C400',
+    hasIcon: !!(EV[kind] && EV[kind].icon), icon: EV[kind]?.icon || '', iconColor: kind === 'GOAL' ? '#8B3DF5' : 'var(--label)',
+    bg: kind === 'GOAL' ? '#8B3DF5' : kind === 'RED CARD' ? '#D6202A' : kind === 'YELLOW' ? '#F4C400' : 'var(--sand2)',
+    fg: kind === 'GOAL' || kind === 'RED CARD' ? '#fff' : 'var(--ink)', tc: side === 'h' ? '#8B3DF5' : side === 'a' ? '#1E3A6E' : 'var(--sand2)',
+  }));
+
+  const shown = st.chat;
+  const previewMsgs = st.chat.filter((m) => !m.ev).slice(-5).map((m) => ({ user: m.me ? 'YOU' : m.user, text: m.text, initials: m.me ? 'YO' : m.user.slice(0, 2), avBg: TEAM[m.t].bg, avFg: TEAM[m.t].fg }));
+
+  const statusLabel = inactive ? 'NEXT: SAT 08 AUG, 17:30' : pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
+  const myCrewCount = ALL_CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).length;
+  const crewGatedLocked = activeCrewData.gated && !st.boxUnlocked;
+  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'VOLTFORD STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), createCrew: 'START A CREW', crewSettings: 'CREW SETTINGS', invite: 'INVITE', room: 'ROOM', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
+  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS', crew: crewGatedLocked ? 'LOCKED' : activeCrewData.members.toLocaleString() + ' MEMBERS', createCrew: 'FAN-RUN', crewSettings: activeCrewData.name.toUpperCase(), invite: activeCrewData.name.toUpperCase(), room: 'LIVE', spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
+  const isHome = st.route === 'home', isSub = st.route !== 'home';
+  const backLabel = st.navStack.length ? (titles[st.navStack[st.navStack.length - 1]] || 'HOME') : 'HOME';
+  const showCrewsIntro = st.forceCrewsIntro || ((st.route === 'community' || st.route === 'crew') && !st.crewsIntroSeen);
+
+  const opBtn = (label: string, onClick: () => void, bg: string, color: string, pad = '8px 10px') => (
+    <button onClick={onClick} style={{ ...s("font:800 10px/1 'Archivo';letter-spacing:.08em;padding:" + pad), background: bg, color }}>{label}</button>
+  );
+
+  // Embed mode (control-room monitor iframe): fill the frame, no operator strip / bezel.
+  const embedParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === '1';
+  const [vw, setVw] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  useEffect(() => {
+    const onResize = () => setVw(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  // On a real phone (narrow viewport) or when embedded, drop the phone mockup and fill
+  // the screen like a normal web app. Desktop keeps the framed mockup. ?embed=1 also hides
+  // the operator strip for a clean, fan-facing view.
+  const frameless = embedParam || vw <= 520;
+  const showOperator = !embedParam;
+  const wrapStyle = frameless ? s('height:100dvh;background:var(--ground);display:flex;justify-content:center') : s('min-height:100vh;background:var(--desk);display:flex;justify-content:center;padding:28px 16px 40px');
+  const colStyle = frameless ? s('display:flex;flex-direction:column;height:100%;width:100%;max-width:520px') : s('display:flex;flex-direction:column;gap:12px');
+  const phoneStyle = frameless ? s('position:relative;flex:1;min-height:0;width:100%;background:var(--ground);overflow:hidden') : s('position:relative;width:393px;height:844px;background:var(--ground);border-radius:44px;overflow:hidden;box-shadow:0 2px 2px rgba(27,11,45,.06),0 26px 56px -18px rgba(27,11,45,.4),0 0 0 9px #1B0B2D,0 0 0 10px #29163E');
+
+  return (
+    <div style={wrapStyle}>
+      <style>{FAN_CSS}</style>
+      <div style={colStyle}>
+        {showOperator && (<>
+        {/* operator strip (demo): match states + a goal drop */}
+        <div style={{ ...s('display:flex;flex-direction:column;gap:7px;padding:9px 10px'), width: frameless ? '100%' : '393px', background: 'var(--panel)' }}>
+          <div style={s('display:flex;align-items:center;gap:8px')}>
+            <span style={s("font:800 10px/1 'Archivo';letter-spacing:.18em;color:#9F8AB6;padding-left:4px")}>STATE</span>
+            <div style={s('display:flex;gap:4px;margin-left:auto')}>
+              {opBtn('PRE', () => applyState('pre'), 'rgba(242,242,240,.12)', 'var(--on-panel)')}
+              {opBtn('LIVE', () => applyState('live'), 'rgba(242,242,240,.12)', 'var(--on-panel)')}
+              {opBtn('HT', () => applyState('ht'), 'rgba(242,242,240,.12)', 'var(--on-panel)')}
+              {opBtn('FT', () => applyState('ft'), 'rgba(242,242,240,.12)', 'var(--on-panel)')}
+            </div>
+          </div>
+          <div style={s('display:flex;align-items:center;gap:8px')}>
+            <span style={s("font:800 10px/1 'Archivo';letter-spacing:.18em;color:#9F8AB6;padding-left:4px")}>EVENT</span>
+            <div style={s('display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end')}>
+              {opBtn('GOAL', () => applyEventCmd('goal'), '#8B3DF5', '#fff', '8px 7px')}
+              {opBtn('YELLOW', () => applyEventCmd('card'), '#F4C400', '#1B0B2D', '8px 7px')}
+              {opBtn('RED', () => applyEventCmd('red'), '#D6202A', '#fff', '8px 7px')}
+              {opBtn('OFFSIDE', () => applyEventCmd('offside'), 'rgba(242,242,240,.12)', 'var(--on-panel)', '8px 7px')}
+              {opBtn('VAR', () => applyEventCmd('var'), 'rgba(242,242,240,.12)', 'var(--on-panel)', '8px 7px')}
+              {opBtn('SUB', () => applyEventCmd('sub'), 'rgba(242,242,240,.12)', 'var(--on-panel)', '8px 7px')}
+            </div>
+          </div>
+        </div>
+        </>)}
+
+        {/* PHONE */}
+        <div style={phoneStyle}>
+          {/* status bar */}
+          <div style={s("position:absolute;top:0;left:0;right:0;height:46px;z-index:50;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 4px;font:700 12.5px/1 'Archivo';color:var(--on-panel);background:var(--panel)")}>
+            <span>20:44</span>
+            <div style={s('display:flex;align-items:center;gap:5px')}><span style={s('width:15px;height:8px;border:1.4px solid #F2F2F0;border-radius:2px;display:inline-block')} /><span style={s("font:700 10px/1 'Archivo';letter-spacing:.06em")}>5G</span></div>
+          </div>
+
+          {autoplay && <AutoChip interacting={autoplayState.interacting} />}
+          {cursor.node}
+          <div data-fanscroll style={s('position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:46px;padding-bottom:56px')}>
+            {/* event lower-third */}
+            {st.event && (() => { const e = st.event!; const color = EV[e.kind]?.color || '#8B3DF5'; const isCard = e.kind === 'YELLOW' || e.kind === 'RED CARD'; const hasIcon = !!EV[e.kind]?.icon; return (
+              <div style={s('position:sticky;top:0;z-index:45;overflow:hidden')}>
+                <div style={s('animation:bgThird 4.6s cubic-bezier(.18,.9,.2,1) both;display:flex;align-items:stretch;background:var(--panel)')}>
+                  <div style={{ ...s('width:14px;transform:skewX(-8deg) translateX(-3px)'), background: color }} />
+                  <div style={s('flex:1;padding:14px 4px 16px 8px;min-width:0')}>
+                    <div style={s('display:flex;align-items:center;gap:8px')}>
+                      {isCard && <span style={{ ...s('width:13px;height:18px;border-radius:2px;display:inline-block'), background: color }} />}
+                      {hasIcon && <Ms size={17} color={color}>{EV[e.kind].icon}</Ms>}
+                      <span style={{ ...s("font:800 15px/1 'Archivo Black';letter-spacing:.14em"), color }}>{e.kind}</span>
+                      <span style={s("font:700 11px/1 'Archivo';letter-spacing:.1em;color:#9F8AB6")}>{e.minute}′ · {e.team}</span>
+                    </div>
+                    <div style={s("font:800 40px/.86 'Archivo Black';letter-spacing:.008em;color:var(--on-panel);margin-top:9px")}>{e.who}</div>
+                    <div style={s("font:500 11.5px/1.3 'Archivo';color:#9F8AB6;margin-top:7px")}>{e.note}</div>
+                  </div>
+                  {e.kind === 'GOAL' && <div style={s("display:flex;align-items:center;padding:0 18px 0 6px;font:800 50px/.8 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.hs}–{st.as}</div>}
+                </div>
+              </div>
+            ); })()}
+
+            {/* score bug + header */}
+            <div style={s('position:sticky;top:0;z-index:40;background:var(--panel)')}>
+              <div style={s('display:flex;align-items:stretch;height:44px')}>
+                {isSub && <button data-cur="fanback" onClick={goBack} className="fh" style={s("display:flex;align-items:center;gap:6px;padding:0 10px 0 15px;font:800 10px/1 'Archivo';letter-spacing:.14em;color:#9F8AB6")}><Ms size={15} color="inherit">arrow_back</Ms>{backLabel}</button>}
+                {inactive ? (<>
+                  <div style={s('display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding-left:14px')}>
+                    <span style={s('width:6px;height:18px;background:#8B3DF5;transform:skewX(-8deg);display:inline-block')} />
+                    <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 10px")}>VOLTFORD</span>
+                  </div>
+                  <div style={s('display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--chrome)')}>
+                    <Ms size={14} color="#9F8AB6">event</Ms>
+                    <span style={s("font:800 11px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel)")}>{statusLabel}</span>
+                  </div>
+                </>) : (<>
+                  <div style={s('display:flex;align-items:center;flex:1;min-width:0;padding-left:14px;overflow:hidden')}>
+                    <Badge club="home" size={22} bare />
+                    {!isSub && <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>VOL</span>}
+                    <span style={s("font:800 19px/1 'Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums;padding-left:" + (isSub ? '8px' : '0'))}>{st.hs}</span>
+                    <span style={s("font:700 13px/1 'Archivo';color:var(--label);padding:0 6px")}>–</span>
+                    <span style={s("font:800 19px/1 'Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums;padding-right:" + (isSub ? '8px' : '0'))}>{st.as}</span>
+                    {!isSub && <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>KGM</span>}
+                    <Badge club="away" size={22} bare />
+                  </div>
+                  <div style={{ ...s('display:flex;align-items:center;gap:6px;padding:0 12px'), background: live ? '#D6202A' : 'rgba(242,242,240,.14)' }}>
+                    {live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:bgBlink 1.6s steps(1,end) infinite')} />}
+                    <span style={s("font:800 12px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);font-variant-numeric:tabular-nums")}>{statusLabel}</span>
+                  </div>
+                </>)}
+                <button onClick={() => set((x) => ({ theme: x.theme === 'auto' ? 'light' : x.theme === 'light' ? 'dark' : 'auto' }))} className="fh2" style={s('display:flex;align-items:center;padding:0 9px;background:var(--chrome)')}><Ms size={17} color="#9F8AB6">{st.theme === 'dark' ? 'dark_mode' : st.theme === 'light' ? 'light_mode' : 'brightness_auto'}</Ms></button>
+                <button onClick={go('profile')} className="fh2" style={s('display:flex;align-items:center;padding:0 12px 0 9px;background:var(--chrome)')}><span style={s("width:26px;height:26px;border-radius:50%;background:#8B3DF5;display:flex;align-items:center;justify-content:center;font:800 9.5px/1 'Archivo';color:#fff")}>AJ</span></button>
+              </div>
+              {isHome && (
+                <div style={s('display:flex;overflow:hidden;height:26px;background:var(--chrome);align-items:center')}>
+                  <div style={s('display:flex;white-space:nowrap;animation:bgTicker 34s linear infinite')}>
+                    {[0, 1].map((k) => <span key={k} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.1em;color:#B19DC7")}>{`  CHAMPIONS LEAGUE SEMI-FINALS  ·  HVU 2 – 2 RVD  FT (RVD WIN 4–3 AGG)  ·  AGGREGATE HERE: VOL ${st.hs + 2} – ${st.as + 2} KGM  ·  FINAL: 31 MAY, MUNICH  ·  ATTENDANCE 52,900  ·  REFEREE: F. LETEXIER  ·`}</span>)}
+                  </div>
+                </div>
+              )}
+              {isSub && (
+                <div style={s('display:flex;align-items:center;gap:9px;height:40px;padding:0 15px;background:var(--chrome);box-shadow:inset 0 -1px 0 rgba(242,242,240,.08)')}>
+                  <span style={s('width:5px;height:16px;flex:none;background:#8B3DF5;transform:skewX(-8deg)')} />
+                  <span style={s("font:800 19px/1 'Archivo Black';letter-spacing:.05em;color:var(--on-panel)")}>{titles[st.route]}</span>
+                  <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:#B19DC7;margin-left:auto;background:rgba(242,242,240,.08);padding:5px 8px")}>{metas[st.route]}</span>
+                </div>
+              )}
+            </div>
+
+            {/* ROUTES */}
+            {isHome && <Home {...{ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, award, set }} />}
+            {st.route === 'community' && <Community {...{ st, set, go, openCrew, pickOnboarding, skipOnboarding }} />}
+            {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom, approveCrew }} />}
+            {st.route === 'createCrew' && <CreateCrew {...{ st, set, createCrew }} />}
+            {st.route === 'crewSettings' && <CrewSettings {...{ st, crew: activeCrewData, set, go, notify }} />}
+            {st.route === 'invite' && <Invite {...{ st, crew: activeCrewData, set, inviteContact, notify }} />}
+            {st.route === 'room' && <Room {...{ st, joinRoom, leaveRoom, frameless }} />}
+            {st.route === 'spotkick' && <Spotkick {...{ st, shootZone }} />}
+            {st.route === 'spotkickResult' && <SpotkickResult {...{ st, go, startSpotkick, notify }} />}
+            {st.route === 'leaderboard' && <Leaderboard {...{ st, set }} />}
+            {st.route === 'chat' && <Chat {...{ st, shown, set, post, chatRef }} />}
+            {st.route === 'intel' && <Intel {...{ pre, live, ht, openIris: () => set({ iris: true }) }} />}
+            {st.route === 'pred' && <Predictions {...{ st, set, award }} />}
+            {st.route === 'polls' && <Polls {...{ st, ft, set, award }} />}
+            {st.route === 'shop' && <Shop {...{ st, set, award }} />}
+            {st.route === 'food' && <Food {...{ st, set, award, timers }} />}
+            {st.route === 'photos' && <Photos {...{ st, award, set }} />}
+            {st.route === 'reactions' && <Reactions />}
+            {st.route === 'reads' && <Reads {...{ st, set }} />}
+            {st.route === 'seat' && <Seat {...{ st, set, go }} />}
+            {st.route === 'profile' && <Profile {...{ st, filled, set, go }} />}
+          </div>
+
+          {/* FLASH SALE, pops on a goal, dismissible */}
+          {st.flash && (
+            <div style={{ ...s('position:absolute;top:122px;left:10px;right:10px;z-index:48'), animation: st.flashOut ? 'bgFlashOut .18s cubic-bezier(.23,1,.32,1) both' : 'bgRise .32s cubic-bezier(.18,.9,.2,1) both' }}>
+              <div style={s('display:flex;align-items:center;gap:11px;padding:11px 11px 11px 13px;background:var(--panel);border-radius:2px;box-shadow:0 14px 34px -8px rgba(27,11,45,.55)')}>
+                <span style={s('width:36px;height:36px;flex:none;border-radius:2px;background:#8B3DF5;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">local_offer</Ms></span>
+                <button onClick={() => { set({ route: 'shop' }); closeFlash(); }} style={s('flex:1;min-width:0;text-align:left')}>
+                  <div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:#8B3DF5")}>FLASH DROP · LIMITED</div>
+                  <div style={s("font:700 13px/1.25 'Archivo';color:var(--on-panel);margin-top:5px")}>{st.flash.title}</div>
+                  <div style={s("font:500 10.5px/1.3 'Archivo';color:#9F8AB6;margin-top:3px")}>{st.flash.sub}</div>
+                </button>
+                <button onClick={() => closeFlash()} style={s('width:28px;height:28px;flex:none;border-radius:50%;background:rgba(242,242,240,.12);display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#9F8AB6">close</Ms></button>
+              </div>
+            </div>
+          )}
+
+          {/* IRIS */}
+          {!st.iris && (
+            <button data-cur="iris" onClick={() => set({ iris: true })} className="fh2" style={s('position:absolute;right:0;bottom:96px;z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px')}>
+              <span style={s('width:7px;height:7px;background:#8B3DF5;animation:bgDot 1.6s ease-in-out infinite')} />
+              <span style={s("font:800 10.5px/1 'Archivo';letter-spacing:.16em;color:var(--on-panel)")}>ASK IRIS</span>
+            </button>
+          )}
+          {st.iris && <Iris {...{ st, pre, live, ht, set, ask, irisRef, go, closeIris }} />}
+
+          {/* CREWS INTRO, full-frame, shown once per session on first entry to Crews */}
+          {showCrewsIntro && <CrewsIntro dismiss={dismissCrewsIntro} />}
+
+          {st.toast && (
+            <div style={s('position:absolute;left:0;right:0;bottom:64px;z-index:55;display:flex;justify-content:center;pointer-events:none')}>
+              <div style={s('display:flex;align-items:center;gap:9px;padding:11px 15px;background:var(--panel);animation:bgToast 2.4s ease both')}>
+                <span style={s("font:800 17px/1 'Archivo Black';color:#8B3DF5")}>{st.toastXp}</span>
+                <span style={s("font:700 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel)")}>{st.toast}</span>
+              </div>
+            </div>
+          )}
+
+          <div style={s('position:absolute;bottom:0;left:0;right:0;height:52px;z-index:40;display:flex;align-items:center;justify-content:center;padding:0 20px 12px;background:linear-gradient(transparent,var(--ground) 44%)')}>
+            <div style={s("display:flex;align-items:center;gap:8px;padding:9px 15px;background:var(--sand);border-radius:100px;font:600 11.5px/1 'Archivo';color:var(--body)")}><Ms size={13} color="var(--label)">lock</Ms>matchday.voltford.fc</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════ HOME ═══════════
+type HP = { st: FSt; pre: boolean; live: boolean; ht: boolean; ft: boolean; inactive: boolean; isCommunityLead: boolean; showCommunityBlock: boolean; showSpotkickTile: boolean; timeline: ReturnType<typeof Object>[] | any[]; previewMsgs: any[]; filled: number; cd: number; go: (r: string) => () => void; award: (x: number, l: string, q?: string) => void; set: (p: any) => void };
+function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go }: HP) {
+  const liveish = live || ht;
+  const label = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  // Section header with the Voltford-violet skewed accent tick, to tie the light body to the heroes.
+  const sect = (t: string) => <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:5px;height:15px;flex:none;background:#8B3DF5;transform:skewX(-8deg)')} />{label(t)}</div>;
+  const sections = [
+    { t: 'Fan reactions', tag: 'LIVE', d: 'Reels & posts pulled from Instagram, TikTok, YouTube, X and Threads by #VOLKGM.', icon: 'sensors', go: go('reactions') },
+    // Predictions close once the match ends, no tab at full-time.
+    ...(!ft ? [
+      { t: 'Predictions', tag: pre ? '2 OPEN' : 'LOCKED', d: 'Call the score and first scorer. 120 XP if you nail both.', icon: 'scoreboard', go: go('pred') },
+    ] : []),
+    { t: 'Polls', tag: ft ? 'MOTM' : 'LIVE', d: ft ? 'Vote for your man of the match. 40 XP a vote.' : 'Two questions open. 40 XP a vote, results update live.', icon: 'bar_chart', go: go('polls') },
+    ...(showSpotkickTile ? [
+      { t: 'Spot Kick', tag: 'BEST OF 5', d: 'A penalty shootout. Score to earn XP and climb your Crew’s board.', icon: 'sports_soccer', go: go('spotkick') },
+    ] : []),
+    { t: 'Reads', tag: '4 NEW', d: 'Tactical read, the Varela number, and the away view.', icon: 'article', go: go('reads') },
+    { t: 'Volts store', tag: 'MATCH DROP', d: 'Tonight-only shirt print, collected on the way out.', icon: 'shopping_bag', go: go('shop') },
+    { t: 'Your seat', tag: '112–J', d: ft ? 'Your block plan and the quickest walk back out.' : 'Block plan, nearest kiosk, and the walk back out.', icon: 'event_seat', go: go('seat') },
+    { t: 'Your profile', tag: 'TIER 2', d: 'XP, rewards claimed, your photos and alerts.', icon: 'account_circle', go: go('profile') },
+    // Order food only makes sense inside the match; drop it at full-time.
+    ...(live || ht ? [
+      { t: 'Order food', tag: 'TO SEAT', d: 'Delivered to 112–J. Skip the half-time queue entirely.', icon: 'restaurant', go: go('food') },
+    ] : []),
+    ...(!pre && !inactive ? [
+      { t: 'Photo pool', tag: '1,204', d: 'Everyone’s photos in one place. Add yours for 25 XP.', icon: 'photo_library', go: go('photos') },
+    ] : []),
+  ];
+  const myCrews = CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).map((c) => {
+    const gatedLocked = c.gated && !st.boxUnlocked;
+    return { id: c.id, name: c.name, members: gatedLocked ? '–' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated };
+  });
+  const communityHeadline = inactive ? 'While we wait' : 'Full-time. Still here.';
+  const communitySub = inactive ? 'No match tonight, this is what the app is between matchdays.' : 'The result settles. The conversation doesn’t.';
+  const communityBadge = pre ? '212 ONLINE' : live ? 'ONE TAP AWAY' : '214 ONLINE';
+  const communityBlockLine = pre ? 'Arcside Volts are sorting travel and banter before kick-off.'
+    : live ? 'Reactions are piling up in Arcside Volts, the terrace is buzzing.'
+    : ht ? 'Half-time chat is already livelier than the game.'
+    : 'Full-time, but the Crew is still going.';
+  const communityAvatars = [{ i: 'MB', bg: '#8B3DF5' }, { i: 'PR', bg: '#331C4E' }, { i: 'DE', bg: '#8B3DF5' }, { i: 'HA', bg: '#331C4E' }];
+  const formH = ['W', 'W', 'D', 'W', 'L'].map((r) => ({ r, bg: r === 'W' ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.26)', fg: r === 'W' ? '#331C4E' : '#fff' }));
+  const formA = ['W', 'W', 'W', 'D', 'W'].map((r) => ({ r, bg: r === 'W' ? '#4FB3E8' : 'rgba(255,255,255,.22)', fg: r === 'W' ? '#331457' : '#fff' }));
+  const ladder = [
+    { name: '£5 food credit', cost: '500 XP', tag: 'CLAIMED', bg: 'rgba(242,242,240,.08)', fg: '#F2F2F0', subFg: '#9F8AB6', tagFg: '#8B3DF5', op: 1 },
+    { name: 'Seat upgrade', cost: '2,000 XP', tag: 'NEXT UP', bg: '#F2F2F0', fg: '#1B0B2D', subFg: '#725E88', tagFg: '#1B0B2D', op: 1 },
+    { name: 'Home shirt', cost: '5,000 XP', tag: 'LOCKED', bg: 'rgba(242,242,240,.08)', fg: '#F2F2F0', subFg: '#9F8AB6', tagFg: '#9F8AB6', op: 0.6 },
+  ];
+  const questDefs = [
+    { k: 'predict', title: 'Lock in a prediction', how: 'Correct score + first scorer', xp: '120 XP', go: go('pred') },
+    { k: 'poll', title: 'Vote in tonight’s poll', how: 'Two questions open now', xp: '40 XP', go: go('polls') },
+    { k: 'chat', title: 'Say something in fan chat', how: '312 fans in session', xp: '2 XP', go: go('chat') },
+    { k: 'photo', title: 'Add a photo to the pool', how: 'From your seat, any moment', xp: '25 XP', go: go('photos') },
+  ];
+  const questsDone = questDefs.filter((q) => st.quests[q.k]).length;
+  return (
+    <div>
+      {isCommunityLead && (
+        <section style={s('animation:bgFade .3s ease both')}>
+          <div style={s('background:var(--panel);padding:18px 16px 20px')}>
+            <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:#8B3DF5;transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#9F8AB6")}>CREWS</span></div>
+            <div style={s("font:800 34px/.88 'Archivo Black';color:var(--on-panel);margin-top:10px")}>{communityHeadline}</div>
+            <div style={s("font:500 13px/1.5 'Archivo';color:#9F8AB6;margin-top:8px;max-width:300px")}>{communitySub}</div>
+            <button onClick={go('community')} className="fp" style={s("display:inline-flex;align-items:center;gap:7px;margin-top:14px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#8B3DF5;padding:11px 14px")}>OPEN CREWS<Ms size={15} color="#fff">arrow_forward</Ms></button>
+          </div>
+          <div style={s('padding:26px 16px 0')}>
+            <div style={s('display:flex;align-items:baseline;justify-content:space-between')}>{label('YOUR CREWS')}<button onClick={go('community')} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.08em;color:#8B3DF5")}>SEE ALL</button></div>
+            <div style={s('display:flex;gap:9px;margin-top:11px;overflow-x:auto')}>
+              {myCrews.map((c) => (
+                <button key={c.id} onClick={go('community')} className="fs" style={s('flex:none;width:168px;text-align:left;background:var(--sand);padding:16px')}>
+                  <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 18px/1 'Archivo Black';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}</div>
+                  <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--label);margin-top:6px")}>{c.members} members · {c.latest}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          {inactive && (
+            <div style={s('padding:26px 16px 0')}>
+              {label('NEXT MATCH')}
+              <div style={s('display:flex;align-items:center;gap:12px;margin-top:9px;background:var(--sand);padding:18px')}><div style={s('flex:1')}><div style={s("font:700 15px/1.3 'Archivo';color:var(--ink)")}>Harrow Vale United</div><div style={s("font:500 11.5px/1.4 'Archivo';color:var(--label);margin-top:4px")}>SAT 08 AUG · 17:30 · THE ARC</div></div><Ms size={22} color="var(--label)">chevron_right</Ms></div>
+            </div>
+          )}
+          <div style={s('padding:26px 16px 0')}>
+            <button onClick={go('spotkick')} className="fp" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--panel);padding:18px')}>
+              <span style={s('width:44px;height:44px;flex:none;background:#8B3DF5;display:flex;align-items:center;justify-content:center')}><Ms size={24} color="#fff">sports_soccer</Ms></span>
+              <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 19px/1 'Archivo Black';color:var(--on-panel)")}>Spot Kick</span><span style={s("display:block;font:500 12px/1.4 'Archivo';color:#9F8AB6;margin-top:3px")}>Five penalties. Beat your Crew.</span></span>
+              <Ms size={18} color="#9F8AB6">chevron_right</Ms>
+            </button>
+          </div>
+        </section>
+      )}
+      {pre && (
+        <section style={s('position:relative;animation:bgFade .35s ease both')}>
+          {/* ── Cinematic night-match hero: Voltford crowd, floodlight grade, live countdown ── */}
+          <div style={s('position:relative;overflow:hidden;background:#160925')}>
+            <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 8%')} />
+            <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,9,37,.46) 0%,rgba(22,9,37,.62) 24%,rgba(18,7,31,.9) 52%,#160925 88%)')} />
+            <div style={s('position:absolute;inset:0;background:radial-gradient(140% 88% at 50% 26%,transparent 42%,rgba(14,6,24,.5))')} />
+            <div style={s('position:absolute;inset:0;background:radial-gradient(120% 72% at 50% -14%,rgba(139,61,245,.46),transparent 56%);animation:bgFloods 5s ease-in-out infinite')} />
+            <div style={s('position:absolute;top:0;bottom:0;left:-45%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);transform:skewX(-12deg);animation:bgSweep 1.6s cubic-bezier(.3,.7,.3,1) .3s both;pointer-events:none')} />
+
+            <div style={s('position:relative;padding:16px 16px 0')}>
+              {/* competition */}
+              <div style={s('display:flex;align-items:center;justify-content:center;gap:11px')}>
+                <span style={s('height:1px;flex:1;max-width:38px;background:linear-gradient(90deg,transparent,rgba(242,242,240,.55))')} />
+                <div style={s('text-align:center')}>
+                  <div style={s("font:800 9px/1 'Archivo';letter-spacing:.24em;color:#F2F2F0;text-shadow:0 1px 10px rgba(13,5,23,.85)")}>UEFA CHAMPIONS LEAGUE</div>
+                  <div style={s("font:700 8px/1 'Archivo';letter-spacing:.2em;color:#B08EF0;margin-top:6px")}>SEMI-FINAL · SECOND LEG</div>
+                </div>
+                <span style={s('height:1px;flex:1;max-width:38px;background:linear-gradient(90deg,rgba(242,242,240,.55),transparent)')} />
+              </div>
+
+              {/* matchup */}
+              <div style={s('display:flex;align-items:flex-start;justify-content:center;margin-top:18px')}>
+                <div style={s('flex:1;display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="home" size={58} />
+                  <div style={s("font:800 19px/.88 'Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(13,5,23,.75)")}>VOLTFORD<br />ATHLETIC</div>
+                  <div style={s('display:flex;gap:3px')}>{formH.map((f, i) => <span key={i} style={{ ...s("font:800 8px/1 'Archivo';padding:3px 4px"), color: f.fg, background: f.bg }}>{f.r}</span>)}</div>
+                </div>
+                <div style={s("flex:none;padding-top:20px;font:800 13px/1 'Archivo Black';letter-spacing:.06em;color:#B08EF0")}>V</div>
+                <div style={s('flex:1;display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="away" size={58} />
+                  <div style={s("font:800 19px/.88 'Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(13,5,23,.75)")}>KINGSMERE<br />CITY</div>
+                  <div style={s('display:flex;gap:3px')}>{formA.map((f, i) => <span key={i} style={{ ...s("font:800 8px/1 'Archivo';padding:3px 4px"), color: f.fg, background: f.bg }}>{f.r}</span>)}</div>
+                </div>
+              </div>
+
+              {/* live countdown, the focal moment */}
+              <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.3em;color:#B08EF0;text-align:center;margin-top:26px;text-shadow:0 1px 8px rgba(13,5,23,.8)")}>KICK-OFF IN</div>
+              <div style={s('display:flex;align-items:flex-start;justify-content:center;gap:9px;margin-top:13px;animation:bgReveal .6s cubic-bezier(.2,.85,.2,1) .25s both')}>
+                <div style={s('display:flex;flex-direction:column;align-items:center')}>
+                  <span style={s("font:800 62px/.78 'Archivo Black';font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 3px 24px rgba(13,5,23,.65)")}>{pad(Math.floor(cd / 3600))}</span>
+                  <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.18em;color:#9F8AB6;margin-top:10px")}>HRS</span>
+                </div>
+                <span style={s("padding-top:5px;font:800 44px/.78 'Archivo Black';color:rgba(242,242,240,.26)")}>:</span>
+                <div style={s('display:flex;flex-direction:column;align-items:center')}>
+                  <span style={s("font:800 62px/.78 'Archivo Black';font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 3px 24px rgba(13,5,23,.65)")}>{pad(Math.floor(cd / 60) % 60)}</span>
+                  <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.18em;color:#9F8AB6;margin-top:10px")}>MIN</span>
+                </div>
+                <span style={s("padding-top:5px;font:800 44px/.78 'Archivo Black';color:rgba(242,242,240,.26)")}>:</span>
+                <div style={s('display:flex;flex-direction:column;align-items:center')}>
+                  <span style={s("font:800 62px/.78 'Archivo Black';font-variant-numeric:tabular-nums;color:#8B3DF5;text-shadow:0 3px 24px rgba(139,61,245,.4)")}>{pad(cd % 60)}</span>
+                  <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.18em;color:#8B3DF5;margin-top:10px")}>SEC</span>
+                </div>
+              </div>
+              <div style={s("font:700 10px/1 'Archivo';letter-spacing:.14em;color:#B09DC6;text-align:center;margin-top:17px")}>TUE 20:00 · THE ARC</div>
+            </div>
+
+            {/* aggregate, the tale of the tie */}
+            <button onClick={go('reads')} className="agg" style={s('position:relative;display:flex;align-items:center;gap:13px;width:100%;text-align:left;margin-top:22px;padding:14px 16px;background:rgba(139,61,245,.14);box-shadow:inset 0 1px 0 rgba(242,242,240,.12)')}>
+              <span style={s('width:38px;height:38px;flex:none;background:#8B3DF5;display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#1B0B2D">trending_up</Ms></span>
+              <span style={s('flex:1;min-width:0')}>
+                <span style={s("display:block;font:800 15px/1 'Archivo Black';letter-spacing:.03em;color:#fff")}>VOLTS LEAD 2–1 ON AGGREGATE</span>
+                <span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:#B09DC6;margin-top:4px")}>90 minutes from the final in Munich.</span>
+              </span>
+              <Ms size={18} color="#B08EF0">chevron_right</Ms>
+            </button>
+          </div>
+          <div style={s('padding:22px 16px 0')}>
+            {label('THE FIRST LEG')}
+            <button onClick={go('reads')} className="fs" style={s('display:flex;align-items:stretch;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(27,11,45,.07)')}>
+              <span style={s('flex:1;min-width:0;padding:14px 14px 15px')}>
+                <span style={s('display:flex;align-items:flex-end;gap:10px')}><span style={s("font:800 34px/.8 'Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>2 – 1</span><span style={s("font:600 10.5px/1.35 'Archivo';color:var(--label);padding-bottom:2px")}>30 APR · THE CROWN<br />Volts lead on aggregate</span></span>
+                <span style={s("display:block;font:500 12px/1.45 'Archivo';color:var(--body);margin-top:10px")}>Brink 2, Montes 1. Six minutes of highlights and the tactical read.</span>
+                <span style={s("display:inline-flex;align-items:center;gap:6px;margin-top:11px;font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:9px 10px")}><Ms size={13} color="var(--on-panel)">play_circle</Ms>WATCH HIGHLIGHTS</span>
+              </span>
+              <span style={s('width:116px;flex:none;position:relative;background:var(--sand2)')}><Slot id="last-meeting" label="First leg" /></span>
+            </button>
+          </div>
+          <div style={s("padding:20px 16px 0;font:500 13.5px/1.5 'Archivo';color:var(--body)")}>Tonight’s companion: follow the game, talk to other Voltford fans, and earn towards a seat upgrade while you watch. Nothing to install.</div>
+          <div style={s('padding:22px 16px 0')}>
+            {label('NEXT UP AT THE ARC')}
+            <div style={s('margin-top:6px')}>
+              {[
+                { day: '31', mon: 'MAY', opp: 'Champions League final', comp: 'Munich', ko: '20:00', tag: 'IF WE WIN', bg: '#8B3DF5', fg: '#fff' },
+                { day: '08', mon: 'AUG', opp: 'Harrow Vale United', comp: 'Premier League', ko: '17:30', tag: 'HOME', bg: 'var(--sand)', fg: 'var(--ink)' },
+                { day: '16', mon: 'AUG', opp: 'Ashdown Rovers', comp: 'Premier League', ko: '15:00', tag: 'AWAY', bg: 'var(--sand)', fg: 'var(--ink)' },
+              ].map((x, i) => (
+                <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}>
+                  <span style={s('width:38px;flex:none;text-align:center')}><span style={s("display:block;font:800 17px/1 'Archivo Black';color:var(--ink)")}>{x.day}</span><span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:var(--label);margin-top:4px")}>{x.mon}</span></span>
+                  <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{x.opp}</span><span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{x.comp} · {x.ko}</span></span>
+                  <span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:6px 7px"), color: x.fg, background: x.bg }}>{x.tag}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {liveish && (
+        <section style={s('position:relative;animation:bgFade .3s ease both')}>
+          {/* ── Cinematic in-play hero: giant live score over the floodlit crowd ── */}
+          <div style={s('position:relative;overflow:hidden;background:#160925')}>
+            <HeroBg pos="50% 8%" glow={ht ? 'rgba(79,179,232,.3)' : 'rgba(214,32,42,.32)'} sweep={false} />
+            <div style={s('position:relative;padding:15px 16px 18px')}>
+              <div style={s('display:flex;align-items:center;justify-content:center')}>
+                {ht
+                  ? <span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#4FB3E8;background:rgba(79,179,232,.16);padding:7px 10px")}>HALF-TIME</span>
+                  : <span style={s('display:flex;align-items:center;gap:7px;background:rgba(214,32,42,.92);padding:7px 11px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#fff")}>LIVE · {live ? "38'" : "45'+2"}</span></span>}
+              </div>
+              <div style={s('display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-top:16px')}>
+                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="home" size={46} />
+                  <span style={s("font:800 15px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>VOLTFORD</span>
+                </div>
+                <div key={'s' + st.hs + st.as} style={s('display:flex;align-items:center;justify-content:center;gap:13px;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both')}>
+                  <span style={s("font:800 76px/.76 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(13,5,23,.6)")}>{st.hs}</span>
+                  <span style={s('width:15px;height:3px;background:#8B3DF5')} />
+                  <span style={s("font:800 76px/.76 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(13,5,23,.6)")}>{st.as}</span>
+                </div>
+                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="away" size={46} />
+                  <span style={s("font:800 15px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>KINGSMERE</span>
+                </div>
+              </div>
+              <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:13px;font:500 11px/1.45 'Archivo';color:#B09DC6")}>
+                <span>{st.hs > 1 ? 'Brink 23’ · Marsh 71’' : st.hs ? 'Brink 23’' : '—'}</span>
+                <span style={s('text-align:right')}>{st.as ? (ht ? 'Montes 45’' : 'Montes 58’') : '—'}</span>
+              </div>
+              <div style={s('display:flex;align-items:center;gap:10px;margin-top:16px')}>
+                <span style={s("font:800 10px/1 'Archivo';letter-spacing:.12em;color:#B08EF0;font-variant-numeric:tabular-nums")}>{live ? "38'" : "45'+2"}</span>
+                <div style={s('flex:1;height:4px;background:rgba(242,242,240,.18);position:relative')}><span style={{ ...s('position:absolute;left:0;top:0;bottom:0;background:#D6202A;transition:width 1s linear'), width: Math.min((live ? 38 : 45) / 90 * 100, 100) + '%' }} /><span style={s('position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:rgba(242,242,240,.45)')} /></div>
+                <span style={s("font:800 10px/1 'Archivo';letter-spacing:.12em;color:#B08EF0")}>90′</span>
+              </div>
+            </div>
+          </div>
+          <div style={s('padding:0 16px')}>
+            {(timeline as any[]).map((e, i) => (
+              <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}>
+                <span style={s("font:800 12px/1 'Archivo';color:var(--ink);width:26px;font-variant-numeric:tabular-nums")}>{e.min}′</span>
+                {e.isCard && <span style={{ ...s('width:11px;height:15px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(27,11,45,.3)'), background: e.cardColor }} />}
+                {e.hasIcon && <Ms size={16} color={e.iconColor}>{e.icon}</Ms>}
+                <span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:5px 6px;text-align:center"), color: e.fg, background: e.bg }}>{e.kind}</span>
+                <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 13.5px/1.2 'Archivo';color:var(--ink)")}>{e.who}</span>{e.detail && <span style={s("display:block;font:500 11px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{e.detail}</span>}</span>
+                <span style={{ ...s('width:5px;height:14px;transform:skewX(-8deg);margin-left:auto'), background: e.tc }} />
+              </div>
+            ))}
+          </div>
+          {ht && (
+            <div style={s('margin:16px 16px 0;background:var(--sand);padding:16px')}>
+              <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>HALF-TIME · 15 MINUTES</div>
+              <div style={s("font:800 28px/.9 'Archivo Black';color:var(--ink);margin-top:10px")}>Beat the queue</div>
+              <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>Order to seat 112–J and it lands before the restart.</div>
+              <div style={s('display:flex;gap:7px;margin-top:13px;flex-wrap:wrap')}>
+                <button onClick={go('food')} className="fp" style={s("display:flex;align-items:center;gap:7px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:12px 15px")}><Ms size={15} color="var(--on-panel)">restaurant</Ms>ORDER FOOD</button>
+                <button onClick={go('spotkick')} style={s("display:flex;align-items:center;gap:7px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#8B3DF5;padding:12px 15px")}><Ms size={15} color="#fff">sports_soccer</Ms>PLAY SPOT KICK</button>
+                <button onClick={go('intel')} className="fs" style={s("font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--ink);padding:12px 15px;box-shadow:inset 0 0 0 1.5px var(--ink)")}>HALF-TIME INTEL</button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {ft && (
+        <section style={s('position:relative;animation:bgFade .3s ease both')}>
+          {/* ── Cinematic full-time hero: the result, the aggregate, Munich ── */}
+          <div style={s('position:relative;overflow:hidden;background:#160925')}>
+            <HeroBg pos="50% 30%" glow="rgba(139,61,245,.5)" sweep={true} />
+            <div style={s('position:relative;padding:16px 16px 18px')}>
+              <div style={s('display:flex;align-items:center;justify-content:center')}>
+                <span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#fff;background:#D6202A;padding:7px 11px")}>FULL-TIME</span>
+              </div>
+              <div style={s('display:flex;align-items:center;justify-content:center;gap:15px;margin-top:16px')}>
+                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="home" size={50} />
+                  <span style={s("font:800 15px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>VOLTFORD</span>
+                </div>
+                <div style={s('display:flex;align-items:center;gap:13px')}>
+                  <span style={s("font:800 82px/.74 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(13,5,23,.6)")}>2</span>
+                  <span style={s('width:16px;height:3px;background:#8B3DF5')} />
+                  <span style={s("font:800 82px/.74 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(13,5,23,.6)")}>1</span>
+                </div>
+                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
+                  <Badge club="away" size={50} />
+                  <span style={s("font:800 15px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(13,5,23,.75)")}>KINGSMERE</span>
+                </div>
+              </div>
+              <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:14px;font:500 11px/1.5 'Archivo';color:#B09DC6")}><span>Brink 23’ · Marsh 71’</span><span style={s('text-align:right')}>Montes 58’</span></div>
+            </div>
+            <button onClick={go('reads')} className="agg" style={s('position:relative;display:flex;align-items:center;gap:13px;width:100%;text-align:left;padding:14px 16px;background:rgba(139,61,245,.16);box-shadow:inset 0 1px 0 rgba(242,242,240,.12)')}>
+              <span style={s('width:38px;height:38px;flex:none;background:#8B3DF5;display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#1B0B2D">emoji_events</Ms></span>
+              <span style={s('flex:1;min-width:0')}>
+                <span style={s("display:block;font:800 15px/1 'Archivo Black';letter-spacing:.03em;color:#fff")}>VOLTS ADVANCE 4–3 ON AGGREGATE</span>
+                <span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:#B09DC6;margin-top:4px")}>Into the final. Munich, 31 May.</span>
+              </span>
+              <Ms size={18} color="#B08EF0">chevron_right</Ms>
+            </button>
+          </div>
+          <div style={s('padding:20px 16px 0')}>
+            {label('MATCH STATS')}
+            <div style={s('margin-top:10px')}>
+              {[{ label: 'POSSESSION', h: '58%', a: '42%', hf: 58, af: 42 }, { label: 'SHOTS', h: '17', a: '11', hf: 17, af: 11 }, { label: 'ON TARGET', h: '8', a: '4', hf: 8, af: 4 }, { label: 'EXPECTED GOALS', h: '2.34', a: '1.02', hf: 234, af: 102 }, { label: 'PASSES', h: '641', a: '498', hf: 641, af: 498 }, { label: 'CORNERS', h: '9', a: '3', hf: 9, af: 3 }].map((x) => (
+                <div key={x.label} style={s('padding:10px 0;border-bottom:1.5px solid var(--hair)')}>
+                  <div style={s('display:flex;align-items:baseline;justify-content:space-between;gap:10px')}><span style={s("font:800 17px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums;width:52px")}>{x.h}</span><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{x.label}</span><span style={s("font:800 17px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums;width:52px;text-align:right")}>{x.a}</span></div>
+                  <div style={s('display:flex;gap:2px;margin-top:7px;height:7px')}><span style={{ flex: x.hf, background: '#8B3DF5' }} /><span style={{ flex: x.af, background: '#1E3A6E', opacity: 0.55 }} /></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={s('padding:22px 16px 0')}>
+            {label('FROM THE FANS')}
+            <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px')}>
+              <button onClick={go('photos')} className="fs" style={s('grid-column:span 2;text-align:left;background:var(--sand)')}>
+                <div style={s('height:120px;position:relative')}><Slot id="ft-hero-photo" label="Winning moment" /></div>
+                <div style={s('padding:12px 13px 13px')}><div style={s("font:800 22px/.94 'Archivo Black';color:var(--ink)")}>The night in photos</div><div style={s("font:500 12.5px/1.45 'Archivo';color:var(--body);margin-top:4px")}>1,204 fan photos from all four stands.</div></div>
+              </button>
+              <button onClick={go('reactions')} className="fs" style={s('text-align:left;background:var(--sand)')}><div style={s('height:96px;position:relative')}><Slot id="ft-reel" label="Reel still" /></div><div style={s('padding:11px 12px 12px')}><div style={s("font:800 19px/1 'Archivo Black';color:var(--ink)")}>Reactions</div><div style={s("font:500 12px/1.4 'Archivo';color:var(--body);margin-top:3px")}>30-second fan reels.</div></div></button>
+              <button onClick={go('reads')} className="fs" style={s('text-align:left;background:var(--sand)')}><div style={s('height:96px;display:flex;align-items:center;justify-content:center')}><Ms size={34} color="var(--ink)">article</Ms></div><div style={s('padding:11px 12px 12px')}><div style={s("font:800 19px/1 'Archivo Black';color:var(--ink)")}>Reads</div><div style={s("font:500 12px/1.4 'Archivo';color:var(--body);margin-top:3px")}>Ratings and the tactical read.</div></div></button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FAN CHAT PREVIEW */}
+      <section style={s('margin:20px 16px 0;animation:bgRise .4s .08s ease both')}>
+        <div style={s('display:flex;align-items:center;gap:8px')}>{sect('FAN CHAT')}<span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{298 + (st.n % 40)} TALKING NOW</span></div>
+        <button onClick={go('chat')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(27,11,45,.07)')}>
+          <div style={s('height:150px;overflow:hidden;position:relative;padding:0 12px')}>
+            <div style={{ ...s('position:absolute;left:12px;right:12px;bottom:11px;display:flex;flex-direction:column;gap:8px;transition:transform .5s cubic-bezier(.2,.85,.2,1)'), transform: `translateY(${st.rollY}px)` }}>
+              {previewMsgs.map((m, i) => (
+                <div key={i} style={s('display:flex;gap:8px;align-items:flex-start')}>
+                  <span style={{ ...s("width:22px;height:22px;flex:none;border-radius:50%;font:800 8.5px/22px 'Archivo';text-align:center"), background: m.avBg, color: m.avFg }}>{m.initials}</span>
+                  <span style={s('flex:1;min-width:0;background:var(--ground);padding:8px 10px;border-radius:2px 12px 12px 12px')}><span style={s("display:block;font:800 9px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>{m.user}</span><span style={s("display:block;font:500 12.5px/1.35 'Archivo';color:var(--ink);margin-top:4px")}>{m.text}</span></span>
+                </div>
+              ))}
+            </div>
+            <div style={s('position:absolute;inset:0 0 auto;height:46px;background:linear-gradient(var(--sand),transparent);pointer-events:none')} />
+          </div>
+          <div style={s('display:flex;align-items:center;gap:10px;padding:12px 13px;background:var(--panel)')}><span style={s("font:800 12.5px/1 'Archivo';letter-spacing:.04em;color:var(--on-panel)")}>JOIN THE CONVERSATION</span><Ms size={17} color="#9F8AB6" style={s('margin-left:auto')}>arrow_forward</Ms></div>
+        </button>
+      </section>
+
+      {/* REWARDS */}
+      {!pre && !inactive && (
+        <section style={s('margin:20px 16px 0;background:var(--panel);padding:16px;border-radius:2px;box-shadow:0 8px 24px rgba(27,11,45,.16);animation:bgRise .4s .04s ease both')}>
+          <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#9F8AB6")}>MATCHDAY REWARDS</span><span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:5px 7px")}>TIER 2</span></div>
+          <div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:12px')}><span style={s("font:800 44px/.8 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.xp.toLocaleString()}</span><span style={s("font:600 11.5px/1 'Archivo';color:#9F8AB6;padding-bottom:5px")}>/ 2,000 XP</span></div>
+          <div style={s("font:600 14px/1.35 'Archivo';color:var(--on-panel);margin-top:7px")}>{Math.max(2000 - st.xp, 0).toLocaleString()} XP from a seat upgrade for the final.</div>
+          <div style={s('display:flex;gap:2px;height:10px;margin-top:13px')}>{Array.from({ length: 20 }, (_, i) => <span key={i} style={{ flex: 1, background: i < filled ? '#F2F2F0' : 'rgba(242,242,240,.16)', transition: 'background .4s ease' }} />)}</div>
+          <div style={s('display:flex;gap:5px;margin-top:12px')}>{ladder.map((l, i) => <div key={i} style={{ ...s('flex:1;padding:10px'), background: l.bg, opacity: l.op }}><div style={{ ...s("font:800 8.5px/1 'Archivo';letter-spacing:.12em"), color: l.tagFg }}>{l.tag}</div><div style={{ ...s("font:700 12.5px/1.25 'Archivo';margin-top:6px"), color: l.fg }}>{l.name}</div><div style={{ ...s("font:500 10.5px/1 'Archivo';margin-top:4px"), color: l.subFg }}>{l.cost}</div></div>)}</div>
+          <div style={s('margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(242,242,240,.16)')}>
+            <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#9F8AB6")}>HOW TO EARN IT, TONIGHT’S QUESTS</span><span style={s("font:700 9px/1 'Archivo';letter-spacing:.1em;color:#8B3DF5")}>{questsDone}/4 DONE</span></div>
+            <div style={s('margin-top:10px;display:flex;flex-direction:column;gap:6px')}>
+              {questDefs.map((q) => { const done = !!st.quests[q.k]; return (
+                <button key={q.k} onClick={q.go} className="fq" style={s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 12px;background:rgba(242,242,240,.07)')}>
+                  <span style={{ ...s('width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center'), background: done ? '#8B3DF5' : 'rgba(242,242,240,.16)' }}><Ms size={14} color="#fff">{done ? 'check' : ''}</Ms></span>
+                  <span style={s('flex:1;min-width:0')}><span style={{ ...s("display:block;font:700 12.5px/1.2 'Archivo';color:var(--on-panel)"), textDecoration: done ? 'line-through' : 'none' }}>{q.title}</span><span style={s("display:block;font:500 11px/1.3 'Archivo';color:#9F8AB6;margin-top:3px")}>{done ? 'Done, XP added' : q.how}</span></span>
+                  <span style={{ ...s("font:800 11px/1 'Archivo';letter-spacing:.06em"), color: done ? '#8B3DF5' : '#F2F2F0' }}>{done ? 'PAID' : q.xp}</span>
+                </button>
+              ); })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* MATCH INTEL PREVIEW */}
+      <section style={s('margin:20px 16px 0;animation:bgRise .4s .12s ease both')}>
+        {sect('MATCH INTEL')}
+        <button onClick={go('intel')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:2px;box-shadow:0 4px 16px rgba(27,11,45,.07)')}>
+          <div style={s("font:800 26px/.92 'Archivo Black';color:var(--ink)")}>The briefing,<br />already written</div>
+          <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:8px")}>Win probability, the shot map, head-to-head and form, prepared before kick-off.</div>
+          <div style={s('display:flex;gap:2px;margin-top:15px')}>
+            <div style={s('flex:46;background:#8B3DF5;padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:rgba(255,255,255,.9)")}>MOST LIKELY</div><div style={s("font:800 27px/1 'Archivo Black';color:#fff;margin-top:8px;font-variant-numeric:tabular-nums")}>46%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:rgba(255,255,255,.92);margin-top:6px")}>VOLTFORD WIN</div></div>
+            <div style={s('flex:27;background:var(--sand2);padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/1 'Archivo Black';color:var(--ink);margin-top:8px;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--body);margin-top:6px")}>DRAW</div></div>
+            <div style={s('flex:27;background:#1E3A6E;padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/1 'Archivo Black';color:#fff;margin-top:8px;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:#4FB3E8;margin-top:6px")}>KINGSMERE</div></div>
+          </div>
+          <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>READ THE BRIEFING<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
+        </button>
+      </section>
+
+      {/* COMMUNITY PREVIEW, the Match Intel treatment, applied to Community */}
+      {showCommunityBlock && (
+        <section style={s('margin:20px 16px 0;animation:bgRise .4s .14s ease both')}>
+          <div style={s('display:flex;align-items:center;gap:8px')}>{sect('CREWS')}<span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{communityBadge}</span></div>
+          <button onClick={go('community')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(27,11,45,.07)')}>
+            <div style={s('position:relative;height:104px;overflow:hidden')}>
+              <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 32%')} />
+              <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,9,37,.12),rgba(22,9,37,.84))')} />
+              <div style={s('position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:9px')}>
+                <div style={s('display:flex')}>{communityAvatars.map((a, i) => <span key={i} style={{ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Archivo';color:#fff;box-shadow:0 0 0 2px #160925"), background: a.bg, marginLeft: i ? -8 : 0 }}>{a.i}</span>)}</div>
+                <span style={s("font:700 10.5px/1 'Archivo';letter-spacing:.05em;color:#F2F2F0;text-shadow:0 1px 6px rgba(13,5,23,.8)")}>2,182 in your Crews right now</span>
+              </div>
+            </div>
+            <div style={s('padding:14px 16px 16px')}>
+              <div style={s("font:800 24px/.92 'Archivo Black';color:var(--ink)")}>Your Crew,<br />between the whistles</div>
+              <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:8px")}>{communityBlockLine}</div>
+              <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>OPEN CREWS<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
+            </div>
+          </button>
+        </section>
+      )}
+
+      {/* ALSO TONIGHT */}
+      <section style={s('margin:24px 0 0;padding:0 16px;animation:bgRise .4s .16s ease both')}>
+        {sect('ALSO TONIGHT')}
+        <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:11px')}>
+          {sections.map((x) => (
+            <button key={x.t} onClick={x.go} className="frow" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 13px;background:var(--sand);border-radius:2px;box-shadow:0 2px 10px rgba(27,11,45,.05)')}>
+              <span style={s('width:44px;height:44px;flex:none;border-radius:2px;background:transparent;box-shadow:inset 0 0 0 1.5px var(--hair);display:flex;align-items:center;justify-content:center')}><Ms size={25} color="var(--ink)">{x.icon}</Ms></span>
+              <span style={s('flex:1;min-width:0')}>
+                <span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 19px/1 'Archivo Black';letter-spacing:.03em;color:var(--ink)")}>{x.t}</span><span style={s("font:800 8px/1 'Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:4px 5px")}>{x.tag}</span></span>
+                <span style={s("display:block;font:500 12.5px/1.4 'Archivo';color:var(--body);margin-top:3px")}>{x.d}</span>
+              </span>
+              <Ms size={18} color="var(--label)">chevron_right</Ms>
+            </button>
+          ))}
+        </div>
+        <div style={s("font:700 10.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin:16px 0 0;text-align:center")}>MATCHDAY.VOLTFORD.FC · NO APP, NO DOWNLOAD</div>
+      </section>
+    </div>
+  );
+}
+
+// ═══════════ sub-screens ═══════════
+
+// ── Crews onboarding: shown when the fan is in no non-gated Crew and hasn't skipped ──
+const ONBOARDING_OPTS = [
+  { icon: 'directions_bus', label: 'I travel to away games', crewId: 'voltheads', crewName: 'Voltheads' },
+  { icon: 'groups', label: 'I go with family or kids', crewId: 'family', crewName: 'Family Stand' },
+  { icon: 'music_note', label: 'I’m there for the atmosphere', crewId: 'boltchoir', crewName: 'The Bolt Choir' },
+  { icon: 'home', label: 'I mostly watch from home', crewId: 'msb', crewName: 'Arcside Volts' },
+];
+function CrewsOnboarding({ pickOnboarding, skipOnboarding }: any) {
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
+      <div style={s("font:800 30px/.92 'Archivo Black';color:var(--ink)")}>Pick your matchday crew</div>
+      <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px;max-width:300px")}>Tell us how you watch and we’ll drop you into the Crew that fits. You can join more, or leave, any time.</div>
+      <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:20px')}>
+        {ONBOARDING_OPTS.map((o) => (
+          <button key={o.crewId} onClick={() => pickOnboarding(o.crewId)} className="fs" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--sand);padding:14px')}>
+            <Ms size={22} color="var(--ink)">{o.icon}</Ms>
+            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Archivo';color:var(--ink)")}>{o.label}</span><span style={s("display:block;font:500 11.5px/1.4 'Archivo';color:var(--label);margin-top:2px")}>Joins {o.crewName}</span></span>
+            <Ms size={18} color="var(--label)">chevron_right</Ms>
+          </button>
+        ))}
+      </div>
+      <button onClick={skipOnboarding} style={s("display:block;margin-top:16px;font:700 11px/1 'Archivo';letter-spacing:.06em;color:var(--label)")}>SKIP FOR NOW</button>
+    </div>
+  );
+}
+
+// ── Crews Home ──
+function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: any) {
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const allCrews: CrewRec[] = [...CREWS, ...st.customCrews];
+  const needsOnboarding = !allCrews.some((c) => !c.gated && st.crewsJoined[c.id]) && !st.onboardingSkipped;
+  if (needsOnboarding) return <CrewsOnboarding {...{ pickOnboarding, skipOnboarding }} />;
+  const dropInCrewId = st.dropIn.active ? st.dropIn.crewId : null;
+  const myCrews = allCrews.filter((c) => st.crewsJoined[c.id] || c.gated).map((c) => {
+    const gatedLocked = c.gated && !st.boxUnlocked;
+    return { id: c.id, name: c.name, initials: c.initials, members: gatedLocked ? '–' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated, locked: gatedLocked, avatarBg: c.status === 'pending' ? '#B98900' : gatedLocked ? '#725E88' : '#8B3DF5', dropInNow: dropInCrewId === c.id, pending: c.status === 'pending' };
+  });
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding-bottom:26px')}>
+      <div style={s('padding:16px 16px 0')}>
+        <div style={s("font:800 32px/.9 'Archivo Black';color:var(--ink)")}>Crews</div>
+        <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px;max-width:300px")}>Permanent fan groups that don’t reset at full-time. Join one, or start your own.</div>
+      </div>
+      <div style={s('padding:26px 16px 0')}>
+        {L('YOUR CREWS')}
+        <div style={s('margin-top:9px')}>
+          {myCrews.map((c) => (
+            <button key={c.id} onClick={() => openCrew(c.id)} className="frow" style={s('display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 0;border-bottom:1.5px solid var(--hair)')}>
+              <span style={{ ...s("width:46px;height:46px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 11px/1 'Archivo';color:#fff"), background: c.avatarBg }}>{c.locked ? <Ms size={19} color="#fff">lock</Ms> : c.initials}</span>
+              <span style={s('flex:1;min-width:0')}><span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 14.5px/1.2 'Archivo';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}{c.pending && <span style={s("font:800 8px/1 'Archivo';letter-spacing:.08em;color:#B98900;background:rgba(79,179,232,.18);padding:3px 5px")}>PENDING</span>}{c.dropInNow && <span style={s("font:800 8px/1 'Archivo';letter-spacing:.08em;color:#fff;background:#8B3DF5;padding:3px 5px")}>PLAYER HERE</span>}</span><span style={s("display:block;font:500 12px/1.4 'Archivo';color:var(--label);margin-top:3px")}>{c.pending ? 'Pending Voltford review' : c.members + ' members · ' + c.latest}</span></span>
+              <Ms size={18} color="var(--label)">chevron_right</Ms>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={s('padding:26px 16px 0')}>
+        {L('DISCOVER CREWS')}
+        <div style={s('display:flex;gap:9px;margin-top:11px;overflow-x:auto')}>
+          {DISCOVER_CREWS.map((c) => { const joined = !!st.crewsJoined[c.id]; return (
+            <div key={c.id} style={s('flex:none;width:158px;background:var(--sand);padding:16px')}>
+              <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{c.name}</span>{c.official && <Ms size={14} color="#8B3DF5">verified</Ms>}</div>
+              <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--label);margin-top:6px")}>{c.members.toLocaleString()} members</div>
+              <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [c.id]: !joined } }))} style={{ ...s("display:block;width:100%;margin-top:10px;font:800 10px/1 'Archivo';letter-spacing:.08em;padding:9px 0;text-align:center"), background: joined ? 'var(--ground)' : 'var(--panel)', color: joined ? 'var(--ink)' : 'var(--on-panel)' }}>{joined ? 'JOINED' : 'JOIN'}</button>
+            </div>
+          ); })}
+          {/* Start a Crew tile */}
+          <button onClick={go('createCrew')} className="fs" style={s('flex:none;width:158px;text-align:left;background:var(--sand);padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:9px')}>
+            <Ms size={22} color="#8B3DF5">add_circle</Ms>
+            <span style={s("font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>Start a Crew</span>
+            <span style={s("font:500 11.5px/1.4 'Archivo';color:var(--label)")}>Fan-run, yours to shape</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Crew View: thread, plans, gated states, player drop-in, verified player posts ──
+function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom, approveCrew }: any) {
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const joined = !!st.crewsJoined[crew.id];
+  const pendingReview = crew.status === 'pending';
+  const gatedLocked = crew.gated && !st.boxUnlocked;
+  const dropInActive = st.dropIn.active && st.dropIn.crewId === crew.id;
+  const secsLeft = dropInActive && st.dropIn.endsAt ? Math.max(0, Math.round((st.dropIn.endsAt - Date.now()) / 1000)) : 0;
+  const mm = Math.floor(secsLeft / 60), ss = String(secsLeft % 60).padStart(2, '0');
+  const presence = st.presenceStamps[crew.id] || 0;
+  const msgs: CrewMsg[] = [...CREW_MSGS, ...(PLAYER_MSGS[crew.id] || []), ...(st.crewMsgsExtra[crew.id] || [])];
+  const memberAvatars = Array.from({ length: 8 }, (_, i) => ({ src: ROSTER_PHOTOS[i % ROSTER_PHOTOS.length], initials: 'M' + (i + 1), bg: i % 2 ? '#8B3DF5' : '#331C4E' }));
+  const playVoice = (key: string) => set((sp: FSt) => ({ playingVoice: sp.playingVoice === key ? null : key }));
+  // Reply threading: look up the quoted message + who/what the composer is replying to.
+  const bySrcId: Record<string, CrewMsg> = {}; msgs.forEach((m) => { if (m.id) bySrcId[m.id] = m; });
+  const quoteText = (q: CrewMsg) => q.text || q.caption || '(voice note)';
+  const replyDraftSrc = st.replyDraftId ? bySrcId[st.replyDraftId] : null;
+  // Pinned notification with RSVP (Johan's "pin a coach to the away game, let people RSVP").
+  const [rsvp, setRsvp] = useState<null | 'in' | 'out'>(null);
+  const goingCount = 18 + (rsvp === 'in' ? 1 : 0);
+  const rsvpAvatars = ROSTER_PHOTOS.slice(0, 4);
+  return (
+    <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:600px')}>
+      {/* Twitter-style banner header */}
+      <div style={s('position:relative;height:118px;background:var(--panel)')}><Slot id={'crew-banner-' + crew.id} label="Crew banner" /></div>
+      <div style={s('padding:16px 16px 0')}>
+        <div style={s('display:flex;align-items:center;gap:8px')}>
+          <span style={s("flex:1;min-width:0;font:800 30px/.94 'Archivo Black';color:var(--ink)")}>{crew.name}</span>
+          {pendingReview && <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#B98900;background:rgba(79,179,232,.18);padding:5px 7px")}>PENDING</span>}
+          {crew.official && <Ms size={18} color="#8B3DF5">verified</Ms>}
+          {crew.gated && <Ms size={18} color="var(--label)">lock</Ms>}
+          <button onClick={go('crewSettings')} className="fs" style={s('flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--sand)')}><Ms size={17} color="var(--ink)">settings</Ms></button>
+        </div>
+        {pendingReview && (
+          <div style={s('margin-top:14px;background:var(--panel);padding:16px')}>
+            <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color="#8B3DF5">verified_user</Ms><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.16em;color:#8B3DF5")}>PENDING VOLTFORD REVIEW</span></div>
+            <div style={s("font:800 21px/1.04 'Archivo Black';color:var(--on-panel);margin-top:11px")}>We’re checking your Crew over</div>
+            <div style={s("font:500 12.5px/1.55 'Archivo';color:#9F8AB6;margin-top:8px")}>Every fan-run Crew gets a quick safety check from Voltford, usually cleared within a few hours. It’s already yours, so invite people and set the tone now. It goes public the moment it’s approved.</div>
+            <div style={s('display:flex;gap:8px;margin-top:14px')}>
+              <button onClick={go('invite')} style={s("display:flex;align-items:center;gap:7px;font:800 11px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#8B3DF5;padding:11px 13px")}><Ms size={15} color="#fff">person_add</Ms>INVITE PEOPLE</button>
+              <button onClick={() => approveCrew(crew.id)} className="fq" style={s("font:800 10.5px/1 'Archivo';letter-spacing:.1em;color:#9F8AB6;background:rgba(242,242,240,.08);padding:11px 13px")}>DEMO · APPROVE</button>
+            </div>
+          </div>
+        )}
+        {presence > 0 && (
+          <div style={s('display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:#8B3DF5;padding:5px 8px')}><Ms size={13} color="#fff">verified</Ms><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.08em;color:#fff")}>WAS THERE FOR THE DROP-IN</span></div>
+        )}
+        {gatedLocked && (
+          <div style={s('margin-top:14px;background:var(--panel);padding:22px;text-align:center')}>
+            <Ms size={30} color="#9F8AB6">lock</Ms>
+            <div style={s("font:800 22px/1 'Archivo Black';color:var(--on-panel);margin-top:10px")}>Locked</div>
+            <div style={s("font:500 12.5px/1.5 'Archivo';color:#9F8AB6;margin-top:8px;max-width:260px;margin-left:auto;margin-right:auto")}>{crew.unlockHint}</div>
+            <button onClick={() => set({ boxUnlocked: true })} style={s("margin-top:14px;font:800 10.5px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#8B3DF5;padding:11px 14px")}>DEMO · UNLOCK</button>
+          </div>
+        )}
+      </div>
+
+      {!gatedLocked && (<>
+        {crew.gated && (
+          <div style={s('padding:0 16px 8px')}>
+            <div style={s("font:500 12px/1.5 'Archivo';color:var(--body)")}>Early access, first look at the next shirt, private thread, season-ticket holders only.</div>
+            <button onClick={() => set({ boxUnlocked: false })} style={s("margin-top:8px;font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>DEMO · LOCK AGAIN</button>
+          </div>
+        )}
+        <div style={s('padding:0 16px 0')}>
+          <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body)")}>{crew.members.toLocaleString()} members · permanent thread</div>
+          <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} style={{ ...s("display:block;margin-top:11px;font:800 10.5px/1 'Archivo';letter-spacing:.1em;padding:11px 14px;text-align:center"), background: joined ? 'var(--sand)' : '#8B3DF5', color: joined ? 'var(--ink)' : '#fff' }}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
+        </div>
+
+        {!crew.gated && !crew.isCustom && (
+          <div style={s('margin:18px 16px 0;background:var(--panel);padding:15px 16px')}>
+            <div style={s('display:flex;align-items:center;gap:7px')}><Ms size={15} color="#8B3DF5">push_pin</Ms><span style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:#8B3DF5")}>PINNED · COACH TRAVEL</span><span style={s("font:700 9px/1 'Archivo';letter-spacing:.06em;color:#947EAE;margin-left:auto")}>BY MARCUS_92</span></div>
+            <div style={s("font:800 21px/1.04 'Archivo Black';color:var(--on-panel);margin-top:11px")}>Coach to Ashdown Rovers (A)</div>
+            <div style={s("font:500 12.5px/1.55 'Archivo';color:#B09DC6;margin-top:7px")}>Sat 12 Aug · leaves the Arc 10:30 · £15 return, kids half price. RSVP by Thursday so we can book the seats.</div>
+            <div style={s('display:flex;align-items:center;gap:10px;margin-top:13px')}>
+              <div style={s('display:flex')}>{rsvpAvatars.map((src: string, i: number) => <span key={i} style={{ ...s('width:26px;height:26px;flex:none;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px var(--panel)'), marginLeft: i ? -8 : 0 }}><img src={src} alt="" style={s('width:100%;height:100%;object-fit:cover')} /></span>)}</div>
+              <span style={s("font:700 11px/1 'Archivo';color:#B09DC6")}>{goingCount} going</span>
+            </div>
+            <div style={s('display:flex;gap:8px;margin-top:14px')}>
+              <button onClick={() => setRsvp(rsvp === 'in' ? null : 'in')} style={{ ...s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font:800 11px/1 'Archivo';letter-spacing:.06em;padding:12px 0"), background: rsvp === 'in' ? '#8B3DF5' : 'rgba(242,242,240,.1)', color: rsvp === 'in' ? '#fff' : 'var(--on-panel)' }}><Ms size={15} color={rsvp === 'in' ? '#fff' : '#8B3DF5'}>{rsvp === 'in' ? 'check_circle' : 'directions_bus'}</Ms>{rsvp === 'in' ? 'YOU’RE GOING' : 'I’M GOING'}</button>
+              <button onClick={() => setRsvp(rsvp === 'out' ? null : 'out')} style={{ ...s("flex:none;font:800 11px/1 'Archivo';letter-spacing:.06em;padding:12px 16px"), background: rsvp === 'out' ? 'rgba(242,242,240,.22)' : 'rgba(242,242,240,.06)', color: rsvp === 'out' ? 'var(--on-panel)' : '#947EAE' }}>CAN’T</button>
+            </div>
+          </div>
+        )}
+
+        {dropInActive && (
+          <div style={s('margin:18px 16px 0;background:#8B3DF5;padding:14px 16px;display:flex;align-items:center;gap:10px')}>
+            <Ms size={18} color="#fff">verified</Ms>
+            <span style={s("flex:1;font:800 12px/1.3 'Archivo';color:#fff")}>{st.dropIn.player} is here, replying to approved questions</span>
+            <span style={s("font:800 13px/1 'Archivo';color:#fff;font-variant-numeric:tabular-nums")}>{mm}:{ss}</span>
+          </div>
+        )}
+
+        <div style={s('padding:18px 16px 0')}>
+          {L('MEMBERS')}
+          <div style={s('display:flex;gap:6px;margin-top:9px')}>{memberAvatars.map((m, i) => <Avatar key={i} src={m.src} initials={m.initials} bg={m.bg} size={32} />)}</div>
+        </div>
+        <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label);padding:26px 16px 0")}>THE THREAD</div>
+        <div style={s('flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px')}>
+          {dropInActive && st.dropIn.approved.map((q: any) => (
+            <div key={q.id} style={s('background:var(--panel);padding:10px 12px')}>
+              <div style={s("font:600 12px/1.4 'Archivo';color:#9F8AB6")}>{q.user}: {q.text}</div>
+              <div style={s('display:flex;align-items:center;gap:6px;margin-top:6px')}><Ms size={13} color="#8B3DF5">verified</Ms><span style={s("font:700 12.5px/1.4 'Archivo';color:var(--on-panel)")}>{q.reply}</span></div>
+            </div>
+          ))}
+          {msgs.map((m, i) => {
+            const vkey = 'v' + crew.id + i;
+            const quoted = m.replyToId ? bySrcId[m.replyToId] : null;
+            const mid = m.id ?? '';
+            const rx = REACTION_EMOJIS.map((e) => { const on = !!(mid && st.reactions[mid + ':' + e]); return { e, on, count: ((m.baseReactions && m.baseReactions[e]) || 0) + (on ? 1 : 0) }; }).filter((r) => r.count > 0);
+            return (
+              <div key={i} style={s('display:flex;gap:8px')}>
+                <Avatar src={m.photo} initials={m.initials} bg={m.avBg} size={26} />
+                <div style={s('flex:1;min-width:0')}>
+                  <div style={s('display:flex;align-items:center;gap:5px')}><span style={s("font:800 9px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>{m.user}</span>{m.verified && <Ms size={12} color="#8B3DF5">verified</Ms>}</div>
+                  {quoted && (
+                    <div style={s('display:flex;align-items:center;gap:5px;margin-top:4px;padding-left:8px;border-left:2px solid #8B3DF5')}>
+                      <span style={s("font:700 10.5px/1.3 'Archivo';color:#8B3DF5")}>{quoted.user}</span>
+                      <span style={s("font:500 10.5px/1.3 'Archivo';color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px")}>{quoteText(quoted)}</span>
+                    </div>
+                  )}
+                  {m.isText && <div style={s("font:500 13px/1.4 'Archivo';color:var(--ink);margin-top:4px;background:var(--sand);padding:8px 10px;border-radius:3px 12px 12px 12px")}>{m.text}</div>}
+                  {m.isImage && (
+                    <div style={s('margin-top:4px;background:var(--sand);border-radius:3px 12px 12px 12px;overflow:hidden;max-width:220px')}>
+                      <div style={s('position:relative;width:220px;height:150px')}><Slot id={m.id!} label={m.caption || 'Player photo'} /></div>
+                      <div style={s("font:600 11.5px/1.4 'Archivo';color:var(--ink);padding:8px 10px")}>{m.caption}</div>
+                    </div>
+                  )}
+                  {m.isVoice && (
+                    <button onClick={() => playVoice(vkey)} className="fs" style={s('display:flex;align-items:center;gap:9px;margin-top:4px;background:var(--sand);border-radius:3px 12px 12px 12px;padding:9px 12px 9px 9px')}>
+                      <span style={s('width:30px;height:30px;flex:none;border-radius:50%;background:#8B3DF5;display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#fff">{st.playingVoice === vkey ? 'pause' : 'play_arrow'}</Ms></span>
+                      <span style={s('display:flex;align-items:center;gap:2px')}>{(m.wave || []).map((w, wi) => <span key={wi} style={{ width: 2.5, height: w, background: '#9F8AB6', borderRadius: 2 }} />)}</span>
+                      <span style={s("font:700 11px/1 'Archivo';letter-spacing:.04em;color:var(--label)")}>{m.dur}</span>
+                    </button>
+                  )}
+                  {m.isSocial && (
+                    <div style={s('margin-top:4px;display:flex;align-items:center;gap:9px;background:var(--sand);border-radius:3px 12px 12px 12px;padding:10px 12px;max-width:240px')}>
+                      <Ms size={19} color="var(--ink)">{m.socialIcon!}</Ms>
+                      <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 12px/1.3 'Archivo';color:var(--ink)")}>{m.socialTitle}</span><span style={s("display:block;font:500 11px/1.3 'Archivo';color:var(--label);margin-top:2px")}>{m.socialSub}</span></span>
+                    </div>
+                  )}
+                  {m.isCall && (
+                    <button onClick={() => openRoom(m.callPlayer || m.user)} className="fs" style={s('margin-top:4px;display:flex;align-items:center;gap:11px;width:100%;max-width:300px;background:var(--panel);border-radius:3px 12px 12px 12px;padding:11px 12px;text-align:left')}>
+                      <span style={s('width:38px;height:38px;flex:none;border-radius:10px;background:#8B3DF5;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#100E0A">videocam</Ms></span>
+                      <span style={s('flex:1;min-width:0')}>
+                        <span style={s('display:flex;align-items:center;gap:5px')}><span style={s('width:5px;height:5px;flex:none;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} /><span style={s("font:800 12px/1.3 'Archivo';color:var(--on-panel)")}>{m.callTitle}</span></span>
+                        <span style={s("display:block;font:500 11px/1.3 'Archivo';color:#8B93A0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{m.callSub}</span>
+                      </span>
+                      <span style={s("flex:none;font:800 10px/1 'Archivo';letter-spacing:.06em;color:#100E0A;background:#8B3DF5;padding:8px 13px;border-radius:100px")}>JOIN</span>
+                    </button>
+                  )}
+                  {m.id && (
+                    <div style={s('display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap')}>
+                      {rx.map((r) => (
+                        <button key={r.e} onClick={() => toggleReaction(mid, r.e)} style={{ ...s("display:flex;align-items:center;gap:4px;font:700 10.5px/1 'Archivo';padding:4px 7px;border-radius:100px"), background: r.on ? '#8B3DF5' : 'var(--sand)', color: r.on ? '#fff' : 'var(--label)' }}><span>{r.e}</span><span>{r.count}</span></button>
+                      ))}
+                      <button onClick={() => toggleReaction(mid, '❤️')} style={s("font:700 12px/1 'Archivo';color:var(--label);padding:4px 6px")}>+😀</button>
+                      <button onClick={() => setReply(mid)} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.04em;color:var(--label);padding:4px 6px")}>REPLY</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {dropInActive ? (<>
+          <div style={s('padding:6px 16px 4px')}><div style={s("font:600 10.5px/1.4 'Archivo';color:var(--label)")}>Questions go to a moderator, not straight to {st.dropIn.player}.</div></div>
+          <div style={s('padding:0 16px 20px;display:flex;gap:8px;align-items:center')}>
+            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.dropIn.qDraft} onChange={(e: any) => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, qDraft: e.target.value } }))} onKeyDown={(e: any) => { if (e.key === 'Enter') askDropIn(st.dropIn.qDraft); }} placeholder="Ask a question…" style={s("width:100%;font:500 13.5px/1.2 'Archivo';color:var(--ink)")} /></div>
+            <button onClick={() => askDropIn(st.dropIn.qDraft)} style={s('width:44px;height:44px;flex:none;background:#8B3DF5;border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="#fff">arrow_upward</Ms></button>
+          </div>
+        </>) : (<>
+          {replyDraftSrc && (
+            <div style={s('display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--sand)')}>
+              <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 11.5px/1.3 'Archivo';color:var(--label)")}>Replying to <strong style={{ color: 'var(--ink)' }}>{replyDraftSrc.user}</strong>: {quoteText(replyDraftSrc)}</span>
+              <button onClick={cancelReply} style={s("flex:none;font:800 12px/1 'Archivo';color:var(--label)")}>✕</button>
+            </div>
+          )}
+          <div style={s('padding:10px 16px 20px;display:flex;gap:8px;align-items:center')}>
+            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.crewDraft} onChange={(e: any) => set({ crewDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') postCrew(st.crewDraft); }} placeholder={replyDraftSrc ? 'Reply to ' + replyDraftSrc.user + '…' : 'Message your Crew…'} style={s("width:100%;font:500 13.5px/1.2 'Archivo';color:var(--ink)")} /></div>
+            <button onClick={() => postCrew(st.crewDraft)} style={s('width:44px;height:44px;flex:none;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
+          </div>
+        </>)}
+      </>)}
+    </div>
+  );
+}
+
+// ── Create Crew: name, blurb, privacy, banner + icon ──
+function CreateCrew({ st, set, createCrew }: any) {
+  const L = (t: string) => <div style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
+  const privacyOpts = [{ k: 'public', label: 'PUBLIC' }, { k: 'invite', label: 'INVITE ONLY' }];
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
+      <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Start a Crew</div>
+      <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>Permanent, fan-run, yours to shape. You’re the first admin.</div>
+
+      <div style={s('margin-top:20px')}>{L('CREW NAME')}
+        <input value={st.newCrewName} onChange={(e: any) => set({ newCrewName: e.target.value })} placeholder="e.g. North Tier Corner" style={s("display:block;width:100%;margin-top:7px;padding:12px 14px;background:var(--sand);font:700 14px/1 'Archivo';color:var(--ink)")} />
+      </div>
+      <div style={s('margin-top:16px')}>{L('WHAT’S IT ABOUT')}
+        <textarea value={st.newCrewDesc} onChange={(e: any) => set({ newCrewDesc: e.target.value })} placeholder="Who this Crew is for and what happens in it" style={s("display:block;width:100%;height:74px;margin-top:7px;padding:12px 14px;background:var(--sand);font:500 13px/1.4 'Archivo';color:var(--ink);resize:none")} />
+      </div>
+      <div style={s('margin-top:16px')}>{L('PRIVACY')}
+        <div style={s('display:flex;gap:6px;margin-top:7px')}>{privacyOpts.map((o) => { const on = st.newCrewPrivacy === o.k; return <button key={o.k} onClick={() => set({ newCrewPrivacy: o.k })} style={{ ...s("flex:1;font:800 11px/1 'Archivo';letter-spacing:.04em;padding:11px 0;text-align:center"), background: on ? '#8B3DF5' : 'var(--sand)', color: on ? '#fff' : 'var(--ink)' }}>{o.label}</button>; })}</div>
+      </div>
+      <div style={s('margin-top:16px')}>{L('BANNER & ICON')}
+        <div style={s('position:relative;height:80px;margin-top:7px;background:var(--sand)')}>
+          <Slot id="new-crew-banner" label="Tap to add a banner" />
+          <span style={s('position:absolute;left:14px;bottom:-20px;width:44px;height:44px;border-radius:50%;background:var(--sand2);box-shadow:0 0 0 3px var(--ground);display:flex;align-items:center;justify-content:center')}><Ms size={18} color="var(--label)">add_photo_alternate</Ms></span>
+        </div>
+      </div>
+      <div style={s('display:flex;align-items:flex-start;gap:11px;margin-top:26px;background:var(--sand);padding:13px 14px')}>
+        <Ms size={18} color="#8B3DF5">verified_user</Ms>
+        <span style={s('flex:1;min-width:0')}>
+          <span style={s("display:block;font:800 9px/1 'Archivo';letter-spacing:.12em;color:var(--ink)")}>QUICK SAFETY CHECK</span>
+          <span style={s("display:block;font:500 12px/1.5 'Archivo';color:var(--body);margin-top:5px")}>New Crews get a light review from Voltford, usually cleared within a few hours. Invite people and set it up straight away, it just goes public once it’s approved.</span>
+        </span>
+      </div>
+      <button onClick={createCrew} className="fp" style={s("display:block;width:100%;margin-top:12px;font:800 12px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#8B3DF5;padding:15px 0;text-align:center")}>SUBMIT FOR REVIEW</button>
+    </div>
+  );
+}
+
+// ── Crew Settings: banner/avatar, rules, invite link, members, leave ──
+function CrewSettings({ st, crew, set, go, notify }: any) {
+  const L = (t: string) => <div style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
+  const joined = !!st.crewsJoined[crew.id];
+  const rules = crew.rules || CREW_RULES[crew.id] || 'Be respectful. Keep it about the Volts.';
+  const inviteLink = 'city.app/join/' + crew.id;
+  // Join requests waiting on the admin (the pending-members queue for invite-only Crews).
+  const [requests, setRequests] = useState([
+    { id: 'rq1', name: 'Aisha_R', initials: 'AI', bg: '#8B3DF5', note: 'Season ticket · Block 108' },
+    { id: 'rq2', name: 'Tomasz_K', initials: 'TO', bg: '#331C4E', note: 'Invited by Marcus_92' },
+    { id: 'rq3', name: 'Bea_M', initials: 'BE', bg: '#725E88', note: 'New to the app' },
+  ]);
+  const resolveReq = (id: string, ok: boolean) => { setRequests((rs) => rs.filter((r) => r.id !== id)); notify(ok ? 'MEMBER APPROVED' : 'REQUEST DECLINED'); };
+  const memberRows = [
+    { name: 'You', initials: 'YO', bg: '#1B0B2D', photo: undefined as string | undefined, isAdmin: !!crew.isCustom },
+    { name: 'Marcus_92', initials: 'MA', bg: '#8B3DF5', photo: MEMBER_PHOTO.MARCUS_92, isAdmin: !crew.isCustom },
+    { name: 'Priya_S', initials: 'PR', bg: '#331C4E', photo: MEMBER_PHOTO.PRIYA_S, isAdmin: false },
+    { name: 'Declan_K', initials: 'DE', bg: '#8B3DF5', photo: MEMBER_PHOTO.DECLAN_K, isAdmin: false },
+  ];
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding-bottom:30px')}>
+      <div style={s('position:relative;height:100px;background:var(--panel)')}>
+        <Slot id={'crew-banner-' + crew.id} label="Tap to change banner" />
+        <span style={{ ...s('position:absolute;left:16px;bottom:-24px;width:56px;height:56px;border-radius:50%;box-shadow:0 0 0 4px var(--ground);display:flex;align-items:center;justify-content:center;font:800 15px/1 \'Archivo\';color:#fff'), background: crew.gated ? '#725E88' : '#8B3DF5' }}>{crew.initials}</span>
+      </div>
+      <div style={s('padding:34px 16px 0')}>
+        <div style={s("font:800 26px/.94 'Archivo Black';color:var(--ink)")}>{crew.name}</div>
+        <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:8px")}>{rules}</div>
+      </div>
+      <div style={s('padding:22px 16px 0')}>{L('INVITE LINK')}
+        <div style={s('display:flex;align-items:center;gap:10px;margin-top:9px;background:var(--sand);padding:12px 14px')}>
+          <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12.5px/1 'Archivo';color:var(--body)")}>{inviteLink}</span>
+          <button onClick={() => notify('LINK COPIED')} className="fs" style={s("flex:none;font:800 10px/1 'Archivo';letter-spacing:.06em;color:var(--ink);background:var(--sand3);padding:8px 10px")}>COPY</button>
+        </div>
+        <button onClick={go('invite')} className="frow" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;margin-top:4px;border-bottom:1.5px solid var(--hair)')}>
+          <Ms size={20} color="var(--ink)">person_add</Ms>
+          <span style={s("flex:1;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>Invite people</span>
+          <Ms size={18} color="var(--label)">chevron_right</Ms>
+        </button>
+      </div>
+      <div style={s('padding:22px 16px 0')}>{L('MEMBERS (' + crew.members.toLocaleString() + ')')}
+        <div style={s('margin-top:9px')}>{memberRows.map((m, i) => (
+          <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}>
+            <Avatar src={m.photo} initials={m.initials} bg={m.bg} size={30} />
+            <span style={s("flex:1;font:700 12.5px/1.2 'Archivo';color:var(--ink)")}>{m.name}</span>
+            {m.isAdmin && <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.08em;color:var(--label);background:var(--sand);padding:4px 6px")}>ADMIN</span>}
+          </div>
+        ))}</div>
+      </div>
+      {requests.length > 0 && (
+        <div style={s('padding:22px 16px 0')}>
+          <div style={s('display:flex;align-items:center;gap:8px')}>{L('JOIN REQUESTS')}<span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.08em;color:#B98900;background:rgba(79,179,232,.18);padding:4px 6px")}>{requests.length} WAITING</span></div>
+          <div style={s('margin-top:9px')}>{requests.map((r) => (
+            <div key={r.id} style={s('display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}>
+              <Avatar initials={r.initials} bg={r.bg} size={34} />
+              <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Archivo';color:var(--ink)")}>{r.name}</span><span style={s("display:block;font:500 11px/1.3 'Archivo';color:var(--label);margin-top:2px")}>{r.note}</span></span>
+              <button onClick={() => resolveReq(r.id, false)} className="fs" style={s('flex:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--sand)')}><Ms size={18} color="var(--label)">close</Ms></button>
+              <button onClick={() => resolveReq(r.id, true)} style={s('flex:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#8B3DF5')}><Ms size={18} color="#fff">check</Ms></button>
+            </div>
+          ))}</div>
+        </div>
+      )}
+      <div style={s('padding:26px 16px 0')}>
+        <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} className="fs" style={s("display:block;width:100%;font:800 11px/1 'Archivo';letter-spacing:.06em;color:var(--label);padding:13px 0;text-align:center;box-shadow:inset 0 0 0 1.5px var(--hair)")}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Invite / Add People: shareable link + suggested contacts ──
+const INVITE_NAMES = ['Sam Whitfield', 'Jordan Ade', 'Louis Marsh', 'Fatima Noor'];
+const INVITE_PHOTO = [media.avR1, media.avR2, media.avDeclan, media.avR3];
+function Invite({ st, crew, inviteContact, notify }: any) {
+  const L = (t: string) => <div style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
+  const inviteLink = 'city.app/join/' + crew.id;
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
+      <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Invite to {crew.name}</div>
+      <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>Share the link, or invite someone directly.</div>
+      <div style={s('display:flex;align-items:center;gap:10px;margin-top:18px;background:var(--sand);padding:13px 14px')}>
+        <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12.5px/1 'Archivo';color:var(--body)")}>{inviteLink}</span>
+        <button onClick={() => notify('LINK COPIED')} className="fs" style={s("flex:none;font:800 10px/1 'Archivo';letter-spacing:.06em;color:var(--ink);background:var(--sand3);padding:8px 10px")}>COPY</button>
+      </div>
+      <button onClick={() => notify('SHARE SHEET OPENED')} className="fp" style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:9px;font:800 12px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#8B3DF5;padding:14px 0")}><Ms size={16} color="#fff">ios_share</Ms>SHARE LINK</button>
+      <div style={s('margin-top:22px')}>{L('SUGGESTED')}
+        <div style={s('margin-top:9px')}>{INVITE_NAMES.map((n, ni) => { const sent = !!st.inviteSent[n]; return (
+          <div key={n} style={s('display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)')}>
+            <Avatar src={INVITE_PHOTO[ni]} initials={n.split(' ').map((w) => w[0]).join('')} bg="#331C4E" size={32} />
+            <span style={s("flex:1;font:700 13px/1.2 'Archivo';color:var(--ink)")}>{n}</span>
+            <button onClick={() => inviteContact(n)} disabled={sent} style={{ ...s("flex:none;font:800 10px/1 'Archivo';letter-spacing:.06em;padding:8px 11px"), background: sent ? 'var(--sand)' : '#8B3DF5', color: sent ? 'var(--label)' : '#fff' }}>{sent ? 'SENT' : 'INVITE'}</button>
+          </div>
+        ); })}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Room (group video call): player on the main stage, Crew in thumbnails ──
+const ROOM_GUESTS: { name: string; src?: string }[] = [
+  { name: 'Marcus_92', src: media.avMarcus },
+  { name: 'Priya_S', src: media.avPriya },
+  { name: 'You' },
+];
+function Room({ st, joinRoom, leaveRoom, frameless }: any) {
+  const player = st.call.player;
+  const mainSrc = player === 'Kasper Brink' ? media.roomBrink : PLAYER_PHOTO[player];
+  const inRoom = ROOM_GUESTS.length + 1;
+  // Live emoji reactions float up the right rail, live-stream style.
+  const [floats, setFloats] = useState<{ id: number; e: string; x: number }[]>([]);
+  const react = (e: string) => {
+    const id = Date.now() + Math.random();
+    setFloats((f) => [...f, { id, e, x: Math.random() * 26 }]);
+    window.setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id)), 1400);
+  };
+  const REACTIONS = ['❤️', '🔥', '👏', '⚽'];
+  const orb = (icon: string, bg: string, onClick?: () => void, fg = '#fff') => (
+    <button onClick={onClick} style={{ ...s('width:52px;height:52px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center'), background: bg }}><Ms size={23} color={fg}>{icon}</Ms></button>
+  );
+  return (
+    <div style={s('animation:bgFade .25s ease both;position:relative;height:' + (frameless ? 'calc(100dvh - 232px)' : '710px') + ';min-height:440px;overflow:hidden;background:#150E1C')}>
+      <img src={mainSrc} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />
+      <div style={s('position:absolute;left:0;right:0;top:0;height:104px;background:linear-gradient(rgba(14,9,19,.72),transparent)')} />
+      <div style={s('position:absolute;left:0;right:0;bottom:0;height:340px;background:linear-gradient(transparent,rgba(14,9,19,.94))')} />
+      <div style={s('position:absolute;left:14px;right:14px;top:13px;display:flex;align-items:center;gap:8px')}>
+        <span style={s('width:6px;height:6px;flex:none;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} />
+        <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 12px/1.2 'Archivo';color:#fff;text-shadow:0 1px 6px rgba(13,5,23,.75)")}>Arcside Volts Room</span>
+        <span style={s("display:flex;align-items:center;gap:5px;flex:none;background:rgba(21,14,28,.5);backdrop-filter:blur(6px);padding:5px 9px;border-radius:100px;font:700 9px/1 'Archivo';color:#F2F2F0")}><Ms size={12} color="#F2F2F0">visibility</Ms>1,204</span>
+        <span style={s("display:flex;align-items:center;gap:5px;flex:none;background:#D6202A;padding:5px 9px;border-radius:100px;font:800 8.5px/1 'Archivo';letter-spacing:.08em;color:#fff")}><span style={s('width:5px;height:5px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} />LIVE</span>
+      </div>
+      <div style={s('position:absolute;right:14px;bottom:246px;display:flex;flex-direction:column;gap:11px')}>
+        {REACTIONS.map((e) => <button key={e} onClick={() => react(e)} className="fw" style={s('width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(21,14,28,.5);backdrop-filter:blur(8px);font-size:21px;line-height:1')}>{e}</button>)}
+      </div>
+      {floats.map((f) => <span key={f.id} style={{ ...s('position:absolute;right:24px;bottom:296px;pointer-events:none;font-size:27px;line-height:1;animation:bgFloatUp 1.4s ease-out both'), marginRight: f.x + 'px' }}>{f.e}</span>)}
+      <div style={s('position:absolute;left:0;right:0;bottom:0;padding:0 15px 64px')}>
+        <div style={s('display:flex;align-items:center;gap:6px')}><Ms size={18} color="#8B3DF5">verified</Ms><span style={s("font:800 21px/1 'Archivo Black';letter-spacing:.02em;color:#fff")}>{player}</span></div>
+        <div style={s("font:500 11px/1.3 'Archivo';color:#D5D5D2;margin-top:5px")}>Taking questions from Arcside Volts · {inRoom} on camera</div>
+        <div style={s('display:flex;gap:8px;margin-top:14px')}>
+          {ROOM_GUESTS.map((t, i) => { const you = !t.src; return (
+            <div key={i} style={{ ...s('position:relative;width:42px;height:42px;flex:none;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#241931'), boxShadow: you ? 'inset 0 0 0 2px #8B3DF5' : 'inset 0 0 0 1px rgba(242,242,240,.18)' }}>
+              {t.src ? <img src={t.src} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} /> : <Ms size={19} color="#8B3DF5">person</Ms>}
+            </div>
+          ); })}
+        </div>
+        <div style={s('display:flex;align-items:center;gap:10px;margin-top:15px')}>
+          {st.call.joined ? (<>
+            {orb('mic', 'rgba(242,242,240,.18)')}
+            {orb('videocam', 'rgba(242,242,240,.18)')}
+            <button onClick={() => react('✋')} style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font:800 11px/1 'Archivo';letter-spacing:.06em;color:#1B0B2D;background:#8B3DF5;padding:16px 0;border-radius:100px")}><Ms size={16} color="#1B0B2D">pan_tool</Ms>ASK A QUESTION</button>
+            {orb('call_end', '#D6202A', leaveRoom)}
+          </>) : (
+            <button onClick={joinRoom} style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font:800 12.5px/1 'Archivo';letter-spacing:.04em;color:#1B0B2D;background:#8B3DF5;padding:17px 0;border-radius:100px")}><Ms size={17} color="#1B0B2D">videocam</Ms>JOIN WITH CAMERA</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Crews intro modal: full-frame, city-crowd backdrop, once per session ──
+function CrewsIntro({ dismiss }: { dismiss: () => void }) {
+  const feats = [
+    { icon: 'groups', t: 'Your people, always on', d: 'Join a Crew and pick up the thread whenever you open the app.' },
+    { icon: 'verified', t: 'Real drop-ins from the players', d: 'Verified Q&A and posts land straight in the Crew.' },
+    { icon: 'photo_camera', t: 'Verified posts, straight to you', d: 'Player photos, voice notes and social cards in the thread.' },
+  ];
+  return (
+    <div style={s('position:absolute;inset:0;z-index:60;background:var(--panel);display:flex;flex-direction:column;animation:bgFade .3s ease both')}>
+      <div style={s('position:relative;height:320px;flex:none;overflow:hidden')}>
+        <Slot id="crews-intro-bg" label="Voltford crowd" />
+        <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(27,11,45,.05) 0%,rgba(27,11,45,.1) 45%,var(--panel) 96%)')} />
+        <div style={s('position:absolute;inset:0;background:linear-gradient(100deg,rgba(27,11,45,.6) 0%,transparent 55%)')} />
+        <button onClick={dismiss} style={s('position:absolute;top:16px;right:16px;z-index:2;width:34px;height:34px;border-radius:50%;background:rgba(27,11,45,.4);display:flex;align-items:center;justify-content:center')}><Ms size={19} color="#fff">close</Ms></button>
+        <div style={s('position:absolute;left:24px;bottom:20px;z-index:2;display:flex;align-items:center;gap:9px')}>
+          <span style={s('width:7px;height:18px;background:#8B3DF5;transform:skewX(-8deg)')} />
+          <span style={s("font:800 10px/1 'Archivo';letter-spacing:.2em;color:#fff;background:#D6202A;padding:6px 8px")}>NEW FEATURE</span>
+        </div>
+      </div>
+      <div style={s('flex:1;overflow-y:auto;padding:26px 24px 0')}>
+        <div style={s("font:800 52px/.84 'Archivo Black';color:var(--on-panel)")}>Introducing<br />Crews</div>
+        <div style={s("font:500 14px/1.6 'Archivo';color:#9F8AB6;margin-top:14px;max-width:320px")}>A permanent place for your people. Crews don’t reset at full-time, they’re the thread, the plans, and the banter that carry through every matchday.</div>
+        <div style={s('margin-top:8px')}>{feats.map((f, i) => (
+          <div key={i} style={{ ...s('display:flex;align-items:flex-start;gap:12px;padding:16px 0;border-top:1.5px solid rgba(242,242,240,.1)'), borderBottom: i === feats.length - 1 ? '1.5px solid rgba(242,242,240,.1)' : undefined }}>
+            <span style={s('width:40px;height:40px;flex:none;background:#8B3DF5;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">{f.icon}</Ms></span>
+            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14.5px/1.2 'Archivo';color:var(--on-panel)")}>{f.t}</span><span style={s("display:block;font:500 12px/1.4 'Archivo';color:#9F8AB6;margin-top:3px")}>{f.d}</span></span>
+          </div>
+        ))}</div>
+      </div>
+      <div style={s('flex:none;padding:18px 24px 24px;background:var(--panel)')}>
+        <button onClick={dismiss} style={s("display:block;width:100%;font:800 13px/1 'Archivo';letter-spacing:.06em;color:#1B0B2D;background:#8B3DF5;padding:16px 0;text-align:center")}>TRY IT OUT</button>
+        <button onClick={dismiss} className="fh" style={s("display:block;width:100%;margin-top:12px;font:700 11px/1 'Archivo';letter-spacing:.08em;color:#9F8AB6;padding:4px 0;text-align:center")}>MAYBE LATER</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Spot Kick: the game ──
+function Spotkick({ st, shootZone }: any) {
+  const keeperCol = st.sk.keeperZone !== null ? st.sk.keeperZone % 3 : 1;
+  const keeperX = ((keeperCol - 1) * 70) + 'px';
+  const pips = Array.from({ length: 5 }, (_, i) => i < st.sk.goals ? '#8B3DF5' : i < st.sk.kick ? 'var(--sand2)' : 'var(--sand)');
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 20px')}>
+      <div style={s('display:flex;align-items:center;justify-content:space-between')}><div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Spot Kick</div><span style={s("font:800 11px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>KICK {Math.min(st.sk.kick + 1, 5)} / 5</span></div>
+      <div style={s('display:flex;gap:5px;margin-top:10px')}>{pips.map((c, i) => <span key={i} style={{ flex: 1, height: 5, background: c }} />)}</div>
+      <div style={s('position:relative;margin-top:16px;height:340px;background:#173018;overflow:hidden')}>
+        <div style={s('position:absolute;left:8%;right:8%;top:14%;bottom:38%;border:5px solid #F2F2F0;border-bottom:0')} />
+        <div style={s('position:absolute;left:8%;right:8%;bottom:38%;height:3px;background:repeating-linear-gradient(90deg,#F2F2F0 0 10px,transparent 10px 20px)')} />
+        <div style={{ ...s('position:absolute;left:50%;bottom:16%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.3,.8,.3,1)'), transform: `translateX(calc(-50% + ${keeperX}))` }}>
+          <span style={s('width:40px;height:56px;background:#1B0B2D;border-radius:8px 8px 3px 3px')} />
+        </div>
+        {SK_ZONES.map((z, i) => <button key={i} onClick={() => shootZone(i)} className="skz" style={{ position: 'absolute', left: z.x, top: z.y, width: z.w, height: z.h, background: 'rgba(242,242,240,.02)' }} />)}
+        {st.sk.flash && (
+          <div style={s('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(27,11,45,.55);animation:bgFade .2s ease both')}>
+            <span style={{ ...s("font:800 44px/.9 'Archivo Black'"), color: st.sk.flash === 'GOAL' ? '#8B3DF5' : '#D6202A' }}>{st.sk.flash}</span>
+          </div>
+        )}
+      </div>
+      <div style={s('display:flex;align-items:center;justify-content:space-between;margin-top:14px')}>
+        <div><div style={s("font:800 9px/1 'Archivo';letter-spacing:.12em;color:var(--label)")}>GOALS</div><div style={s("font:800 30px/.9 'Archivo Black';color:var(--ink);margin-top:6px")}>{st.sk.goals}</div></div>
+        <div style={s("font:500 12px/1.5 'Archivo';color:var(--body);max-width:180px;text-align:right")}>Tap a corner of the goal to place your shot.</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Spot Kick: result ──
+function SpotkickResult({ st, go, startSpotkick, notify }: any) {
+  const line = st.sk.goals >= 4 ? 'Elite. Your Crew will hear about this.' : st.sk.goals >= 2 ? 'Solid night from the spot.' : 'Room to improve before the next matchday.';
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:20px 16px 32px')}>
+      <div style={s('background:var(--panel);padding:22px;text-align:center')}>
+        <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#9F8AB6")}>SPOT KICK · FULL TIME</div>
+        <div style={s("font:800 62px/.82 'Archivo Black';color:var(--on-panel);margin-top:14px")}>{st.sk.goals}/5</div>
+        <div style={s("font:600 13px/1.5 'Archivo';color:#9F8AB6;margin-top:10px")}>{line}</div>
+        <div style={s('display:flex;align-items:baseline;gap:8px;justify-content:center;margin-top:14px')}><span style={s("font:800 26px/1 'Archivo Black';color:#8B3DF5")}>+{st.sk.goals * 20}</span><span style={s("font:700 10.5px/1 'Archivo';letter-spacing:.1em;color:#9F8AB6")}>XP EARNED</span></div>
+      </div>
+      <div style={s('display:flex;gap:8px;margin-top:16px')}>
+        <button onClick={() => notify('RESULT CARD READY TO SHARE')} className="fs" style={s("flex:1;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--ink);background:var(--sand);padding:14px 0")}>SHARE RESULT</button>
+        <button onClick={go('leaderboard')} className="fp" style={s("flex:1;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:14px 0")}>LEADERBOARD</button>
+      </div>
+      <button onClick={startSpotkick} style={s("display:block;width:100%;margin-top:10px;font:800 11px/1 'Archivo';letter-spacing:.08em;color:var(--label);padding:12px 0")}>PLAY AGAIN</button>
+    </div>
+  );
+}
+
+// ── Spot Kick: leaderboard ──
+function Leaderboard({ st, set }: any) {
+  const rows = (st.lbScope === 'crew' ? LB_CREW : LB_GLOBAL).map((r: any, i: number) => ({ rank: i + 1, name: r.name, score: r.me ? st.sk.goals : r.score, initials: r.initials, avBg: r.bg, hl: !!r.me }));
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:20px 16px 32px')}>
+      <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Leaderboard</div>
+      <div style={s('display:flex;gap:6px;margin-top:12px')}>{[['crew', 'YOUR CREW'], ['global', 'GLOBAL']].map(([k, lab]) => { const on = st.lbScope === k; return <button key={k} onClick={() => set({ lbScope: k })} style={{ ...s("flex:1;font:800 10.5px/1 'Archivo';letter-spacing:.08em;padding:11px 0"), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{lab}</button>; })}</div>
+      <div style={s('margin-top:14px')}>{rows.map((r: any, i: number) => (
+        <div key={i} style={{ ...s('display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)'), background: r.hl ? 'rgba(139,61,245,.14)' : 'transparent' }}>
+          <span style={s("width:22px;font:800 13px/1 'Archivo';color:var(--label)")}>{r.rank}</span>
+          <span style={{ ...s("width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Archivo';color:#fff"), background: r.avBg }}>{r.initials}</span>
+          <span style={s("flex:1;min-width:0;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{r.name}</span>
+          <span style={s("font:800 14px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{r.score}/5</span>
+        </div>
+      ))}</div>
+    </div>
+  );
+}
+function Chat({ st, shown, set, post, chatRef }: any) {
+  return (
+    <div style={s('animation:bgFade .25s ease both;display:flex;flex-direction:column;min-height:640px')}>
+      <div ref={chatRef} style={s('flex:1;overflow-y:auto;padding:16px 14px 10px;display:flex;flex-direction:column;gap:10px;max-height:544px')}>
+        {shown.slice(-16).map((m: any) => {
+          // A live match moment, dropped inline then cleared out.
+          if (m.ev) return (
+            <div key={m.id} style={{ ...s('display:flex;align-items:center;gap:10px;align-self:center;max-width:92%;padding:9px 13px;border-radius:100px;background:var(--sand)'), boxShadow: `inset 0 0 0 1.5px ${m.ev.color}44` }}>
+              {m.ev.kind === 'YELLOW' || m.ev.kind === 'RED CARD'
+                ? <span style={{ ...s('width:10px;height:14px;border-radius:2px;flex:none'), background: m.ev.kind === 'RED CARD' ? '#D6202A' : '#F4C400' }} />
+                : <Ms size={15} color={m.ev.color}>{EV[m.ev.kind]?.icon || 'bolt'}</Ms>}
+              <span style={{ ...s("font:800 10px/1 'Archivo';letter-spacing:.08em"), color: m.ev.color }}>{m.ev.kind}</span>
+              <span style={s("font:600 12px/1.2 'Archivo';color:var(--ink)")}>{m.text}{m.ev.minute ? ` · ${m.ev.minute}′` : ''}</span>
+            </div>
+          );
+          const me = !!m.me; const liked = !!st.likes[m.id];
+          return (
+            <div key={m.id} style={{ ...s('display:flex;gap:8px;animation:bgBubble .3s ease both'), justifyContent: me ? 'flex-end' : 'flex-start' }}>
+              {!me && <span style={{ ...s("width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;font:800 10px/32px 'Archivo';text-align:center;margin-top:12px"), background: TEAM[m.t].bg, color: TEAM[m.t].fg }}>{CHAT_AV[m.user] ? <img src={CHAT_AV[m.user]} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : m.user.slice(0, 2)}</span>}
+              <div style={s('max-width:74%')}>
+                <div style={{ ...s('display:flex;align-items:baseline;gap:7px;padding:0 3px 4px'), justifyContent: me ? 'flex-end' : 'flex-start' }}><span style={s("font:800 9px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>{me ? 'YOU' : m.user}</span></div>
+                <div style={{ ...s('padding:10px 12px'), background: me ? 'var(--panel)' : 'var(--sand)', borderRadius: me ? '14px 14px 3px 14px' : '3px 14px 14px 14px' }}>
+                  <div style={{ ...s("font:500 14px/1.4 'Archivo'"), color: me ? 'var(--on-panel)' : 'var(--ink)' }}>{m.text}</div>
+                  <div style={s('display:flex;align-items:center;gap:9px;margin-top:7px')}><span style={{ ...s("font:600 9.5px/1 'Archivo';font-variant-numeric:tabular-nums"), color: me ? '#9F8AB6' : 'var(--label)' }}>{m.time}</span><button onClick={() => set((sp: FSt) => ({ likes: { ...sp.likes, [m.id]: !sp.likes[m.id] } }))} style={{ ...s("display:flex;align-items:center;gap:4px;font:700 9.5px/1 'Archivo'"), color: liked ? '#8B3DF5' : (me ? '#9F8AB6' : 'var(--label)') }}><Ms size={13} color={liked ? '#8B3DF5' : '#9F8AB6'}>favorite</Ms>{(m.likes || 0) + (liked ? 1 : 0)}</button></div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={s('position:sticky;bottom:0;flex:none;background:var(--ground);border-top:1.5px solid var(--hair)')}>
+        <div style={s('display:flex;gap:6px;padding:9px 12px 0;overflow-x:auto')}>{['Come on Volts!', 'That’s never a foul', 'Anyone in 112?', 'Get it forward'].map((q) => <button key={q} onClick={() => post(q)} className="fs" style={s("flex:none;font:700 11px/1 'Archivo';color:var(--ink);background:var(--sand);padding:9px 11px;border-radius:100px;white-space:nowrap")}>{q}</button>)}</div>
+        <div style={s('display:flex;gap:8px;align-items:center;padding:9px 12px 14px')}>
+          <div style={s('flex:1;display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.draft} onChange={(e: any) => set({ draft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') post(st.draft); }} placeholder="Say something to the terrace…" style={s("flex:1;min-width:0;font:500 13.5px/1.2 'Archivo';color:var(--ink)")} /><span style={s("font:700 8.5px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>+2 XP</span></div>
+          <button data-cur="send" onClick={() => post(st.draft)} style={{ ...s('width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%'), background: st.draft.trim() ? '#8B3DF5' : '#1B0B2D' }}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Intel({ pre, live, ht, openIris }: any) {
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const shots = [{ x: '46%', y: '26%', d: '22px', bg: '#8B3DF5' }, { x: '58%', y: '18%', d: '13px', bg: '#8B3DF5' }, { x: '38%', y: '32%', d: '10px', bg: '#8B3DF5' }, { x: '52%', y: '36%', d: '16px', bg: '#8B3DF5' }, { x: '62%', y: '30%', d: '9px', bg: '#8B3DF5' }, { x: '44%', y: '14%', d: '12px', bg: '#8B3DF5' }, { x: '50%', y: '76%', d: '18px', bg: '#1E3A6E' }, { x: '40%', y: '68%', d: '11px', bg: '#1E3A6E' }, { x: '60%', y: '72%', d: '9px', bg: '#1E3A6E' }, { x: '55%', y: '86%', d: '14px', bg: '#1E3A6E' }];
+  const h2h = [{ r: 'W', bg: '#8B3DF5', fg: '#fff', score: '2 – 1', comp: 'Semi-final, 1st leg', date: 'APR 30' }, { r: 'D', bg: 'var(--sand2)', fg: 'var(--ink)', score: '1 – 1', comp: 'Group stage', date: 'NOV 12' }, { r: 'L', bg: '#1E3A6E', fg: '#4FB3E8', score: '0 – 2', comp: 'Quarter-final', date: 'APR 09' }, { r: 'W', bg: '#8B3DF5', fg: '#fff', score: '4 – 0', comp: 'Semi-final, 2nd leg', date: 'MAY 17' }, { r: 'W', bg: '#8B3DF5', fg: '#fff', score: '3 – 2', comp: 'Friendly, Houston', date: 'JUL 24' }];
+  const watch = [{ t: 'Montes against a high line', d: 'Voltford push their back four to halfway. Kingsmere have six counter-attack goals in the competition, more than anyone.' }, { t: 'Varela’s first ten minutes', d: 'Voltford win 71% of matches he starts and finishes. One booking from a final suspension.' }, { t: 'The 70th minute onwards', d: 'Half of Kingsmere’s goals this season have come in the last twenty minutes.' }];
+  const stamp = pre ? '19:20 · 40 MIN BEFORE KICK-OFF' : live ? '19:20 · NEXT UPDATE AT HALF-TIME' : ht ? '20:47 · HALF-TIME REFRESH' : '21:52 · FULL-TIME REFRESH';
+  return (
+    <div style={s('animation:bgFade .25s ease both')}>
+      <div style={s('background:var(--panel);padding:16px 16px 20px')}>
+        <div style={s("font:800 36px/.9 'Archivo Black';color:var(--on-panel)")}>Match intel</div>
+        <div style={s("font:500 13px/1.5 'Archivo';color:#9F8AB6;margin-top:9px;max-width:300px")}>Written from this season’s data and refreshed at half-time and full-time. Read it, or ask IRIS for any part of it.</div>
+        <div style={s("font:700 10px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:12px")}>UPDATED {stamp}</div>
+      </div>
+      <div style={s('padding:18px 16px 0')}>{L('WIN PROBABILITY')}<div style={s('display:flex;gap:2px;margin-top:11px')}><div style={s('flex:46;background:#8B3DF5;padding:12px 11px 14px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:rgba(255,255,255,.9)")}>MOST LIKELY</div><div style={s("font:800 34px/.86 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;margin-top:8px")}>46%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#fff;margin-top:8px")}>VOLTFORD WIN</div></div><div style={s('flex:27;background:var(--sand2);padding:12px 9px 14px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/.86 'Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums;margin-top:8px")}>27%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:var(--body);margin-top:8px")}>DRAW</div></div><div style={s('flex:27;background:#1E3A6E;padding:12px 9px 14px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/.86 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;margin-top:8px")}>27%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#4FB3E8;margin-top:8px")}>KINGSMERE</div></div></div></div>
+      <div style={s('padding:20px 16px 0')}>{L('SHOT MAP · FIRST LEG')}
+        <div style={s('position:relative;margin-top:11px;height:182px;background:#1B1422;overflow:hidden')}>
+          <div style={s('position:absolute;inset:10px;border:1.5px solid rgba(226,216,196,.45)')} /><div style={s('position:absolute;left:10px;right:10px;top:50%;height:1.5px;background:rgba(226,216,196,.45)')} /><div style={s('position:absolute;left:50%;top:50%;width:52px;height:52px;border:1.5px solid rgba(226,216,196,.45);border-radius:50%;transform:translate(-50%,-50%)')} /><div style={s('position:absolute;left:50%;top:10px;width:104px;height:34px;border:1.5px solid rgba(226,216,196,.45);border-top:0;transform:translateX(-50%)')} /><div style={s('position:absolute;left:50%;bottom:10px;width:104px;height:34px;border:1.5px solid rgba(226,216,196,.45);border-bottom:0;transform:translateX(-50%)')} />
+          {shots.map((p, i) => <span key={i} style={{ position: 'absolute', left: p.x, top: p.y, width: p.d, height: p.d, borderRadius: '50%', background: p.bg, boxShadow: '0 0 0 1.5px rgba(226,216,196,.55)', transform: 'translate(-50%,-50%)' }} />)}
+        </div>
+        <div style={s("display:flex;align-items:center;gap:13px;margin-top:9px;font:700 9.5px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}><span style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#8B3DF5')} />VOLTFORD 17</span><span style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#1E3A6E')} />KINGSMERE 11</span><span style={s('margin-left:auto')}>SIZE = XG</span></div>
+      </div>
+      <div style={s('padding:22px 16px 0')}>{L('KEY STAT')}<div style={s('display:flex;align-items:flex-start;gap:13px;margin-top:11px')}><div style={s("font:800 58px/.78 'Archivo Black';color:#8B3DF5;font-variant-numeric:tabular-nums")}>9<span style={s('font-size:24px;color:var(--ink)')}>/10</span></div><div style={s("flex:1;font:600 15px/1.3 'Archivo';color:var(--ink)")}>Voltford have scored first in nine of their last ten at home, and won all nine.<span style={s("display:block;font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>The first goal decides this tie more than possession does.</span></div></div></div>
+      <div style={s('padding:22px 16px 0')}>{L('HEAD-TO-HEAD · LAST 5')}<div style={s('margin-top:9px')}>{h2h.map((g, i) => <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}><span style={{ ...s("width:22px;height:22px;flex:none;font:800 11px/22px 'Archivo';text-align:center"), background: g.bg, color: g.fg }}>{g.r}</span><span style={s("font:800 14px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{g.score}</span><span style={s("font:500 12px/1.3 'Archivo';color:var(--body)")}>{g.comp}</span><span style={s("font:700 10px/1 'Archivo';letter-spacing:.1em;color:var(--label);margin-left:auto")}>{g.date}</span></div>)}</div></div>
+      <div style={s('padding:22px 16px 0')}>{L('FORM & EXPECTED GOALS')}<div style={s('display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px')}><div style={s('padding:14px;background:var(--sand);border-top:5px solid #8B3DF5')}><div style={s("font:800 12px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>VOLTFORD</div><div style={s("font:800 34px/.88 'Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.87</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:9px")}>Unbeaten in 8 at home. Brink 12 in the competition.</div></div><div style={s('padding:14px;background:var(--sand);border-top:5px solid #1E3A6E')}><div style={s("font:800 12px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>KINGSMERE CITY</div><div style={s("font:800 34px/.88 'Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.64</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:9px")}>Score late: 7 of 14 goals after the 70th minute.</div></div></div></div>
+      <div style={s('padding:22px 16px 26px')}>{L('WATCH FOR')}<div style={s('margin-top:7px')}>{watch.map((w, i) => <div key={i} style={s('padding:12px 0;border-bottom:1.5px solid var(--hair)')}><div style={s("font:700 14px/1.3 'Archivo';color:var(--ink)")}>{w.t}</div><div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:4px")}>{w.d}</div></div>)}</div><button onClick={openIris} className="fp" style={s("display:block;width:100%;margin-top:18px;padding:15px;background:var(--panel);font:800 12.5px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);text-align:center")}>ASK IRIS ABOUT ANY OF THIS</button></div>
+    </div>
+  );
+}
+
+function Predictions({ st, set, award }: any) {
+  const scorerNames = ['Brink', 'Marsh', 'Brandt', 'Montes', 'Hart', 'Lino'];
+  const crowd = [{ s: '2–1 Voltford', p: '28%' }, { s: '1–0 Voltford', p: '21%' }, { s: '1–1', p: '17%' }, { s: '2–0 Voltford', p: '14%' }];
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
+      <div style={s("font:800 30px/.92 'Archivo Black';color:var(--ink)")}>Call it before<br />kick-off</div>
+      <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>Correct score pays 60 XP. First scorer pays another 60. Locks at the first whistle.</div>
+      {!st.pred.done && (
+        <div style={s('margin-top:18px;background:var(--sand);padding:16px')}>
+          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>CORRECT SCORE</div>
+          <div style={s('display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px')}>
+            {[['VOL', 'h'], ['KGM', 'a']].map(([lab, k], idx) => (
+              <div key={lab as string} style={{ ...s('text-align:center'), order: idx === 1 ? 3 : 1 }}>
+                <div style={s("font:800 10px/1 'Archivo';letter-spacing:.1em;color:var(--body)")}>{lab}</div>
+                <div style={s('display:flex;align-items:center;gap:8px;margin-top:8px')}>
+                  <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, [k as string]: Math.max((sp.pred as any)[k as string] - 1, 0) } }))} className="fw" style={s("width:30px;height:30px;background:var(--ground);font:800 14px/1 'Archivo';color:var(--ink)")}>−</button>
+                  <span style={s("font:800 42px/.8 'Archivo Black';color:var(--ink);width:34px;font-variant-numeric:tabular-nums")}>{(st.pred as any)[k as string]}</span>
+                  <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, [k as string]: Math.min((sp.pred as any)[k as string] + 1, 9) } }))} className="fw" style={s("width:30px;height:30px;background:var(--ground);font:800 14px/1 'Archivo';color:var(--ink)")}>+</button>
+                </div>
+              </div>
+            ))}
+            <span style={{ ...s("font:800 24px/1 'Archivo Black';color:#927EA8;padding-top:18px"), order: 2 }}>–</span>
+          </div>
+          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label);margin-top:20px")}>FIRST SCORER</div>
+          <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:10px')}>{scorerNames.map((n) => { const on = st.pred.s === n; return <button key={n} onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, s: n } }))} style={{ ...s("font:700 11.5px/1 'Archivo';padding:10px 12px"), color: on ? 'var(--on-panel)' : 'var(--ink)', background: on ? 'var(--panel)' : 'var(--ground)' }}>{n}</button>; })}</div>
+          <button onClick={() => { set((sp: FSt) => ({ pred: { ...sp.pred, done: true } })); award(120, 'PREDICTION LOCKED', 'predict'); }} className="fp" style={s("display:block;width:100%;margin-top:18px;padding:15px;background:var(--panel);font:800 12.5px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel)")}>LOCK IN PREDICTION · 120 XP</button>
+        </div>
+      )}
+      {st.pred.done && (
+        <div style={s('margin-top:18px;background:var(--panel);padding:18px')}>
+          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#8B3DF5")}>LOCKED IN · 120 XP AWARDED</div>
+          <div style={s('display:flex;align-items:flex-end;gap:10px;margin-top:12px')}><span style={s("font:800 52px/.82 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.pred.h} – {st.pred.a}</span><span style={s("font:600 12px/1.3 'Archivo';color:#9F8AB6;padding-bottom:6px")}>First scorer<br /><strong style={{ fontWeight: 800, color: 'var(--on-panel)' }}>{st.pred.s}</strong></span></div>
+          <div style={s("font:500 12.5px/1.5 'Archivo';color:#9F8AB6;margin-top:14px")}>You’re in with 12,480 other fans. Results settle at full-time and pay into your XP automatically.</div>
+          <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, done: false } }))} className="fs" style={s("margin-top:14px;font:800 11px/1 'Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:11px 13px")}>CHANGE IT</button>
+        </div>
+      )}
+      <div style={s('margin-top:20px')}><div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>HOW OTHER FANS CALLED IT</div><div style={s('margin-top:10px')}>{crowd.map((c, i) => <div key={i} style={s('padding:9px 0')}><div style={s("display:flex;justify-content:space-between;font:700 12px/1 'Archivo';color:var(--ink)")}><span>{c.s}</span><span>{c.p}</span></div><div style={s('height:6px;background:var(--sand);margin-top:6px')}><span style={{ display: 'block', height: 6, width: c.p, background: '#8B3DF5' }} /></div></div>)}</div></div>
+    </div>
+  );
+}
+
+function Polls({ st, ft, set, award }: any) {
+  const pollDefs = [
+    { id: 'starter', tag: 'LIVE', tagBg: '#D6202A', q: 'Who starts up front tonight?', base: { Brink: 62, Okoro: 23, 'Marsh false 9': 15 }, votes: 4120 },
+    { id: 'motm', tag: 'OPEN', tagBg: '#1B0B2D', q: ft ? 'Who was your man of the match?' : 'Who decides this tie?', base: ft ? { Marsh: 44, Varela: 31, Brink: 25 } : { Brink: 41, Montes: 34, Varela: 25 }, votes: 2870 },
+  ];
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
+      <div style={s("font:800 30px/.92 'Archivo Black';color:var(--ink)")}>Fan polls</div>
+      <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>40 XP per vote. Results update live as the terrace votes.</div>
+      {pollDefs.map((p) => { const mine = st.votes[p.id]; const total = Object.values(p.base).reduce((a, b) => a + b, 0) + (mine ? 1 : 0); return (
+        <div key={p.id} style={s('margin-top:18px;background:var(--sand);padding:16px')}>
+          <div style={s('display:flex;align-items:center;gap:8px')}><span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:#fff;padding:5px 6px"), background: p.tagBg }}>{p.tag}</span><span style={s("font:700 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label);margin-left:auto")}>{(p.votes + (mine ? 1 : 0)).toLocaleString()} VOTES</span></div>
+          <div style={s("font:800 22px/1 'Archivo Black';color:var(--ink);margin-top:11px")}>{p.q}</div>
+          <div style={s('margin-top:12px;display:flex;flex-direction:column;gap:7px')}>
+            {Object.keys(p.base).map((k) => { const v = (p.base as any)[k] + (mine === k ? 1 : 0); const pct = Math.round(v / total * 100); const on = mine === k; return (
+              <button key={k} onClick={() => { if (!st.votes[p.id]) { set((sp: FSt) => ({ votes: { ...sp.votes, [p.id]: k } })); award(40, 'POLL VOTED', 'poll'); } }} className="fw" style={s('display:block;width:100%;text-align:left;position:relative;padding:12px 13px;background:var(--ground);overflow:hidden')}>
+                <span style={{ ...s('position:absolute;left:0;top:0;bottom:0;transition:width .6s cubic-bezier(.2,.8,.2,1)'), width: mine ? pct + '%' : '0%', background: on ? '#8B3DF5' : 'var(--sand)' }} />
+                <span style={s('position:relative;display:flex;align-items:center;gap:9px')}><span style={s("flex:1;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{k}</span><span style={s("font:800 12px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{mine ? pct + '%' : ''}</span>{on && <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#fff;background:var(--panel);padding:4px 5px")}>YOURS</span>}</span>
+              </button>
+            ); })}
+          </div>
+        </div>
+      ); })}
+    </div>
+  );
+}
+
+function Shop({ st, set, award }: any) {
+  const sizes = ['S', 'M', 'L', 'XL', '2XL'];
+  const merch = [{ name: 'Semi-final scarf', price: 22, icon: 'checkroom' }, { name: 'Match programme', price: 5, icon: 'menu_book' }, { name: 'Terrace beanie', price: 18, icon: 'ac_unit' }];
+  const total = st.basket.reduce((a: number, b: any) => a + b.price, 0);
+  const shirtIn = st.basket.some((b: any) => b.name.indexOf('shirt') > -1 || b.name === 'Match shirt');
+  return (
+    <div style={s('animation:bgFade .25s ease both')}>
+      <div style={s('position:relative;height:190px;background:#8B3DF5')}><Slot id="shop-hero" label="Match shirt shot" /></div>
+      <div style={s('padding:16px 16px 0')}>
+        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>TONIGHT ONLY</span><span style={s("font:700 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>FREE COLLECTION AT GATE 4</span></div>
+        <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink);margin-top:11px")}>Semi-final match shirt</div>
+        <div style={s('display:flex;align-items:baseline;gap:10px;margin-top:8px')}><span style={s("font:800 20px/1 'Archivo';color:var(--ink)")}>£95.00</span><span style={s("font:500 12.5px/1 'Archivo';color:var(--label)")}>Match-day print included</span></div>
+        <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label);margin-top:18px")}>SIZE</div>
+        <div style={s('display:flex;gap:8px;margin-top:10px')}>{sizes.map((l) => { const on = st.size === l; return <button key={l} onClick={() => set({ size: l })} style={{ ...s("flex:1;height:48px;display:flex;align-items:center;justify-content:center;border-radius:11px;font:800 14px/1 'Archivo';letter-spacing:.01em;transition:transform .1s ease"), color: on ? '#fff' : 'var(--ink)', background: on ? '#1B0B2D' : 'var(--sand)', boxShadow: on ? '0 7px 16px -9px rgba(27,11,45,.65)' : 'inset 0 0 0 1.5px var(--hair)' }}>{l}</button>; })}</div>
+        <button data-cur="shopadd" onClick={() => { if (!shirtIn) { set((sp: FSt) => ({ basket: [...sp.basket, { name: 'Match shirt', price: 95 }], ordered: false })); award(10, 'SHIRT ADDED'); } }} style={{ ...s("display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:16px;padding:16px;border-radius:12px;font:800 13px/1 'Archivo';letter-spacing:.06em;color:#fff"), background: shirtIn ? '#8B3DF5' : '#1B0B2D' }}><Ms size={18} color="#fff">{shirtIn ? 'check' : 'add_shopping_cart'}</Ms>{shirtIn ? 'IN BASKET · SIZE ' + st.size : 'ADD SHIRT · SIZE ' + st.size}</button>
+      </div>
+      <div style={s('padding:24px 16px 0')}><div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>ALSO IN THE DROP</div><div style={s('margin-top:10px')}>{merch.map((m, i) => <div key={m.name} style={{ ...s('display:flex;align-items:center;gap:13px;padding:13px 0'), borderTop: i === 0 ? 'none' : '1.5px solid var(--hair)' }}><span style={s('width:48px;height:48px;flex:none;border-radius:12px;background:var(--sand);display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#8B3DF5">{m.icon}</Ms></span><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:600 12.5px/1.3 'Archivo';color:var(--label);margin-top:4px")}>{money(m.price)}</span></span><button onClick={() => { set((sp: FSt) => ({ basket: [...sp.basket, { name: m.name, price: m.price }], ordered: false })); award(10, 'ADDED TO BASKET'); }} className="fp" style={s("font:800 11px/1 'Archivo';letter-spacing:.08em;color:var(--ink);background:var(--sand);padding:12px 17px;border-radius:100px;box-shadow:inset 0 0 0 1.5px var(--hair)")}>ADD</button></div>)}</div></div>
+      {st.basket.length > 0 && (
+        <div style={s('position:sticky;bottom:0;margin-top:18px;padding:13px 16px 16px;background:var(--panel);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Archivo';letter-spacing:.12em;color:#9F8AB6")}>{st.basket.length} ITEMS</div><div style={s("font:800 17px/1 'Archivo';color:var(--on-panel);margin-top:6px")}>{money(total)}</div></div><button data-cur="checkout" onClick={() => { if (!st.ordered) { set({ ordered: true }); award(30, 'ORDER CONFIRMED'); } }} style={s("display:flex;align-items:center;gap:8px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;background:#8B3DF5;padding:15px 20px;border-radius:11px;color:#fff")}><Ms size={16} color="#fff">{st.ordered ? 'check_circle' : 'shopping_bag'}</Ms>{st.ordered ? 'ORDER CONFIRMED' : 'CHECKOUT'}</button></div>
+      )}
+    </div>
+  );
+}
+
+function Food({ st, set, award, timers }: any) {
+  const menuDefs = [{ id: 'pie', name: 'Steak pie', note: 'Kiosk 14', price: 5.5 }, { id: 'chips', name: 'Chips', note: 'Kiosk 14', price: 4 }, { id: 'pint', name: 'Pint', note: 'Bar 3', price: 6.2 }, { id: 'tea', name: 'Tea', note: 'Kiosk 14', price: 2.5 }, { id: 'wrap', name: 'Halloumi wrap', note: 'Kiosk 9', price: 7 }];
+  const count = menuDefs.reduce((a, m) => a + (st.food[m.id] || 0), 0);
+  const total = menuDefs.reduce((a, m) => a + (st.food[m.id] || 0) * m.price, 0);
+  const summary = menuDefs.filter((m) => st.food[m.id]).map((m) => st.food[m.id] + '× ' + m.name).join(', ');
+  const place = () => {
+    set({ foodPlaced: true, foodEta: 6 }); award(15, 'ORDER ON ITS WAY');
+    window.clearInterval(timers.current.food);
+    timers.current.food = window.setInterval(() => set((sp: FSt) => { if (sp.foodEta <= 1) { window.clearInterval(timers.current.food); return { foodEta: 0 }; } return { foodEta: sp.foodEta - 1 }; }), 2000);
+  };
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
+      <div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:6px 7px")}>DELIVER TO 112–J</span><span style={s("font:700 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>KIOSK 14 · 40M AWAY</span></div>
+      <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink);margin-top:12px")}>To your seat</div>
+      {st.foodPlaced && (
+        <div style={s('margin-top:14px;background:var(--panel);padding:16px')}><div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#8B3DF5")}>ORDER PLACED · RUNNER ON THE WAY</div><div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:11px')}><span style={s("font:800 46px/.8 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.foodEta}</span><span style={s("font:600 11.5px/1 'Archivo';color:#9F8AB6;padding-bottom:5px")}>MIN AWAY</span></div><div style={s('height:6px;background:rgba(242,242,240,.18);margin-top:12px')}><span style={{ display: 'block', height: 6, width: ((6 - st.foodEta) / 6 * 100) + '%', background: '#8B3DF5', transition: 'width 1s linear' }} /></div><div style={s("font:500 12.5px/1.5 'Archivo';color:#9F8AB6;margin-top:12px")}>{summary || 'Order placed'} · paid with match wallet</div></div>
+      )}
+      <div style={s('margin-top:16px')}>{menuDefs.map((m) => <div key={m.id} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:500 12px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{m.note} · {money(m.price)}</span></span><span style={s('display:flex;align-items:center;gap:8px')}><button onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: Math.max((sp.food[m.id] || 0) - 1, 0) } }))} className="fs" style={s("width:30px;height:30px;background:var(--sand);font:800 14px/1 'Archivo';color:var(--ink)")}>−</button><span style={s("font:800 15px/1 'Archivo';color:var(--ink);width:16px;text-align:center;font-variant-numeric:tabular-nums")}>{st.food[m.id] || 0}</span><button data-cur="foodadd" onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: (sp.food[m.id] || 0) + 1 } }))} className="fp" style={s("width:30px;height:30px;background:var(--panel);font:800 14px/1 'Archivo';color:var(--on-panel)")}>+</button></span></div>)}</div>
+      {count > 0 && (
+        <div style={s('position:sticky;bottom:0;margin-top:16px;padding:13px 0 4px;background:var(--ground);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Archivo';letter-spacing:.12em;color:var(--label)")}>{count} ITEMS</div><div style={s("font:800 17px/1 'Archivo';color:var(--ink);margin-top:5px")}>{money(total)}</div></div><button data-cur="fooddeliver" onClick={place} className="fp" style={s("font:800 11.5px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);background:var(--panel);padding:14px 16px")}>{st.foodPlaced ? 'ADD TO ORDER' : 'DELIVER TO 112–J'}</button></div>
+      )}
+    </div>
+  );
+}
+
+function Photos({ st, award, set }: any) {
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
+      <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Photo pool</div><div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>{(st.photos * 134).toLocaleString()} photos from all four stands. Drop yours in for 25 XP.</div></div><button onClick={() => { set((sp: FSt) => ({ photos: Math.min(sp.photos + 3, 18) })); award(25, 'PHOTO ADDED', 'photo'); }} className="fp" style={s("font:800 10.5px/1 'Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:12px 13px;flex:none")}>+ ADD</button></div>
+      <div style={s('display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:14px')}>{Array.from({ length: st.photos }, (_, i) => <div key={i} style={s('position:relative;aspect-ratio:1;background:var(--sand)')}><Slot id={'photo-' + i} label={i < 3 ? 'Terrace shot' : 'Fan photo'} /></div>)}</div>
+      <div style={s("font:500 11.5px/1.5 'Archivo';color:var(--label);margin-top:12px")}>Tap a tile to drop a real photo in. Anything you add is credited to your seat and enters tonight’s best-photo vote.</div>
+    </div>
+  );
+}
+
+const PLAT: Record<string, { bg: string; fg: string; short: string }> = {
+  Instagram: { bg: '#C13584', fg: '#fff', short: 'IG' },
+  TikTok: { bg: '#111214', fg: '#fff', short: 'TikTok' },
+  YouTube: { bg: '#FF0000', fg: '#fff', short: 'YouTube' },
+  X: { bg: '#000000', fg: '#fff', short: 'X' },
+  Threads: { bg: '#101012', fg: '#fff', short: 'Threads' },
+};
+const REELS = [
+  { id: 'r1', plat: 'Instagram', handle: '@purplebolt.media', cap: 'Anthem at the Arc, chills 🟣 #VOLKGM', likes: 2400, slot: 'reel-1', dur: '0:24' },
+  { id: 'r2', plat: 'TikTok', handle: '@voltzone', cap: 'Brink warm-up routine, up close #VOLKGM', likes: 8100, slot: 'reel-2', dur: '0:31' },
+  { id: 'r3', plat: 'YouTube', handle: 'VoltsXtra', cap: 'LIVE: the walk-in from Gate 4', likes: 1200, slot: 'reel-3', dur: '2:10' },
+  { id: 'r4', plat: 'Instagram', handle: '@ftbl.frames', cap: 'Tunnel cam before kick-off 🎥 #VOLKGM', likes: 5700, slot: 'photo-3', dur: '0:18' },
+];
+const POSTS = [
+  { id: 'p1', plat: 'X', handle: '@VoltsMatchday', text: 'The noise for the anthem tonight. Never heard the Arc like that. #VOLKGM', likes: 3100, rt: 842, t: '2m' },
+  { id: 'p2', plat: 'Threads', handle: '@boltrising', text: 'If Varela runs this midfield we’re going to Munich. Simple as that.', likes: 1900, rt: 210, t: '5m' },
+  { id: 'p3', plat: 'X', handle: '@ftbltalk', text: 'Voltford press, Kingsmere counter. First goal decides the tie, buckle up.', likes: 2600, rt: 540, t: '8m' },
+];
+const kfmt = (n: number) => (n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'k' : String(n));
+const PLATS = ['All', 'Instagram', 'TikTok', 'YouTube', 'X', 'Threads'];
+const VIDEO = ['Instagram', 'TikTok', 'YouTube'];
+
+function Badge2({ plat }: { plat: string }) {
+  const p = PLAT[plat];
+  return <span style={{ ...s("font:800 8.5px/1 'Archivo';letter-spacing:.06em;padding:4px 6px;border-radius:5px"), background: p.bg, color: p.fg }}>{p.short}</span>;
+}
+
+function Reactions() {
+  const [filt, setFilt] = useState('All');
+  const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [playing, setPlaying] = useState<string | null>(null);
+  const reels = REELS.filter((r) => (filt === 'All' || filt === r.plat) && (filt === 'All' || VIDEO.includes(filt)));
+  const posts = POSTS.filter((p) => (filt === 'All' || filt === p.plat) && (filt === 'All' || !VIDEO.includes(filt)));
+  const like = (id: string) => setLiked((l) => ({ ...l, [id]: !l[id] }));
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
+      <div style={s('display:flex;align-items:center;gap:9px')}>
+        <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Fan reactions</div>
+        <span style={s("font:800 9px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#8B3DF5;padding:5px 7px;border-radius:100px")}>#VOLKGM</span>
+      </div>
+      <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>Reels, clips and posts pulled from across social by hashtag, Instagram, TikTok, YouTube, X and Threads, in one place.</div>
+
+      {/* platform filter */}
+      <div style={s('display:flex;gap:7px;margin-top:14px;overflow-x:auto')}>
+        {PLATS.map((p) => { const on = filt === p; return (
+          <button key={p} onClick={() => setFilt(p)} style={{ ...s("flex:none;font:800 10.5px/1 'Archivo';letter-spacing:.04em;padding:9px 12px;border-radius:100px"), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{p}</button>
+        ); })}
+      </div>
+
+      {/* REELS / video + pictures */}
+      {reels.length > 0 && (
+        <div style={s('margin-top:18px')}>
+          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>REELS & CLIPS</div>
+          <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px')}>
+            {reels.map((r, i) => { const pl = playing === r.id; return (
+              <div key={r.id} style={{ ...s('background:var(--sand);overflow:hidden'), animation: 'bgRise .28s cubic-bezier(.18,.9,.2,1) both', animationDelay: `${i * 40}ms` }}>
+                <button onClick={() => setPlaying(pl ? null : r.id)} style={s('display:block;width:100%;position:relative;height:212px')}>
+                  <Slot id={r.slot} label="Reel" />
+                  <span style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(27,11,45,.18),rgba(27,11,45,0) 34%,rgba(27,11,45,.55))')} />
+                  <span style={s('position:absolute;left:8px;top:8px')}><Badge2 plat={r.plat} /></span>
+                  <span style={s('position:absolute;right:8px;bottom:8px;font:800 8.5px/1 \'Archivo\';color:#fff;background:rgba(27,11,45,.6);padding:4px 5px')}>{pl ? '▮▮ 0:12' : r.dur}</span>
+                  <span style={s('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none')}><span style={s('width:46px;height:46px;border-radius:50%;background:rgba(27,11,45,.62);display:flex;align-items:center;justify-content:center')}>{pl ? <span style={s('display:flex;gap:4px')}><span style={s('width:4px;height:15px;background:#fff')} /><span style={s('width:4px;height:15px;background:#fff')} /></span> : <span style={s('width:0;height:0;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px')} />}</span></span>
+                </button>
+                <div style={s('padding:10px 11px 11px')}>
+                  <div style={s("font:700 11px/1.25 'Archivo';color:var(--ink)")}>{r.handle}</div>
+                  <div style={s("font:500 11px/1.35 'Archivo';color:var(--body);margin-top:4px")}>{r.cap}</div>
+                  <button onClick={() => like(r.id)} style={{ ...s("display:flex;align-items:center;gap:5px;margin-top:9px;font:800 10.5px/1 'Archivo'"), color: liked[r.id] ? '#8B3DF5' : 'var(--label)' }}><span style={{ display: 'flex', animation: liked[r.id] ? 'bgPop .22s cubic-bezier(.23,1,.32,1)' : undefined }}><Ms size={13} color={liked[r.id] ? '#8B3DF5' : 'var(--label)'}>favorite</Ms></span>{kfmt(r.likes + (liked[r.id] ? 1 : 0))}</button>
+                </div>
+              </div>
+            ); })}
+          </div>
+        </div>
+      )}
+
+      {/* POSTS / text from X + Threads */}
+      {posts.length > 0 && (
+        <div style={s('margin-top:22px')}>
+          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>POSTS</div>
+          <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:11px')}>
+            {posts.map((p, i) => (
+              <div key={p.id} style={{ ...s('background:var(--sand);padding:13px 14px'), animation: 'bgRise .28s cubic-bezier(.18,.9,.2,1) both', animationDelay: `${i * 40}ms` }}>
+                <div style={s('display:flex;align-items:center;gap:8px')}><Badge2 plat={p.plat} /><span style={s("font:700 12px/1 'Archivo';color:var(--ink)")}>{p.handle}</span><span style={s("font:500 10.5px/1 'Archivo';color:var(--label);margin-left:auto")}>{p.t}</span></div>
+                <div style={s("font:500 13.5px/1.45 'Archivo';color:var(--ink);margin-top:9px")}>{p.text}</div>
+                <div style={s('display:flex;align-items:center;gap:16px;margin-top:11px')}>
+                  <button onClick={() => like(p.id)} style={{ ...s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Archivo'"), color: liked[p.id] ? '#8B3DF5' : 'var(--label)' }}><span style={{ display: 'flex', animation: liked[p.id] ? 'bgPop .22s cubic-bezier(.23,1,.32,1)' : undefined }}><Ms size={14} color={liked[p.id] ? '#8B3DF5' : 'var(--label)'}>favorite</Ms></span>{kfmt(p.likes + (liked[p.id] ? 1 : 0))}</button>
+                  <span style={s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Archivo';color:var(--label)")}><Ms size={14} color="var(--label)">repeat</Ms>{p.rt}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={s("font:500 10.5px/1.5 'Archivo';color:var(--label);margin-top:18px")}>Curated &amp; moderated from #VOLKGM before it appears here, approved clips play in-app via each platform’s embed.</div>
+    </div>
+  );
+}
+
+function Reads({ st, set }: any) {
+  const open = st.read !== null ? ARTICLES[st.read] : null;
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
+      {!open && (<>
+        <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Reads</div>
+        <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>Written tonight by people who watch both teams every week.</div>
+        <div style={s('margin-top:14px')}>{ARTICLES.map((a, i) => <button key={i} onClick={() => set({ read: i })} className="frow" style={s('display:flex;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('width:70px;height:70px;flex:none;position:relative;background:var(--sand)')}><Slot id={a.slot} label="Art" /></span><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:#8B3DF5")}>{a.kicker}</span><span style={s("display:block;font:700 14.5px/1.25 'Archivo';color:var(--ink);margin-top:6px")}>{a.title}</span><span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:var(--label);margin-top:5px")}>{a.meta}</span></span></button>)}</div>
+      </>)}
+      {open && (
+        <div style={s('animation:bgFade .25s ease both')}>
+          <button onClick={() => set({ read: null })} className="fh" style={s("font:800 10px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}><Ms size={14} color="inherit" style={s('vertical-align:-2px')}>arrow_back</Ms> ALL READS</button>
+          <div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:#8B3DF5;margin-top:14px")}>{open.kicker}</div>
+          <div style={s("font:800 30px/.96 'Archivo Black';color:var(--ink);margin-top:9px")}>{open.title}</div>
+          <div style={s("font:500 11.5px/1 'Archivo';color:var(--label);margin-top:9px")}>{open.meta}</div>
+          <div style={s('position:relative;height:170px;background:var(--sand);margin-top:14px')}><Slot id={open.slot + '-hero'} label="Article image" /></div>
+          <div style={s('margin-top:14px;display:flex;flex-direction:column;gap:12px')}>{open.body.map((t, i) => <div key={i} style={s("font:400 15px/1.6 'Archivo';color:var(--ink)")}>{t}</div>)}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Seat({ st, set, go }: any) {
+  const blockDefs: [string, string][] = [['1 / 1 / 2 / 3', '101'], ['1 / 3 / 2 / 5', '102'], ['1 / 5 / 2 / 7', '103'], ['2 / 1 / 4 / 2', '120'], ['2 / 6 / 4 / 7', '104'], ['4 / 1 / 6 / 2', '119'], ['4 / 6 / 6 / 7', '105'], ['6 / 1 / 7 / 3', '112'], ['6 / 3 / 7 / 5', '111'], ['6 / 5 / 7 / 7', '110']];
+  const facts = [{ k: 'ENTRANCE', v: 'Gate 4, then stairs C' }, { k: 'NEAREST KIOSK', v: 'Kiosk 14, 40m, turn right' }, { k: 'TOILETS', v: 'Concourse south, 25m' }, { k: 'QUICKEST EXIT', v: 'Gate 4 to Ashton New Road' }];
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
+      <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Block 112 · row J</div><div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>South stand, lower tier. Seat 14.</div></div><button onClick={() => set((sp: FSt) => ({ routeOn: !sp.routeOn }))} style={{ ...s("font:800 10.5px/1 'Archivo';letter-spacing:.1em;padding:12px 13px;flex:none"), color: st.routeOn ? '#fff' : '#1B0B2D', background: st.routeOn ? '#8B3DF5' : '#E4DACA' }}>{st.routeOn ? 'HIDE ROUTE' : 'SHOW ROUTE'}</button></div>
+      <div style={s('position:relative;margin-top:16px;height:280px;background:#1B1422;padding:20px;display:flex;align-items:center;justify-content:center')}>
+        <div style={s('position:relative;width:100%;height:100%;border:1.5px solid rgba(226,216,196,.4)')}><div style={s('position:absolute;left:0;right:0;top:50%;height:1.5px;background:rgba(226,216,196,.4)')} /><div style={s('position:absolute;left:50%;top:50%;width:60px;height:60px;border:1.5px solid rgba(226,216,196,.4);border-radius:50%;transform:translate(-50%,-50%)')} /></div>
+        <div style={s('position:absolute;inset:6px;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);gap:3px;pointer-events:none')}>{blockDefs.map(([area, label]) => <span key={label} style={{ ...s("display:flex;align-items:center;justify-content:center;font:800 7.5px/1 'Archivo';letter-spacing:.04em"), gridArea: area, background: label === '112' ? '#8B3DF5' : 'rgba(226,216,196,.14)', color: label === '112' ? '#fff' : '#9F8AB6' }}>{label}</span>)}</div>
+        {st.routeOn && (<><div style={s('position:absolute;left:22%;top:78%;width:52%;height:3px;background:repeating-linear-gradient(90deg,#8B3DF5 0 7px,transparent 7px 12px)')} /><div style={s('position:absolute;left:74%;top:52%;width:3px;height:28%;background:repeating-linear-gradient(0deg,#8B3DF5 0 7px,transparent 7px 12px)')} /></>)}
+      </div>
+      <div style={s('margin-top:14px')}>{facts.map((f) => <div key={f.k} style={s('display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)')}><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);width:96px")}>{f.k}</span><span style={s("flex:1;font:600 13.5px/1.3 'Archivo';color:var(--ink)")}>{f.v}</span></div>)}</div>
+      <button onClick={go('food')} className="fp" style={s("display:block;width:100%;margin-top:16px;padding:15px;background:var(--panel);font:800 12.5px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel)")}>ORDER TO THIS SEAT</button>
+    </div>
+  );
+}
+
+function Profile({ st, filled, set, go }: any) {
+  const stats = [{ icon: 'stadium', v: '14', k: 'MATCHES THIS SEASON' }, { icon: 'forum', v: '212', k: 'CHAT MESSAGES' }, { icon: 'photo_camera', v: '38', k: 'PHOTOS ADDED' }, { icon: 'emoji_events', v: '6', k: 'PREDICTIONS WON' }];
+  const activity = [
+    { icon: 'redeem', t: '£5 food credit', d: 'Claimed at 500 XP', v: 'USED', color: 'var(--label)' },
+    { icon: 'restaurant', t: st.foodPlaced ? 'Steak pie to 112–J' : 'No food order yet', d: st.foodPlaced ? 'Runner on the way' : 'Order before half-time', v: st.foodPlaced ? 'LIVE' : '–', color: st.foodPlaced ? '#8B3DF5' : 'var(--label)' },
+    { icon: 'shopping_bag', t: st.basket.length ? st.basket.length + ' items in basket' : 'Basket empty', d: st.ordered ? 'Collect at Gate 4' : 'Collection on the way out', v: st.ordered ? 'PAID' : 'OPEN', color: st.ordered ? '#8B3DF5' : 'var(--label)' },
+    { icon: 'scoreboard', t: st.pred.done ? 'Prediction ' + st.pred.h + '–' + st.pred.a + ', ' + st.pred.s : 'No prediction yet', d: st.pred.done ? 'Settles at full-time' : 'Closes at kick-off', v: st.pred.done ? '+120' : '–', color: st.pred.done ? '#8B3DF5' : 'var(--label)' },
+  ];
+  const themeOpts = [{ k: 'auto', label: 'Auto', icon: 'brightness_auto' }, { k: 'light', label: 'Light', icon: 'light_mode' }, { k: 'dark', label: 'Dark', icon: 'dark_mode' }];
+  const prefs = [{ k: 'goals', label: 'Goal alerts', icon: 'sports_soccer' }, { k: 'ht', label: 'Half-time summary', icon: 'schedule' }, { k: 'rewards', label: 'Reward updates', icon: 'redeem' }];
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  return (
+    <div style={s('animation:bgFade .25s ease both')}>
+      <div style={s('background:var(--panel);padding:18px 16px 20px')}>
+        <div style={s('display:flex;align-items:center;gap:13px')}><span style={s("width:56px;height:56px;flex:none;border-radius:50%;background:#8B3DF5;display:flex;align-items:center;justify-content:center;font:800 20px/1 'Archivo Black';color:#fff")}>AJ</span><div style={s('flex:1;min-width:0')}><div style={s("font:800 26px/.94 'Archivo Black';color:var(--on-panel)")}>Alex Jarrett</div><div style={s("font:600 11.5px/1 'Archivo';color:#9F8AB6;margin-top:7px")}>@alexj · member since 2016</div></div><span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:6px 7px")}>TIER 2</span></div>
+        <div style={s('display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(242,242,240,.16)')}><Ms size={16} color="#8B3DF5">event_seat</Ms><span style={s("font:600 12px/1.4 'Archivo';color:var(--on-panel)")}>Season ticket · Block 112, Row J, Seat 14</span></div>
+      </div>
+      <div style={s('padding:18px 16px 0')}>
+        <div style={s('display:flex;align-items:baseline;justify-content:space-between')}>{L('MATCHDAY XP')}<span style={s("font:600 11px/1 'Archivo';color:var(--label)")}>{Math.max(2000 - st.xp, 0).toLocaleString()} to a seat upgrade</span></div>
+        <div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:10px')}><span style={s("font:800 40px/.82 'Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>{st.xp.toLocaleString()}</span><span style={s("font:600 11.5px/1 'Archivo';color:var(--label);padding-bottom:4px")}>/ 2,000 XP</span></div>
+        <div style={s('display:flex;gap:2px;height:10px;margin-top:11px')}>{Array.from({ length: 20 }, (_, i) => <span key={i} style={{ flex: 1, background: i < filled ? 'var(--ink)' : 'var(--sand)', transition: 'background .4s ease' }} />)}</div>
+        <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px')}>{stats.map((p) => <div key={p.k} style={s('background:var(--sand);padding:13px')}><Ms size={19} color="var(--ink)">{p.icon}</Ms><div style={s("font:800 26px/.9 'Archivo Black';color:var(--ink);margin-top:9px;font-variant-numeric:tabular-nums")}>{p.v}</div><div style={s("font:800 8.5px/1.3 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>{p.k}</div></div>)}</div>
+      </div>
+      <div style={s('padding:20px 16px 0')}>{L('TONIGHT’S ACTIVITY')}<div style={s('margin-top:6px')}>{activity.map((a, i) => <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><Ms size={20} color={a.color}>{a.icon}</Ms><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Archivo';color:var(--ink)")}>{a.t}</span><span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{a.d}</span></span><span style={{ ...s("font:800 10.5px/1 'Archivo';letter-spacing:.06em"), color: a.color }}>{a.v}</span></div>)}</div></div>
+      <div style={s('padding:20px 16px 0')}>{L('YOUR PHOTOS')}<div style={s('display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:10px')}>{['profile-photo-1', 'profile-photo-2', 'profile-photo-3'].map((id) => <div key={id} style={s('position:relative;aspect-ratio:1;background:var(--sand)')}><Slot id={id} label="Your shot" /></div>)}</div></div>
+      <div style={s('padding:20px 16px 0')}>{L('APPEARANCE')}<div style={s('display:flex;gap:6px;margin-top:10px')}>{themeOpts.map((o) => { const on = st.theme === o.k; return <button key={o.k} onClick={() => set({ theme: o.k })} style={{ ...s('flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 0'), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}><Ms size={21} color="inherit">{o.icon}</Ms><span style={s("font:800 10px/1 'Archivo';letter-spacing:.1em;color:inherit")}>{o.label}</span></button>; })}</div><div style={s("font:500 11.5px/1.5 'Archivo';color:var(--label);margin-top:9px")}>Auto follows your phone’s appearance setting.</div></div>
+      <div style={s('padding:20px 16px 26px')}>{L('ALERTS')}<div style={s('margin-top:6px')}>{prefs.map((p) => { const on = st.prefs[p.k]; return <button key={p.k} onClick={() => set((sp: FSt) => ({ prefs: { ...sp.prefs, [p.k]: !sp.prefs[p.k] } }))} style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><Ms size={20} color="var(--ink)">{p.icon}</Ms><span style={s("flex:1;font:600 13.5px/1.2 'Archivo';color:var(--ink)")}>{p.label}</span><span style={{ ...s('width:42px;height:24px;flex:none;border-radius:100px;position:relative;transition:background .25s ease'), background: on ? '#8B3DF5' : 'var(--sand2)' }}><span style={{ ...s('position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .25s cubic-bezier(.2,.8,.2,1)'), left: on ? '21px' : '3px' }} /></span></button>; })}</div><button onClick={go('home')} className="fs" style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:18px;padding:15px;box-shadow:inset 0 0 0 1.5px var(--hair);font:800 12px/1 'Archivo';letter-spacing:.08em;color:var(--ink)")}><Ms size={16} color="var(--ink)">logout</Ms>SIGN OUT</button></div>
+    </div>
+  );
+}
+
+function Iris({ st, pre, live, ht, set, ask, irisRef, go, closeIris }: any) {
+  const QA: [string, string, string?, string?][] = pre ? [
+    ['Who decides this?', 'Kasper Brink against a Kingsmere back line that has conceded first only twice all competition. He has 12 in the competition and scores 0.82 goals per 90 at home.', '12', 'GOALS IN THIS COMPETITION'],
+    ['Why is Voltford favourite?', 'Home leg, unbeaten in eight here, and 1.87 xG per game against Kingsmere’s 1.64. The model still only gives Voltford 46%, Kingsmere score late.', '46%', 'MODELLED WIN CHANCE'],
+    ['Kingsmere’s main threat?', 'Montes against a high line. Kingsmere have six counter-attack goals in the competition, more than any side left in it.', '6', 'COUNTER-ATTACK GOALS'],
+    ['What can I win tonight?', 'You’re 760 XP from a seat upgrade for the final. Two predictions are open, 120 XP, and polls pay 40 XP each.', '760', 'XP TO A SEAT UPGRADE'],
+  ] : live ? [
+    ['What just happened?', 'Brink finished a Brandt cutback on 23 minutes from an 0.34 xG chance. Voltford lead and are 3–2 up on aggregate.', '0.34', 'XG ON THE OPENING GOAL'],
+    ['Is Voltford in control?', 'Territorially yes, 58% possession, 8 shots on target, but Kingsmere have scored half their goals after the 70th minute.', '58%', 'VOLTFORD POSSESSION'],
+    ['Who’s the danger man?', 'Montes. He has been isolated wide left all half; every Kingsmere counter has gone through him.', '6', 'KINGSMERE COUNTER GOALS'],
+    ['How do I earn XP now?', 'The live poll is open, 40 XP, and chat messages pay 2 XP each.', '40', 'XP FOR THIS POLL'],
+  ] : ht ? [
+    ['What changed in the first half?', 'Kingsmere equalised on 45 minutes through Montes, against the run of play, Voltford had 2.1 xG to their 0.6 before it went in.', '2.1', 'VOLTFORD XG, FIRST HALF'],
+    ['What should Voltford fix?', 'The high line. Both Kingsmere shots on target came from balls played in behind the full-backs.', '2', 'KINGSMERE SHOTS ON TARGET'],
+    ['Who wins from here?', 'Aggregate is level. On second-half form the model swings to Voltford 51%, Kingsmere 29%, draw 20%.', '51%', 'VOLTFORD, SECOND HALF ON'],
+    ['Can I still order food?', 'Fifteen minutes left, an order to 112–J typically lands with four minutes to spare.', '15', 'MINUTES OF HALF-TIME'],
+  ] : [
+    ['Who was man of the match?', 'Fans gave it to Theo Marsh, the 71st-minute winner and 4 chances created. The model preferred Varela.', '71’', 'THE WINNING GOAL'],
+    ['How did Voltford win it?', '2.34 xG to 1.02, and the first goal again, nine of their last ten home wins have followed it.', '2.34', 'VOLTFORD EXPECTED GOALS'],
+    ['What happens next?', 'The final is in Munich on 31 May. Your seat upgrade unlocks at 2,000 XP; player ratings are worth a final 80 XP.', '80', 'XP LEFT TONIGHT'],
+    ['Best of the fan content?', '1,204 photos in the pool and the away-end reaction reels are worth a minute of your time.', '1,204', 'FAN PHOTOS TONIGHT'],
+  ];
+  const fallback = 'That one isn’t in tonight’s briefing yet. I refresh at half-time and full-time, until then, the shot map and the win-probability model on the Match Intel page cover most of it.';
+  const askFree = (q: string) => { const words = q.toLowerCase().split(/\W+/).filter((w) => w.length > 3); const hit = QA.find(([qq]) => words.some((w) => qq.toLowerCase().indexOf(w) > -1)); if (hit) ask(hit[0], hit[1], hit[2], hit[3]); else ask(q, fallback); };
+  return (
+    <div style={{ ...s('position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(27,11,45,.45)'), animation: st.irisOut ? 'bgFadeOut .26s ease both' : undefined }}>
+      <button onClick={() => closeIris()} style={s('position:absolute;inset:0;cursor:default')} />
+      <div style={{ ...s('position:relative;height:82%;display:flex;flex-direction:column;background:var(--ground)'), animation: st.irisOut ? 'bgSheetOut .26s cubic-bezier(.32,.72,0,1) both' : 'bgSheet .32s cubic-bezier(.18,.9,.2,1) both' }}>
+        <div style={s('display:flex;align-items:center;gap:10px;padding:13px 15px;background:var(--panel)')}><span style={s('width:7px;height:7px;background:#8B3DF5;animation:bgDot 1.6s ease-in-out infinite')} /><div style={s('min-width:0')}><div style={s("font:800 21px/1 'Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>IRIS</div><div style={s("font:700 8.5px/1 'Archivo';letter-spacing:.14em;color:#9F8AB6;margin-top:5px")}>ANSWERS FROM TONIGHT’S BRIEFING</div></div><button onClick={go('intel')} className="fs" style={s("margin-left:auto;font:800 9px/1 'Archivo';letter-spacing:.12em;color:var(--ink);background:var(--sand);padding:7px 8px")}>FULL INTEL</button><button onClick={() => closeIris()} className="fh" style={s("font:800 14px/1 'Archivo';color:#9F8AB6;padding:4px 2px 4px 6px")}><Ms size={18} color="inherit">close</Ms></button></div>
+        <div ref={irisRef} style={s('flex:1;overflow-y:auto;padding:15px 15px 8px;display:flex;flex-direction:column;gap:11px')}>
+          {st.thread.map((m: any, i: number) => { const me = m.me; return (
+            <div key={i} style={{ ...s('display:flex;animation:bgBubble .3s ease both'), justifyContent: me ? 'flex-end' : 'flex-start' }}>
+              <div style={{ ...s('max-width:84%;padding:12px 13px'), background: me ? 'var(--panel)' : 'var(--sand)', borderRadius: me ? '14px 14px 3px 14px' : '3px 14px 14px 14px' }}>
+                <div style={{ ...s("font:800 8.5px/1 'Archivo';letter-spacing:.14em"), color: me ? '#9F8AB6' : 'var(--label)' }}>{me ? 'YOU' : 'IRIS'}</div>
+                <div style={{ ...s("font:500 13.5px/1.5 'Archivo';margin-top:6px"), color: me ? 'var(--on-panel)' : 'var(--ink)' }}>{m.text}</div>
+                {m.stat && <div style={s('display:flex;align-items:baseline;gap:8px;margin-top:10px;padding-top:9px;border-top:1.5px solid rgba(27,11,45,.14)')}><span style={s("font:800 25px/.9 'Archivo Black';color:#8B3DF5;font-variant-numeric:tabular-nums")}>{m.stat}</span><span style={s("font:700 8.5px/1.3 'Archivo';letter-spacing:.12em;color:var(--label)")}>{m.statLabel}</span></div>}
+              </div>
+            </div>
+          ); })}
+          {st.irisTyping && <div style={s('display:flex;gap:5px;padding:4px 2px')}><span style={s('width:6px;height:6px;background:#8B3DF5;animation:bgDot 1.2s ease-in-out infinite')} /><span style={s('width:6px;height:6px;background:#8B3DF5;animation:bgDot 1.2s .2s ease-in-out infinite')} /><span style={s('width:6px;height:6px;background:#8B3DF5;animation:bgDot 1.2s .4s ease-in-out infinite')} /></div>}
+        </div>
+        <div style={s('padding:9px 11px 0;display:flex;gap:6px;overflow-x:auto')}>{QA.map(([q, a, stat, statLabel]) => <button key={q} onClick={() => ask(q, a, stat, statLabel)} className="fs" style={s("flex:none;font:700 11px/1 'Archivo';color:var(--ink);padding:10px 12px;background:var(--sand);white-space:nowrap")}>{q}</button>)}</div>
+        <div style={s('padding:9px 11px 15px;display:flex;gap:8px;align-items:center')}><div style={s('flex:1;padding:12px 14px;background:var(--sand);border-radius:100px')}><input value={st.irisDraft} onChange={(e: any) => set({ irisDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter' && st.irisDraft.trim()) askFree(st.irisDraft); }} placeholder="Ask about tonight’s match…" style={s("width:100%;font:500 13.5px/1.2 'Archivo';color:var(--ink)")} /></div><button onClick={() => { if (st.irisDraft.trim()) askFree(st.irisDraft); }} style={s("width:44px;height:44px;flex:none;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 16px/1 'Archivo';color:var(--on-panel)")}>↑</button></div>
+      </div>
+    </div>
+  );
+}
+
+const FAN_CSS = `
+:root{--ground:#F6F6F5;--sand:#EEEEEA;--sand2:#D5D5D2;--sand3:#E4E4E2;--ink:#1B0B2D;--body:#46335C;--label:#725E88;--panel:#1B0B2D;--panel-hover:#29163E;--chrome:#140921;--on-panel:#F2F2F0;--hair:rgba(27,11,45,.12);--desk:#D5D5D2}
+:root[data-theme="dark"]{--ground:#160F1E;--sand:#251B30;--sand2:#392B4A;--sand3:#2B2038;--ink:#F2F2F0;--body:#C4C4BF;--label:#957FAF;--panel:#2F1F41;--panel-hover:#3B2851;--chrome:#150E1C;--on-panel:#F2F2F0;--hair:rgba(208,208,204,.12);--desk:#0B080F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ground:#160F1E;--sand:#251B30;--sand2:#392B4A;--sand3:#2B2038;--ink:#F2F2F0;--body:#C4C4BF;--label:#957FAF;--panel:#2F1F41;--panel-hover:#3B2851;--chrome:#150E1C;--on-panel:#F2F2F0;--hair:rgba(208,208,204,.12);--desk:#0B080F}}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;line-height:1;display:inline-block;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased}
+@keyframes bgRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes bgFade{from{opacity:0}to{opacity:1}}
+@keyframes bgScore{0%{opacity:0;transform:translateY(24px) scale(.9)}55%{opacity:1;transform:translateY(-4px) scale(1.04)}100%{opacity:1;transform:none}}
+@keyframes bgThird{0%{opacity:0;transform:translateX(-102%)}14%{opacity:1;transform:translateX(0)}86%{opacity:1;transform:translateX(0)}100%{opacity:0;transform:translateX(-14px)}}
+@keyframes bgBlink{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes bgTicker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes bgSheet{from{transform:translateY(100%)}to{transform:none}}
+@keyframes bgDot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@keyframes bgBubble{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes bgToast{0%{opacity:0;transform:translateY(12px)}12%{opacity:1;transform:none}84%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}
+@keyframes bgSheetOut{from{transform:none}to{transform:translateY(100%)}}
+@keyframes bgFadeOut{from{opacity:1}to{opacity:0}}
+@keyframes bgFlashOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-8px)}}
+@keyframes bgPop{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
+@keyframes bgSweep{from{transform:translateX(0) skewX(-12deg)}to{transform:translateX(420%) skewX(-12deg)}}
+@keyframes bgReveal{from{opacity:0;transform:translateY(12px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes bgFloatUp{0%{opacity:0;transform:translateY(0) scale(.5)}18%{opacity:1;transform:translateY(-16px) scale(1.1)}100%{opacity:0;transform:translateY(-128px) scale(.95)}}
+@keyframes bgFloods{0%,100%{opacity:.85}50%{opacity:1}}
+.fs,.fp,.fq,.fw,.frow,.skz,.agg{transition:background .18s ease,box-shadow .18s ease,transform .13s cubic-bezier(.2,.7,.3,1)}
+.agg:hover{background:rgba(139,61,245,.2) !important}
+.agg:active{transform:scale(.99)}
+.fs:hover{background:var(--sand3) !important}
+.fp:hover{background:var(--panel-hover) !important}
+.fh:hover{color:var(--on-panel) !important}
+.fh2:hover{background:var(--panel-hover) !important}
+.fq:hover{background:rgba(242,242,240,.14) !important}
+.fw:hover{background:#fff !important}
+.frow:hover{background:var(--sand3) !important}
+.frow > .ms{transition:transform .13s cubic-bezier(.2,.7,.3,1)}
+.frow:hover > .ms{transform:translateX(3px)}
+.fs:active,.fp:active,.fq:active,.fw:active,.frow:active{transform:scale(.985)}
+.skz:hover{background:rgba(139,61,245,.22) !important}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
+`;
