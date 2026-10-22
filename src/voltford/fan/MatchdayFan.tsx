@@ -866,7 +866,7 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
                 <div style={s("flex:none;padding-top:20px;font:800 13px/1 'Archivo Black';letter-spacing:.06em;color:#B08EF0")}>V</div>
                 <div style={s('flex:1;display:flex;flex-direction:column;align-items:center;gap:9px')}>
                   <Badge club="away" size={58} />
-                  <div style={s("font:800 19px/.88 'Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(13,5,23,.75)")}>KINGSMERE<br />CITY</div>
+                  <div style={s("font:800 19px/.88 'Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(13,5,23,.75)")}>KINGSMERE<br />TOWN</div>
                   <div style={s('display:flex;gap:3px')}>{formA.map((f, i) => <span key={i} style={{ ...s("font:800 8px/1 'Archivo';padding:3px 4px"), color: f.fg, background: f.bg }}>{f.r}</span>)}</div>
                 </div>
               </div>
