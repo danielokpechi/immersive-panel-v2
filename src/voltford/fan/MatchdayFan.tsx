@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════
 // MatchdayFan, the mobile web fan panel.
-// Voltford v Kingsmere City (CL semi, 2nd leg) across four operator-driven
+// Voltford v Kingsmere Town (CL semi, 2nd leg) across four operator-driven
 // states (PRE/LIVE/HT/FT) and eleven screens, themed light + dark via CSS
 // variables, with a broadcast aesthetic (score bug, lower thirds).
 // ═══════════════════════════════════════════════════════════════════════
@@ -27,7 +27,7 @@ const Ms = ({ children, size = 18, color, style }: { children: string; size?: nu
   <span className="ms" style={{ fontSize: size, color, ...style }}>{children}</span>
 );
 
-// Club crest. Both clubs use shield crests, which read cramped inside City's
+// Club crest. Both clubs use shield crests, which read cramped inside the old
 // white disc, so the crest sits bare with a soft shadow to lift it off the ground.
 const CREST: Record<string, string> = { home: media.clubBadge, away: media.rivalBadge };
 // Narrow embeds (the Studio's 308px live monitor) can't fit the one-word club
@@ -284,7 +284,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   };
   const varCheck = () => {
     const min = st.ms === 'live' ? 38 : 71;
-    fire('VAR CHECK', 'Possible handball', min, 'Referee reviewing, Varela, Voltford penalty area', 'KINGSMERE CITY APPEAL', 'a', true);
+    fire('VAR CHECK', 'Possible handball', min, 'Referee reviewing, Varela, Voltford penalty area', 'KINGSMERE TOWN APPEAL', 'a', true);
     window.clearTimeout(timers.current.varT);
     timers.current.varT = window.setTimeout(() => fire('NO PENALTY', 'Ball struck the shoulder', min, 'On-field decision stands · play restarts with a Voltford free-kick', 'VAR DECISION', 'a'), 3600);
   };
@@ -301,11 +301,11 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
     // Events fire in place (the lower-third shows on every screen) so a moment
     // in the game surfaces right where the fan is, including in the chat.
     if (kind === 'goal') { if (st.ms === 'pre') set({ ms: 'live', route: 'home', hs: 0, as: 0 }); fire('GOAL', 'Marsh', 71, 'Assist Brink · xG 0.19', 'VOLTFORD', 'h'); }
-    else if (kind === 'card') fire('YELLOW', 'Moreau', 31, 'Late on Marsh · second booking of the tie', 'KINGSMERE CITY', 'a');
-    else if (kind === 'red') fire('RED CARD', 'Moreau', 64, 'Second yellow · Kingsmere down to ten', 'KINGSMERE CITY', 'a');
+    else if (kind === 'card') fire('YELLOW', 'Moreau', 31, 'Late on Marsh · second booking of the tie', 'KINGSMERE TOWN', 'a');
+    else if (kind === 'red') fire('RED CARD', 'Moreau', 64, 'Second yellow · Kingsmere down to ten', 'KINGSMERE TOWN', 'a');
     else if (kind === 'var') varCheck();
     else if (kind === 'sub') fire('SUBSTITUTION', 'Adebayo on', 68, 'Ellery off · 68 minutes played, 3 chances created', 'VOLTFORD', 'h');
-    else if (kind === 'offside') fire('OFFSIDE', 'Dario Montes', 44, 'Flag up · Kingsmere strike ruled out, tight one on the shoulder', 'KINGSMERE CITY', 'a');
+    else if (kind === 'offside') fire('OFFSIDE', 'Dario Montes', 44, 'Flag up · Kingsmere strike ruled out, tight one on the shoulder', 'KINGSMERE TOWN', 'a');
     else if (kind === 'drinks') fire('DRINKS BREAK', 'Two minutes', 33, 'Referee has paused play, 26°C at kick-off', 'HYDRATION', 'n');
   };
   // Autoplay demo mode (?autoplay=1): pins the panel LIVE and loops fan actions
@@ -1465,7 +1465,7 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
   const L = (t: string) => <div style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
   const joined = !!st.crewsJoined[crew.id];
   const rules = crew.rules || CREW_RULES[crew.id] || 'Be respectful. Keep it about the Volts.';
-  const inviteLink = 'city.app/join/' + crew.id;
+  const inviteLink = 'voltford.app/join/' + crew.id;
   // Join requests waiting on the admin (the pending-members queue for invite-only Crews).
   const [requests, setRequests] = useState([
     { id: 'rq1', name: 'Aisha_R', initials: 'AI', bg: '#8B3DF5', note: 'Season ticket · Block 108' },
@@ -1534,7 +1534,7 @@ const INVITE_NAMES = ['Sam Whitfield', 'Jordan Ade', 'Louis Marsh', 'Fatima Noor
 const INVITE_PHOTO = [media.avR1, media.avR2, media.avDeclan, media.avR3];
 function Invite({ st, crew, inviteContact, notify }: any) {
   const L = (t: string) => <div style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
-  const inviteLink = 'city.app/join/' + crew.id;
+  const inviteLink = 'voltford.app/join/' + crew.id;
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
       <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Invite to {crew.name}</div>
@@ -1618,7 +1618,7 @@ function Room({ st, joinRoom, leaveRoom, frameless }: any) {
   );
 }
 
-// ── Crews intro modal: full-frame, city-crowd backdrop, once per session ──
+// ── Crews intro modal: full-frame, crowd backdrop, once per session ──
 function CrewsIntro({ dismiss }: { dismiss: () => void }) {
   const feats = [
     { icon: 'groups', t: 'Your people, always on', d: 'Join a Crew and pick up the thread whenever you open the app.' },
@@ -1787,7 +1787,7 @@ function Intel({ pre, live, ht, openIris }: any) {
       </div>
       <div style={s('padding:22px 16px 0')}>{L('KEY STAT')}<div style={s('display:flex;align-items:flex-start;gap:13px;margin-top:11px')}><div style={s("font:800 58px/.78 'Archivo Black';color:#8B3DF5;font-variant-numeric:tabular-nums")}>9<span style={s('font-size:24px;color:var(--ink)')}>/10</span></div><div style={s("flex:1;font:600 15px/1.3 'Archivo';color:var(--ink)")}>Voltford have scored first in nine of their last ten at home, and won all nine.<span style={s("display:block;font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>The first goal decides this tie more than possession does.</span></div></div></div>
       <div style={s('padding:22px 16px 0')}>{L('HEAD-TO-HEAD · LAST 5')}<div style={s('margin-top:9px')}>{h2h.map((g, i) => <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}><span style={{ ...s("width:22px;height:22px;flex:none;font:800 11px/22px 'Archivo';text-align:center"), background: g.bg, color: g.fg }}>{g.r}</span><span style={s("font:800 14px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{g.score}</span><span style={s("font:500 12px/1.3 'Archivo';color:var(--body)")}>{g.comp}</span><span style={s("font:700 10px/1 'Archivo';letter-spacing:.1em;color:var(--label);margin-left:auto")}>{g.date}</span></div>)}</div></div>
-      <div style={s('padding:22px 16px 0')}>{L('FORM & EXPECTED GOALS')}<div style={s('display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px')}><div style={s('padding:14px;background:var(--sand);border-top:5px solid #8B3DF5')}><div style={s("font:800 12px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>VOLTFORD</div><div style={s("font:800 34px/.88 'Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.87</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:9px")}>Unbeaten in 8 at home. Brink 12 in the competition.</div></div><div style={s('padding:14px;background:var(--sand);border-top:5px solid #1E3A6E')}><div style={s("font:800 12px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>KINGSMERE CITY</div><div style={s("font:800 34px/.88 'Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.64</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:9px")}>Score late: 7 of 14 goals after the 70th minute.</div></div></div></div>
+      <div style={s('padding:22px 16px 0')}>{L('FORM & EXPECTED GOALS')}<div style={s('display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px')}><div style={s('padding:14px;background:var(--sand);border-top:5px solid #8B3DF5')}><div style={s("font:800 12px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>VOLTFORD</div><div style={s("font:800 34px/.88 'Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.87</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:9px")}>Unbeaten in 8 at home. Brink 12 in the competition.</div></div><div style={s('padding:14px;background:var(--sand);border-top:5px solid #1E3A6E')}><div style={s("font:800 12px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>KINGSMERE TOWN</div><div style={s("font:800 34px/.88 'Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.64</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:9px")}>Score late: 7 of 14 goals after the 70th minute.</div></div></div></div>
       <div style={s('padding:22px 16px 26px')}>{L('WATCH FOR')}<div style={s('margin-top:7px')}>{watch.map((w, i) => <div key={i} style={s('padding:12px 0;border-bottom:1.5px solid var(--hair)')}><div style={s("font:700 14px/1.3 'Archivo';color:var(--ink)")}>{w.t}</div><div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:4px")}>{w.d}</div></div>)}</div><button onClick={openIris} className="fp" style={s("display:block;width:100%;margin-top:18px;padding:15px;background:var(--panel);font:800 12.5px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);text-align:center")}>ASK IRIS ABOUT ANY OF THIS</button></div>
     </div>
   );
