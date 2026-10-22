@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 // A static export has no server redirects, so this runs in the browser.
 export function RedirectHome() {
   const router = useRouter();
-  useEffect(() => { router.replace('/studio/'); }, [router]);
+  // Unknown Voltford paths stay in the Voltford Studio rather than landing on City.
+  useEffect(() => { router.replace(window.location.pathname.includes('/voltford/') ? '/voltford/studio/' : '/studio/'); }, [router]);
   return null;
 }

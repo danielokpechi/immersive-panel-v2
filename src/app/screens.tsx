@@ -10,3 +10,7 @@ export const ConnectStudio = dynamic(() => import('../cstudio/ConnectStudio'), {
 export const ConnectApp = dynamic(() => import('../connect/ConnectApp'), { ssr: false });
 export const PanelStudio = dynamic(() => import('../admin/PanelStudio').then((m) => m.PanelStudio), { ssr: false });
 export const MatchdayFan = dynamic(() => import('../fan/MatchdayFan').then((m) => m.MatchdayFan), { ssr: false });
+// Fictional-club copy of the City Studio and fan panel (src/voltford), so demos
+// need not show Manchester City. The City screens above stay untouched.
+export const VoltfordStudio = dynamic(() => import('../voltford/admin/PanelStudio').then((m) => m.PanelStudio), { ssr: false });
+export const VoltfordFan = dynamic(() => import('../voltford/fan/MatchdayFan').then((m) => m.MatchdayFan), { ssr: false });
