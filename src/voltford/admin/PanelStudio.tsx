@@ -303,8 +303,8 @@ function Dashboard({ st, setState, say }: Props) {
             <Ms size={16} color={ctx('#513E66')}>restart_alt</Ms>Reset demo
           </button>
           <div style={s('display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:100px;background:#F1F1EE')}>
-            <span style={s("width:30px;height:30px;border-radius:50%;background:#8B3DF5;display:flex;align-items:center;justify-content:center;font:700 11px/1 'Archivo';color:#fff")}>SJ</span>
-            <div><div style={s('font:600 12.5px/1')}>Sasha Jarrett</div><div style={s('font:500 10.5px/1;color:#826E99;margin-top:4px')}>Studio admin</div></div>
+            <span style={s("width:30px;height:30px;border-radius:50%;background:#8B3DF5;display:flex;align-items:center;justify-content:center;font:700 11px/1 'Archivo';color:#fff")}>JJ</span>
+            <div><div style={s('font:600 12.5px/1')}>Johan Jamal</div><div style={s('font:500 10.5px/1;color:#826E99;margin-top:4px')}>Studio admin</div></div>
           </div>
         </div>
       </header>
