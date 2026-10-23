@@ -6,8 +6,9 @@
 // (see LiveMonitor).
 // ═══════════════════════════════════════════════════════════════════════
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { s, setAdmDark, dk, ctx } from './s';
+import QRCode from 'qrcode';
 import { BASE } from '../base';
 import { media } from '../domain/media';
 import {
@@ -68,6 +69,8 @@ const sportOf = (id: string) => SPORTS.find((x) => x.id === id) || { name: '', i
 const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 // The real fan panel (Matchday Companion v4) lives at /p/:id, open it for real.
 const fanUrl = (id: string) => `${BASE}p/${id.toLowerCase()}/`;
+// Absolute fan URL on the host the studio is served from (works under /studio and /voltford/studio).
+const fanHref = (id: string) => (typeof window === 'undefined' ? fanUrl(id) : new URL(fanUrl(id), window.location.origin).href);
 const openFan = (id: string) => window.open(fanUrl(id), '_blank', 'noopener');
 // Map the studio's phases + triggers to the fan client's operator commands.
 const phaseToMs = (ph: string) => (ph === 'Live' ? 'live' : ph === 'Break' ? 'ht' : ph === 'Post' ? 'ft' : ph === 'Idle' ? 'inactive' : 'pre');
@@ -736,10 +739,14 @@ function Control({ st, setState, say, broadcast }: Props) {
   }, [p.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const send = (msg: { cmd: string; ms?: string; kind?: string; route?: string; action?: string; crewId?: string; player?: string; duration?: number; type?: string }) => chanRef.current?.postMessage(msg);
 
-  const qr = useMemo(() => {
-    const seed = (i: number) => { const x = i % 21, y = Math.floor(i / 21); const finder = (a: number, b: number) => (a < 7 && b < 7) || (a > 13 && b < 7) || (a < 7 && b > 13); if (finder(x, y)) { const dx = x > 13 ? x - 14 : x, dy = y > 13 ? y - 14 : y; const r = Math.max(Math.abs(dx - 3), Math.abs(dy - 3)); return r === 3 || r <= 1; } return (x * 7 + y * 13 + ((x * y) % 5)) % 3 === 0; };
-    return Array.from({ length: 441 }, (_, i) => (seed(i) ? '#001838' : '#EEF3F9'));
-  }, []);
+  // The real, scannable QR for the same absolute fan URL shown in the link field.
+  const [shareUrl, setShareUrl] = useState('');
+  const [qr, setQr] = useState('');
+  useEffect(() => {
+    const url = fanHref(p.id);
+    setShareUrl(url);
+    QRCode.toDataURL(url, { margin: 0, width: 252, color: { dark: '#001838', light: '#EEF3F9' } }).then(setQr, () => setQr(''));
+  }, [p.id]);
 
   return (
     <div style={s('animation:stFade .3s ease both')}>
@@ -762,13 +769,13 @@ function Control({ st, setState, say, broadcast }: Props) {
           {st.shareOpen && (
             <div style={s('display:flex;gap:24px;padding:0 24px 24px;animation:stFade .25s ease both')}>
               <div style={s('width:150px;flex:none;padding:12px;border-radius:14px;background:#E9EFF6')}>
-                <div style={dk({ ...s('display:grid;width:126px;height:126px'), gridTemplateColumns: 'repeat(21,1fr)' })}>{qr.map((c, i) => <span key={i} style={dk({ background: c })} />)}</div>
+                {qr && <img src={qr} alt="QR code for the fan panel link" width={126} height={126} style={{ display: 'block', borderRadius: 4 }} />}
               </div>
               <div style={s('flex:1;min-width:0')}>
                 <span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>FAN PANEL LINK</span>
                 <div style={s('display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:12px;background:#E9EFF6')}>
-                  <Ms size={16} color={ctx('#3E5266')}>link</Ms><span style={s("flex:1;min-width:0;font:500 13px/1 'Kippax','Archivo';color:#001838")}>matchday.mancity.com/{p.id.toLowerCase()}</span>
-                  <button onClick={() => { setState({ copied: true }); say('Fan link copied', 'content_copy'); window.setTimeout(() => setState({ copied: false }), 1600); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;font:600 11.5px/1 'Kippax','Archivo'"), background: st.copied ? '#001838' : '#FFFFFF', color: st.copied ? '#EEF3F9' : '#001838' })}><Ms size={15} color="inherit">{st.copied ? 'check' : 'content_copy'}</Ms>{st.copied ? 'Copied' : 'Copy'}</button>
+                  <Ms size={16} color={ctx('#3E5266')}>link</Ms><span style={s("flex:1;min-width:0;font:500 13px/1 'Kippax','Archivo';color:#001838")}>{shareUrl}</span>
+                  <button onClick={() => { navigator.clipboard?.writeText(shareUrl).catch(() => {}); setState({ copied: true }); say('Fan link copied', 'content_copy'); window.setTimeout(() => setState({ copied: false }), 1600); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;font:600 11.5px/1 'Kippax','Archivo'"), background: st.copied ? '#001838' : '#FFFFFF', color: st.copied ? '#EEF3F9' : '#001838' })}><Ms size={15} color="inherit">{st.copied ? 'check' : 'content_copy'}</Ms>{st.copied ? 'Copied' : 'Copy'}</button>
                 </div>
                 <div style={s('display:flex;gap:12px;margin-top:16px')}>
                   <button className="ah-ink-btn" onClick={() => { openFan(p.id); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#001838;font:600 12.5px/1 'Kippax','Archivo';color:#EEF3F9")}><Ms size={16} color={ctx('#EEF3F9')}>smartphone</Ms>Open fan view</button>
