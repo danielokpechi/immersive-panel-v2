@@ -747,7 +747,16 @@ function Control({ st, setState, say, broadcast }: Props) {
     setShareUrl(url);
     QRCode.toDataURL(url, { margin: 0, width: 252, color: { dark: '#001838', light: '#EEF3F9' } }).then(setQr, () => setQr(''));
   }, [p.id]);
-
+  // Print-ready PNG: dark on white with a quiet zone, larger than the on-screen preview.
+  const downloadQr = () => {
+    QRCode.toDataURL(shareUrl, { margin: 4, width: 1024, color: { dark: '#001838', light: '#FFFFFF' } }).then((href) => {
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = `fan-panel-qr-${p.id.toLowerCase()}.png`;
+      a.click();
+      say('QR code downloaded', 'download');
+    });
+  };
   return (
     <div style={s('animation:stFade .3s ease both')}>
       <header style={s('display:flex;align-items:center;gap:16px;padding:16px 44px;background:#FFFFFF;border-bottom:1px solid rgba(0,24,56,.08);position:sticky;top:0;z-index:20')}>
@@ -768,8 +777,11 @@ function Control({ st, setState, say, broadcast }: Props) {
           </button>
           {st.shareOpen && (
             <div style={s('display:flex;gap:24px;padding:0 24px 24px;animation:stFade .25s ease both')}>
-              <div style={s('width:150px;flex:none;padding:12px;border-radius:14px;background:#E9EFF6')}>
-                {qr && <img src={qr} alt="QR code for the fan panel link" width={126} height={126} style={{ display: 'block', borderRadius: 4 }} />}
+              <div style={s('width:150px;flex:none;display:flex;flex-direction:column;gap:10px')}>
+                <div style={s('padding:12px;border-radius:14px;background:#E9EFF6')}>
+                  {qr && <img src={qr} alt="QR code for the fan panel link" width={126} height={126} style={{ display: 'block', borderRadius: 4 }} />}
+                </div>
+                <button className="ah" disabled={!shareUrl} onClick={downloadQr} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border-radius:11px;font:600 12px/1 'Kippax','Archivo';color:#001838;box-shadow:inset 0 0 0 1px rgba(0,24,56,.14)")}><Ms size={16} color="inherit">download</Ms>Download QR</button>
               </div>
               <div style={s('flex:1;min-width:0')}>
                 <span style={s("font:600 10.5px/1 'Kippax','Archivo';letter-spacing:.14em;color:#3E5266")}>FAN PANEL LINK</span>
