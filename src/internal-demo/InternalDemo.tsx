@@ -1,8 +1,9 @@
 // Internal demo: the standalone, full-window cut of the Connect demo for sales calls
 // and walkthroughs. Mounted at /internal-demo. It is a copy of src/connect-demo
 // (the Book a Demo embed stays exactly as it is) with these changes:
-//  - Autoplay can be stopped. Once stopped, both apps are fully clickable, and
-//    Back / Next / Restart step through the tour by chapter. Any real click,
+//  - Opens in manual mode; Autoplay runs the tour and can be stopped. In manual,
+//    both apps are fully clickable and Back / Next / Restart step through the
+//    tour by chapter. During autoplay any real click,
 //    key press or scroll inside either app hands control to the presenter.
 //  - The tour ends on the operator's match analytics and stays there (Replay
 //    instead of looping).
@@ -119,7 +120,7 @@ const DONE_NOTE = 'Tour complete · explore freely, or press Replay';
 
 type Mode = 'auto' | 'manual' | 'jump';
 type Ctl = { cancelled: boolean };
-type Engine = { play: () => void; stop: () => void; next: () => void; back: () => void; restart: () => void };
+type Engine = { play: () => void; stop: () => void; next: () => void; back: () => void; restart: (auto?: boolean) => void };
 
 export default function InternalDemo() {
   const studioRef = useRef<HTMLIFrameElement | null>(null);
@@ -129,9 +130,9 @@ export default function InternalDemo() {
   const rippleRef = useRef<HTMLDivElement | null>(null);
   const engine = useRef<Engine | null>(null);
 
-  const [mode, setMode] = useState<Mode>('auto');
+  const [mode, setMode] = useState<Mode>('manual');
   const [pos, setPos] = useState(0);
-  const [note, setNote] = useState('Live demo · the operator Studio and the fan panel, both running now');
+  const [note, setNote] = useState('Manual · click around both apps, or press Autoplay to run the tour');
   const [L, setL] = useState({ stacked: false, ps: 0.8, opW: 900, opH: 600, sOp: 0.8 });
   const stackedRef = useRef(false); stackedRef.current = L.stacked;
 
@@ -172,7 +173,7 @@ export default function InternalDemo() {
     let raf = 0;
     let ctl: Ctl = { cancelled: false };
     let at = 0;               // index of the next step to run
-    let modeNow: Mode = 'auto';
+    let modeNow: Mode = 'manual';
     const cur = { x: window.innerWidth * 0.4, y: window.innerHeight * 0.5 };
     const apply = () => { const c = cursorRef.current; if (c) c.style.transform = `translate(${cur.x}px, ${cur.y}px)`; };
     apply();
@@ -346,7 +347,7 @@ export default function InternalDemo() {
 
     const play = async () => {
       const c = fresh();
-      if (at >= N) return restart();
+      if (at >= N) return restart(true);
       setM('auto');
       await sleep(250);
       if (await runTo(c, N)) finish();
@@ -384,9 +385,14 @@ export default function InternalDemo() {
       if (at >= N) ci = CHAPTERS.length - 1;
       else if (at === chapterStart(ci)) ci = Math.max(0, ci - 1);
       const target = chapterStart(ci);
-      if (await jump(target)) { setM('manual'); setNote(`Manual · at ${CHAPTERS[ci].label}. Press Next or Play.`); }
+      if (await jump(target)) { setM('manual'); setNote(`Manual · at ${CHAPTERS[ci].label}. Press Next or Autoplay.`); }
     };
-    const restart = async () => { if (await jump(0)) play(); };
+    // Restart resets to the beginning in manual; Replay (at the end) also runs the tour.
+    const restart = async (auto = false) => {
+      if (!(await jump(0))) return;
+      if (auto) play();
+      else { setM('manual'); setNote('Manual · back at the start. Click around, or press Autoplay'); }
+    };
 
     engine.current = { play, stop, next, back, restart };
 
@@ -406,12 +412,6 @@ export default function InternalDemo() {
     };
     const unhook = [hook(studioRef.current), hook(fanRef.current)];
 
-    (async () => {
-      await ready(ctl);
-      if (!alive) return;
-      await sleep(600);
-      if (modeNow === 'auto') play();
-    })();
     return () => { alive = false; ctl.cancelled = true; cancelAnimationFrame(raf); unhook.forEach((u) => u()); };
   }, []);
 
@@ -474,8 +474,8 @@ export default function InternalDemo() {
           {mode === 'auto'
             ? ctlBtn('■ Stop', () => engine.current?.stop(), { primary: true, aria: 'Stop autoplay', title: 'Stop autoplay (space)' })
             : done
-              ? ctlBtn('↻ Replay', () => engine.current?.restart(), { primary: true, disabled: busy, aria: 'Replay the demo' })
-              : ctlBtn('▶ Play', () => engine.current?.play(), { primary: true, disabled: busy, aria: 'Resume autoplay', title: 'Resume autoplay (space)' })}
+              ? ctlBtn('↻ Replay', () => engine.current?.restart(true), { primary: true, disabled: busy, aria: 'Replay the demo' })
+              : ctlBtn('▶ Autoplay', () => engine.current?.play(), { primary: true, disabled: busy, aria: 'Start autoplay', title: 'Start autoplay (space)' })}
           {ctlBtn('Next ›', () => engine.current?.next(), { disabled: busy || done || mode === 'auto', aria: 'Next chapter', title: 'Play the next chapter (→)' })}
           {ctlBtn('Restart', () => engine.current?.restart(), { disabled: busy, aria: 'Restart the demo' })}
           <span className="id-chapter">{done ? `${CHAPTERS.length}/${CHAPTERS.length}` : `${ci + 1}/${CHAPTERS.length}`} · {CHAPTERS[ci].label}</span>
