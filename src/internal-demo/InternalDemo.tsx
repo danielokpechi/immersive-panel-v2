@@ -117,6 +117,9 @@ const chapterOf = (pos: number) => (pos >= N ? CHAPTERS.length : STEPS[pos].ch);
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const SRC = { studio: BASE + 'internal-demo/studio/', fan: BASE + 'c/voltford/' };
 const DONE_NOTE = 'Tour complete · explore freely, or press Replay';
+// Start the fan view fresh on every load (same origin as the iframes, so this
+// clears their saved chat and basket before they mount).
+if (typeof window !== 'undefined') { try { localStorage.removeItem(FAN_STORE_KEY); } catch { /* ignore */ } }
 
 type Mode = 'auto' | 'manual' | 'jump';
 type Ctl = { cancelled: boolean };
