@@ -218,7 +218,7 @@ export function PanelStudio({ start = 'dash' }: { start?: string }) {
   // the dark corporate site). Colours are mapped by role in s() and ring().
   setAdmDark(autoplay);
   return (
-    <div style={dk({ minHeight: '100vh', background: autoplay ? '#160F1E' : '#F5F5F2', color: autoplay ? '#F2F2EF' : '#1B0B2D', fontFamily: 'Archivo,-apple-system,system-ui,sans-serif' })}>
+    <div className={autoplay ? undefined : 'vs-r'} style={dk({ minHeight: '100vh', background: autoplay ? '#160F1E' : '#F5F5F2', color: autoplay ? '#F2F2EF' : '#1B0B2D', fontFamily: 'Archivo,-apple-system,system-ui,sans-serif' })}>
       <style>{ADMIN_CSS}</style>
       {cursor.node}
       {st.screen === 'dash' && <Dashboard {...{ st, setState, say, broadcast }} />}
@@ -227,7 +227,7 @@ export function PanelStudio({ start = 'dash' }: { start?: string }) {
       {st.screen === 'stats' && <Stats {...{ st, setState, say }} />}
       {st.screen === 'control' && <Control {...{ st, setState, say, broadcast }} />}
       {st.toast && (
-        <div style={s('position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:13px;background:#1B0B2D;box-shadow:0 14px 34px -12px rgba(27,11,45,.7);animation:stRise .25s ease both')}>
+        <div className="m-toast" style={s('position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:13px;background:#1B0B2D;box-shadow:0 14px 34px -12px rgba(27,11,45,.7);animation:stRise .25s ease both')}>
           <Ms color={ctx('#8B3DF5')}>{st.toastIcon}</Ms>
           <span style={s("font:600 13px/1 'Archivo';color:#F5F5F2")}>{st.toast}</span>
         </div>
@@ -293,37 +293,37 @@ function Dashboard({ st, setState, say }: Props) {
   ];
   return (
     <div>
-      <header style={s('display:flex;align-items:center;gap:18px;padding:20px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08)')}>
-        <div style={s('display:flex;align-items:center;gap:13px')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:18px;padding:20px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08)')}>
+        <div className="m-brand" style={s('display:flex;align-items:center;gap:13px')}>
           <span style={s('width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(27,11,45,.08)')}><img src={media.clubBadge} alt="Voltford" style={dk({ width: 30, height: 30, objectFit: 'contain' })} /></span>
-          <div>
+          <div className="m-brand">
             <div style={s("font:700 15.5px/1 'Archivo';letter-spacing:-.01em")}>Voltford Athletic · Matchday Studio</div>
             <div style={s("font:500 11.5px/1 'Archivo';color:#826E99;margin-top:5px")}>Club workspace · running on BoltOS</div>
           </div>
         </div>
         <div style={s('display:flex;align-items:center;gap:10px;margin-left:auto')}>
-          <button className="ah" onClick={() => { setState({ panels: clone(PANELS), sessions: clone(SESSIONS), log: [], cur: 0, liveIdx: 2, clock: 38 * 60 + 12 }); say('Demo data restored', 'restart_alt'); }} style={s("display:flex;align-items:center;gap:7px;padding:9px 13px;border-radius:10px;font:600 12.5px/1 'Archivo';color:#513E66;box-shadow:inset 0 0 0 1px rgba(27,11,45,.12)")}>
-            <Ms size={16} color={ctx('#513E66')}>restart_alt</Ms>Reset demo
+          <button onClick={() => { setState({ panels: clone(PANELS), sessions: clone(SESSIONS), log: [], cur: 0, liveIdx: 2, clock: 38 * 60 + 12 }); say('Demo data restored', 'restart_alt'); }} className="ah m-iconbtn" style={s("display:flex;align-items:center;gap:7px;padding:9px 13px;border-radius:10px;font:600 12.5px/1 'Archivo';color:#513E66;box-shadow:inset 0 0 0 1px rgba(27,11,45,.12)")}>
+            <Ms size={16} color={ctx('#513E66')}>restart_alt</Ms><span className="m-hide">Reset demo</span>
           </button>
-          <div style={s('display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:100px;background:#F1F1EE')}>
+          <div className="m-chip" style={s('display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:100px;background:#F1F1EE')}>
             <span style={s("width:30px;height:30px;border-radius:50%;background:#8B3DF5;display:flex;align-items:center;justify-content:center;font:700 11px/1 'Archivo';color:#fff")}>JJ</span>
-            <div><div style={s('font:600 12.5px/1')}>Johan Jamal</div><div style={s('font:500 10.5px/1;color:#826E99;margin-top:4px')}>Studio admin</div></div>
+            <div className="m-hide"><div style={s('font:600 12.5px/1')}>Johan Jamal</div><div style={s('font:500 10.5px/1;color:#826E99;margin-top:4px')}>Studio admin</div></div>
           </div>
         </div>
       </header>
 
-      <section style={s('padding:40px 44px 0;animation:stRise .4s ease both')}>
-        <div style={s('display:flex;align-items:flex-end;gap:30px')}>
+      <section className="m-px" style={s('padding:40px 44px 0;animation:stRise .4s ease both')}>
+        <div className="m-col" style={s('display:flex;align-items:flex-end;gap:30px')}>
           <div style={s('flex:1;min-width:0')}>
             <div style={s("font:600 11px/1 'Archivo';letter-spacing:.16em;color:#826E99")}>VOLTFORD ATHLETIC · CLUB WORKSPACE</div>
-            <h1 style={s("font:700 40px/1.02 'Archivo';letter-spacing:-.025em;margin:14px 0 0")}>Your immersive panels</h1>
+            <h1 className="m-h1" style={s("font:700 40px/1.02 'Archivo';letter-spacing:-.025em;margin:14px 0 0")}>Your immersive panels</h1>
             <p style={s("font:400 15px/1.5 'Archivo';color:#513E66;margin:10px 0 0;max-width:520px")}>{st.panels.length} panels across {new Set(st.panels.map((x) => x.sport)).size} competitions, league, cups, women’s and tour. Author each one once, then drive it live on matchday.</p>
           </div>
           <button data-cur="create" className="ah-ink-btn" onClick={() => setState({ screen: 'wizard', step: 0 })} style={s("display:flex;align-items:center;gap:9px;padding:15px 20px;border-radius:14px;background:#1B0B2D;font:600 13.5px/1 'Archivo';color:#F5F5F2;box-shadow:0 8px 20px -10px rgba(27,11,45,.5)")}>
             <Ms size={19} color={ctx('#F5F5F2')}>add</Ms>Create new panel
           </button>
         </div>
-        <div style={s('display:flex;gap:20px;margin-top:24px')}>
+        <div className="m-kpis" style={s('display:flex;gap:20px;margin-top:24px')}>
           {kpis.map((k) => (
             <div key={k.label} style={s('flex:1;padding:18px 20px;background:#FFFFFF;border-radius:16px;box-shadow:0 1px 2px rgba(27,11,45,.05)')}>
               <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color={k.color}>{k.icon}</Ms><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#826E99")}>{k.label}</span></div>
@@ -333,12 +333,12 @@ function Dashboard({ st, setState, say }: Props) {
         </div>
       </section>
 
-      <section style={s('padding:34px 44px 20px')}>
+      <section className="m-px" style={s('padding:34px 44px 20px')}>
         <div style={s('display:flex;align-items:center;gap:10px')}>
           <span style={s("font:600 11px/1 'Archivo';letter-spacing:.16em;color:#826E99")}>ALL PANELS</span>
           <span style={s('flex:1;height:1px;background:rgba(27,11,45,.08)')} />
         </div>
-        <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px')}>
+        <div className="m-g3" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px')}>
           {st.panels.map((x, i) => {
             const statusColor = x.live ? '#C0473C' : '#826E99';
             const tags = x.mods.slice(0, 5).map((id) => modOf(id).name).concat(x.mods.length > 5 ? [`+${x.mods.length - 5} more`] : []);
@@ -381,9 +381,9 @@ function Dashboard({ st, setState, say }: Props) {
         </div>
       </section>
 
-      <footer style={s("display:flex;align-items:center;gap:14px;padding:28px 44px 34px;margin-top:20px;border-top:1px solid rgba(27,11,45,.08);font:500 11.5px/1 'Archivo';color:#826E99")}>
-        <span>© 2026 Voltford Athletic FC · BoltOS Studio licence</span><span>·</span><span>Panels served from matchday.voltford.fc</span>
-        <a href="#support" style={s('margin-left:auto;font-weight:600;color:#513E66')}>studio-support@voltford.fc</a>
+      <footer className="m-foot" style={s("display:flex;align-items:center;gap:14px;padding:28px 44px 34px;margin-top:20px;border-top:1px solid rgba(27,11,45,.08);font:500 11.5px/1 'Archivo';color:#826E99")}>
+        <span>© 2026 Voltford Athletic FC · BoltOS Studio licence</span><span className="m-hide">·</span><span>Panels served from matchday.voltford.fc</span>
+        <a href="#support" className="m-ml0" style={s('margin-left:auto;font-weight:600;color:#513E66')}>studio-support@voltford.fc</a>
       </footer>
     </div>
   );
@@ -413,15 +413,15 @@ function Wizard({ st, setState, say }: Props) {
   ];
   return (
     <div style={s('animation:stFade .3s ease both')}>
-      <header style={s('display:flex;align-items:center;gap:16px;padding:16px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08)')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:16px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08)')}>
         <Back onClick={() => setState({ screen: 'dash' })} />
-        <span style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
+        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
         <span style={s("font:700 14px/1 'Archivo';letter-spacing:-.01em")}>Create a new panel</span>
         <span style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#826E99;padding:6px 9px;border-radius:8px;background:#F1F1EE;margin-left:auto")}>STEP {st.step + 1} OF 5</span>
       </header>
-      <div style={s('display:flex;gap:40px;padding:32px 44px 48px')}>
+      <div className="m-col m-body" style={s('display:flex;gap:40px;padding:32px 44px 48px')}>
         <div style={s('flex:1;min-width:0')}>
-          <div style={s('display:flex;align-items:center;gap:0')}>
+          <div className="m-steps" style={s('display:flex;align-items:center;gap:0')}>
             {STEP_DEFS.map((step, i) => {
               const done = i < st.step, cur = i === st.step;
               return (
@@ -430,7 +430,7 @@ function Wizard({ st, setState, say }: Props) {
                     <span style={dk({ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:600 12px/1 'Archivo'"), background: done ? '#8B3DF5' : cur ? '#1B0B2D' : '#FFFFFF', color: cur ? '#F5F5F2' : '#826E99', boxShadow: i > st.step ? 'inset 0 0 0 1px rgba(27,11,45,.16)' : 'none' })}>
                       {done ? <Ms size={16} color="#fff">check</Ms> : cur ? i + 1 : i + 1}
                     </span>
-                    <span style={dk({ ...s("font:600 12.5px/1 'Archivo';white-space:nowrap"), color: cur ? '#1B0B2D' : '#826E99' })}>{step.label}</span>
+                    <span data-lbl style={dk({ ...s("font:600 12.5px/1 'Archivo';white-space:nowrap"), color: cur ? '#1B0B2D' : '#826E99' })}>{step.label}</span>
                   </button>
                   {i < 4 && <span style={s('flex:1;height:1px;background:rgba(27,11,45,.14);margin:0 6px')} />}
                 </div>
@@ -438,12 +438,12 @@ function Wizard({ st, setState, say }: Props) {
             })}
           </div>
 
-          <div style={s('margin-top:30px;padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);min-height:520px')}>
-            <h2 style={s("font:700 26px/1.1 'Archivo';letter-spacing:-.022em;margin:0")}>{def.title}</h2>
+          <div className="m-card" style={s('margin-top:30px;padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);min-height:520px')}>
+            <h2 className="m-big" style={s("font:700 26px/1.1 'Archivo';letter-spacing:-.022em;margin:0")}>{def.title}</h2>
             <p style={s("font:400 14px/1.5 'Archivo';color:#513E66;margin:9px 0 0;max-width:560px")}>{def.blurb}</p>
 
             {st.step === 0 && (
-              <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px')}>
+              <div className="m-g1" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px')}>
                 {[{ id: 'STREAM', name: 'Online Stream', icon: 'live_tv', blurb: 'Second screen alongside a broadcast.' }, { id: 'VOD', name: 'VOD (On-Demand)', icon: 'ondemand_video', blurb: 'Replays the authored session flow.' }, { id: 'IN-PERSON', name: 'In-Person Event', icon: 'stadium', blurb: 'QR at the ground, seat-aware modules.' }].map((e) => {
                   const on = d.experience === e.id;
                   return <button key={e.id} data-cur={'exp-' + e.id} className="ah" onClick={() => setDraft({ experience: e.id })} style={dk({ ...s('padding:20px;border-radius:16px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}><Ms size={26} color={ctx('#1B0B2D')}>{e.icon}</Ms><div style={s("font:700 15px/1.2 'Archivo';color:#1B0B2D;margin-top:16px")}>{e.name}</div><div style={s("font:400 12.5px/1.45 'Archivo';color:#513E66;margin-top:6px")}>{e.blurb}</div></button>;
@@ -453,7 +453,7 @@ function Wizard({ st, setState, say }: Props) {
 
             {st.step === 1 && (
               <>
-                <div style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-top:26px')}>
+                <div className="m-g2" style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-top:26px')}>
                   {SPORTS.map((sp) => { const on = d.sport === sp.id; return <button key={sp.id} data-cur={'sport-' + sp.id} className="ah" onClick={() => setDraft({ sport: sp.id })} style={dk({ ...s('padding:16px 14px;border-radius:14px;text-align:center'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}><Ms size={23} color={ctx('#1B0B2D')}>{sp.icon}</Ms><div style={s("font:600 12.5px/1.2 'Archivo';color:#1B0B2D;margin-top:11px")}>{sp.name}</div><div style={s("font:500 10px/1.2 'Archivo';color:#826E99;margin-top:5px")}>{sp.states}</div></button>; })}
                 </div>
                 <div style={s('display:flex;align-items:flex-start;gap:11px;margin-top:22px;padding:15px 17px;border-radius:14px;background:#F1F1EE')}><Ms color={ctx('#8B3DF5')}>info</Ms><div style={s("font:400 12.5px/1.5 'Archivo';color:#513E66")}>Every football competition brings Idle · Pre · Live · Break · Post, plus goal, VAR, substitution, card and man-of-the-match triggers. Cup ties add an aggregate line; tour panels add time-zone handling.</div></div>
@@ -461,7 +461,7 @@ function Wizard({ st, setState, say }: Props) {
             )}
 
             {st.step === 2 && (
-              <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px')}>
+              <div className="m-g1" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px')}>
                 {PRESETS.map((t, i) => { const on = d.preset === i; return (
                   <button key={i} data-cur={'tmpl-' + i} className="ah" onClick={() => setDraft({ preset: i, primary: t.c1, accent: t.c2 })} style={dk({ ...s('padding:18px;border-radius:16px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}>
                     <div style={s('display:flex;align-items:center;gap:11px')}><span style={dk({ ...s("width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 10.5px/1 'Archivo'"), background: t.crestBg, color: t.crestFg })}>{t.abbr}</span><span style={s("font:700 14px/1.15 'Archivo';color:#1B0B2D;flex:1;min-width:0")}>{t.name}</span></div>
@@ -478,7 +478,7 @@ function Wizard({ st, setState, say }: Props) {
                   {d.sessions.map((x, i) => { const on = d.editIdx === i; return <button key={i} onClick={() => setDraft({ editIdx: i })} style={dk({ ...s('display:flex;align-items:center;gap:8px;padding:11px 13px;border-radius:12px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}><span style={dk({ ...s('width:7px;height:7px;border-radius:50%'), background: PHASE_COLOR[x.phase] || '#826E99' })} /><span style={s("font:600 12.5px/1 'Archivo';color:#1B0B2D")}>{x.name}</span><span style={dk({ ...s("font:600 10px/1 'Archivo'"), color: on ? '#1B0B2D' : '#826E99' })}>{x.stack.length}</span></button>; })}
                   <button className="ah" onClick={() => setDraft({ sessions: [...d.sessions, { name: 'New state', phase: 'Live', stack: [] }], editIdx: d.sessions.length })} style={s("display:flex;align-items:center;gap:6px;padding:11px 13px;border-radius:12px;font:600 12px/1 'Archivo';color:#513E66;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={15} color="inherit">add</Ms>Add state</button>
                 </div>
-                <div style={s('display:flex;gap:20px;margin-top:18px')}>
+                <div className="m-col" style={s('display:flex;gap:20px;margin-top:18px')}>
                   <div style={s('flex:1;min-width:0;padding:18px;border-radius:14px;background:#F1F1EE')}>
                     <div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.13em;color:#826E99")}>ON SCREEN IN “{editState.name}”</span><span style={s("font:500 11px/1 'Archivo';color:#826E99;margin-left:auto")}>Top to bottom</span></div>
                     {editState.stack.length === 0 && <div style={s("margin-top:12px;padding:16px;border-radius:12px;background:#FFFFFF;font:400 12.5px/1.5 'Archivo';color:#826E99")}>Nothing in this state yet, add blocks from the library on the right.</div>}
@@ -501,7 +501,7 @@ function Wizard({ st, setState, say }: Props) {
                       })}
                     </div>
                   </div>
-                  <div style={s('width:290px;flex:none;padding:18px;border-radius:16px;background:#FFFFFF;box-shadow:inset 0 0 0 1px rgba(27,11,45,.08)')}>
+                  <div className="m-full" style={s('width:290px;flex:none;padding:18px;border-radius:16px;background:#FFFFFF;box-shadow:inset 0 0 0 1px rgba(27,11,45,.08)')}>
                     <div style={s("font:600 10.5px/1 'Archivo';letter-spacing:.13em;color:#826E99")}>BLOCK LIBRARY</div>
                     <div style={s('display:flex;flex-direction:column;gap:6px;margin-top:12px')}>
                       {MODULES.map((m) => { const on = editState.stack.indexOf(m.id) > -1; return (
@@ -520,7 +520,7 @@ function Wizard({ st, setState, say }: Props) {
             )}
 
             {st.step === 4 && (
-              <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px')}>
+              <div className="m-g1" style={s('display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px')}>
                 <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Archivo';letter-spacing:.12em;color:#826E99")}>PANEL NAME</div><input data-cur="name" value={d.name} onChange={(e) => setDraft({ name: e.target.value })} placeholder="The Arc Matchday Companion" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#F1F1EE;font:600 15px/1.2 'Archivo';color:#1B0B2D")} /></div>
                 <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Archivo';letter-spacing:.12em;color:#826E99")}>DESCRIPTION</div><input data-cur="desc" value={d.desc} onChange={(e) => setDraft({ desc: e.target.value })} placeholder="What fans get when they scan the QR" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#F1F1EE;font:400 14px/1.2 'Archivo';color:#1B0B2D")} /></div>
                 <div><div style={s("font:600 11px/1 'Archivo';letter-spacing:.12em;color:#826E99")}>PRIMARY COLOUR</div><div style={s('display:flex;gap:8px;margin-top:9px')}>{PRIMARIES.map((hex, i) => <button key={hex} data-cur={'primary-' + i} onClick={() => setDraft({ primary: hex })} style={dk({ ...s('flex:1;height:46px;border-radius:12px'), background: hex, boxShadow: ring(d.primary === hex) })} />)}</div><div style={s("font:500 11.5px/1 'Archivo';color:#826E99;margin-top:9px;font-variant-numeric:tabular-nums")}>{d.primary}</div></div>
@@ -530,13 +530,13 @@ function Wizard({ st, setState, say }: Props) {
 
             <div style={s('display:flex;align-items:center;gap:10px;margin-top:34px;padding-top:22px;border-top:1px solid rgba(27,11,45,.08)')}>
               <button className="ah" onClick={() => (st.step > 0 ? setState({ step: st.step - 1 }) : setState({ screen: 'dash' }))} style={s("display:flex;align-items:center;gap:8px;padding:13px 17px;border-radius:12px;font:600 13px/1 'Archivo';color:#513E66;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={17} color="inherit">arrow_back</Ms>Back</button>
-              <span style={s("font:500 12px/1 'Archivo';color:#826E99;margin-left:6px")}>{def.hint}</span>
+              <span className="m-hide" style={s("font:500 12px/1 'Archivo';color:#826E99;margin-left:6px")}>{def.hint}</span>
               <button data-cur="next" className="ah-ink-btn" onClick={nextStep} style={s("display:flex;align-items:center;gap:8px;padding:13px 19px;border-radius:12px;background:#1B0B2D;font:600 13px/1 'Archivo';color:#F5F5F2;margin-left:auto")}>{st.step === 4 ? 'Build sessions' : 'Next'}<Ms size={17} color={ctx('#F5F5F2')}>arrow_forward</Ms></button>
             </div>
           </div>
         </div>
 
-        <aside style={s('width:330px;flex:none')}>
+        <aside className="m-full" style={s('width:330px;flex:none')}>
           <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#8B3DF5')} /><span style={s("font:600 11px/1 'Archivo';letter-spacing:.14em;color:#826E99")}>LIVE PREVIEW</span></div>
           <div style={s('margin-top:14px;padding:14px;background:#FFFFFF;border-radius:26px;box-shadow:0 1px 2px rgba(27,11,45,.05)')}><Phone st={st} wizard /></div>
           <div style={s('margin-top:14px;padding:15px 17px;background:#F1F1EE;border-radius:14px')}>
@@ -563,24 +563,24 @@ function Builder({ st, setState, say }: Props) {
   const setSess = (fn: (ss: AdminSession[]) => void) => setState((s2) => { const n = clone(s2.sessions); fn(n); return { sessions: n }; });
   return (
     <div style={s('animation:stFade .3s ease both')}>
-      <header style={s('display:flex;align-items:center;gap:16px;padding:14px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08);position:sticky;top:0;z-index:20')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:14px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08);position:sticky;top:0;z-index:20')}>
         <Back onClick={() => setState({ screen: 'dash' })} />
-        <span style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
-        <div style={s('display:flex;align-items:center;gap:11px')}>
+        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
+        <div className="m-brand" style={s('display:flex;align-items:center;gap:11px')}>
           <span style={dk({ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 9.5px/1 'Archivo';color:#fff"), background: p.primary })}>{p.abbr}</span>
           <div><div style={s("font:700 13.5px/1 'Archivo';letter-spacing:-.01em")}>{p.title}</div><div style={s("font:500 11px/1 'Archivo';color:#826E99;margin-top:5px")}>{sportOf(p.sport).name} · {p.experience === 'IN-PERSON' ? 'In-person' : p.experience === 'VOD' ? 'VOD' : 'Stream'}</div></div>
         </div>
-        <div style={s('display:flex;align-items:center;gap:9px;margin-left:auto')}>
+        <div className="m-actions" style={s('display:flex;align-items:center;gap:9px;margin-left:auto')}>
           <button className="ah" onClick={() => say('Draft saved', 'save')} style={s("display:flex;align-items:center;gap:7px;padding:11px 15px;border-radius:11px;font:600 12.5px/1 'Archivo';color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={16} color={ctx('#1B0B2D')}>save</Ms>Save draft</button>
           <button data-cur="golive" className="ah-ink-btn" onClick={() => { setPanel((pl) => { pl.live = true; pl.fans = 0.4; pl.updated = 'Updated just now'; }); setState({ screen: 'control', sync: 'connecting' }); say('Panel deployed, control room open', 'rocket_launch'); window.setTimeout(() => setState({ sync: 'live' }), 1400); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#1B0B2D;font:600 12.5px/1 'Archivo';color:#F5F5F2")}>Save &amp; go live<Ms size={16} color={ctx('#F5F5F2')}>arrow_forward</Ms></button>
         </div>
       </header>
 
-      <div style={s('display:flex;gap:34px;padding:30px 44px 52px')}>
+      <div className="m-col m-body" style={s('display:flex;gap:34px;padding:30px 44px 52px')}>
         <div style={s('flex:1;min-width:0;display:flex;flex-direction:column;gap:20px')}>
           <Card>
             <TitleRow icon="description">Panel details</TitleRow>
-            <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px')}>
+            <div className="m-g1" style={s('display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px')}>
               <div><Label>NAME</Label><input value={p.title} onChange={(e) => setPanel((pl) => { pl.title = e.target.value; })} style={s("width:100%;margin-top:8px;padding:13px 14px;border-radius:12px;background:#F1F1EE;font:600 14px/1.2 'Archivo'")} /></div>
               <div><Label>IMAGE PACK</Label><div style={s('display:flex;gap:7px;margin-top:8px')}>{PACKS.map((k) => { const on = st.pack === k; return <button key={k} onClick={() => setState({ pack: k })} style={dk({ ...s("flex:1;padding:13px 10px;border-radius:12px;font:600 11.5px/1 'Archivo';text-align:center"), background: on ? '#1B0B2D' : '#F1F1EE', color: on ? '#F5F5F2' : '#513E66', boxShadow: on ? 'none' : 'inset 0 0 0 1px rgba(27,11,45,.1)' })}>{k}</button>; })}</div></div>
               <div style={s('grid-column:span 2')}><Label>DESCRIPTION</Label><input value={p.desc} onChange={(e) => setPanel((pl) => { pl.desc = e.target.value; })} style={s("width:100%;margin-top:8px;padding:13px 14px;border-radius:12px;background:#F1F1EE;font:400 13.5px/1.2 'Archivo'")} /></div>
@@ -590,7 +590,7 @@ function Builder({ st, setState, say }: Props) {
           </Card>
 
           <Card>
-            <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#1B0B2D')}>widgets</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Module library</span><span style={s("font:500 11.5px/1 'Archivo';color:#826E99;margin-left:auto")}>{enabled.length} of {MODULES.length} modules enabled</span></div>
+            <div className="m-wrap" style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#1B0B2D')}>widgets</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Module library</span><span style={s("font:500 11.5px/1 'Archivo';color:#826E99;margin-left:auto")}>{enabled.length} of {MODULES.length} modules enabled</span></div>
             <div style={s('display:flex;flex-wrap:wrap;gap:8px;margin-top:18px')}>
               {MODULES.map((m) => { const on = p.mods.indexOf(m.id) > -1; return (
                 <button key={m.id} data-cur={'bmod-' + m.id} className="ah" onClick={() => setPanel((pl) => { const j = pl.mods.indexOf(m.id); if (j > -1) pl.mods.splice(j, 1); else pl.mods.push(m.id); })} style={dk({ ...s('display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}>
@@ -611,14 +611,14 @@ function Builder({ st, setState, say }: Props) {
                 const avail = enabled.filter((id) => se.stack.indexOf(id) < 0);
                 return (
                   <div key={i} style={{ ...s('border-radius:14px;background:#F1F1EE;padding:16px 17px'), boxShadow: `inset 0 0 0 1px ${i === st.previewIdx ? '#1B0B2D' : 'rgba(27,11,45,.08)'}` }}>
-                    <div style={s('display:flex;align-items:center;gap:11px')}>
+                    <div className="m-wrap" style={s('display:flex;align-items:center;gap:11px')}>
                       <div style={s('display:flex;flex-direction:column;gap:2px')}>
                         <button className="ah2" onClick={() => setSess((n) => { if (i > 0)[n[i - 1], n[i]] = [n[i], n[i - 1]]; })} style={s('width:22px;height:17px;border-radius:6px;background:#FFFFFF;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#513E66')}>keyboard_arrow_up</Ms></button>
                         <button className="ah2" onClick={() => setSess((n) => { if (i < n.length - 1)[n[i + 1], n[i]] = [n[i], n[i + 1]]; })} style={s('width:22px;height:17px;border-radius:6px;background:#FFFFFF;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#513E66')}>keyboard_arrow_down</Ms></button>
                       </div>
                       <span style={s("width:26px;height:26px;flex:none;border-radius:8px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font:700 12px/1 'Archivo';color:#513E66;font-variant-numeric:tabular-nums")}>{i + 1}</span>
                       <input value={se.name} onChange={(e) => setSess((n) => { n[i].name = e.target.value; })} style={s("flex:1;min-width:0;padding:10px 12px;border-radius:10px;background:#FFFFFF;font:600 13.5px/1.2 'Archivo'")} />
-                      <div style={s('display:flex;gap:4px;padding:3px;border-radius:10px;background:#FFFFFF')}>
+                      <div className="m-phases" style={s('display:flex;gap:4px;padding:3px;border-radius:10px;background:#FFFFFF')}>
                         {PHASES.map((ph) => { const on = se.phase === ph; return <button key={ph} onClick={() => setSess((n) => { n[i].phase = ph; })} style={dk({ ...s("padding:7px 9px;border-radius:8px;font:600 10.5px/1 'Archivo'"), background: on ? PHASE_COLOR[ph] : 'transparent', color: on ? '#FFFFFF' : '#826E99' })}>{ph}</button>; })}
                       </div>
                       <button onClick={() => setSess((n) => n.forEach((y, k) => { y.def = k === i; }))} style={dk({ ...s("display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:10px;font:600 10.5px/1 'Archivo';white-space:nowrap"), background: se.def ? '#1B0B2D' : '#FFFFFF', color: se.def ? '#F5F5F2' : '#826E99' })}><Ms size={14} color={se.def ? '#F5F5F2' : '#826E99'}>{se.def ? 'star' : 'star_outline'}</Ms>Default</button>
@@ -635,7 +635,7 @@ function Builder({ st, setState, say }: Props) {
                               <button className="ah2" onClick={() => setSess((n) => { const a = n[i].stack; if (j < a.length - 1)[a[j + 1], a[j]] = [a[j], a[j + 1]]; })} style={s('width:20px;height:15px;border-radius:5px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={12} color={ctx('#513E66')}>keyboard_arrow_down</Ms></button>
                             </div>
                             <span style={s("font:600 11px/1 'Archivo';color:#826E99;width:16px;font-variant-numeric:tabular-nums")}>{j + 1}</span>
-                            <Ms size={17} color={ctx('#1B0B2D')}>{m.icon}</Ms><span style={s("flex:1;font:600 13px/1.2 'Archivo'")}>{m.name}</span><span style={s("font:400 11.5px/1.2 'Archivo';color:#826E99")}>{m.blurb}</span>
+                            <Ms size={17} color={ctx('#1B0B2D')}>{m.icon}</Ms><span style={s("flex:1;font:600 13px/1.2 'Archivo'")}>{m.name}</span><span className="m-hide" style={s("font:400 11.5px/1.2 'Archivo';color:#826E99")}>{m.blurb}</span>
                             <button className="ah-del" onClick={() => setSess((n) => { n[i].stack.splice(j, 1); })} style={s('width:26px;height:26px;border-radius:8px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={15} color={ctx('#C0473C')}>close</Ms></button>
                           </div>
                         ); })}
@@ -654,7 +654,7 @@ function Builder({ st, setState, say }: Props) {
           </Card>
         </div>
 
-        <aside style={s('width:330px;flex:none;position:sticky;top:96px;align-self:flex-start')}>
+        <aside className="m-full" style={s('width:330px;flex:none;position:sticky;top:96px;align-self:flex-start')}>
           <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#8B3DF5')} /><span style={s("font:600 11px/1 'Archivo';letter-spacing:.14em;color:#826E99")}>FAN PREVIEW · {(sess[st.previewIdx] || {}).name || '–'}</span></div>
           <div style={s('margin-top:14px;padding:14px;background:#FFFFFF;border-radius:26px;box-shadow:0 1px 2px rgba(27,11,45,.05)')}><Phone st={st} wizard={false} /></div>
           <div style={s('display:flex;gap:7px;margin-top:12px')}>{sess.slice(0, 5).map((se, i) => { const on = st.previewIdx === i; return <button key={i} onClick={() => setState({ previewIdx: i })} style={dk({ ...s("flex:1;padding:9px 0;border-radius:10px;font:600 10.5px/1 'Archivo';text-align:center"), background: on ? '#1B0B2D' : '#FFFFFF', color: on ? '#F5F5F2' : '#513E66' })}>{se.name.split(' ')[0]}</button>; })}</div>
@@ -676,28 +676,28 @@ function Stats({ st, setState }: Props) {
   const engagement = p.mods.map((id, i) => ({ ...modOf(id), pct: ([92, 78, 71, 64, 58, 49, 41, 33, 27, 22, 18, 14][i] || 12) + '%', color: i === 0 ? '#1B0B2D' : i < 3 ? '#8B3DF5' : '#C4C4C0' }));
   return (
     <div style={s('animation:stFade .3s ease both')}>
-      <header style={s('display:flex;align-items:center;gap:16px;padding:14px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08)')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:14px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08)')}>
         <Back onClick={() => setState({ screen: 'dash' })} />
-        <span style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
-        <span style={s("font:700 14px/1 'Archivo';letter-spacing:-.01em")}>{p.title} · stats</span>
+        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
+        <span className="m-row2" style={s("font:700 14px/1.25 'Archivo';letter-spacing:-.01em")}>{p.title} · stats</span>
         <button className="ah-ink-btn" onClick={() => setState({ screen: 'control' })} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#1B0B2D;font:600 12.5px/1 'Archivo';color:#F5F5F2;margin-left:auto")}>Launch panel<Ms size={16} color={ctx('#F5F5F2')}>arrow_forward</Ms></button>
       </header>
-      <div style={s('padding:34px 44px 52px')}>
-        <div style={s('display:flex;align-items:flex-end;gap:20px')}>
-          <div style={s('flex:1')}><h1 style={s("font:700 32px/1.05 'Archivo';letter-spacing:-.022em;margin:0")}>Last event performance</h1><p style={s("font:400 14px/1.5 'Archivo';color:#513E66;margin:9px 0 0")}>Semi-final, 2nd leg · 30 April · compared with the previous home fixture.</p></div>
+      <div className="m-body" style={s('padding:34px 44px 52px')}>
+        <div className="m-col" style={s('display:flex;align-items:flex-end;gap:20px')}>
+          <div style={s('flex:1')}><h1 className="m-h1" style={s("font:700 32px/1.05 'Archivo';letter-spacing:-.022em;margin:0")}>Last event performance</h1><p style={s("font:400 14px/1.5 'Archivo';color:#513E66;margin:9px 0 0")}>Semi-final, 2nd leg · 30 April · compared with the previous home fixture.</p></div>
           <div style={s('display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:11px;background:#FFFFFF;box-shadow:0 1px 2px rgba(27,11,45,.05)')}><Ms size={16} color={ctx('#8B3DF5')}>check_circle</Ms><span style={s("font:600 12px/1 'Archivo';color:#513E66")}>Panel deployed · 4h 12m of live time</span></div>
         </div>
-        <div style={s('display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:24px')}>
+        <div className="m-g2" style={s('display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:24px')}>
           {kpis.map((k) => (
-            <div key={k.label} style={s('padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);animation:stRise .4s ease both')}>
+            <div key={k.label} className="m-card" style={s('padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);animation:stRise .4s ease both')}>
               <div style={s('display:flex;align-items:center;gap:9px')}><Ms color={ctx('#826E99')}>{k.icon}</Ms><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.13em;color:#826E99")}>{k.label}</span></div>
-              <div style={s("font:800 40px/.92 'Archivo Black';margin-top:16px;letter-spacing:.01em")}>{k.v}</div>
+              <div className="m-big" style={s("font:800 40px/.92 'Archivo Black';margin-top:16px;letter-spacing:.01em")}>{k.v}</div>
               <div style={s('display:flex;align-items:center;gap:6px;margin-top:12px')}><Ms size={15} color={k.deltaColor}>{k.deltaIcon}</Ms><span style={dk({ ...s("font:600 12px/1 'Archivo'"), color: k.deltaColor })}>{k.delta}</span><span style={s("font:400 11.5px/1 'Archivo';color:#826E99")}>vs last event</span></div>
             </div>
           ))}
         </div>
-        <div style={s('margin-top:26px;padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05)')}>
-          <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#1B0B2D')}>bar_chart</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Module engagement</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>Share of connected fans who opened each module</span></div>
+        <div className="m-card" style={s('margin-top:26px;padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05)')}>
+          <div className="m-wrap" style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#1B0B2D')}>bar_chart</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Module engagement</span><span className="m-ml0" style={s("font:400 12px/1.4 'Archivo';color:#826E99;margin-left:auto")}>Share of connected fans who opened each module</span></div>
           <div style={s('margin-top:22px;display:flex;flex-direction:column;gap:16px')}>
             {engagement.map((e) => (
               <div key={e.id}>
@@ -760,24 +760,24 @@ function Control({ st, setState, say, broadcast }: Props) {
 
   return (
     <div style={s('animation:stFade .3s ease both')}>
-      <header style={s('display:flex;align-items:center;gap:16px;padding:16px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08);position:sticky;top:0;z-index:20')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:16px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08);position:sticky;top:0;z-index:20')}>
         <Back onClick={() => setState({ screen: 'dash' })} />
-        <span style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
-        <div style={s('display:flex;align-items:center;gap:10px')}><span style={s('width:8px;height:8px;border-radius:50%;background:#C0473C;animation:stPulse 2s ease-out infinite')} /><span style={s("font:700 14px/1 'Archivo';letter-spacing:-.01em")}>Control Room · {p.title}</span></div>
+        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
+        <div className="m-row2" style={s('display:flex;align-items:center;gap:10px')}><span style={s('width:8px;height:8px;flex:none;border-radius:50%;background:#C0473C;animation:stPulse 2s ease-out infinite')} /><span style={s("font:700 14px/1.25 'Archivo';letter-spacing:-.01em")}>Control Room · {p.title}</span></div>
         <span style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#F5F5F2;background:#1B0B2D;padding:7px 10px;border-radius:8px")}>{p.live ? 'DEPLOYED' : 'DRAFT'}</span>
         <button className="ah" onClick={() => { openFan(p.id); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 15px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14);margin-left:auto")}><Ms size={16} color="inherit">open_in_new</Ms>Open fan view</button>
       </header>
 
-      <div style={s('padding:24px 44px 48px;display:flex;flex-direction:column;gap:20px')}>
+      <div className="m-body" style={s('padding:24px 44px 48px;display:flex;flex-direction:column;gap:20px')}>
         <div style={s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);overflow:hidden')}>
           <button className="ah" onClick={() => setState({ shareOpen: !st.shareOpen })} style={s('display:flex;align-items:center;gap:14px;width:100%;padding:20px 24px')}>
-            <Ms size={19} color={ctx('#1B0B2D')}>qr_code_2</Ms><span style={s("font:700 14px/1 'Archivo'")}>Deploy &amp; share</span>
-            <span style={s('display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:9px;background:#F1F1EE')}><span style={dk({ ...s('width:7px;height:7px;border-radius:50%'), background: sync.dot, animation: sync.anim })} /><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.08em;color:#1B0B2D")}>{sync.label}</span></span>
-            <span style={s("font:500 12px/1 'Archivo';color:#513E66;margin-left:auto")}>{st.shareOpen ? 'Collapse to focus on live controls' : 'QR, fan link and connection'}</span>
+            <Ms size={19} color={ctx('#1B0B2D')}>qr_code_2</Ms><span style={s("font:700 14px/1 'Archivo';white-space:nowrap")}>Deploy &amp; share</span>
+            <span style={s('display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:9px;background:#F1F1EE')}><span style={dk({ ...s('width:7px;height:7px;border-radius:50%'), background: sync.dot, animation: sync.anim })} /><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.08em;color:#1B0B2D;white-space:nowrap")}>{sync.label}</span></span>
+            <span className="m-hide" style={s("font:500 12px/1 'Archivo';color:#513E66;margin-left:auto")}>{st.shareOpen ? 'Collapse to focus on live controls' : 'QR, fan link and connection'}</span>
             <Ms size={20} color={ctx('#513E66')}>{st.shareOpen ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</Ms>
           </button>
           {st.shareOpen && (
-            <div style={s('display:flex;gap:24px;padding:0 24px 24px;animation:stFade .25s ease both')}>
+            <div className="m-col" style={s('display:flex;gap:24px;padding:0 24px 24px;animation:stFade .25s ease both')}>
               <div style={s('width:150px;flex:none;display:flex;flex-direction:column;gap:10px')}>
                 <div style={s('padding:12px;border-radius:14px;background:#F1F1EE')}>
                   {qr && <img src={qr} alt="QR code for the fan panel link" width={126} height={126} style={{ display: 'block', borderRadius: 4 }} />}
@@ -787,10 +787,10 @@ function Control({ st, setState, say, broadcast }: Props) {
               <div style={s('flex:1;min-width:0')}>
                 <span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>FAN PANEL LINK</span>
                 <div style={s('display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:12px;background:#F1F1EE')}>
-                  <Ms size={16} color={ctx('#513E66')}>link</Ms><span style={s("flex:1;min-width:0;font:500 13px/1 'Archivo';color:#1B0B2D")}>{shareUrl}</span>
+                  <Ms size={16} color={ctx('#513E66')}>link</Ms><span style={s("flex:1;min-width:0;font:500 13px/1.3 'Archivo';color:#1B0B2D;overflow-wrap:anywhere")}>{shareUrl}</span>
                   <button onClick={() => { navigator.clipboard?.writeText(shareUrl).catch(() => {}); setState({ copied: true }); say('Fan link copied', 'content_copy'); window.setTimeout(() => setState({ copied: false }), 1600); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;font:600 11.5px/1 'Archivo'"), background: st.copied ? '#1B0B2D' : '#FFFFFF', color: st.copied ? '#F5F5F2' : '#1B0B2D' })}><Ms size={15} color="inherit">{st.copied ? 'check' : 'content_copy'}</Ms>{st.copied ? 'Copied' : 'Copy'}</button>
                 </div>
-                <div style={s('display:flex;gap:12px;margin-top:16px')}>
+                <div className="m-wrap" style={s('display:flex;gap:12px;margin-top:16px')}>
                   <button className="ah-ink-btn" onClick={() => { openFan(p.id); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#1B0B2D;font:600 12.5px/1 'Archivo';color:#F5F5F2")}><Ms size={16} color={ctx('#F5F5F2')}>smartphone</Ms>Open fan view</button>
                   <button className="ah" onClick={() => { openFan(p.id); say('Opened a staged fan session', 'visibility'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={16} color="inherit">visibility</Ms>Preview as a fan</button>
                 </div>
@@ -800,33 +800,33 @@ function Control({ st, setState, say, broadcast }: Props) {
           )}
         </div>
 
-        <div style={s('display:flex;gap:20px;align-items:flex-start')}>
+        <div className="m-col" style={s('display:flex;gap:20px;align-items:flex-start')}>
           <div style={s('flex:1;min-width:0;display:flex;flex-direction:column;gap:20px')}>
-            <div style={{ ...s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);padding:24px'), borderLeft: `4px solid ${stripe}` }}>
+            <div className="m-card" style={{ ...s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);padding:24px'), borderLeft: `4px solid ${stripe}` }}>
               <div style={s('display:flex;align-items:center;gap:12px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#C0473C;animation:stPulse 2s ease-out infinite')} /><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>ON AIR</span><button className="ah-ink" onClick={() => say('Live header popped out', 'open_in_full')} style={s("display:flex;align-items:center;gap:7px;font:600 11.5px/1 'Archivo';color:#513E66;margin-left:auto")}><Ms size={15} color="inherit">open_in_full</Ms>Pop out</button></div>
-              <div style={s('display:flex;align-items:flex-end;gap:20px;margin-top:16px')}>
+              <div className="m-wrap" style={s('display:flex;align-items:flex-end;gap:20px;margin-top:16px')}>
                 <div style={s('flex:1;min-width:0')}>
-                  <div style={s("font:800 38px/.94 'Archivo Black';letter-spacing:.01em")}>{cur.name}</div>
+                  <div className="m-big" style={s("font:800 38px/.94 'Archivo Black';letter-spacing:.01em")}>{cur.name}</div>
                   <div style={s('display:flex;align-items:center;gap:12px;margin-top:12px')}><span style={s('display:flex;align-items:center;gap:7px;background:#F1F1EE;padding:7px 10px;border-radius:8px')}><span style={dk({ ...s('width:6px;height:6px;border-radius:50%'), background: stripe })} /><span style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#1B0B2D")}>{String(cur.phase).toUpperCase()}</span></span><span style={s("font:500 12px/1 'Archivo';color:#513E66")}>{cur.stack.length} blocks on screen</span></div>
                 </div>
-                <div style={s('text-align:right')}><div style={s("font:800 44px/.9 'Archivo Black';font-variant-numeric:tabular-nums")}>{fmt(st.clock)}</div><div style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#513E66;margin-top:12px")}>{st.playing ? 'MATCH CLOCK · RUNNING' : 'MATCH CLOCK · HELD'}</div></div>
+                <div style={s('text-align:right')}><div className="m-big" style={s("font:800 44px/.9 'Archivo Black';font-variant-numeric:tabular-nums")}>{fmt(st.clock)}</div><div style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#513E66;margin-top:12px")}>{st.playing ? 'MATCH CLOCK · RUNNING' : 'MATCH CLOCK · HELD'}</div></div>
               </div>
             </div>
 
             <Card>
               <span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>MODE</span>
-              <div style={s('display:flex;align-items:center;gap:12px;margin-top:16px')}>
+              <div className="m-wrap" style={s('display:flex;align-items:center;gap:12px;margin-top:16px')}>
                 <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE')}>{[{ k: 'auto', name: 'Auto', icon: 'autoplay' }, { k: 'manual', name: 'Manual', icon: 'sports_esports' }].map((m) => { const on = st.mode === m.k; return <button key={m.k} data-cur={'mode-' + m.k} onClick={() => { setState({ mode: m.k }); say(`${m.name} mode`, m.icon); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:10px 15px;border-radius:9px;font:600 12px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66' })}><Ms size={16} color="inherit">{m.icon}</Ms>{m.name}</button>; })}</div>
                 <button onClick={() => { setState({ playing: !st.playing }); say(st.playing ? 'Clock held' : 'Clock running', st.playing ? 'pause' : 'play_arrow'); }} style={dk({ ...s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Archivo'"), background: st.playing ? '#FFFFFF' : '#1B0B2D', color: st.playing ? '#1B0B2D' : '#F5F5F2', boxShadow: st.playing ? 'inset 0 0 0 1px rgba(27,11,45,.14)' : 'none' })}><Ms size={17} color="inherit">{st.playing ? 'pause' : 'play_arrow'}</Ms>{st.playing ? 'Pause' : 'Play'}</button>
                 <button className="ah" onClick={() => { setState({ clock: 0, liveIdx: 0, log: [] }); say('Panel restarted for all devices', 'restart_alt'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={17} color="inherit">restart_alt</Ms>Restart</button>
-                <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE;margin-left:auto')}>{['1×', '2×', '5×', '10×'].map((x) => { const on = st.speed === x; return <button key={x} onClick={() => setState({ speed: x })} style={dk({ ...s("padding:9px 12px;border-radius:9px;font:600 11.5px/1 'Archivo';font-variant-numeric:tabular-nums"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66' })}>{x}</button>; })}</div>
+                <div className="m-ml0" style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE;margin-left:auto')}>{['1×', '2×', '5×', '10×'].map((x) => { const on = st.speed === x; return <button key={x} onClick={() => setState({ speed: x })} style={dk({ ...s("padding:9px 12px;border-radius:9px;font:600 11.5px/1 'Archivo';font-variant-numeric:tabular-nums"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66' })}>{x}</button>; })}</div>
               </div>
               <div style={s("font:400 12px/1.5 'Archivo';color:#513E66;margin-top:16px")}>{st.mode === 'manual' ? 'Manual: nothing advances unless you advance it. Safest during a live match.' : 'Auto: sessions advance on the match clock, you can still fire events and override.'}</div>
             </Card>
 
             <Card>
-              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>SESSIONS</span><span style={s("font:500 11.5px/1 'Archivo';color:#513E66;margin-left:auto")}>Jump to any state, every fan device follows</span></div>
-              <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
+              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>SESSIONS</span><span className="m-hide" style={s("font:500 11.5px/1 'Archivo';color:#513E66;margin-left:auto")}>Jump to any state, every fan device follows</span></div>
+              <div className="m-g2" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
                 {sess.map((se, i) => { const on = i === st.liveIdx; return (
                   <button key={i} className="ah" onClick={() => { setState({ liveIdx: i }); send({ cmd: 'state', ms: phaseToMs(se.phase) }); say(`Fans moved to “${se.name}”`, 'swap_horiz'); }} style={dk({ ...s('display:flex;align-items:center;gap:10px;padding:14px;border-radius:12px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: on ? 'inset 0 0 0 2px #1B0B2D' : 'inset 0 0 0 1px rgba(27,11,45,.12)' })}>
                     <span style={dk({ ...s("width:22px;height:22px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;font:700 10.5px/1 'Archivo'"), background: on ? '#1B0B2D' : '#E9E9E4', color: on ? '#F5F5F2' : '#513E66' })}>{i + 1}</span>
@@ -840,14 +840,14 @@ function Control({ st, setState, say, broadcast }: Props) {
 
             <Card>
               <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>KICKOFF COUNTDOWN</span><span style={s("font:800 34px/.9 'Archivo Black';margin-left:auto;font-variant-numeric:tabular-nums")}>{st.countdown > 0 ? fmt(st.countdown) : '–'}</span></div>
-              <div style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px')}>
+              <div style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px')}>
                 {[{ n: '0:30', v: 30 }, { n: '2:00', v: 120 }, { n: '5:00', v: 300 }, { n: '15:00', v: 900 }, { n: 'Clear', v: 0 }].map((c) => { const on = st.countdown === c.v && c.v > 0; return <button key={c.n} data-cur={'cd-' + c.v} onClick={() => { setState({ countdown: c.v }); say(c.v ? `Countdown set to ${c.n}` : 'Countdown cleared', 'timer'); }} style={dk({ ...s("padding:13px 0;border-radius:12px;font:600 12px/1 'Archivo';text-align:center;font-variant-numeric:tabular-nums"), background: on ? '#1B0B2D' : '#F1F1EE', color: on ? '#F5F5F2' : '#1B0B2D', boxShadow: on ? 'none' : 'inset 0 0 0 1px rgba(27,11,45,.1)' })}>{c.n}</button>; })}
               </div>
             </Card>
 
             <Card>
-              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>TRIGGER EVENT</span><span style={s("display:flex;align-items:center;gap:7px;margin-left:auto;font:600 11.5px/1 'Archivo';color:#C0473C")}><Ms size={15} color={ctx('#C0473C')}>bolt</Ms>Fires instantly to {st.devices.toLocaleString()} devices</span></div>
-              <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
+              <div className="m-wrap" style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>TRIGGER EVENT</span><span style={s("display:flex;align-items:center;gap:7px;margin-left:auto;font:600 11.5px/1 'Archivo';color:#C0473C")}><Ms size={15} color={ctx('#C0473C')}>bolt</Ms>Fires instantly to {st.devices.toLocaleString()} devices</span></div>
+              <div className="m-g3" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
                 {TRIGGERS.map((t) => (
                   <button key={t.id} data-cur={'trig-' + t.id} className="ah2" onClick={() => { broadcast?.(t); const k = trigToKind[t.id]; if (k) send({ cmd: 'event', kind: k }); }} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#F1F1EE;box-shadow:inset 0 0 0 1px rgba(27,11,45,.08)')}>
                     <Ms size={21} color={t.color}>{t.icon}</Ms>
@@ -858,8 +858,8 @@ function Control({ st, setState, say, broadcast }: Props) {
             </Card>
 
             <Card>
-              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>CREWS &amp; GAMES</span><span style={s("font:500 11.5px/1 'Archivo';color:#513E66;margin-left:auto")}>Between the whistles &amp; dead time</span></div>
-              <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
+              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>CREWS &amp; GAMES</span><span className="m-hide" style={s("font:500 11.5px/1 'Archivo';color:#513E66;margin-left:auto")}>Between the whistles &amp; dead time</span></div>
+              <div className="m-g3" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
                 {[
                   { id: 'crews', name: 'Open Crews', blurb: 'Switch fans to the Crews home', icon: 'groups', color: '#8B3DF5', act: () => { send({ cmd: 'state', ms: 'inactive' }); say('Fans switched to Crews', 'groups'); } },
                   { id: 'spotkick', name: 'Push Spot Kick', blurb: 'Prompt fans to play the mini-game', icon: 'sports_soccer', color: '#8B3DF5', act: () => { send({ cmd: 'nav', route: 'spotkick' }); say('Spot Kick pushed to devices', 'sports_soccer'); } },
@@ -876,8 +876,8 @@ function Control({ st, setState, say, broadcast }: Props) {
             </Card>
           </div>
 
-          <aside style={s('width:376px;flex:none;position:sticky;top:96px')}>
-            <div style={s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);padding:24px')}>
+          <aside className="m-full" style={s('width:376px;flex:none;position:sticky;top:96px')}>
+            <div className="m-card" style={s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);padding:24px')}>
               <div style={s('display:flex;align-items:center;gap:10px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#C0473C;animation:stBlink 1.6s steps(1,end) infinite')} /><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#513E66")}>LIVE MONITOR</span><span style={s("font:500 11px/1 'Archivo';color:#513E66;margin-left:auto")}>True fan view</span></div>
               <div style={s('margin-top:16px;padding:10px;background:#100E0A;border-radius:20px')}>
                 <iframe title="Live fan monitor" src={fanUrl(p.id) + '?embed=1&theme=dark'} style={dk({ width: '100%', height: 660, border: 0, borderRadius: 12, background: '#100E0A', display: 'block' })} />
@@ -909,7 +909,7 @@ function Control({ st, setState, say, broadcast }: Props) {
 }
 
 // ── small shared pieces ──
-const Card = ({ children }: { children: ReactNode }) => <div style={s('padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05)')}>{children}</div>;
+const Card = ({ children }: { children: ReactNode }) => <div className="m-card" style={s('padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05)')}>{children}</div>;
 const TitleRow = ({ icon, children }: { icon: string; children: ReactNode }) => <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#1B0B2D')}>{icon}</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>{children}</span></div>;
 const Label = ({ children }: { children: ReactNode }) => <div style={s("font:600 10.5px/1 'Archivo';letter-spacing:.12em;color:#826E99")}>{children}</div>;
 function SwatchRow({ label, value, swatches, onPick }: { label: string; value: string; swatches: string[]; onPick: (hex: string) => void }) {
@@ -936,4 +936,47 @@ const ADMIN_CSS = `
 .ah-ink-btn:hover{background:#29163E !important}
 .ah-del:hover{background:#F6DCD8 !important}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
+/* Responsive layer. The screens are authored as desktop inline styles, so these
+   hooks override them with !important. Scoped to .vs-r, which is only set
+   outside autoplay so the embedded demo keeps its desktop layout. */
+@media (max-width:1100px){
+  .vs-r .m-g3{grid-template-columns:repeat(2,1fr) !important}
+}
+@media (max-width:760px){
+  .vs-r .m-hdr{flex-wrap:wrap;padding:12px 16px !important;gap:10px 12px !important}
+  .vs-r .m-sep,.vs-r .m-hide{display:none !important}
+  .vs-r .m-px{padding-left:16px !important;padding-right:16px !important}
+  .vs-r .m-body{padding:20px 16px 36px !important;gap:16px !important}
+  .vs-r .m-col{flex-direction:column !important;align-items:stretch !important;gap:16px !important}
+  .vs-r .m-wrap{flex-wrap:wrap !important}
+  .vs-r .m-full{width:100% !important;position:static !important;justify-content:center}
+  .vs-r .m-g1{grid-template-columns:1fr !important}
+  .vs-r .m-g1>*{grid-column:auto !important}
+  .vs-r .m-g2{grid-template-columns:repeat(2,1fr) !important}
+  .vs-r .m-g3{grid-template-columns:1fr !important}
+  .vs-r .m-card{padding:18px !important;min-height:0 !important}
+  .vs-r .m-h1{font-size:30px !important}
+  .vs-r .m-big{font-size:30px !important}
+  .vs-r .m-ml0{margin-left:0 !important}
+  .vs-r .m-brand{flex:1;min-width:0}
+  .vs-r .m-row2{order:1;flex:1 1 100% !important;min-width:0}
+  .vs-r .m-col>button{justify-content:center}
+  .vs-r .m-brand>div:first-child{font-size:14px !important;line-height:1.2 !important}
+  .vs-r .m-chip{padding:4px !important}
+  .vs-r .m-iconbtn{padding:9px !important}
+  .vs-r .m-kpis{display:grid !important;grid-template-columns:repeat(3,1fr);gap:8px !important}
+  .vs-r .m-kpis>div{padding:13px 12px !important;min-width:0}
+  .vs-r .m-kpis .ms{display:none !important}
+  .vs-r .m-kpis>div>div:first-child span{font-size:9px !important;letter-spacing:.1em !important}
+  .vs-r .m-kpis>div>div:last-child{flex-wrap:wrap;gap:4px 6px !important;margin-top:10px !important}
+  .vs-r .m-kpis>div>div:last-child>span:first-child{font-size:26px !important}
+  .vs-r .m-steps{gap:0 !important}
+  .vs-r .m-steps span[data-lbl]{display:none}
+  .vs-r .m-actions{width:100%;margin-left:0 !important}
+  .vs-r .m-actions>button{flex:1;justify-content:center}
+  .vs-r .m-phases{order:1;width:100%}
+  .vs-r .m-phases>button{flex:1}
+  .vs-r .m-foot{flex-wrap:wrap;gap:8px 12px !important;padding:22px 16px 28px !important;line-height:1.4 !important}
+  .vs-r .m-toast{max-width:calc(100vw - 32px);white-space:normal}
+}
 `;
