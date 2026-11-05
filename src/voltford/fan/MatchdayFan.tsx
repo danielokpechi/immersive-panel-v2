@@ -203,9 +203,19 @@ interface FSt {
   playingVoice: string | null;
   call: { active: boolean; player: string; joined: boolean };
   reactions: Record<string, number>; replyDraftId: string | null;
+  mm: MMState; mmResult: { time: number; xp: number } | null;
 }
 const money = (n: number) => '£' + n.toFixed(2);
 const pad = (n: number) => String(n).padStart(2, '0');
+
+// Match Mode: finished stretches are banked in `counted`; `since` is when the
+// current stretch began, null while off or while the fan is away from Connect.
+const MM_XP_PER_MIN = 2;
+type MMState = { on: boolean; counted: number; since: number | null };
+const MM_OFF: MMState = { on: false, counted: 0, since: null };
+const mmTime = (m: MMState) => m.counted + (m.since === null ? 0 : Date.now() - m.since);
+const mmClock = (ms: number) => pad(Math.floor(ms / 60000)) + ':' + pad(Math.floor(ms / 1000) % 60);
+const mmXp = (ms: number) => Math.floor(ms / 60000) * MM_XP_PER_MIN;
 
 export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   const [st, setSt] = useState<FSt>(() => ({
@@ -224,6 +234,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
     presenceStamps: {}, playerPost: { crewId: 'msb', player: 'Kasper Brink', type: 'image' }, playingVoice: null,
     call: { active: false, player: 'Kasper Brink', joined: false },
     reactions: {}, replyDraftId: null,
+    mm: MM_OFF, mmResult: null,
   }));
   const set = (patch: Partial<FSt> | ((s: FSt) => Partial<FSt>)) => setSt((sPrev) => ({ ...sPrev, ...(typeof patch === 'function' ? patch(sPrev) : patch) }));
   const timers = useRef<{ toast?: number; ev?: number; iris?: number; varT?: number; roll?: number; food?: number; flash?: number; sk?: number; di?: number; diBanner?: number }>({});
@@ -291,11 +302,22 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   // Shared operator actions, used by the local demo strip AND by the control
   // room over the realtime bus, so an operator drives this exact fan client.
   const applyState = (m: string) => {
-    if (m === 'inactive') set({ ms: 'inactive', route: 'home', event: null, hs: 0, as: 0 });
-    else if (m === 'pre') set({ ms: 'pre', route: 'home', event: null, hs: 0, as: 0 });
-    else if (m === 'live') { set({ ms: 'live', route: 'home', hs: 0, as: 0 }); fire('GOAL', 'Brink', 23, 'Assist Brandt · xG 0.34', 'VOLTFORD', 'h'); }
-    else if (m === 'ht') set({ ms: 'ht', route: 'home', event: null, hs: 1, as: 1 });
-    else if (m === 'ft') set({ ms: 'ft', route: 'home', event: null, hs: 2, as: 1 });
+    // A fan in Match Mode stays there as the match moves on.
+    const stay = (sp: FSt) => (sp.mm.on ? { route: 'matchMode', navStack: [] as string[] } : { route: 'home' });
+    if (m === 'inactive') set({ ms: 'inactive', route: 'home', event: null, hs: 0, as: 0, mm: MM_OFF, mmResult: null });
+    else if (m === 'pre') set({ ms: 'pre', route: 'home', event: null, hs: 0, as: 0, mm: MM_OFF, mmResult: null });
+    else if (m === 'live') { set((sp) => ({ ms: 'live', ...stay(sp), hs: 0, as: 0 })); fire('GOAL', 'Brink', 23, 'Assist Brandt · xG 0.34', 'VOLTFORD', 'h'); }
+    else if (m === 'ht') set((sp) => ({ ms: 'ht', ...stay(sp), event: null, hs: 1, as: 1 }));
+    else if (m === 'ft') {
+      // Full time ends Match Mode: pay out whatever was counted, once.
+      const time = mmTime(st.mm);
+      if (time < 1000) set({ ms: 'ft', route: 'home', event: null, hs: 2, as: 1, mm: MM_OFF });
+      else {
+        const xp = mmXp(time);
+        set({ ms: 'ft', route: 'matchModeSummary', navStack: [], event: null, hs: 2, as: 1, mm: MM_OFF, mmResult: { time, xp } });
+        if (xp) award(xp, 'MATCH MODE');
+      }
+    }
   };
   const applyEventCmd = (kind: string) => {
     // Events fire in place (the lower-third shows on every screen) so a moment
@@ -323,7 +345,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
     if (m.cmd === 'state' && m.ms) applyState(m.ms);
     else if (m.cmd === 'event' && m.kind) applyEventCmd(m.kind);
     // Operator prompt: send fans straight to a screen (Crews, Spot Kick…).
-    else if (m.cmd === 'nav' && m.route) { if (m.route === 'spotkick') startSpotkick(); else set((sp) => ({ route: m.route, navStack: sp.route === m.route ? sp.navStack : [...sp.navStack, sp.route], iris: false, read: null })); }
+    else if (m.cmd === 'nav' && m.route) { if (st.mm.on) return; if (m.route === 'spotkick') startSpotkick(); else set((sp) => ({ route: m.route, navStack: sp.route === m.route ? sp.navStack : [...sp.navStack, sp.route], iris: false, read: null })); }
     // Operator fires a player into a Crew, ends it, or posts verified content.
     else if (m.cmd === 'dropin' && m.action === 'start') startDropInWith(m.crewId || 'seasontix', m.player || 'Kasper Brink', m.duration || 10);
     else if (m.cmd === 'dropin' && m.action === 'end') endDropIn();
@@ -477,6 +499,34 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   const startSpotkick = () => set((sp) => ({ sk: { kick: 0, goals: 0, phase: 'idle', flash: null, keeperZone: null }, route: 'spotkick', navStack: sp.route === 'spotkick' ? sp.navStack : [...sp.navStack, sp.route], iris: false }));
   // Navigate forward: push the current route so back returns to the actual previous screen.
   const go = (r: string) => () => set((sp) => ({ route: r, navStack: sp.route === r ? sp.navStack : [...sp.navStack, sp.route], iris: false, read: null }));
+  const startMM = () => set((sp) => ({ mm: { on: true, counted: sp.mm.counted, since: document.hidden ? null : Date.now() }, route: 'matchMode', navStack: [], iris: false, read: null }));
+  const stopMM = () => set((sp) => ({ mm: { on: false, counted: mmTime(sp.mm), since: null }, route: 'home', navStack: [] }));
+  // Pause while the fan is away from Connect, resume when they come back. Phones
+  // auto-lock after a minute or so, which would pause the timer, so ask to keep
+  // the screen awake where the browser supports it.
+  useEffect(() => {
+    if (!st.mm.on) return;
+    let ended = false;
+    let wake: { release: () => Promise<void> } | null = null;
+    const keepAwake = async () => {
+      try {
+        const lock = await (navigator as any).wakeLock?.request('screen');
+        if (ended) lock?.release(); else wake = lock || null;
+      } catch { /* not supported, or the browser refused */ }
+    };
+    const onVisibility = () => {
+      if (document.hidden) {
+        set((sp) => (sp.mm.since === null ? {} : { mm: { ...sp.mm, counted: mmTime(sp.mm), since: null } }));
+      } else {
+        set((sp) => (sp.mm.on && sp.mm.since === null ? { mm: { ...sp.mm, since: Date.now() } } : {}));
+        notify('WELCOME BACK · TIMER RESUMED');
+        keepAwake();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    keepAwake();
+    return () => { ended = true; document.removeEventListener('visibilitychange', onVisibility); wake?.release(); };
+  }, [st.mm.on]); // eslint-disable-line react-hooks/exhaustive-deps
   // Navigate back: pop the stack (empties to Home).
   const goBack = () => set((sp) => { const stack = sp.navStack.slice(); const prev = stack.pop(); return { route: prev || 'home', navStack: stack, iris: false, read: null }; });
   const openCrew = (crewId: string) => set((sp) => ({ route: 'crew', activeCrew: crewId, navStack: [...sp.navStack, sp.route], iris: false, read: null }));
@@ -540,9 +590,9 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   const statusLabel = inactive ? (NARROW ? 'SAT 08 AUG · 17:30' : 'NEXT: SAT 08 AUG, 17:30') : pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
   const myCrewCount = ALL_CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).length;
   const crewGatedLocked = activeCrewData.gated && !st.boxUnlocked;
-  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'VOLTFORD STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), createCrew: 'START A CREW', crewSettings: 'CREW SETTINGS', invite: 'INVITE', room: 'ROOM', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
-  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS', crew: crewGatedLocked ? 'LOCKED' : activeCrewData.members.toLocaleString() + ' MEMBERS', createCrew: 'FAN-RUN', crewSettings: activeCrewData.name.toUpperCase(), invite: activeCrewData.name.toUpperCase(), room: 'LIVE', spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
-  const isHome = st.route === 'home', isSub = st.route !== 'home';
+  const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'VOLTFORD STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), createCrew: 'START A CREW', crewSettings: 'CREW SETTINGS', invite: 'INVITE', room: 'ROOM', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD', matchMode: 'MATCH MODE', matchModeSummary: 'MATCH MODE' };
+  const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: st.mm.on ? 'MATCH MODE · ' + mmClock(mmTime(st.mm)) : 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS', crew: crewGatedLocked ? 'LOCKED' : activeCrewData.members.toLocaleString() + ' MEMBERS', createCrew: 'FAN-RUN', crewSettings: activeCrewData.name.toUpperCase(), invite: activeCrewData.name.toUpperCase(), room: 'LIVE', spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL', matchModeSummary: 'FULL TIME' };
+  const isHome = st.route === 'home', isSub = st.route !== 'home' && st.route !== 'matchMode';
   const backLabel = st.navStack.length ? (titles[st.navStack[st.navStack.length - 1]] || 'HOME') : 'HOME';
   const showCrewsIntro = st.forceCrewsIntro || ((st.route === 'community' || st.route === 'crew') && !st.crewsIntroSeen);
 
@@ -657,7 +707,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
                   </div>
                 </>)}
                 <button onClick={() => set((x) => ({ theme: x.theme === 'auto' ? 'light' : x.theme === 'light' ? 'dark' : 'auto' }))} className="fh2" style={s('display:flex;align-items:center;padding:0 9px;background:var(--chrome)')}><Ms size={17} color="#9F8AB6">{st.theme === 'dark' ? 'dark_mode' : st.theme === 'light' ? 'light_mode' : 'brightness_auto'}</Ms></button>
-                <button onClick={go('profile')} className="fh2" style={s('display:flex;align-items:center;padding:0 12px 0 9px;background:var(--chrome)')}><span style={s("width:26px;height:26px;border-radius:50%;background:#8B3DF5;display:flex;align-items:center;justify-content:center;font:800 9.5px/1 'Archivo';color:#fff")}>AJ</span></button>
+                {!st.mm.on && <button onClick={go('profile')} className="fh2" style={s('display:flex;align-items:center;padding:0 12px 0 9px;background:var(--chrome)')}><span style={s("width:26px;height:26px;border-radius:50%;background:#8B3DF5;display:flex;align-items:center;justify-content:center;font:800 9.5px/1 'Archivo';color:#fff")}>AJ</span></button>}
               </div>
               {isHome && (
                 <div style={s('display:flex;overflow:hidden;height:26px;background:var(--chrome);align-items:center')}>
@@ -676,7 +726,9 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
             </div>
 
             {/* ROUTES */}
-            {isHome && <Home {...{ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, award, set }} />}
+            {isHome && <Home {...{ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, award, set, startMM: autoplay ? undefined : startMM }} />}
+            {st.route === 'matchMode' && <MatchMode {...{ st, timeline, go, stopMM }} />}
+            {st.route === 'matchModeSummary' && <MatchModeSummary {...{ st, set }} />}
             {st.route === 'community' && <Community {...{ st, set, go, openCrew, pickOnboarding, skipOnboarding }} />}
             {st.route === 'crew' && <Crew {...{ st, crew: activeCrewData, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom, approveCrew }} />}
             {st.route === 'createCrew' && <CreateCrew {...{ st, set, createCrew }} />}
@@ -700,7 +752,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
           </div>
 
           {/* FLASH SALE, pops on a goal, dismissible */}
-          {st.flash && (
+          {st.flash && !st.mm.on && (
             <div style={{ ...s('position:absolute;top:122px;left:10px;right:10px;z-index:48'), animation: st.flashOut ? 'bgFlashOut .18s cubic-bezier(.23,1,.32,1) both' : 'bgRise .32s cubic-bezier(.18,.9,.2,1) both' }}>
               <div style={s('display:flex;align-items:center;gap:11px;padding:11px 11px 11px 13px;background:var(--panel);border-radius:2px;box-shadow:0 14px 34px -8px rgba(27,11,45,.55)')}>
                 <span style={s('width:36px;height:36px;flex:none;border-radius:2px;background:#8B3DF5;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">local_offer</Ms></span>
@@ -715,7 +767,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
           )}
 
           {/* IRIS */}
-          {!st.iris && (
+          {!st.iris && !st.mm.on && (
             <button data-cur="iris" onClick={() => set({ iris: true })} className="fh2" style={s('position:absolute;right:0;bottom:96px;z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px')}>
               <span style={s('width:7px;height:7px;background:#8B3DF5;animation:bgDot 1.6s ease-in-out infinite')} />
               <span style={s("font:800 10.5px/1 'Archivo';letter-spacing:.16em;color:var(--on-panel)")}>ASK IRIS</span>
@@ -745,8 +797,8 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
 }
 
 // ═══════════ HOME ═══════════
-type HP = { st: FSt; pre: boolean; live: boolean; ht: boolean; ft: boolean; inactive: boolean; isCommunityLead: boolean; showCommunityBlock: boolean; showSpotkickTile: boolean; timeline: ReturnType<typeof Object>[] | any[]; previewMsgs: any[]; filled: number; cd: number; go: (r: string) => () => void; award: (x: number, l: string, q?: string) => void; set: (p: any) => void };
-function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go }: HP) {
+type HP = { st: FSt; pre: boolean; live: boolean; ht: boolean; ft: boolean; inactive: boolean; isCommunityLead: boolean; showCommunityBlock: boolean; showSpotkickTile: boolean; timeline: ReturnType<typeof Object>[] | any[]; previewMsgs: any[]; filled: number; cd: number; go: (r: string) => () => void; award: (x: number, l: string, q?: string) => void; set: (p: any) => void; startMM?: () => void };
+function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go, startMM }: HP) {
   const liveish = live || ht;
   const label = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   // Section header with the Voltford-violet skewed accent tick, to tie the light body to the heroes.
@@ -970,18 +1022,15 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
               </div>
             </div>
           </div>
-          <div style={s('padding:0 16px')}>
-            {(timeline as any[]).map((e, i) => (
-              <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}>
-                <span style={s("font:800 12px/1 'Archivo';color:var(--ink);width:26px;font-variant-numeric:tabular-nums")}>{e.min}′</span>
-                {e.isCard && <span style={{ ...s('width:11px;height:15px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(27,11,45,.3)'), background: e.cardColor }} />}
-                {e.hasIcon && <Ms size={16} color={e.iconColor}>{e.icon}</Ms>}
-                <span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:5px 6px;text-align:center"), color: e.fg, background: e.bg }}>{e.kind}</span>
-                <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 13.5px/1.2 'Archivo';color:var(--ink)")}>{e.who}</span>{e.detail && <span style={s("display:block;font:500 11px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{e.detail}</span>}</span>
-                <span style={{ ...s('width:5px;height:14px;transform:skewX(-8deg);margin-left:auto'), background: e.tc }} />
-              </div>
-            ))}
-          </div>
+          {startMM && (
+            <div style={s('margin:16px 16px 4px;background:var(--sand);padding:16px')}>
+              <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{st.mm.counted > 0 ? 'MATCH MODE · ' + mmClock(st.mm.counted) + ' COUNTED' : 'MATCH MODE · ' + MM_XP_PER_MIN + ' XP A MINUTE'}</div>
+              <div style={s("font:800 28px/.9 'Archivo Black';color:var(--ink);margin-top:10px")}>Eyes on the game</div>
+              <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>Earn XP while Connect stays open. Leave the app or lock your phone and the timer pauses.</div>
+              <button onClick={startMM} className="fp" style={s("display:flex;align-items:center;gap:7px;margin-top:13px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:12px 15px")}><Ms size={15} color="var(--on-panel)">timer</Ms>{st.mm.counted > 0 ? 'TURN BACK ON' : 'TURN ON MATCH MODE'}</button>
+            </div>
+          )}
+          <MatchEvents timeline={timeline} />
           {ht && (
             <div style={s('margin:16px 16px 0;background:var(--sand);padding:16px')}>
               <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>HALF-TIME · 15 MINUTES</div>
@@ -1160,6 +1209,61 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
 // ═══════════ sub-screens ═══════════
 
 // ── Crews onboarding: shown when the fan is in no non-gated Crew and hasn't skipped ──
+function MatchEvents({ timeline }: { timeline: any[] }) {
+  return (
+    <div style={s('padding:0 16px')}>
+      {timeline.map((e, i) => (
+        <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}>
+          <span style={s("font:800 12px/1 'Archivo';color:var(--ink);width:26px;font-variant-numeric:tabular-nums")}>{e.min}′</span>
+          {e.isCard && <span style={{ ...s('width:11px;height:15px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(27,11,45,.3)'), background: e.cardColor }} />}
+          {e.hasIcon && <Ms size={16} color={e.iconColor}>{e.icon}</Ms>}
+          <span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:5px 6px;text-align:center"), color: e.fg, background: e.bg }}>{e.kind}</span>
+          <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 13.5px/1.2 'Archivo';color:var(--ink)")}>{e.who}</span>{e.detail && <span style={s("display:block;font:500 11px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{e.detail}</span>}</span>
+          <span style={{ ...s('width:5px;height:14px;transform:skewX(-8deg);margin-left:auto'), background: e.tc }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Match Mode: timer, match events and one quick action ──
+function MatchMode({ st, timeline, go, stopMM }: any) {
+  const time = mmTime(st.mm);
+  return (
+    <section style={s('animation:bgFade .25s ease both;padding-bottom:28px')}>
+      <div style={s('position:relative;overflow:hidden;background:#160925')}>
+        <HeroBg pos="50% 8%" glow="rgba(139,61,245,.46)" sweep={false} />
+        <div style={s('position:relative;padding:18px 16px 20px;text-align:center')}>
+          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#B08EF0")}>MATCH MODE ON</div>
+          <div style={s("font:800 " + (NARROW ? 56 : 76) + "px/.9 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;margin-top:14px;text-shadow:0 4px 28px rgba(13,5,23,.6)")}>{mmClock(time)}</div>
+          <div style={s("font:800 10px/1 'Archivo';letter-spacing:.12em;color:#B08EF0;margin-top:12px")}>{mmXp(time)} XP SO FAR · PAID AT FULL TIME</div>
+          <div style={s("font:500 11px/1.45 'Archivo';color:#B09DC6;margin-top:10px")}>Leave Connect or lock your phone and the timer pauses.</div>
+        </div>
+      </div>
+      <div style={s('display:flex;gap:8px;padding:16px 16px 4px')}>
+        <button onClick={go('food')} className="fp" style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:14px 8px")}><Ms size={15} color="var(--on-panel)">restaurant</Ms>ORDER FOOD</button>
+        <button onClick={stopMM} className="fs" style={s("flex:1;text-align:center;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--ink);padding:14px 8px;box-shadow:inset 0 0 0 1.5px var(--ink)")}>TURN OFF</button>
+      </div>
+      <MatchEvents timeline={timeline} />
+    </section>
+  );
+}
+
+function MatchModeSummary({ st, set }: any) {
+  const { time, xp } = st.mmResult || { time: 0, xp: 0 };
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:20px 16px 32px')}>
+      <div style={s('background:var(--panel);padding:22px;text-align:center')}>
+        <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#9F8AB6")}>TIME COUNTED</div>
+        <div style={s("font:800 62px/.82 'Archivo Black';color:var(--on-panel);margin-top:14px;font-variant-numeric:tabular-nums")}>{mmClock(time)}</div>
+        <div style={s("font:600 13px/1.5 'Archivo';color:#9F8AB6;margin-top:10px")}>{xp ? 'Added to your matchday XP.' : 'Under a minute, so no XP this time.'}</div>
+        <div style={s('display:flex;align-items:baseline;gap:8px;justify-content:center;margin-top:14px')}><span style={s("font:800 26px/1 'Archivo Black';color:#8B3DF5")}>+{xp}</span><span style={s("font:700 10.5px/1 'Archivo';letter-spacing:.1em;color:#9F8AB6")}>XP EARNED</span></div>
+      </div>
+      <button onClick={() => set({ route: 'home', navStack: [] })} className="fp" style={s("display:block;width:100%;margin-top:16px;text-align:center;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:14px 0")}>BACK TO THE PANEL</button>
+    </div>
+  );
+}
+
 const ONBOARDING_OPTS = [
   { icon: 'directions_bus', label: 'I travel to away games', crewId: 'voltheads', crewName: 'Voltheads' },
   { icon: 'groups', label: 'I go with family or kids', crewId: 'family', crewName: 'Family Stand' },
