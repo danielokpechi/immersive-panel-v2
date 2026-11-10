@@ -14,3 +14,7 @@ export const MatchdayFan = dynamic(() => import('../fan/MatchdayFan').then((m) =
 // need not show Manchester City. The City screens above stay untouched.
 export const VoltfordStudio = dynamic(() => import('../voltford/admin/PanelStudio').then((m) => m.PanelStudio), { ssr: false });
 export const VoltfordFan = dynamic(() => import('../voltford/fan/MatchdayFan').then((m) => m.MatchdayFan), { ssr: false });
+// Connect Events prototype (Aurora Nova launch), src/events. Separate from the
+// Voltford and City screens; nothing above imports it.
+export const EventFan = dynamic(() => import('../events/EventFan').then((m) => m.EventFan), { ssr: false });
+export const EventStudio = dynamic(() => import('../events/EventStudio').then((m) => m.EventStudio), { ssr: false });
