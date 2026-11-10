@@ -18,3 +18,4 @@ export const VoltfordFan = dynamic(() => import('../voltford/fan/MatchdayFan').t
 // Voltford and City screens; nothing above imports it.
 export const EventFan = dynamic(() => import('../events/EventFan').then((m) => m.EventFan), { ssr: false });
 export const EventStudio = dynamic(() => import('../events/EventStudio').then((m) => m.EventStudio), { ssr: false });
+export const EventsStudioHome = dynamic(() => import('../events/StudioHome').then((m) => m.StudioHome), { ssr: false });

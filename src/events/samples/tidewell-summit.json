@@ -1,0 +1,715 @@
+{
+  "id": "tidewell-summit",
+  "version": 1,
+  "status": "upcoming",
+  "brand": {
+    "name": "Tidewell",
+    "wordmark": "TIDEWELL",
+    "wordmarkShort": "TIDEWELL",
+    "logo": "connect-events/tidewell/logo.svg",
+    "accent": "#17C3B2",
+    "dark": "#071A24",
+    "domain": "connect.boltos.ai/tidewell"
+  },
+  "event": {
+    "name": "Tidewell Summit 2026",
+    "template": "conference",
+    "format": "Hybrid",
+    "date": "2026-12-03",
+    "time": "09:00",
+    "dayLabel": "THU 09:00",
+    "dateShort": "THU 3 DEC",
+    "venue": "Harbour Works, Dock 4",
+    "venueShort": "HARBOUR WORKS",
+    "venueWord": "VENUE",
+    "city": "Lisbon",
+    "kicker": "TIDEWELL",
+    "kickerSub": "SUMMIT 2026 · LISBON",
+    "title": "TIDEWELL SUMMIT",
+    "countdownLabel": "KEYNOTE IN",
+    "countdownSeconds": 9678,
+    "dateLine": "THU 09:00 · HARBOUR WORKS, LISBON · AND ONLINE",
+    "inviteTitle": "SAVE YOUR SEAT",
+    "inviteSub": "In the room or on the stream, the same sessions.",
+    "venueOption": "In person",
+    "venueOptionSub": "Harbour Works, Dock 4 · doors 08:30",
+    "onlineOptionSub": "Live stream with this panel · polls, chat, Q&A",
+    "registeredVenue": "Harbour Works, Dock 4. Show this panel at the door.",
+    "registeredOnline": "Watching online. This panel is your stream companion.",
+    "details": [
+      {
+        "icon": "event",
+        "k": "When",
+        "v": "Thu 3 Dec · doors 08:30, keynote 09:30"
+      },
+      {
+        "icon": "location_on",
+        "k": "Where",
+        "v": "Harbour Works, Dock 4, Lisbon"
+      },
+      {
+        "icon": "wifi",
+        "k": "Online",
+        "v": "Every session streams here, with live Q&A"
+      },
+      {
+        "icon": "confirmation_number",
+        "k": "Entry",
+        "v": "Free for Tidewell customers, registration required"
+      }
+    ],
+    "heroImage": {
+      "src": "connect-events/tidewell/hero.svg",
+      "w": 1600,
+      "h": 1000
+    }
+  },
+  "segments": [
+    {
+      "id": "s1",
+      "name": "Registration",
+      "short": "DOORS",
+      "time": "08:30",
+      "kind": "doors",
+      "blurb": "Badges, coffee and the expo floor",
+      "note": "Grab a coffee, the keynote is at 09:30",
+      "heroTitle": "DOORS ARE OPEN",
+      "heroSub": "Coffee and badges in the atrium. Keynote at 09:30.",
+      "heroSubOnline": "The stream starts at 09:30. Say hello in the chat."
+    },
+    {
+      "id": "s2",
+      "name": "Opening keynote",
+      "short": "KEYNOTE",
+      "time": "09:30",
+      "kind": "reveal",
+      "blurb": "Maya Okafor, CEO, and a new product",
+      "note": "Maya Okafor, CEO, Tidewell",
+      "heroTitle": "OPENING KEYNOTE",
+      "heroSub": "Something new ships on stage this morning."
+    },
+    {
+      "id": "s3",
+      "name": "Sessions",
+      "short": "SESSIONS",
+      "time": "10:30",
+      "kind": "talk",
+      "blurb": "Three tracks: Build, Ship, Scale",
+      "note": "Pick a track, all three stream here",
+      "heroTitle": "SESSIONS",
+      "heroSub": "Build, Ship and Scale run side by side."
+    },
+    {
+      "id": "s4",
+      "name": "Panel",
+      "short": "PANEL",
+      "time": "13:00",
+      "kind": "talk",
+      "blurb": "The future of developer platforms",
+      "note": "Four engineering leaders, one stage",
+      "heroTitle": "THE PANEL",
+      "heroSub": "Four engineering leaders on what ships next."
+    },
+    {
+      "id": "s5",
+      "name": "Q&A",
+      "short": "Q&A",
+      "time": "15:00",
+      "kind": "qa",
+      "blurb": "Ask the product team anything",
+      "note": "Ask and upvote, the top questions go first",
+      "heroTitle": "Q&A IS OPEN",
+      "heroSub": "Ask the product team anything. Most upvoted first."
+    }
+  ],
+  "reveal": {
+    "kicker": "TIDEWELL INTRODUCES",
+    "word1": "TIDEWELL",
+    "word2": "FLOW",
+    "line": "Pipelines, reviews and previews in one place · free in beta",
+    "thirdNote": "Free in beta · tap the glowing points to explore",
+    "title": "TIDEWELL FLOW",
+    "sub": "Tap a glowing point to explore Flow.",
+    "triggerBlurb": "Unveil Tidewell Flow on every screen"
+  },
+  "product": {
+    "sectionTitle": "TIDEWELL FLOW",
+    "priceLine": "FREE IN BETA",
+    "featuresHint": "Spotlight the next feature on the car",
+    "variants": [
+      {
+        "name": "Flow Free",
+        "price": "£0",
+        "spec": "Up to 5 builders · 2,000 pipeline minutes"
+      },
+      {
+        "name": "Flow Team",
+        "price": "£18/seat",
+        "spec": "Unlimited builders · AI review · previews"
+      },
+      {
+        "name": "Flow Enterprise",
+        "price": "Talk to us",
+        "spec": "SSO, audit log, private runners"
+      }
+    ]
+  },
+  "hotspots": [
+    {
+      "id": "lights",
+      "x": 46.9,
+      "y": 38.9,
+      "name": "Live pipelines",
+      "desc": "Every build across every repo on one timeline, with the slow step highlighted.",
+      "stat": "38%",
+      "unit": "faster median build"
+    },
+    {
+      "id": "wheels",
+      "x": 45.7,
+      "y": 68.1,
+      "name": "AI review",
+      "desc": "Flow reads each pull request against your house rules before a teammate does.",
+      "stat": "2.4×",
+      "unit": "faster first review"
+    },
+    {
+      "id": "cabin",
+      "x": 72.9,
+      "y": 68.1,
+      "name": "Deploy previews",
+      "desc": "A live link for every branch, torn down when it merges.",
+      "stat": "1 click",
+      "unit": "to share a branch"
+    },
+    {
+      "id": "roof",
+      "x": 74.3,
+      "y": 47.9,
+      "name": "Cost meter",
+      "desc": "Pipeline minutes and cloud spend per team, before the invoice arrives.",
+      "stat": "−22%",
+      "unit": "compute spend in beta"
+    },
+    {
+      "id": "charge",
+      "x": 21,
+      "y": 72.5,
+      "name": "Team presence",
+      "desc": "See who is reviewing what, live, without a stand-up.",
+      "stat": "0",
+      "unit": "status meetings needed"
+    }
+  ],
+  "polls": [
+    {
+      "id": "colour",
+      "q": "Which track are you joining next?",
+      "opts": {
+        "Build": 41,
+        "Ship": 35,
+        "Scale": 24
+      },
+      "votes": 2410
+    },
+    {
+      "id": "trim",
+      "q": "Would you switch your CI to Flow?",
+      "opts": {
+        "Yes, this quarter": 38,
+        "Trial first": 47,
+        "Not yet": 15
+      },
+      "votes": 1980
+    },
+    {
+      "id": "feature",
+      "q": "Best thing in the keynote?",
+      "opts": {
+        "AI review": 44,
+        "Deploy previews": 33,
+        "Cost meter": 23
+      },
+      "votes": 1730
+    }
+  ],
+  "breakContent": {
+    "minutes": 15,
+    "sub": "Sessions resume at 10:30. Coffee is in the atrium.",
+    "poll": {
+      "id": "break",
+      "q": "The keynote, in one word?",
+      "opts": {
+        "Ambitious": 48,
+        "Practical": 37,
+        "Too early to say": 15
+      },
+      "votes": 1890
+    },
+    "reads": [
+      {
+        "kicker": "WHY FLOW",
+        "title": "One place for the whole pipeline",
+        "body": "Beta teams cut switching between CI, review and preview tools by half, because all three live in one workspace."
+      },
+      {
+        "kicker": "AI REVIEW",
+        "title": "Reviews that know your house rules",
+        "body": "You write the rules once in plain English. Flow checks every pull request against them before a teammate opens it."
+      },
+      {
+        "kicker": "THE BETA",
+        "title": "Free until general release",
+        "body": "Every beta workspace keeps its launch pricing for 12 months after Flow goes on sale in March."
+      }
+    ]
+  },
+  "announcements": {
+    "all": [
+      {
+        "kicker": "FLOW BETA",
+        "title": "Flow beta is open now",
+        "sub": "Join from this page, free for every Tidewell workspace"
+      },
+      {
+        "kicker": "COMING UP",
+        "title": "Sessions start in 10 minutes",
+        "sub": "Build, Ship and Scale tracks, all streamed here"
+      }
+    ],
+    "venue": [
+      {
+        "kicker": "IN THE VENUE",
+        "title": "Demo pods on the mezzanine",
+        "sub": "Try Flow with an engineer, all day"
+      },
+      {
+        "kicker": "IN THE VENUE",
+        "title": "Lunch is served in the atrium",
+        "sub": "Vegetarian and vegan options at station 3"
+      }
+    ],
+    "online": [
+      {
+        "kicker": "ONLINE",
+        "title": "Switch tracks any time",
+        "sub": "Use the segment bar to jump between streams"
+      },
+      {
+        "kicker": "ONLINE EXCLUSIVE",
+        "title": "Book a 1:1 demo from home",
+        "sub": "Slots open straight after the keynote"
+      }
+    ]
+  },
+  "reminders": [
+    {
+      "title": "Doors open in 1 hour",
+      "body": "Harbour Works opens at 08:30. Your QR check-in is on this page, no ticket needed.",
+      "target": "venue"
+    },
+    {
+      "title": "The stream starts in 15 minutes",
+      "body": "Keep this page open, the player appears here at 09:30.",
+      "target": "online"
+    },
+    {
+      "title": "Bring your laptop",
+      "body": "The demo pods will set you up with a Flow workspace on the spot.",
+      "target": "venue"
+    },
+    {
+      "title": "Send your questions now",
+      "body": "The most upvoted questions go to the product team at 15:00.",
+      "target": "all"
+    }
+  ],
+  "presenters": [
+    {
+      "name": "Maya Okafor",
+      "role": "CEO, Tidewell",
+      "slot": "Keynote · 09:30",
+      "photo": "voltford/media/crews/av-hannah.jpg"
+    },
+    {
+      "name": "Tomás Reyes",
+      "role": "VP Engineering",
+      "slot": "Panel · 13:00",
+      "photo": "voltford/media/crews/av-marcus.jpg"
+    },
+    {
+      "name": "Priya Nair",
+      "role": "Head of Product",
+      "slot": "Q&A · 15:00",
+      "photo": "voltford/media/crews/av-priya.jpg"
+    }
+  ],
+  "sponsors": [
+    "Northgate Cloud",
+    "Lattice DB",
+    "Quayside Ventures",
+    "Brightpath Security"
+  ],
+  "iris": {
+    "intro": "I’m IRIS. I answer from Tidewell’s approved summit facts: the agenda, Flow, pricing and the beta.",
+    "pre": [
+      {
+        "q": "What’s on today?",
+        "a": "Registration from 08:30, the opening keynote at 09:30, three session tracks from 10:30, a panel at 13:00 and Q&A at 15:00.",
+        "stat": "5",
+        "label": "SEGMENTS TODAY"
+      },
+      {
+        "q": "Can I watch online?",
+        "a": "Yes. Every session streams on this page, with the same polls, chat and Q&A as the room.",
+        "stat": "3",
+        "label": "TRACKS STREAMED"
+      },
+      {
+        "q": "How do I ask a question?",
+        "a": "Send it from the panel any time. The most upvoted go to the product team at 15:00.",
+        "stat": "15:00",
+        "label": "Q&A STARTS"
+      }
+    ],
+    "live": [
+      {
+        "q": "What is Tidewell Flow?",
+        "a": "Flow puts pipelines, AI code review and deploy previews in one workspace. It is free for every Tidewell workspace during the beta.",
+        "stat": "Beta",
+        "label": "AVAILABLE TODAY",
+        "keys": "flow|what is|product|new"
+      },
+      {
+        "q": "How much does Flow cost?",
+        "a": "Free during the beta. After launch, Team is £18 per builder a month, and beta workspaces keep that price for 12 months.",
+        "stat": "£18",
+        "label": "PER BUILDER, MONTHLY",
+        "keys": "price|cost|much|pay|£"
+      },
+      {
+        "q": "How much faster is it?",
+        "a": "Beta teams cut their median build time by 38%, mostly from caching and parallel steps that Flow suggests.",
+        "stat": "38%",
+        "label": "FASTER MEDIAN BUILD",
+        "keys": "fast|speed|faster|build time"
+      },
+      {
+        "q": "Is my code safe?",
+        "a": "Flow runs in your own cloud account or Tidewell’s EU region. Code stays in the region you choose, and AI review never trains on it.",
+        "stat": "EU",
+        "label": "DATA REGION OPTION",
+        "keys": "safe|secur|privacy|data|train"
+      }
+    ],
+    "hidden": "That’s announced in the opening keynote at 09:30. Stay with the panel, I’ll have the answer the moment it ships.",
+    "fallback": "I only answer from Tidewell’s approved summit facts, and that one isn’t in them. Send it to the Q&A and the product team can answer it."
+  },
+  "cta": {
+    "cardKicker": "NEXT STEP",
+    "title": "Book a Flow demo",
+    "sub": "30 minutes with a solutions engineer, on your own repos.",
+    "button": "BOOK A DEMO",
+    "screenTitle": "BOOK A DEMO",
+    "screenMeta": "30 MINUTES",
+    "intro": "A solutions engineer sets Flow up on one of your repos, live.",
+    "optionsLabel": "FORMAT",
+    "options": [
+      {
+        "id": "kl",
+        "name": "At the demo pods",
+        "sub": "Mezzanine, today"
+      },
+      {
+        "id": "pj",
+        "name": "Video call",
+        "sub": "Any time this week"
+      },
+      {
+        "id": "sa",
+        "name": "With your team",
+        "sub": "We come to your office"
+      }
+    ],
+    "slotsLabel": "TIME",
+    "slots": [
+      "Today · 14:00",
+      "Fri 4 Dec · 10:00",
+      "Mon 7 Dec · 16:00"
+    ],
+    "submit": "REQUEST DEMO",
+    "doneTitle": "Demo requested",
+    "doneSub": "We’ll confirm by email within the hour."
+  },
+  "follow": {
+    "title": "Follow Tidewell",
+    "sub": "One email when the next summit is announced. Nothing else.",
+    "doneTitle": "Following Tidewell",
+    "doneSub": "You’ll hear when the next summit is announced."
+  },
+  "after": {
+    "badge": "THAT WAS SUMMIT 2026",
+    "title": "TIDEWELL FLOW",
+    "sub": "Free in beta · general release in March",
+    "stats": [
+      [
+        "6,840",
+        "WATCHED"
+      ],
+      [
+        "21.4k",
+        "REACTIONS"
+      ],
+      [
+        "486",
+        "QUESTIONS"
+      ]
+    ],
+    "recapTitle": "THE RECAP"
+  },
+  "community": {
+    "badge": "TIDEWELL COMMUNITY · ALWAYS ON",
+    "title": "The summit is over.\nThe build isn’t.",
+    "sub": "Talk shop with other Flow users, ask IRIS anything from the approved facts, and get first access to the next Tidewell event.",
+    "next": {
+      "name": "Flow Build Night",
+      "kicker": "MEETUP",
+      "date": "WED 20 JAN",
+      "time": "18:30",
+      "place": "HARBOUR WORKS + ONLINE",
+      "blurb": "An evening of live builds with the Flow team, and the first look at the public roadmap.",
+      "days": 70
+    },
+    "pastLabel": "PAST EVENT",
+    "pastDate": "THU 3 DEC",
+    "pastTitle": "Tidewell Summit 2026",
+    "pastSub": "6,840 watched, 820 in the room. Flow is free in beta today.",
+    "replay": "REPLAY · 6:12:00"
+  },
+  "chat": {
+    "pool": [
+      {
+        "user": "ANA.DEV",
+        "text": "Front row for the keynote, coffee in hand",
+        "where": "venue",
+        "tag": "VENUE · ROW B",
+        "avatar": "voltford/media/crews/av-priya.jpg"
+      },
+      {
+        "user": "KWAME_OPS",
+        "text": "Watching from Accra, stream is sharp",
+        "where": "online",
+        "tag": "ONLINE · ACCRA",
+        "avatar": "voltford/media/crews/av-r1.jpg"
+      },
+      {
+        "user": "LUCA.B",
+        "text": "Hoping for monorepo support",
+        "where": "online",
+        "tag": "ONLINE · MILAN",
+        "avatar": "voltford/media/crews/av-declan.jpg"
+      },
+      {
+        "user": "SOFIA_R",
+        "text": "The demo pods are already busy",
+        "where": "venue",
+        "tag": "VENUE · MEZZANINE",
+        "avatar": "voltford/media/crews/av-hannah.jpg"
+      },
+      {
+        "user": "DEVON",
+        "text": "If AI review knows our lint rules I am sold",
+        "where": "online",
+        "tag": "ONLINE · LEEDS",
+        "avatar": "voltford/media/crews/av-marcus.jpg"
+      },
+      {
+        "user": "MEI.L",
+        "text": "Build track or Scale track, decisions",
+        "where": "venue",
+        "tag": "VENUE · ROW F",
+        "avatar": "voltford/media/crews/av-priya.jpg"
+      },
+      {
+        "user": "ARJUN_K",
+        "text": "Anyone else here for the pricing?",
+        "where": "online",
+        "tag": "ONLINE · PUNE",
+        "avatar": "voltford/media/crews/av-r2.jpg"
+      },
+      {
+        "user": "NOOR",
+        "text": "Previews per branch would save us hours",
+        "where": "venue",
+        "tag": "VENUE · ROW D",
+        "avatar": "voltford/media/crews/av-hannah.jpg"
+      },
+      {
+        "user": "BEN_T",
+        "text": "38% faster builds is a big claim",
+        "where": "online",
+        "tag": "ONLINE · DUBLIN",
+        "avatar": "voltford/media/crews/av-r3.jpg"
+      },
+      {
+        "user": "ZARA",
+        "text": "Signing our team up for the beta today",
+        "where": "venue",
+        "tag": "VENUE · ROW C",
+        "avatar": "voltford/media/crews/av-priya.jpg"
+      }
+    ],
+    "quickBefore": [
+      "Morning all ☕",
+      "Who else is at Harbour Works?",
+      "Watching from home"
+    ],
+    "quickLive": [
+      "Flow looks great",
+      "Pricing?",
+      "Monorepo support?",
+      "Hello from online"
+    ],
+    "quickAfter": [
+      "Great summit",
+      "Booked a demo",
+      "See you at Build Night"
+    ]
+  },
+  "qaSeed": [
+    {
+      "id": "q1",
+      "text": "Does Flow support monorepos?",
+      "who": "luca.b",
+      "where": "online",
+      "votes": 388
+    },
+    {
+      "id": "q2",
+      "text": "Can we run Flow in our own cloud account?",
+      "who": "devon",
+      "where": "online",
+      "votes": 341
+    },
+    {
+      "id": "q3",
+      "text": "When does the beta end?",
+      "who": "ana.dev",
+      "where": "venue",
+      "votes": 276
+    },
+    {
+      "id": "q4",
+      "text": "Will AI review train on our code?",
+      "who": "arjun_k",
+      "where": "online",
+      "votes": 249
+    },
+    {
+      "id": "q5",
+      "text": "Is there an on-prem option?",
+      "who": "noor",
+      "where": "venue",
+      "votes": 162
+    }
+  ],
+  "demo": {
+    "rsvp": {
+      "venue": 900,
+      "online": 7200
+    },
+    "audienceBefore": 1310,
+    "venueBySeg": [
+      410,
+      812,
+      790,
+      760,
+      742
+    ],
+    "onlineBySeg": [
+      1980,
+      5640,
+      4210,
+      3880,
+      3420
+    ],
+    "breakAud": [
+      690,
+      3100
+    ],
+    "afterAud": [
+      260,
+      1840
+    ],
+    "communityOnline": 286,
+    "checkinsBySeg": [
+      402,
+      796,
+      812,
+      812,
+      812
+    ],
+    "results": {
+      "reactions": 21420,
+      "questions": 486,
+      "answered": 31,
+      "conversions": 342,
+      "conversionLabel": "DEMO REQUESTS",
+      "engagement": [
+        {
+          "seg": "Registration",
+          "pct": 31
+        },
+        {
+          "seg": "Opening keynote",
+          "pct": 88
+        },
+        {
+          "seg": "Sessions",
+          "pct": 66
+        },
+        {
+          "seg": "Panel",
+          "pct": 58
+        },
+        {
+          "seg": "Q&A",
+          "pct": 73
+        }
+      ],
+      "conversionsBy": [
+        {
+          "name": "At the demo pods",
+          "n": 168
+        },
+        {
+          "name": "Video call",
+          "n": 121
+        },
+        {
+          "name": "With your team",
+          "n": 53
+        }
+      ],
+      "multiEvent": {
+        "total": 1420,
+        "rows": [
+          {
+            "name": "Summit 2025 + Summit 2026",
+            "n": 960
+          },
+          {
+            "name": "Summit + registered for Build Night",
+            "n": 380
+          },
+          {
+            "name": "All three",
+            "n": 80
+          }
+        ]
+      },
+      "follows": 1240,
+      "votes": 6110
+    }
+  }
+}

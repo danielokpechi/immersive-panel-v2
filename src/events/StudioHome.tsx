@@ -1,0 +1,545 @@
+// ═══════════════════════════════════════════════════════════════════════
+// StudioHome: the Connect Events organiser home. Lists every event (built-in
+// samples plus events saved in this browser) with Open, Edit, Duplicate and
+// Delete, and hosts the step-by-step builder (Brand → Event → Content → IRIS →
+// Preview → Publish). The builder edits one EventConfig; every field is
+// editable, with a live 390px fan preview that redraws as you type.
+// ═══════════════════════════════════════════════════════════════════════
+
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent, type ReactNode } from 'react';
+import { s } from '../voltford/admin/s';
+import {
+  listEvents, getEvent, saveEvent, saveDraft, deleteEvent, duplicateEvent, nextFreeId, isSample, newFromTemplate,
+  fanPath, studioPath, abs, asset, mix, TEMPLATES, TARGETS,
+  type EventConfig, type SegKind, type Target,
+} from './config';
+import { Ms, Card, Cap, Note, Demo, ADMIN_CSS } from './EventStudio';
+
+const STEPS = ['Brand', 'Event', 'Content', 'IRIS', 'Preview', 'Publish'] as const;
+const STATUS: Record<string, { label: string; bg: string; fg: string }> = {
+  live: { label: 'LIVE NOW', bg: '#C0473C', fg: '#F5F5F2' }, upcoming: { label: 'UPCOMING', bg: '#1B0B2D', fg: '#F5F5F2' },
+  past: { label: 'PAST', bg: '#E9E9E4', fg: '#513E66' }, draft: { label: 'DRAFT', bg: '#F3ECFE', fg: '#6A2BC4' },
+};
+const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
+
+export function StudioHome() {
+  const qs = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const [rows, setRows] = useState(() => listEvents());
+  const [draft, setDraft] = useState<EventConfig | null>(() => { const e = qs.get('edit'); return e ? getEvent(e) : null; });
+  const [isNew, setIsNew] = useState(false);
+  const [step, setStep] = useState(() => Math.max(0, STEPS.indexOf((qs.get('step') || 'Brand') as (typeof STEPS)[number])));
+  const [toast, setToast] = useState<string | null>(null);
+  const toastT = useRef<number | undefined>(undefined);
+  const say = (m: string) => { window.clearTimeout(toastT.current); setToast(m); toastT.current = window.setTimeout(() => setToast(null), 2200); };
+  const refresh = () => setRows(listEvents());
+  useEffect(() => { document.title = draft ? 'Event builder · Connect Events' : 'Events · Connect Events'; }, [draft]);
+
+  const openBuilder = (cfg: EventConfig, fresh = false) => { setDraft(clone(cfg)); setIsNew(fresh); setStep(0); history.replaceState(null, '', '?edit=' + cfg.id); };
+  const closeBuilder = () => { setDraft(null); refresh(); history.replaceState(null, '', window.location.pathname); };
+  const create = () => {
+    const id = nextFreeId(); if (!id) { say('All 40 demo event slots are used. Delete one first.'); return; }
+    openBuilder(newFromTemplate(id, TEMPLATES[0]), true);
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#F5F5F2', color: '#1B0B2D', fontFamily: 'Archivo,-apple-system,system-ui,sans-serif' }}>
+      <style>{ADMIN_CSS + BUILDER_CSS}</style>
+      <header style={s('display:flex;align-items:center;gap:16px;padding:14px 44px;background:#FFFFFF;border-bottom:1px solid rgba(27,11,45,.08);position:sticky;top:0;z-index:20')}>
+        <button onClick={() => (draft ? closeBuilder() : null)} style={s('display:flex;align-items:center;gap:10px')}><span style={s('width:30px;height:30px;border-radius:9px;background:#1B0B2D;display:flex;align-items:center;justify-content:center')}><Ms size={18} color="#F5F5F2">hub</Ms></span><span style={s("font:700 14px/1 'Archivo';letter-spacing:-.01em")}>Connect Events</span></button>
+        <span style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
+        <span style={s("font:500 13px/1 'Archivo';color:#513E66")}>{draft ? (isNew ? 'New event' : 'Edit · ' + draft.event.name) : 'All events'}</span>
+      </header>
+      {draft
+        ? <Builder {...{ draft, setDraft, step, setStep, isNew, say, close: closeBuilder, refresh }} />
+        : <EventsList {...{ rows, refresh, openBuilder, create, say }} />}
+      {toast && <div style={s('position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:13px;background:#1B0B2D;box-shadow:0 14px 34px -12px rgba(27,11,45,.7);animation:stRise .25s ease both')}><Ms color="#8B3DF5">check_circle</Ms><span style={s("font:600 13px/1 'Archivo';color:#F5F5F2")}>{toast}</span></div>}
+    </div>
+  );
+}
+
+// ════════════ EVENTS LIST ════════════
+function EventsList({ rows, refresh, openBuilder, create, say }: any) {
+  const order = ['live', 'upcoming', 'draft', 'past'];
+  const list = [...rows].sort((a: any, b: any) => order.indexOf(a.cfg.status) - order.indexOf(b.cfg.status));
+  const act = (label: string, icon: string, onClick: () => void, href?: string) => href
+    ? <a className="ah" href={href} style={s("display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:10px;font:600 12px/1 'Archivo';color:#1B0B2D;text-decoration:none;box-shadow:inset 0 0 0 1px rgba(27,11,45,.12)")}><Ms size={15} color="inherit">{icon}</Ms>{label}</a>
+    : <button className="ah" onClick={onClick} style={s("display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:10px;font:600 12px/1 'Archivo';color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.12)")}><Ms size={15} color="inherit">{icon}</Ms>{label}</button>;
+  return (
+    <div style={s('padding:34px 44px 52px;animation:stFade .3s ease both')}>
+      <div style={s('display:flex;align-items:flex-end;gap:20px')}>
+        <div style={s('flex:1')}><h1 style={s("display:flex;align-items:center;gap:12px;font:700 32px/1.05 'Archivo';letter-spacing:-.022em;margin:0")}>Events <Demo /></h1><p style={s("font:400 14px/1.5 'Archivo';color:#513E66;margin:9px 0 0")}>Every event is one config: brand, agenda, content and IRIS answers. Edit any of them, or build a new one from a template.</p></div>
+        <button className="ah-ink-btn" onClick={create} style={s("display:flex;align-items:center;gap:8px;padding:13px 18px;border-radius:12px;background:#1B0B2D;font:600 13px/1 'Archivo';color:#F5F5F2")}><Ms size={18} color="#F5F5F2">add</Ms>Create event</button>
+      </div>
+      <div style={s('display:flex;flex-direction:column;gap:14px;margin-top:24px')}>
+        {list.map(({ cfg, sample, edited }: { cfg: EventConfig; sample: boolean; edited: boolean }) => { const S = STATUS[cfg.status] || STATUS.draft; const live = cfg.status === 'live'; return (
+          <div key={cfg.id} style={{ ...s('display:flex;align-items:center;gap:20px;padding:18px 22px;border-radius:18px;background:#FFFFFF;box-shadow:0 1px 2px rgba(27,11,45,.05)'), borderLeft: live ? '4px solid #C0473C' : '4px solid transparent' }}>
+            <span style={{ ...s('width:104px;height:68px;flex:none;border-radius:10px;overflow:hidden;position:relative'), background: cfg.brand.dark }}>{cfg.event.heroImage.src && <img src={asset(cfg.event.heroImage.src)} alt="" style={s('width:100%;height:100%;object-fit:cover;mix-blend-mode:lighten')} />}<span style={{ ...s('position:absolute;left:6px;bottom:6px;width:10px;height:10px;border-radius:3px;box-shadow:0 0 0 1.5px #fff'), background: cfg.brand.accent }} /></span>
+            <span style={s('flex:1;min-width:0')}>
+              <span style={s('display:flex;align-items:center;gap:10px;flex-wrap:wrap')}><span style={s("font:700 17px/1.2 'Archivo'")}>{cfg.event.name}</span><span style={{ ...s("display:flex;align-items:center;gap:6px;font:600 9.5px/1 'Archivo';letter-spacing:.12em;padding:5px 7px;border-radius:6px"), background: S.bg, color: S.fg }}>{live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:stBlink 1.4s steps(1,end) infinite')} />}{S.label}</span>{sample && <span style={s("font:600 9.5px/1 'Archivo';letter-spacing:.1em;color:#826E99")}>{edited ? 'SAMPLE · EDITED HERE' : 'SAMPLE'}</span>}</span>
+              <span style={s("display:block;font:400 12.5px/1.4 'Archivo';color:#513E66;margin-top:5px")}>{cfg.brand.name} · {cfg.event.dateShort} · {cfg.event.venue}</span>
+              <span style={s('display:flex;gap:6px;margin-top:9px;flex-wrap:wrap')}>{[TEMPLATES.find((t) => t.id === cfg.event.template)?.name || '', cfg.event.format, cfg.segments.length + ' segments', '/events/' + cfg.id + '/'].map((c) => <span key={c} style={s("font:600 10.5px/1 'Archivo';color:#513E66;background:#F1F1EE;padding:6px 8px;border-radius:6px")}>{c}</span>)}</span>
+            </span>
+            <span style={s('display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:470px')}>
+              <a className="ah-ink-btn" href={studioPath(cfg.id)} style={s("display:flex;align-items:center;gap:6px;padding:9px 12px;border-radius:10px;font:600 12px/1 'Archivo';color:#F5F5F2;background:#1B0B2D;text-decoration:none")}><Ms size={15} color="#F5F5F2">tune</Ms>Studio</a>
+              {act('Fan view', 'smartphone', () => {}, fanPath(cfg.id))}
+              {act('Edit', 'edit', () => openBuilder(cfg))}
+              {act('Duplicate', 'content_copy', () => { const c = duplicateEvent(cfg); if (!c) { say('All demo event slots are used.'); return; } refresh(); say('Duplicated as “' + c.event.name + '”'); })}
+              {sample ? (edited && act('Reset', 'restart_alt', () => { if (window.confirm('Reset “' + cfg.event.name + '” to the built-in sample? Your edits in this browser are removed.')) { deleteEvent(cfg.id); refresh(); say('Reset to the sample'); } }))
+                : act('Delete', 'delete', () => { if (window.confirm('Delete “' + cfg.event.name + '” from this browser? This cannot be undone.')) { deleteEvent(cfg.id); refresh(); say('Event deleted'); } })}
+            </span>
+          </div>
+        ); })}
+      </div>
+      <div style={s("font:400 12px/1.5 'Archivo';color:#826E99;margin-top:18px")}>Events you create or edit are saved in this browser only. Samples ship with the prototype and can be reset at any time.</div>
+    </div>
+  );
+}
+
+// ════════════ BUILDER ════════════
+// Path-based edit helpers: every field reads and writes one path in the config.
+type Path = (string | number)[];
+const getAt = (o: any, p: Path) => p.reduce((a, k) => (a == null ? a : a[k]), o);
+const setAt = (o: any, p: Path, v: any): any => {
+  if (!p.length) return v;
+  const [k, ...rest] = p;
+  const copy = Array.isArray(o) ? o.slice() : { ...o };
+  copy[k as any] = setAt(o?.[k as any], rest, v);
+  return copy;
+};
+
+function Builder({ draft, setDraft, step, setStep, isNew, say, close, refresh }: any) {
+  const cfg = draft as EventConfig;
+  const upd = (p: Path, v: any) => setDraft((d: EventConfig) => setAt(d, p, v));
+  // Keep the live preview in step with the form (the fan view reloads drafts).
+  useEffect(() => { const t = window.setTimeout(() => saveDraft(cfg), 180); return () => window.clearTimeout(t); }, [cfg]);
+  const B = { cfg, upd, setDraft, say };
+  const publish = (status?: EventConfig['status']) => {
+    const out = status ? { ...cfg, status } : cfg;
+    if (!out.event.name.trim()) { say('Give the event a name first'); setStep(1); return; }
+    saveEvent(out); setDraft(out); refresh();
+    say(isSample(out.id) ? 'Saved. This browser now uses your edited sample.' : 'Saved to this browser');
+  };
+  return (
+    <div style={s('padding:26px 44px 52px;display:flex;gap:24px;align-items:flex-start;animation:stFade .3s ease both')}>
+      <div style={s('flex:1;min-width:0;display:flex;flex-direction:column;gap:18px')}>
+        <div style={s('display:flex;align-items:center;gap:14px')}>
+          <button className="ah" onClick={close} style={s("display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:11px;font:600 12.5px/1 'Archivo';color:#513E66")}><Ms size={16} color="inherit">arrow_back</Ms>All events</button>
+          <h1 style={s("font:700 26px/1.1 'Archivo';letter-spacing:-.02em;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{isNew ? 'Create event' : cfg.event.name}</h1>
+          <button className="ah" onClick={() => publish()} style={s("display:flex;align-items:center;gap:7px;padding:11px 14px;border-radius:12px;font:600 12.5px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={16} color="inherit">save</Ms>Save</button>
+        </div>
+        <div style={s('display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:5px;border-radius:14px;background:#EAEAE6')}>
+          {STEPS.map((n, i) => { const on = i === step, done = i < step; return (
+            <button key={n} data-step={n} onClick={() => setStep(i)} style={{ ...s("display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 6px;border-radius:10px;font:600 12.5px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66', boxShadow: on ? '0 1px 2px rgba(27,11,45,.08)' : 'none' }}>
+              <span style={{ ...s("width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font:700 10px/1 'Archivo'"), background: on ? '#1B0B2D' : done ? '#8B3DF5' : '#DCDCD7', color: on || done ? '#fff' : '#513E66' }}>{done ? <Ms size={13} color="#fff">check</Ms> : i + 1}</span>{n}
+            </button>
+          ); })}
+        </div>
+        {step === 0 && <BrandStep {...B} />}
+        {step === 1 && <EventStep {...B} />}
+        {step === 2 && <ContentStep {...B} />}
+        {step === 3 && <IrisStep {...B} />}
+        {step === 4 && <PreviewStep {...B} />}
+        {step === 5 && <PublishStep {...B} publish={publish} />}
+        <div style={s('display:flex;justify-content:space-between;gap:12px')}>
+          <button className="ah" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} style={{ ...s("display:flex;align-items:center;gap:7px;padding:13px 16px;border-radius:12px;font:600 13px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)"), opacity: step === 0 ? 0.4 : 1 }}><Ms size={16} color="inherit">arrow_back</Ms>Back</button>
+          {step < STEPS.length - 1
+            ? <button className="ah-ink-btn" data-next onClick={() => setStep(step + 1)} style={s("display:flex;align-items:center;gap:8px;padding:13px 18px;border-radius:12px;background:#1B0B2D;font:600 13px/1 'Archivo';color:#F5F5F2")}>Next · {STEPS[step + 1]}<Ms size={16} color="#F5F5F2">arrow_forward</Ms></button>
+            : <button className="ah-ink-btn" data-publish onClick={() => publish(cfg.status === 'draft' ? 'upcoming' : cfg.status)} style={s("display:flex;align-items:center;gap:8px;padding:13px 18px;border-radius:12px;background:#8B3DF5;font:600 13px/1 'Archivo';color:#fff")}><Ms size={16} color="#fff">rocket_launch</Ms>Publish</button>}
+        </div>
+      </div>
+      {step !== 4 && (
+        <aside style={s('width:330px;flex:none;position:sticky;top:86px')}>
+          <div style={s('display:flex;align-items:center;gap:8px;margin-bottom:10px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#C0473C;animation:stBlink 1.6s steps(1,end) infinite')} /><Cap>LIVE PREVIEW</Cap><Note>Updates as you type</Note></div>
+          <PhoneFrame cfg={cfg} width={330} height={640} />
+        </aside>
+      )}
+    </div>
+  );
+}
+
+function PhoneFrame({ cfg, width, height, state }: { cfg: EventConfig; width: number; height: number; state?: string }) {
+  return (
+    <div style={{ ...s('padding:9px;border-radius:30px;background:#0E0B12;box-shadow:0 20px 50px -24px rgba(27,11,45,.6)'), width }}>
+      <iframe key={cfg.id + (state || '')} title="Fan preview" src={fanPath(cfg.id) + '?preview=1&embed=1' + (state ? '&' + state : '')} style={{ width: '100%', height, border: 0, borderRadius: 22, display: 'block', background: cfg.brand.dark }} />
+    </div>
+  );
+}
+
+// ── field kit ──
+const fieldCss = "width:100%;padding:11px 13px;border-radius:11px;background:#F1F1EE;border:0;font:500 13px/1.35 'Archivo';color:#1B0B2D";
+function Lbl({ children, hint }: { children: ReactNode; hint?: string }) {
+  return <div style={s('display:flex;align-items:baseline;gap:8px;margin-bottom:7px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.12em;color:#826E99")}>{children}</span>{hint && <span style={s("font:400 11px/1.2 'Archivo';color:#A79BB6")}>{hint}</span>}</div>;
+}
+function Text({ B, p, label, hint, area, ph, type = 'text' }: { B: any; p: Path; label: string; hint?: string; area?: boolean; ph?: string; type?: string }) {
+  const v = getAt(B.cfg, p) ?? '';
+  const on = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => B.upd(p, type === 'number' ? Number(e.target.value) : e.target.value);
+  return (
+    <label style={s('display:block;min-width:0')} data-field={p.join('.')}>
+      <Lbl hint={hint}>{label}</Lbl>
+      {area ? <textarea value={v} onChange={on} rows={3} placeholder={ph} style={s(fieldCss + ';resize:vertical')} /> : <input type={type} value={v} onChange={on} placeholder={ph} style={s(fieldCss)} />}
+    </label>
+  );
+}
+function Pick({ B, p, label, opts }: { B: any; p: Path; label: string; opts: [string, string][] }) {
+  const v = getAt(B.cfg, p);
+  return (
+    <div data-field={p.join('.')}><Lbl>{label}</Lbl>
+      <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE;width:max-content;max-width:100%;flex-wrap:wrap')}>
+        {opts.map(([k, n]) => { const on = v === k; return <button key={k} onClick={() => B.upd(p, k)} style={{ ...s("padding:9px 13px;border-radius:9px;font:600 12px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66', boxShadow: on ? '0 1px 2px rgba(27,11,45,.08)' : 'none' }}>{n}</button>; })}
+      </div>
+    </div>
+  );
+}
+function Colour({ B, p, label, swatches }: { B: any; p: Path; label: string; swatches: string[] }) {
+  const v = getAt(B.cfg, p) || '#000000';
+  return (
+    <div data-field={p.join('.')}><Lbl>{label}</Lbl>
+      <div style={s('display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:#F1F1EE')}>
+        <input type="color" value={v} onChange={(e) => B.upd(p, e.target.value)} style={s('width:34px;height:34px;border:0;padding:0;background:none;border-radius:8px;cursor:pointer')} />
+        <input value={v} onChange={(e) => B.upd(p, e.target.value)} style={s("width:92px;padding:8px 9px;border-radius:8px;border:0;background:#FFFFFF;font:600 12.5px/1 'Archivo';font-variant-numeric:tabular-nums")} />
+        <div style={s('display:flex;gap:5px;margin-left:auto')}>{swatches.map((h) => <button key={h} aria-label={h} onClick={() => B.upd(p, h)} style={{ ...s('width:22px;height:22px;border-radius:7px'), background: h, boxShadow: v.toLowerCase() === h.toLowerCase() ? '0 0 0 2px #fff,0 0 0 4px #1B0B2D' : 'inset 0 0 0 1px rgba(0,0,0,.1)' }} />)}</div>
+      </div>
+    </div>
+  );
+}
+// An image: a URL/path, or a file read into a data URL (kept in this browser).
+function ImageField({ B, p, label, onSize, square }: { B: any; p: Path; label: string; onSize?: (w: number, h: number) => void; square?: boolean }) {
+  const v = getAt(B.cfg, p) || '';
+  const file = useRef<HTMLInputElement>(null);
+  const load = (src: string) => { if (!onSize) return; const im = new Image(); im.onload = () => onSize(im.naturalWidth || 1600, im.naturalHeight || 1000); im.src = asset(src); };
+  const pick = (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    if (f.size > 1.5e6) B.say('That image is large; this browser may not have room to save it');
+    const r = new FileReader(); r.onload = () => { B.upd(p, String(r.result)); load(String(r.result)); }; r.readAsDataURL(f);
+  };
+  return (
+    <div data-field={p.join('.')}><Lbl hint="a path, a URL or an upload">{label}</Lbl>
+      <div style={s('display:flex;align-items:center;gap:10px')}>
+        <span style={{ ...s('flex:none;border-radius:10px;overflow:hidden;background:#1B0B2D;display:flex;align-items:center;justify-content:center'), width: square ? 46 : 74, height: 46 }}>{v && <img src={asset(v)} alt="" style={s('width:100%;height:100%;object-fit:' + (square ? 'contain' : 'cover'))} />}</span>
+        <input value={v.startsWith('data:') ? '(uploaded image)' : v} onChange={(e) => { B.upd(p, e.target.value); load(e.target.value); }} style={s(fieldCss + ';flex:1')} />
+        <button className="ah" onClick={() => file.current?.click()} style={s("display:flex;align-items:center;gap:6px;padding:11px 12px;border-radius:11px;font:600 12px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14);white-space:nowrap")}><Ms size={15} color="inherit">upload</Ms>Upload</button>
+        <input ref={file} type="file" accept="image/*" onChange={pick} style={{ display: 'none' }} />
+      </div>
+    </div>
+  );
+}
+const Grid = ({ cols = 2, children }: { cols?: number; children: ReactNode }) => <div style={{ ...s('display:grid;gap:14px'), gridTemplateColumns: `repeat(${cols},minmax(0,1fr))` }}>{children}</div>;
+function Section({ title, sub, children, open: start = true, id }: { title: string; sub?: string; children: ReactNode; open?: boolean; id?: string }) {
+  const [open, setOpen] = useState(start);
+  return (
+    <Card style={{ padding: 0 }}>
+      <button data-section={id || title} onClick={() => setOpen(!open)} style={s('display:flex;align-items:center;gap:12px;width:100%;padding:18px 22px;text-align:left')}>
+        <span style={s('flex:1')}><span style={s("display:block;font:700 15px/1.2 'Archivo'")}>{title}</span>{sub && <span style={s("display:block;font:400 12px/1.4 'Archivo';color:#826E99;margin-top:4px")}>{sub}</span>}</span>
+        <Ms size={20} color="#513E66">{open ? 'expand_less' : 'expand_more'}</Ms>
+      </button>
+      {open && <div style={s('padding:0 22px 22px;display:flex;flex-direction:column;gap:14px')}>{children}</div>}
+    </Card>
+  );
+}
+// A list of objects, each edited with the same fields.
+type Col = { k: string; label: string; w?: number; area?: boolean; type?: string; opts?: [string, string][] };
+function List({ B, p, cols, blank, label, max }: { B: any; p: Path; cols: Col[]; blank: () => any; label?: string; max?: number }) {
+  const arr: any[] = getAt(B.cfg, p) || [];
+  const move = (i: number, d: number) => { const a = arr.slice(); const j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; B.upd(p, a); };
+  return (
+    <div data-list={p.join('.')}>
+      {label && <Lbl>{label}</Lbl>}
+      <div style={s('display:flex;flex-direction:column;gap:8px')}>
+        {arr.map((row, i) => (
+          <div key={i} style={s('display:flex;gap:8px;align-items:flex-start;padding:10px;border-radius:12px;background:#F7F7F4;box-shadow:inset 0 0 0 1px rgba(27,11,45,.06)')}>
+            <span style={s("width:20px;flex:none;font:700 11px/34px 'Archivo';color:#826E99;text-align:center")}>{i + 1}</span>
+            <div style={{ ...s('flex:1;min-width:0;display:grid;gap:8px'), gridTemplateColumns: cols.map((c) => (c.w ? c.w + 'fr' : '1fr')).join(' ') }}>
+              {cols.map((c) => (
+                <label key={c.k} style={s('display:block;min-width:0')}>
+                  <span style={s("display:block;font:600 9px/1 'Archivo';letter-spacing:.1em;color:#A79BB6;margin-bottom:5px")}>{c.label}</span>
+                  {c.opts
+                    ? <select value={row[c.k]} onChange={(e) => B.upd([...p, i, c.k], e.target.value)} style={s(fieldCss + ';padding:9px 10px')}>{c.opts.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>
+                    : c.area
+                      ? <textarea value={row[c.k] ?? ''} rows={2} onChange={(e) => B.upd([...p, i, c.k], e.target.value)} style={s(fieldCss + ';padding:9px 10px;resize:vertical')} />
+                      : <input type={c.type || 'text'} value={row[c.k] ?? ''} onChange={(e) => B.upd([...p, i, c.k], c.type === 'number' ? Number(e.target.value) : e.target.value)} style={s(fieldCss + ';padding:9px 10px')} />}
+                </label>
+              ))}
+            </div>
+            <div style={s('display:flex;flex-direction:column;gap:2px;padding-top:14px')}>
+              <button aria-label="Move up" onClick={() => move(i, -1)} style={s('display:flex;padding:3px;color:#826E99')}><Ms size={16} color="inherit">arrow_upward</Ms></button>
+              <button aria-label="Move down" onClick={() => move(i, 1)} style={s('display:flex;padding:3px;color:#826E99')}><Ms size={16} color="inherit">arrow_downward</Ms></button>
+              <button aria-label="Remove" onClick={() => B.upd(p, arr.filter((_, k) => k !== i))} style={s('display:flex;padding:3px;color:#C0473C')}><Ms size={16} color="inherit">close</Ms></button>
+            </div>
+          </div>
+        ))}
+        {(!max || arr.length < max) && <button className="ah" data-add={p.join('.')} onClick={() => B.upd(p, [...arr, blank()])} style={s("display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:12px;font:600 12px/1 'Archivo';color:#513E66;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14);border-style:dashed")}><Ms size={16} color="inherit">add</Ms>Add</button>}
+      </div>
+    </div>
+  );
+}
+// A comma-separated list of strings.
+function Csv({ B, p, label, hint }: { B: any; p: Path; label: string; hint?: string }) {
+  const arr: string[] = getAt(B.cfg, p) || [];
+  const [txt, setTxt] = useState(arr.join(', '));
+  useEffect(() => { setTxt(arr.join(', ')); }, [arr.join('|')]); // eslint-disable-line react-hooks/exhaustive-deps
+  return <label style={s('display:block')} data-field={p.join('.')}><Lbl hint={hint || 'comma-separated'}>{label}</Lbl><input value={txt} onChange={(e) => { setTxt(e.target.value); B.upd(p, e.target.value.split(',').map((x) => x.trim()).filter(Boolean)); }} style={s(fieldCss)} /></label>;
+}
+// Poll options as "Option: share" lines.
+function PollOpts({ B, p }: { B: any; p: Path }) {
+  const o: Record<string, number> = getAt(B.cfg, p) || {};
+  const [txt, setTxt] = useState(Object.entries(o).map(([k, v]) => `${k}: ${v}`).join('\n'));
+  const parse = (t: string) => Object.fromEntries(t.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => { const m = l.match(/^(.*?)(?::\s*(\d+))?$/); return [m?.[1].trim() || l, Number(m?.[2] || 0)]; }));
+  return <textarea value={txt} rows={4} onChange={(e) => { setTxt(e.target.value); B.upd(p, parse(e.target.value)); }} style={s(fieldCss + ';padding:9px 10px;resize:vertical')} />;
+}
+
+// ── 1 BRAND ──
+function BrandStep({ cfg, upd }: any) {
+  const B = { cfg, upd };
+  const c = cfg as EventConfig;
+  return (
+    <>
+      <Section title="Brand" sub="Name, logo and the words in the fan view’s top bar.">
+        <Grid><Text B={B} p={['brand', 'name']} label="BRAND NAME" ph="Aurora Motors" /><Text B={B} p={['brand', 'domain']} label="ADDRESS SHOWN AT THE FOOT" ph="connect.boltos.ai/brand" /></Grid>
+        <Grid><Text B={B} p={['brand', 'wordmark']} label="WORDMARK" hint="top bar" /><Text B={B} p={['brand', 'wordmarkShort']} label="SHORT WORDMARK" hint="small phones" /></Grid>
+        <ImageField B={B} p={['brand', 'logo']} label="LOGO" square />
+      </Section>
+      <Section title="Colours" sub="Two colours re-tint the fan view inside the Connect design system: an accent and a dark base.">
+        <Grid>
+          <Colour B={B} p={['brand', 'accent']} label="ACCENT" swatches={['#8B3DF5', '#17C3B2', '#FF5A36', '#2F7CF6', '#E8B400']} />
+          <Colour B={B} p={['brand', 'dark']} label="DARK BASE" swatches={['#160925', '#071A24', '#1A0F0A', '#0B1530', '#141414']} />
+        </Grid>
+        <div style={s('display:flex;gap:8px;align-items:center')}>
+          {[c.brand.dark, mix(c.brand.dark, '#ffffff', 0.12), c.brand.accent, mix(c.brand.accent, '#ffffff', 0.38), mix(mix(c.brand.dark, '#ffffff', 0.58), c.brand.accent, 0.12)].map((h, i) => <span key={i} title={h} style={{ ...s('flex:1;height:34px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)'), background: h }} />)}
+        </div>
+        <div style={s("font:400 11.5px/1.45 'Archivo';color:#826E99")}>Derived tokens: hero, panels, accent, light accent and muted text. Status colours (live red, break blue) stay the same for every brand.</div>
+      </Section>
+    </>
+  );
+}
+
+// ── 2 EVENT ──
+function EventStep({ cfg, upd, setDraft }: any) {
+  const B = { cfg, upd };
+  const c = cfg as EventConfig;
+  const applyTpl = (id: string) => {
+    const t = TEMPLATES.find((x) => x.id === id)!;
+    if (c.event.template === id) return;
+    if (!window.confirm(`Switch to the ${t.name} template? This replaces the segments with the template’s running order.`)) return;
+    setDraft((d: EventConfig) => {
+      const times = ['09:00', '09:30', '10:30', '13:00', '15:00', '16:00'];
+      const segs = t.segments.map(([name, kind], i) => ({ id: 's' + (i + 1), name, short: name.toUpperCase(), time: times[i] || '17:00', kind, blurb: '', note: '', heroTitle: name.toUpperCase(), heroSub: '' }));
+      return { ...d, event: { ...d.event, template: t.id, format: t.format }, segments: segs, demo: { ...d.demo, results: { ...d.demo.results, engagement: segs.map((g, i) => ({ seg: g.name, pct: [38, 64, 92, 71, 55, 44][i] || 40 })) } } };
+    });
+  };
+  const kinds: [string, string][] = [['doors', 'Doors / arrival'], ['talk', 'Talk'], ['reveal', 'Reveal moment'], ['qa', 'Q&A'], ['other', 'Other']];
+  return (
+    <>
+      <Section title="Template" sub="A starting point: it pre-fills the format and running order. Everything stays editable.">
+        <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px')}>
+          {TEMPLATES.map((t) => { const on = c.event.template === t.id; return (
+            <button key={t.id} data-template={t.id} onClick={() => applyTpl(t.id)} className="ah" style={{ ...s('display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:15px;border-radius:14px;text-align:left'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: on ? 'inset 0 0 0 2px #1B0B2D' : 'inset 0 0 0 1px rgba(27,11,45,.12)' }}>
+              <Ms size={22} color="#8B3DF5">{t.icon}</Ms><span style={s("font:700 14px/1.2 'Archivo'")}>{t.name}</span><span style={s("font:400 11.5px/1.45 'Archivo';color:#513E66")}>{t.blurb}</span>
+            </button>
+          ); })}
+        </div>
+      </Section>
+      <Section title="Event" sub="Name, format, date and place.">
+        <Text B={B} p={['event', 'name']} label="EVENT NAME" ph="e.g. Tidewell Summit 2026" />
+        <Grid cols={3}>
+          <Pick B={B} p={['event', 'format']} label="FORMAT" opts={[['In person', 'In person'], ['Online', 'Online'], ['Hybrid', 'Hybrid']]} />
+          <Text B={B} p={['event', 'date']} label="DATE" type="date" />
+          <Text B={B} p={['event', 'time']} label="START" type="time" />
+        </Grid>
+        <Grid cols={3}><Text B={B} p={['event', 'dayLabel']} label="DAY LABEL" hint="top bar" ph="TUE 20:00" /><Text B={B} p={['event', 'dateShort']} label="SHORT DATE" ph="TUE 10 NOV" /><Pick B={B} p={['status']} label="STATUS" opts={[['draft', 'Draft'], ['upcoming', 'Upcoming'], ['live', 'Live'], ['past', 'Past']]} /></Grid>
+        <Grid cols={2}><Text B={B} p={['event', 'venue']} label="VENUE" /><Text B={B} p={['event', 'city']} label="CITY" /></Grid>
+        <Grid cols={2}><Text B={B} p={['event', 'venueShort']} label="VENUE, SHORT" hint="caps" /><Text B={B} p={['event', 'venueWord']} label="VENUE WORD" hint="“IN THE HALL”" /></Grid>
+      </Section>
+      <Section title="Running order" sub="Segments the organiser moves through live. Mark one as the reveal moment and one as Q&A.">
+        <List B={B} p={['segments']} cols={[{ k: 'time', label: 'TIME', w: 0.7 }, { k: 'name', label: 'NAME', w: 1.4 }, { k: 'short', label: 'SHORT', w: 1 }, { k: 'kind', label: 'TYPE', w: 1.2, opts: kinds }, { k: 'blurb', label: 'AGENDA LINE', w: 2 }]} blank={() => ({ id: 's' + Date.now(), name: 'New segment', short: 'NEW', time: '12:00', kind: 'talk' as SegKind, blurb: '', note: '', heroTitle: 'NEW SEGMENT', heroSub: '' })} />
+        <List B={B} p={['segments']} label="WHAT FANS SEE IN EACH SEGMENT" cols={[{ k: 'heroTitle', label: 'HERO TITLE', w: 1.2 }, { k: 'heroSub', label: 'HERO LINE', w: 2 }, { k: 'heroSubOnline', label: 'LINE FOR ONLINE FANS', w: 2 }, { k: 'note', label: 'BANNER NOTE', w: 1.6 }]} blank={() => ({ id: 's' + Date.now(), name: 'New segment', short: 'NEW', time: '12:00', kind: 'talk', blurb: '', note: '', heroTitle: 'NEW', heroSub: '' })} />
+      </Section>
+      <Section title="Event page (Before)" sub="The countdown hero, registration and details." open={false} id="before">
+        <Grid cols={3}><Text B={B} p={['event', 'kicker']} label="KICKER" /><Text B={B} p={['event', 'kickerSub']} label="KICKER LINE" /><Text B={B} p={['event', 'title']} label="HERO TITLE" /></Grid>
+        <Grid cols={3}><Text B={B} p={['event', 'countdownLabel']} label="COUNTDOWN LABEL" ph="STARTS IN" /><Text B={B} p={['event', 'countdownSeconds']} label="COUNTDOWN SECONDS" type="number" /><Text B={B} p={['event', 'dateLine']} label="DATE LINE" /></Grid>
+        <Grid><Text B={B} p={['event', 'inviteTitle']} label="INVITE STRIP TITLE" /><Text B={B} p={['event', 'inviteSub']} label="INVITE STRIP LINE" /></Grid>
+        <Grid cols={3}><Text B={B} p={['event', 'venueOption']} label="IN-PERSON OPTION" /><Text B={B} p={['event', 'venueOptionSub']} label="IN-PERSON LINE" /><Text B={B} p={['event', 'onlineOptionSub']} label="ONLINE LINE" /></Grid>
+        <Grid><Text B={B} p={['event', 'registeredVenue']} label="REGISTERED · IN PERSON" /><Text B={B} p={['event', 'registeredOnline']} label="REGISTERED · ONLINE" /></Grid>
+        <List B={B} p={['event', 'details']} label="EVENT DETAILS" cols={[{ k: 'icon', label: 'ICON', w: 0.8 }, { k: 'k', label: 'LABEL', w: 0.8 }, { k: 'v', label: 'TEXT', w: 3 }]} blank={() => ({ icon: 'info', k: 'Note', v: '' })} />
+      </Section>
+    </>
+  );
+}
+
+// ── 3 CONTENT ──
+function ContentStep({ cfg, upd, say }: any) {
+  const B = { cfg, upd, say };
+  const c = cfg as EventConfig;
+  const [sel, setSel] = useState(0);
+  const box = useRef<HTMLDivElement>(null);
+  const place = (e: MouseEvent) => {
+    const r = box.current!.getBoundingClientRect();
+    const x = Math.round(((e.clientX - r.left) / r.width) * 1000) / 10, y = Math.round(((e.clientY - r.top) / r.height) * 1000) / 10;
+    if (!c.hotspots[sel]) { upd(['hotspots'], [...c.hotspots, { id: 'h' + Date.now(), x, y, name: 'New feature', desc: '', stat: '', unit: '' }]); setSel(c.hotspots.length); return; }
+    upd(['hotspots', sel, 'x'], x); upd(['hotspots', sel, 'y'], y);
+  };
+  const T = (t: Target) => TARGETS.find((x) => x.id === t)!.name;
+  return (
+    <>
+      <Section title="Hero image and features" sub="The image fans see covered before the reveal, then lit with tappable feature points. Click the image to place the selected point.">
+        <ImageField B={B} p={['event', 'heroImage', 'src']} label="HERO IMAGE" onSize={(w, h) => { upd(['event', 'heroImage', 'w'], w); upd(['event', 'heroImage', 'h'], h); }} />
+        <div style={s('display:flex;gap:16px;align-items:flex-start')}>
+          <div ref={box} onClick={place} data-hotspot-canvas style={{ ...s('position:relative;flex:1.3;border-radius:12px;overflow:hidden;cursor:crosshair'), aspectRatio: `${c.event.heroImage.w}/${c.event.heroImage.h}`, background: c.brand.dark }}>
+            {c.event.heroImage.src && <img src={asset(c.event.heroImage.src)} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none')} />}
+            {c.hotspots.map((h, i) => <span key={h.id} style={{ ...s("position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:700 10px/1 'Archivo';color:#fff;pointer-events:none"), left: h.x + '%', top: h.y + '%', background: i === sel ? c.brand.accent : 'rgba(0,0,0,.45)', boxShadow: i === sel ? '0 0 0 4px rgba(255,255,255,.35)' : 'none' }}>{i + 1}</span>)}
+          </div>
+          <div style={s('flex:1;display:flex;flex-direction:column;gap:6px')}>
+            <Lbl hint="pick, then click the image">POINT TO PLACE</Lbl>
+            {c.hotspots.map((h, i) => <button key={h.id} onClick={() => setSel(i)} style={{ ...s("display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:10px;text-align:left;font:600 12.5px/1.2 'Archivo'"), background: i === sel ? '#1B0B2D' : '#F1F1EE', color: i === sel ? '#F5F5F2' : '#1B0B2D' }}><span style={s("width:18px;font:700 11px/1 'Archivo'")}>{i + 1}</span><span style={s('flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>{h.name || 'Untitled'}</span><span style={s("font:500 10.5px/1 'Archivo';opacity:.7")}>{h.x}, {h.y}</span></button>)}
+            <button onClick={() => setSel(c.hotspots.length)} style={{ ...s("display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:10px;font:600 12px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)"), background: sel >= c.hotspots.length ? '#F3ECFE' : 'transparent' }}><Ms size={15} color="inherit">add</Ms>New point (click image)</button>
+          </div>
+        </div>
+        <List B={B} p={['hotspots']} label="FEATURES" cols={[{ k: 'name', label: 'NAME', w: 1.2 }, { k: 'stat', label: 'NUMBER', w: 0.7 }, { k: 'unit', label: 'UNIT', w: 1.2 }, { k: 'desc', label: 'DESCRIPTION', w: 2.4, area: true }]} blank={() => ({ id: 'h' + Date.now(), x: 50, y: 50, name: 'New feature', desc: '', stat: '', unit: '' })} />
+      </Section>
+      <Section title="Reveal moment" sub="The full-screen moment when the organiser fires Reveal.">
+        <Grid cols={3}><Text B={B} p={['reveal', 'kicker']} label="KICKER" /><Text B={B} p={['reveal', 'word1']} label="SMALL WORD" /><Text B={B} p={['reveal', 'word2']} label="BIG WORD" /></Grid>
+        <Grid><Text B={B} p={['reveal', 'line']} label="LINE UNDER" /><Text B={B} p={['reveal', 'thirdNote']} label="BANNER NOTE AFTER" /></Grid>
+        <Grid cols={3}><Text B={B} p={['reveal', 'title']} label="LIVE HERO TITLE" /><Text B={B} p={['reveal', 'sub']} label="LIVE HERO LINE" /><Text B={B} p={['reveal', 'triggerBlurb']} label="STUDIO BUTTON HINT" /></Grid>
+      </Section>
+      <Section title="Product line-up" sub="Shown after the reveal and in the recap." open={false} id="product">
+        <Grid><Text B={B} p={['product', 'sectionTitle']} label="SECTION TITLE" /><Text B={B} p={['product', 'priceLine']} label="PRICE LINE" /></Grid>
+        <List B={B} p={['product', 'variants']} cols={[{ k: 'name', label: 'NAME', w: 1.3 }, { k: 'spec', label: 'DETAIL', w: 2.4 }, { k: 'price', label: 'PRICE', w: 0.9 }]} blank={() => ({ name: 'New version', spec: '', price: '' })} />
+      </Section>
+      <Section title="Polls" sub="Pushed one at a time with the Poll trigger. Options as “Option: starting share”, one per line." open={false} id="polls">
+        {c.polls.map((pl, i) => (
+          <div key={pl.id} style={s('display:grid;grid-template-columns:2fr 1.4fr 0.6fr auto;gap:10px;align-items:start;padding:10px;border-radius:12px;background:#F7F7F4')}>
+            <Text B={B} p={['polls', i, 'q']} label={'POLL ' + (i + 1)} /><div><Lbl>OPTIONS</Lbl><PollOpts B={B} p={['polls', i, 'opts']} /></div><Text B={B} p={['polls', i, 'votes']} label="VOTES" type="number" />
+            <button aria-label="Remove poll" onClick={() => upd(['polls'], c.polls.filter((_, k) => k !== i))} style={s('display:flex;padding:24px 4px 0;color:#C0473C')}><Ms size={17} color="inherit">close</Ms></button>
+          </div>
+        ))}
+        <button className="ah" data-add="polls" onClick={() => upd(['polls'], [...c.polls, { id: 'p' + Date.now(), q: 'New question?', opts: { Yes: 50, No: 50 }, votes: 1000 }])} style={s("padding:11px;border-radius:12px;font:600 12px/1 'Archivo';color:#513E66;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}>Add poll</button>
+      </Section>
+      <Section title="Announcements and reminders" sub="Banners for the Announcement trigger, by audience, and the reminder presets in Invite." open={false} id="announce">
+        {(['all', 'venue', 'online'] as Target[]).map((t) => <List key={t} B={B} p={['announcements', t]} label={'ANNOUNCEMENTS · ' + T(t).toUpperCase()} cols={[{ k: 'kicker', label: 'KICKER', w: 1 }, { k: 'title', label: 'TITLE', w: 1.6 }, { k: 'sub', label: 'LINE', w: 2.4 }]} blank={() => ({ kicker: 'UPDATE', title: 'New announcement', sub: '' })} />)}
+        <List B={B} p={['reminders']} label="REMINDER PRESETS" cols={[{ k: 'title', label: 'TITLE', w: 1.4 }, { k: 'body', label: 'MESSAGE', w: 3, area: true }, { k: 'target', label: 'AUDIENCE', w: 1, opts: TARGETS.map((x) => [x.id, x.name]) }]} blank={() => ({ title: 'New reminder', body: '', target: 'all' })} />
+      </Section>
+      <Section title="Presenters and sponsors" open={false} id="people">
+        <List B={B} p={['presenters']} cols={[{ k: 'name', label: 'NAME', w: 1.2 }, { k: 'role', label: 'ROLE', w: 1.5 }, { k: 'slot', label: 'SLOT', w: 1 }, { k: 'photo', label: 'PHOTO (PATH OR URL)', w: 1.6 }]} blank={() => ({ name: 'New presenter', role: '', slot: '', photo: '' })} />
+        <Csv B={B} p={['sponsors']} label="SPONSORS" />
+      </Section>
+      <Section title="Call to action" sub="The After page’s main action, e.g. “Book a test drive” or “Book a demo”." open={false} id="cta">
+        <Grid cols={3}><Text B={B} p={['cta', 'title']} label="TITLE" /><Text B={B} p={['cta', 'button']} label="BUTTON" /><Text B={B} p={['cta', 'cardKicker']} label="CARD KICKER" /></Grid>
+        <Text B={B} p={['cta', 'sub']} label="CARD LINE" />
+        <Grid cols={3}><Text B={B} p={['cta', 'screenTitle']} label="SCREEN TITLE" /><Text B={B} p={['cta', 'screenMeta']} label="SCREEN TAG" /><Text B={B} p={['cta', 'submit']} label="SUBMIT BUTTON" /></Grid>
+        <Text B={B} p={['cta', 'intro']} label="SCREEN INTRO" />
+        <Grid><Text B={B} p={['cta', 'optionsLabel']} label="OPTIONS LABEL" ph="SHOWROOM" /><Text B={B} p={['cta', 'slotsLabel']} label="TIMES LABEL" ph="TIME" /></Grid>
+        <List B={B} p={['cta', 'options']} label="OPTIONS" cols={[{ k: 'name', label: 'NAME', w: 1.4 }, { k: 'sub', label: 'LINE', w: 2 }]} blank={() => ({ id: 'o' + Date.now(), name: 'New option', sub: '' })} />
+        <Csv B={B} p={['cta', 'slots']} label="TIMES" />
+        <Grid><Text B={B} p={['cta', 'doneTitle']} label="CONFIRMED TITLE" /><Text B={B} p={['cta', 'doneSub']} label="CONFIRMED LINE" /></Grid>
+        <Grid cols={2}><Text B={B} p={['follow', 'title']} label="FOLLOW TITLE" /><Text B={B} p={['follow', 'sub']} label="FOLLOW LINE" /></Grid>
+        <Grid cols={2}><Text B={B} p={['follow', 'doneTitle']} label="FOLLOWING TITLE" /><Text B={B} p={['follow', 'doneSub']} label="FOLLOWING LINE" /></Grid>
+      </Section>
+      <Section title="Break, After and Always-on" open={false} id="later">
+        <Grid cols={3}><Text B={B} p={['breakContent', 'minutes']} label="BREAK MINUTES" type="number" /><Text B={B} p={['breakContent', 'sub']} label="BREAK LINE" /><Text B={B} p={['breakContent', 'poll', 'q']} label="BREAK POLL" /></Grid>
+        <div><Lbl>BREAK POLL OPTIONS</Lbl><PollOpts B={B} p={['breakContent', 'poll', 'opts']} /></div>
+        <List B={B} p={['breakContent', 'reads']} label="BREAK NOTES" cols={[{ k: 'kicker', label: 'KICKER', w: 1 }, { k: 'title', label: 'TITLE', w: 1.6 }, { k: 'body', label: 'TEXT', w: 2.6, area: true }]} blank={() => ({ kicker: 'NOTE', title: 'New note', body: '' })} />
+        <Grid cols={3}><Text B={B} p={['after', 'badge']} label="AFTER BADGE" /><Text B={B} p={['after', 'title']} label="AFTER TITLE" /><Text B={B} p={['after', 'recapTitle']} label="RECAP HEADING" /></Grid>
+        <Text B={B} p={['after', 'sub']} label="AFTER LINE" />
+        <Grid cols={2}><Text B={B} p={['community', 'badge']} label="COMMUNITY BADGE" /><Text B={B} p={['community', 'title']} label="COMMUNITY TITLE" hint="new line = break" area /></Grid>
+        <Text B={B} p={['community', 'sub']} label="COMMUNITY LINE" />
+        <Grid cols={3}><Text B={B} p={['community', 'next', 'name']} label="NEXT EVENT" /><Text B={B} p={['community', 'next', 'date']} label="NEXT DATE" /><Text B={B} p={['community', 'next', 'days']} label="DAYS AWAY" type="number" /></Grid>
+        <Grid cols={3}><Text B={B} p={['community', 'next', 'kicker']} label="NEXT KICKER" /><Text B={B} p={['community', 'next', 'time']} label="NEXT TIME" /><Text B={B} p={['community', 'next', 'place']} label="NEXT PLACE" /></Grid>
+        <Text B={B} p={['community', 'next', 'blurb']} label="NEXT EVENT LINE" />
+        <Grid cols={3}><Text B={B} p={['community', 'pastTitle']} label="PAST EVENT TITLE" /><Text B={B} p={['community', 'pastDate']} label="PAST DATE" /><Text B={B} p={['community', 'replay']} label="REPLAY LABEL" /></Grid>
+        <Text B={B} p={['community', 'pastSub']} label="PAST EVENT LINE" />
+      </Section>
+      <Section title="Chat and questions" sub="The scripted chat and the seeded Q&A board for the demo." open={false} id="chat">
+        <List B={B} p={['chat', 'pool']} cols={[{ k: 'user', label: 'NAME', w: 1 }, { k: 'text', label: 'MESSAGE', w: 2.6 }, { k: 'where', label: 'WHERE', w: 0.9, opts: [['venue', 'In venue'], ['online', 'Online']] }, { k: 'tag', label: 'TAG', w: 1.2 }, { k: 'avatar', label: 'PHOTO', w: 1.2 }]} blank={() => ({ user: 'GUEST', text: '', where: 'online', tag: 'ONLINE' })} />
+        <Grid cols={3}><Csv B={B} p={['chat', 'quickBefore']} label="QUICK REPLIES · BEFORE" /><Csv B={B} p={['chat', 'quickLive']} label="QUICK REPLIES · LIVE" /><Csv B={B} p={['chat', 'quickAfter']} label="QUICK REPLIES · AFTER" /></Grid>
+        <List B={B} p={['qaSeed']} label="SEEDED QUESTIONS" cols={[{ k: 'text', label: 'QUESTION', w: 3 }, { k: 'who', label: 'FROM', w: 1 }, { k: 'where', label: 'WHERE', w: 0.9, opts: [['venue', 'In venue'], ['online', 'Online']] }, { k: 'votes', label: 'VOTES', w: 0.6, type: 'number' }]} blank={() => ({ id: 'q' + Date.now(), text: '', who: 'guest', where: 'online', votes: 10 })} />
+      </Section>
+    </>
+  );
+}
+
+// ── 4 IRIS ──
+function IrisStep({ cfg, upd }: any) {
+  const B = { cfg, upd };
+  return (
+    <>
+      <Section title="IRIS" sub="IRIS answers only from these approved answers and the feature facts. Anything else gets the fallback and is sent to the Q&A.">
+        <Text B={B} p={['iris', 'intro']} label="OPENING LINE" area />
+        <Grid><Text B={B} p={['iris', 'hidden']} label="BEFORE THE REVEAL" hint="for spec questions" area /><Text B={B} p={['iris', 'fallback']} label="FALLBACK" hint="anything off the list" area /></Grid>
+      </Section>
+      <Section title="Before the reveal" sub="Safe to answer any time.">
+        <List B={B} p={['iris', 'pre']} cols={[{ k: 'q', label: 'QUESTION', w: 1.5 }, { k: 'a', label: 'APPROVED ANSWER', w: 3, area: true }, { k: 'stat', label: 'NUMBER', w: 0.7 }, { k: 'label', label: 'NUMBER LABEL', w: 1.1 }]} blank={() => ({ q: 'New question?', a: '', stat: '', label: '' })} />
+      </Section>
+      <Section title="After the reveal" sub="Held back until the reveal. Keywords (separated by |) match typed questions, e.g. price|cost|much.">
+        <List B={B} p={['iris', 'live']} cols={[{ k: 'q', label: 'QUESTION', w: 1.4 }, { k: 'a', label: 'APPROVED ANSWER', w: 2.8, area: true }, { k: 'stat', label: 'NUMBER', w: 0.7 }, { k: 'label', label: 'NUMBER LABEL', w: 1 }, { k: 'keys', label: 'KEYWORDS', w: 1.1 }]} blank={() => ({ q: 'New question?', a: '', stat: '', label: '', keys: '' })} />
+      </Section>
+    </>
+  );
+}
+
+// ── 5 PREVIEW ──
+function PreviewStep({ cfg }: any) {
+  const c = cfg as EventConfig;
+  return (
+    <Card>
+      <div style={s('display:flex;align-items:center;gap:12px')}><Cap>PREVIEW AT 390PX</Cap><Note>Use the state bar above the phone to see every state</Note></div>
+      <div style={s('display:flex;gap:24px;margin-top:18px;align-items:flex-start')}>
+        <div style={s('padding:9px;border-radius:30px;background:#0E0B12;width:408px;flex:none')}>
+          <iframe title="Fan preview" src={fanPath(c.id) + '?preview=1'} style={{ width: 390, height: 760, border: 0, borderRadius: 22, display: 'block', background: c.brand.dark }} />
+        </div>
+        <div style={s('flex:1;display:flex;flex-direction:column;gap:12px')}>
+          <div style={s("font:700 18px/1.2 'Archivo'")}>{c.event.name}</div>
+          <div style={s("font:400 13px/1.5 'Archivo';color:#513E66")}>This is the draft you are editing, not yet saved. The bar above the phone switches Before, Live, Break, After and Always-on, and fires the triggers.</div>
+          {[['Brand', c.brand.name], ['Template', TEMPLATES.find((t) => t.id === c.event.template)?.name], ['Format', c.event.format], ['Segments', c.segments.map((g) => g.name).join(' → ')], ['Features', c.hotspots.length + ' points'], ['Polls', String(c.polls.length)], ['IRIS answers', String(c.iris.pre.length + c.iris.live.length)], ['Call to action', c.cta.title]].map(([k, v]) => (
+            <div key={k} style={s('display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(27,11,45,.08)')}><span style={s("width:120px;flex:none;font:600 12px/1.4 'Archivo';color:#826E99")}>{k}</span><span style={s("flex:1;font:500 12.5px/1.4 'Archivo'")}>{v}</span></div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ── 6 PUBLISH ──
+function PublishStep({ cfg, setDraft, say, publish }: any) {
+  const c = cfg as EventConfig;
+  const [json, setJson] = useState(() => JSON.stringify(c, null, 2));
+  const [err, setErr] = useState('');
+  useEffect(() => { setJson(JSON.stringify(c, null, 2)); }, [c]);
+  const fan = abs(fanPath(c.id)), studio = abs(studioPath(c.id));
+  const copy = (u: string) => { navigator.clipboard?.writeText(u).catch(() => {}); say('Link copied'); };
+  const download = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(c, null, 2)], { type: 'application/json' })); a.download = c.id + '.json'; a.click(); say('Config downloaded'); };
+  const apply = () => { try { const v = JSON.parse(json); if (v.id !== c.id) throw new Error('Keep the same id (' + c.id + ')'); setDraft(v); setErr(''); say('Config applied'); } catch (e: any) { setErr(e.message || 'Not valid JSON'); } };
+  const sizeKb = useMemo(() => Math.round(JSON.stringify(c).length / 1024), [c]);
+  return (
+    <>
+      <Section title="Publish" sub="Save this event in this browser and share its links.">
+        <Grid cols={2}>
+          {[['FAN LINK', fan], ['STUDIO LINK', studio]].map(([k, u]) => (
+            <div key={k}><Lbl>{k}</Lbl><div style={s('display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px;background:#F1F1EE')}><Ms size={15} color="#826E99">link</Ms><span data-link={k} style={s("flex:1;min-width:0;font:500 12px/1.2 'Archivo';overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{u}</span><button onClick={() => copy(u)} style={s("font:600 11.5px/1 'Archivo';color:#8B3DF5")}>Copy</button></div></div>
+          ))}
+        </Grid>
+        <div style={s('display:flex;gap:10px;flex-wrap:wrap')}>
+          <button className="ah-ink-btn" onClick={() => publish(c.status === 'draft' ? 'upcoming' : c.status)} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#8B3DF5;font:600 12.5px/1 'Archivo';color:#fff")}><Ms size={16} color="#fff">rocket_launch</Ms>Save and publish</button>
+          <button className="ah" onClick={() => publish('draft')} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={16} color="inherit">save</Ms>Save as draft</button>
+          <a className="ah" href={fanPath(c.id)} target="_blank" rel="noopener" style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#1B0B2D;text-decoration:none;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={16} color="inherit">smartphone</Ms>Open fan view</a>
+          <a className="ah" href={studioPath(c.id)} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#1B0B2D;text-decoration:none;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={16} color="inherit">tune</Ms>Open Studio</a>
+        </div>
+        <div style={s("font:400 11.5px/1.5 'Archivo';color:#826E99")}>Saved in this browser only ({sizeKb} KB). To share an event beyond this browser, export the config and add it to the prototype’s samples.</div>
+      </Section>
+      <Section title="Demo numbers" sub="The made-up audience, RSVP and results figures. Every field is in the config below." open={false} id="demo">
+        <div style={s("font:400 12px/1.5 'Archivo';color:#513E66")}>RSVPs {c.demo.rsvp.venue.toLocaleString()} in person, {c.demo.rsvp.online.toLocaleString()} online · peak {Math.max(...c.demo.venueBySeg, 0).toLocaleString()} in venue, {Math.max(...c.demo.onlineBySeg, 0).toLocaleString()} online · {c.demo.results.conversions} {c.demo.results.conversionLabel.toLowerCase()}.</div>
+      </Section>
+      <Section title="Advanced: full config" sub="Every field of the event as JSON. Edit and apply, or export it." open={false} id="json">
+        <textarea value={json} onChange={(e) => setJson(e.target.value)} rows={18} spellCheck={false} style={s("width:100%;padding:12px;border-radius:12px;background:#0E0B12;color:#E8E3EF;border:0;font:500 11.5px/1.5 ui-monospace,Menlo,monospace;resize:vertical")} />
+        {err && <div style={s("font:600 12px/1.4 'Archivo';color:#C0473C")}>{err}</div>}
+        <div style={s('display:flex;gap:10px')}>
+          <button className="ah-ink-btn" onClick={apply} style={s("padding:11px 15px;border-radius:11px;background:#1B0B2D;font:600 12.5px/1 'Archivo';color:#F5F5F2")}>Apply JSON</button>
+          <button className="ah" data-export onClick={download} style={s("display:flex;align-items:center;gap:7px;padding:11px 15px;border-radius:11px;font:600 12.5px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={15} color="inherit">download</Ms>Export config</button>
+        </div>
+      </Section>
+    </>
+  );
+}
+
+const BUILDER_CSS = `
+input:focus,textarea:focus,select:focus{outline:2px solid #8B3DF5;outline-offset:1px}
+select{appearance:auto}
+`;
