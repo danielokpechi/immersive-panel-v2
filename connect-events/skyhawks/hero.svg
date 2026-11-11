@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05040B"/><stop offset=".6" stop-color="#0E0B22"/><stop offset="1" stop-color="#040309"/></linearGradient>
+    <radialGradient id="spot" cx=".5" cy=".35" r=".55"><stop offset="0" stop-color="#3DD6F5" stop-opacity=".35"/><stop offset="1" stop-color="#3DD6F5" stop-opacity="0"/></radialGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A23"/><stop offset="1" stop-color="#2A160A"/></linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".22"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+    <radialGradient id="ball" cx=".38" cy=".32" r=".7"><stop offset="0" stop-color="#FFB15C"/><stop offset=".7" stop-color="#E06A12"/><stop offset="1" stop-color="#8A3A05"/></radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <rect width="1600" height="1000" fill="url(#spot)"/>
+  <path d="M520 0 L640 0 L900 640 L380 640 Z" fill="url(#beam)"/>
+  <path d="M960 0 L1080 0 L1260 640 L720 640 Z" fill="url(#beam)" opacity=".7"/>
+  <!-- crowd tiers -->
+  <path d="M0 420 L1600 420 L1600 560 L0 560 Z" fill="#110E26"/>
+  <g fill="#3DD6F5" opacity=".18"><rect x="0" y="440" width="1600" height="2"/><rect x="0" y="470" width="1600" height="2"/><rect x="0" y="500" width="1600" height="2"/><rect x="0" y="530" width="1600" height="2"/></g>
+  <g fill="#F2F2F0" opacity=".22">
+    <circle cx="80" cy="452" r="5"/><circle cx="160" cy="482" r="5"/><circle cx="250" cy="452" r="5"/><circle cx="330" cy="512" r="5"/><circle cx="420" cy="482" r="5"/><circle cx="510" cy="452" r="5"/><circle cx="600" cy="512" r="5"/><circle cx="690" cy="482" r="5"/><circle cx="780" cy="452" r="5"/><circle cx="870" cy="512" r="5"/><circle cx="960" cy="482" r="5"/><circle cx="1050" cy="452" r="5"/><circle cx="1140" cy="512" r="5"/><circle cx="1230" cy="482" r="5"/><circle cx="1320" cy="452" r="5"/><circle cx="1410" cy="512" r="5"/><circle cx="1500" cy="482" r="5"/><circle cx="1570" cy="452" r="5"/>
+  </g>
+  <!-- court in perspective -->
+  <path d="M120 1000 L420 560 L1180 560 L1480 1000 Z" fill="url(#floor)"/>
+  <g fill="none" stroke="#F2E6D6" stroke-width="5" opacity=".75">
+    <path d="M120 1000 L420 560 L1180 560 L1480 1000"/>
+    <path d="M800 560 L800 1000" opacity=".5"/>
+    <ellipse cx="800" cy="760" rx="150" ry="52"/>
+    <path d="M560 560 L520 700 L1080 700 L1040 560"/>
+    <path d="M600 700 A200 70 0 0 0 1000 700" />
+  </g>
+  <path d="M560 560 L520 700 L1080 700 L1040 560 Z" fill="#3DD6F5" opacity=".18"/>
+  <ellipse cx="800" cy="760" rx="60" ry="21" fill="#3DD6F5" opacity=".35"/>
+  <!-- backboard + hoop -->
+  <rect x="790" y="384" width="20" height="66" fill="#1E1B34"/>
+  <rect x="690" y="230" width="220" height="140" rx="6" fill="#F2F2F0" opacity=".12" stroke="#F2F2F0" stroke-opacity=".7" stroke-width="5"/>
+  <rect x="760" y="290" width="80" height="56" fill="none" stroke="#F2F2F0" stroke-opacity=".7" stroke-width="4"/>
+  <ellipse cx="800" cy="372" rx="58" ry="12" fill="none" stroke="#FF6A1A" stroke-width="7"/>
+  <path d="M746 376 L770 440 L830 440 L854 376" fill="none" stroke="#F2F2F0" stroke-opacity=".75" stroke-width="3"/>
+  <path d="M762 378 L790 440 M800 384 L800 440 M838 378 L810 440" stroke="#F2F2F0" stroke-opacity=".6" stroke-width="2.5"/>
+  <!-- ball mid-air with trail -->
+  <path d="M420 640 Q560 260 760 330" fill="none" stroke="#FFB15C" stroke-width="5" stroke-dasharray="4 16" opacity=".55"/>
+  <circle cx="1060" cy="520" r="62" fill="url(#ball)"/>
+  <g fill="none" stroke="#3A1A04" stroke-width="5"><path d="M998 520 L1122 520"/><path d="M1060 458 L1060 582"/><path d="M1016 476 Q1060 520 1016 564"/><path d="M1104 476 Q1060 520 1104 564"/></g>
+  <ellipse cx="1060" cy="910" rx="80" ry="14" fill="#000" opacity=".5"/>
+</svg>

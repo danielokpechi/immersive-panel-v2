@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05070D"/><stop offset=".55" stop-color="#0B1224"/><stop offset="1" stop-color="#05060A"/></linearGradient>
+    <radialGradient id="flood" cx=".5" cy=".18" r=".7"><stop offset="0" stop-color="#FFB547" stop-opacity=".32"/><stop offset="1" stop-color="#FFB547" stop-opacity="0"/></radialGradient>
+    <linearGradient id="track" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161A22"/><stop offset="1" stop-color="#07080B"/></linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F1EA"/><stop offset=".55" stop-color="#C9C6BF"/><stop offset="1" stop-color="#6F6D69"/></linearGradient>
+    <linearGradient id="stripe" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FFB547"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2B3550"/><stop offset="1" stop-color="#0B0F1A"/></linearGradient>
+    <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFB547" stop-opacity="0"/><stop offset="1" stop-color="#FFB547" stop-opacity=".7"/></linearGradient>
+    <radialGradient id="tyre" cx=".5" cy=".5" r=".5"><stop offset=".55" stop-color="#2A2D33"/><stop offset=".62" stop-color="#0A0B0D"/><stop offset="1" stop-color="#050506"/></radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <rect width="1600" height="1000" fill="url(#flood)"/>
+  <!-- floodlight towers -->
+  <g fill="#FFD9A0">
+    <g opacity=".9"><rect x="196" y="120" width="6" height="440" fill="#1A1F2B"/><rect x="170" y="110" width="58" height="22" rx="3"/></g>
+    <g opacity=".9"><rect x="1398" y="140" width="6" height="420" fill="#1A1F2B"/><rect x="1372" y="130" width="58" height="22" rx="3"/></g>
+  </g>
+  <ellipse cx="199" cy="121" rx="120" ry="40" fill="#FFB547" opacity=".18"/>
+  <ellipse cx="1401" cy="141" rx="120" ry="40" fill="#FFB547" opacity=".18"/>
+  <!-- grandstand -->
+  <path d="M0 560 L520 470 L1080 470 L1600 560 L1600 600 L0 600 Z" fill="#0E1320"/>
+  <g fill="#FFB547" opacity=".35">
+    <rect x="560" y="490" width="480" height="3"/><rect x="540" y="505" width="520" height="2"/><rect x="520" y="518" width="560" height="2"/>
+  </g>
+  <!-- track -->
+  <path d="M0 600 L1600 600 L1600 1000 L0 1000 Z" fill="url(#track)"/>
+  <g fill="#E8E4DA" opacity=".55"><rect x="0" y="612" width="1600" height="4"/></g>
+  <g>
+    <rect x="0" y="616" width="1600" height="14" fill="#C8102E" opacity=".75"/>
+    <g fill="#F4F1EA" opacity=".85"><rect x="0" y="616" width="40" height="14"/><rect x="80" y="616" width="40" height="14"/><rect x="160" y="616" width="40" height="14"/><rect x="240" y="616" width="40" height="14"/><rect x="320" y="616" width="40" height="14"/><rect x="400" y="616" width="40" height="14"/><rect x="480" y="616" width="40" height="14"/><rect x="560" y="616" width="40" height="14"/><rect x="640" y="616" width="40" height="14"/><rect x="720" y="616" width="40" height="14"/><rect x="800" y="616" width="40" height="14"/><rect x="880" y="616" width="40" height="14"/><rect x="960" y="616" width="40" height="14"/><rect x="1040" y="616" width="40" height="14"/><rect x="1120" y="616" width="40" height="14"/><rect x="1200" y="616" width="40" height="14"/><rect x="1280" y="616" width="40" height="14"/><rect x="1360" y="616" width="40" height="14"/><rect x="1440" y="616" width="40" height="14"/><rect x="1520" y="616" width="40" height="14"/></g>
+  </g>
+  <!-- motion streaks -->
+  <g opacity=".8"><rect x="40" y="690" width="300" height="3" fill="url(#streak)"/><rect x="0" y="742" width="360" height="2" fill="url(#streak)"/><rect x="90" y="800" width="260" height="3" fill="url(#streak)"/><rect x="20" y="640" width="220" height="2" fill="url(#streak)"/></g>
+  <!-- car shadow -->
+  <ellipse cx="820" cy="842" rx="470" ry="26" fill="#000" opacity=".7"/>
+  <!-- car body: low LMP-style prototype, side on -->
+  <path d="M380 800 C380 760 420 742 470 736 L610 722 C660 690 720 650 800 640 L930 636 C990 638 1030 652 1060 676 L1180 700 C1240 712 1268 740 1272 776 L1276 818 L380 818 Z" fill="url(#body)"/>
+  <path d="M720 646 C760 610 820 596 880 596 L940 600 C980 606 1010 626 1030 652 L940 640 L800 642 Z" fill="url(#glass)"/>
+  <path d="M1150 660 L1190 600 L1260 600 L1262 616 L1206 620 L1180 676 Z" fill="#E7E3DA"/>
+  <rect x="1188" y="594" width="80" height="10" rx="2" fill="#1A1C22"/>
+  <path d="M390 790 L1270 760 L1272 778 L392 806 Z" fill="url(#stripe)"/>
+  <path d="M470 736 L610 722 L640 740 L480 752 Z" fill="#1A1C22" opacity=".55"/>
+  <text x="770" y="740" font-family="Arial Black,Arial,sans-serif" font-size="64" font-weight="900" fill="#14161C">07</text>
+  <rect x="890" y="708" width="120" height="26" rx="3" fill="#14161C"/><text x="902" y="728" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#FFB547" letter-spacing="2">KINRARA</text>
+  <!-- headlight + tail -->
+  <path d="M390 772 L452 760 L456 772 L392 784 Z" fill="#FFF4D6"/>
+  <ellipse cx="420" cy="772" rx="120" ry="26" fill="#FFE7A8" opacity=".18"/>
+  <rect x="1262" y="742" width="12" height="30" rx="3" fill="#FF2A3A"/>
+  <!-- wheels -->
+  <circle cx="520" cy="806" r="66" fill="url(#tyre)"/><circle cx="520" cy="806" r="36" fill="#9CA0A8"/><circle cx="520" cy="806" r="12" fill="#2A2D33"/>
+  <circle cx="1120" cy="806" r="68" fill="url(#tyre)"/><circle cx="1120" cy="806" r="37" fill="#9CA0A8"/><circle cx="1120" cy="806" r="12" fill="#2A2D33"/>
+  <g stroke="#FF5A1F" stroke-width="3" opacity=".9"><circle cx="520" cy="806" r="30" fill="none"/><circle cx="1120" cy="806" r="31" fill="none"/></g>
+</svg>
