@@ -1036,7 +1036,7 @@ function PollCard({ p, tag, tagBg, st, vote, cfg }: any) {
         {Object.keys(p.opts).map((k) => { const v = p.opts[k] + (mine === k ? 1 : 0); const pct = Math.round(v / Math.max(total, 1) * 100); const on = mine === k; return (
           <button key={k} onClick={() => vote(p.id, k)} className="fw" style={s('display:block;width:100%;text-align:left;position:relative;padding:12px 13px;background:var(--ground);overflow:hidden')}>
             <span style={{ ...s('position:absolute;left:0;top:0;bottom:0;transition:width .6s cubic-bezier(.2,.8,.2,1)'), width: mine ? pct + '%' : '0%', background: on ? ACC : 'var(--sand2)' }} />
-            <span style={s('position:relative;display:flex;align-items:center;gap:9px')}><span style={{ ...s("flex:1;font:700 13.5px/1.2 'Archivo'"), color: on ? '#fff' : 'var(--ink)' }}>{k}</span><span style={{ ...s("font:800 12px/1 'Archivo';font-variant-numeric:tabular-nums"), color: on ? '#fff' : 'var(--ink)' }}>{mine ? pct + '%' : ''}</span>{on && <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#fff;background:var(--panel);padding:4px 5px")}>YOURS</span>}</span>
+            <span style={s('position:relative;display:flex;align-items:center;gap:9px')}><span style={{ ...s("flex:1;font:700 13.5px/1.2 'Archivo'"), color: on ? '#fff' : 'var(--ink)' }}>{k}</span><span style={{ ...s("font:800 12px/1 'Archivo';font-variant-numeric:tabular-nums"), color: on && pct > 88 ? '#fff' : 'var(--ink)' }}>{mine ? pct + '%' : ''}</span>{on && <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#fff;background:var(--panel);padding:4px 5px")}>YOURS</span>}</span>
           </button>
         ); })}
       </div>
