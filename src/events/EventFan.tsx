@@ -289,7 +289,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
       signals: signalsOf(x), seen: Object.keys(x.seen).filter((k) => x.seen[k]),
       colour: x.built ? x.colour : undefined, variant: x.built || x.financeSeen ? v?.name : undefined,
       monthly: x.financeSeen && F && price ? fmtMoney(priceCur(v.price), monthlyFlat(price, x.deposit, F.rate, F.termUnit === 'months' ? x.term / 12 : x.term).monthly) : undefined,
-      route: x.drive.showroom, status: x.drive.done ? 'Booked' : 'New', at: 'This session',
+      route: x.drive.showroom, status: 'New', at: 'This session',
     };
   };
   const sendProfile = useRef<() => void>(() => {});
@@ -1544,8 +1544,8 @@ function Build({ cfg, st, set, go }: any) {
           ); })}
         </div>
         <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:20px')}>
-          {accBtn(lab(cfg, 'seeMonthly'), 'payments', () => { set({ built: true }); go('finance')(); }, 'width:100%')}
-          {darkBtn((cfg as EventConfig).cta.button, 'arrow_forward', () => { set({ built: true }); go('drive')(); }, 'width:100%')}
+          {isOn(cfg, 'finance') && accBtn(lab(cfg, 'seeMonthly'), 'payments', () => { set({ built: true }); go('finance')(); }, 'width:100%')}
+          {isOn(cfg, 'cta') && darkBtn((cfg as EventConfig).cta.button, 'arrow_forward', () => { set({ built: true }); go('drive')(); }, 'width:100%')}
         </div>
       </div>
     </div>
@@ -1565,7 +1565,8 @@ function Finance({ cfg, st, set, go }: any) {
       <span style={{ ...s("font:800 13px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums"), fontSize: strong ? 15 : 13 }}>{val}</span>
     </div>
   );
-  const R = F.running; const maxR = R ? Math.max(...R.rows.map((r) => r.v), 1) : 1;
+  const R = F.running; const maxR = R ? Math.max(...(R.rows || []).map((r) => r.v), 1) : 1;
+  const O = F.ownership; const run = O ? O.items.reduce((a, x) => a + x.v, 0) : 0;
   return (
     <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
       <div style={s('background:var(--panel);padding:18px 16px')}>
@@ -1579,8 +1580,12 @@ function Finance({ cfg, st, set, go }: any) {
       <div style={s('margin-top:18px')}>{label(lab(cfg, 'trim'))}</div>
       <div style={s('display:flex;gap:6px;margin-top:9px;flex-wrap:wrap')}>{V.map((x, i) => chip(x.name.replace(/^\S+\s/, ''), i === st.variant, () => set({ variant: i })))}</div>
       <div style={s('display:flex;gap:18px;margin-top:16px;flex-wrap:wrap')}>
-        <div>{label(lab(cfg, 'deposit'))}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.deposits.map((d) => chip(d + '%', d === st.deposit, () => set({ deposit: d })))}</div></div>
-        <div>{label(lab(cfg, 'term'))}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.terms.map((t) => chip(unit(t), t === st.term, () => set({ term: t })))}</div></div>
+        {F.depositRange
+          ? <Slider label={lab(cfg, 'deposit')} value={st.deposit} range={F.depositRange} fmt={(n) => n + '% · ' + fmtMoney(cur, price * n / 100)} onChange={(n) => set({ deposit: n })} />
+          : <div>{label(lab(cfg, 'deposit'))}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.deposits.map((d) => chip(d + '%', d === st.deposit, () => set({ deposit: d })))}</div></div>}
+        {F.termRange
+          ? <Slider label={lab(cfg, 'term')} value={st.term} range={F.termRange} fmt={(n) => (F.termUnit === 'months' ? n + ' months' : n + ' years')} onChange={(n) => set({ term: n })} />
+          : <div>{label(lab(cfg, 'term'))}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.terms.map((t) => chip(unit(t), t === st.term, () => set({ term: t })))}</div></div>}
       </div>
       <div style={s('margin-top:18px;background:var(--sand);padding:4px 14px')}>
         {[
@@ -1591,6 +1596,21 @@ function Finance({ cfg, st, set, go }: any) {
           row('Total payable', fmtMoney(cur, m.total + price - m.loan), true),
         ]}
       </div>
+      {O && O.items.length > 0 && (
+        <div style={s('margin-top:22px')}>
+          {sect(O.title, <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);background:var(--sand);padding:5px 7px")}>ESTIMATE</span>)}
+          <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--body);margin-top:8px")}>{O.sub}</div>
+          <div style={s('margin-top:10px;background:var(--sand);padding:4px 14px')}>
+            {[...O.items.map((x) => row(x.label, fmtMoney(cur, x.v) + ' / mo')), row('Running cost', fmtMoney(cur, run) + ' / mo', true)]}
+          </div>
+          <div style={s('display:flex;align-items:baseline;gap:8px;margin-top:10px;padding:13px 14px;background:var(--panel)')}>
+            <span style={s("flex:1;font:600 12px/1.35 'Archivo';color:var(--muted)")}>Loan plus running cost, estimated</span>
+            <span style={s("font:800 20px/1 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{fmtMoney(cur, m.monthly + run)}</span>
+            <span style={s("font:800 9px/1 'Archivo';letter-spacing:.12em;color:var(--muted)")}>{lab(cfg, 'aMonth')}</span>
+          </div>
+          <div style={s("font:500 10.5px/1.45 'Archivo';color:var(--label);margin-top:8px")}>{O.note}</div>
+        </div>
+      )}
       {R && (
         <div style={s('margin-top:22px')}>
           {sect(R.title)}
@@ -1607,9 +1627,21 @@ function Finance({ cfg, st, set, go }: any) {
       )}
       <div style={s("font:500 10.5px/1.45 'Archivo';color:var(--label);margin-top:16px")}>{F.note}</div>
       <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:16px')}>
-        {accBtn(C.cta.button, 'arrow_forward', go('drive'), 'width:100%')}
+        {isOn(cfg, 'cta') && accBtn(C.cta.button, 'arrow_forward', go('drive'), 'width:100%')}
         {darkBtn(lab(cfg, 'changeBuild'), 'palette', go('build'), 'width:100%')}
       </div>
+    </div>
+  );
+}
+
+// A labelled range slider in the fan view's style (deposit, term).
+function Slider({ label: l, value, range, fmt, onChange }: { label: string; value: number; range: [number, number, number]; fmt: (n: number) => string; onChange: (n: number) => void }) {
+  const [min, max, step] = range; const v = Math.min(max, Math.max(min, value));
+  return (
+    <div style={s('flex:1 1 100%')}>
+      <div style={s('display:flex;align-items:baseline;gap:8px')}>{label(l)}<span style={s("margin-left:auto;font:800 13px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{fmt(v)}</span></div>
+      <input type="range" min={min} max={max} step={step} value={v} onChange={(e) => onChange(Number(e.target.value))} aria-label={l} className="ev-range" style={{ width: '100%', marginTop: 10, ['--p' as any]: ((v - min) / Math.max(max - min, 1)) * 100 + '%' }} />
+      <div style={s("display:flex;justify-content:space-between;font:600 9.5px/1 'Archivo';color:var(--label);margin-top:4px")}><span>{fmt(min).split(' ·')[0]}</span><span>{fmt(max).split(' ·')[0]}</span></div>
     </div>
   );
 }
@@ -1736,6 +1768,9 @@ const FAN_CSS = `
 @keyframes evText{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes evRevealOut{from{opacity:1}to{opacity:0;visibility:hidden}}
 .hs{animation:bgReveal .5s cubic-bezier(.2,.85,.2,1) both}
+.ev-range{-webkit-appearance:none;appearance:none;height:6px;background:linear-gradient(90deg,var(--acc) var(--p),var(--sand2) var(--p));outline:none}
+.ev-range::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px var(--acc),0 2px 6px rgba(0,0,0,.25);cursor:pointer}
+.ev-range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--acc);cursor:pointer}
 .fs,.fp,.fq,.fw,.frow,.fv,.agg{transition:background .18s ease,box-shadow .18s ease,transform .13s cubic-bezier(.2,.7,.3,1)}
 .agg:hover{background:rgba(var(--acc-rgb),.2) !important}
 .fs:hover{background:var(--sand3) !important}

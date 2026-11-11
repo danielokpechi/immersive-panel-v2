@@ -32,8 +32,16 @@ export type Challenge = { id: string; kind: ChallengeKind; title: string; sub: s
 export type Reward = { id: string; name: string; sub: string; points: number; stock: number; sponsor?: string };
 export type SponsorBadge = { name: string; short: string; color: string };
 // Interest + lead model (proposal: one consented profile per person, scored and routed).
-export type LeadStatus = 'New' | 'Contacted' | 'Booked' | 'Reserved' | 'Sold' | 'Not now';
-export const LEAD_STATUSES: LeadStatus[] = ['New', 'Contacted', 'Booked', 'Reserved', 'Sold', 'Not now'];
+export type LeadStatus = string;
+export const LEAD_STATUSES: LeadStatus[] = ['New', 'Contacted', 'Test drive done', 'Sold'];
+export const statusesOf = (c: EventConfig) => c.leadStatuses?.length ? c.leadStatuses : LEAD_STATUSES;
+// Dealers (or showrooms, stores, sales teams). `areas` are the registration
+// answers each one covers; a lead's suggested dealer is the one covering their area.
+export type Dealer = { id: string; name: string; area: string; contact: string; areas: string[] };
+// Lead scoring, set per event: points for simple facts about a lead.
+export type ScoreRule = { kind: 'answer' | 'features' | 'question' | 'booked' | 'built' | 'finance'; field?: string; not?: string; min?: number; pts: number; label: string };
+// Follow-up segments: who's in them, and the draft message for them.
+export type Segment = { id: string; name: string; variant?: string; area?: string; finance?: boolean; booked?: boolean; built?: boolean; template: string };
 export type Signals = { features: number; polls: number; iris: number; questions: number; built: boolean; finance: boolean; booked: boolean; checkedIn: boolean; following: boolean };
 export type Lead = {
   id: string; name: string; where: Mode; answers: Record<string, string>; consent: boolean;
@@ -127,9 +135,17 @@ export interface EventConfig {
     finance: {
       title: string; sub: string; rate: number; deposits: number[]; terms: number[]; defaultDeposit: number; defaultTerm: number; note: string;
       termUnit?: 'years' | 'months';
+      // Sliders instead of chips: [min, max, step].
+      depositRange?: [number, number, number]; termRange?: [number, number, number];
+      // Estimated monthly running cost (charging, insurance…), shown with the loan.
+      ownership?: { title: string; sub: string; items: { label: string; v: number }[]; note: string };
       running?: { title: string; sub: string; rows: { label: string; v: number }[] };
     };
   };
+  dealers?: Dealer[];
+  leadStatuses?: string[];   // e.g. New, Contacted, Test drive done, Sold
+  scoring?: { rules: ScoreRule[]; hot: number; warm: number };
+  leadSegments?: Segment[];   // ready-made follow-up groups
   // Follow-up message drafted for a lead; {first} {model} {route} {extra} are filled in.
   followUp?: { template: string; extraBuilt: string; extraFinance: string; extraFeature: string };
   demo: {
@@ -164,7 +180,7 @@ export const MODULES: { key: ModuleKey; name: string; blurb: string; has: (c: Ev
   { key: 'challenges', name: 'Challenges + rewards', blurb: 'Points for predictions, check-ins, trivia, votes', has: (c) => !!c.challenges?.length },
   { key: 'showroom', name: 'Build your product', blurb: 'Colour swatches and trims with prices', has: (c) => !!c.showroom },
   { key: 'finance', name: 'Monthly cost', blurb: 'Deposit, term and monthly estimate', has: (c) => !!c.showroom?.finance },
-  { key: 'cta', name: 'Booking', blurb: 'Test drive, demo or presale: locations and slots', has: (c) => !!c.cta.options.length },
+  { key: 'cta', name: 'Test drive / booking', blurb: 'Test drive, demo or hands-on: locations and slots', has: (c) => !!c.cta.options.length },
   { key: 'gallery', name: 'Product gallery', blurb: 'Images after the reveal and in the recap', has: (c) => !!c.gallery?.items?.length },
   { key: 'stories', name: 'Story cards', blurb: 'Teams, drivers, players or makers', has: (c) => !!c.stories?.items?.length },
   { key: 'presenters', name: 'Presenters', blurb: 'Speakers and hosts on the event page', has: (c) => c.presenters.length > 0 },
@@ -335,32 +351,54 @@ export function newFromTemplate(id: string, tpl: (typeof TEMPLATES)[number]): Ev
 }
 
 // ── leads ──
-// A transparent score from what the person did: every signal is worth a fixed
-// number of points, so the organiser can see why someone is hot.
-export const SCORE_RULES: { key: keyof Signals; label: string; pts: number; per?: boolean; max?: number }[] = [
-  { key: 'booked', label: 'Booked the next step', pts: 30 },
-  { key: 'finance', label: 'Checked the monthly cost', pts: 15 },
-  { key: 'built', label: 'Picked a colour and trim', pts: 10 },
-  { key: 'features', label: 'Features explored', pts: 4, per: true, max: 20 },
-  { key: 'iris', label: 'Questions to IRIS', pts: 3, per: true, max: 9 },
-  { key: 'questions', label: 'Questions for the Q&A', pts: 3, per: true, max: 6 },
-  { key: 'polls', label: 'Poll votes', pts: 2, per: true, max: 6 },
-  { key: 'checkedIn', label: 'Checked in at the venue', pts: 8 },
-  { key: 'following', label: 'Follows the brand', pts: 4 },
-];
-export const scoreParts = (sg: Signals) => SCORE_RULES.map((r) => {
-  const v = sg[r.key]; const n = typeof v === 'number' ? v : v ? 1 : 0;
-  return { ...r, n, pts: Math.min(r.max ?? r.pts, r.per ? n * r.pts : n ? r.pts : 0) };
-}).filter((r) => r.n > 0);
-export const leadScore = (l: { signals: Signals; answers: Record<string, string> }) =>
-  Math.min(99, 6 + Object.keys(l.answers || {}).length * 2 + scoreParts(l.signals).reduce((a, r) => a + r.pts, 0));
-export const leadTier = (score: number) => (score >= 60 ? 'Hot' : score >= 35 ? 'Warm' : 'Cold');
+// Simple, visible points: each rule adds points when it's true for the lead.
+export const DEFAULT_SCORING: { rules: ScoreRule[]; hot: number; warm: number } = {
+  rules: [
+    { kind: 'answer', field: 'model', not: 'Not sure yet', pts: 10, label: 'chose a model' },
+    { kind: 'answer', field: 'budget', pts: 10, label: 'gave a budget' },
+    { kind: 'features', min: 3, pts: 15, label: 'explored {n} features' },
+    { kind: 'question', pts: 10, label: 'asked a question' },
+    { kind: 'booked', pts: 35, label: 'booked a test drive' },
+  ],
+  hot: 55, warm: 30,
+};
+export function scoreLead(cfg: EventConfig, l: { signals: Signals; answers: Record<string, string> }) {
+  const S = cfg.scoring || DEFAULT_SCORING; const sg = l.signals; const parts: { label: string; pts: number }[] = [];
+  for (const r of S.rules) {
+    let hit = false;
+    if (r.kind === 'answer') { const a = l.answers?.[r.field || '']; hit = !!a && a !== r.not; }
+    else if (r.kind === 'features') hit = sg.features >= (r.min ?? 1);
+    else if (r.kind === 'question') hit = sg.iris + sg.questions > 0;
+    else if (r.kind === 'booked') hit = sg.booked;
+    else if (r.kind === 'built') hit = sg.built;
+    else if (r.kind === 'finance') hit = sg.finance;
+    if (hit) parts.push({ label: r.label.replace('{n}', String(sg.features)), pts: r.pts });
+  }
+  const score = parts.reduce((a, p) => a + p.pts, 0);
+  const tier = score >= S.hot ? 'Hot' : score >= S.warm ? 'Warm' : 'Cold';
+  // "why": strongest reasons first, e.g. "Booked a test drive, explored 5 features"
+  const why = [...parts].sort((a, b) => b.pts - a.pts).map((p) => p.label);
+  return { score, tier, parts, why: why.length ? why[0].charAt(0).toUpperCase() + why.join(', ').slice(1) : 'Registered only' };
+}
+// Lead assignments (dealer, status, reminder) are kept in this browser.
+export type LeadEdit = { dealer?: string; status?: LeadStatus; reminder?: string };
+const LEADS = (id: string) => 'connect-events:leads:' + id;
+export function readLeadEdits(id: string): Record<string, LeadEdit> { try { return JSON.parse(read(LEADS(id)) || '{}'); } catch { return {}; } }
+export const writeLeadEdits = (id: string, v: Record<string, LeadEdit>) => write(LEADS(id), JSON.stringify(v));
 export const NO_SIGNALS: Signals = { features: 0, polls: 0, iris: 0, questions: 0, built: false, finance: false, booked: false, checkedIn: false, following: false };
 // Which CTA option an answer routes to (nearest showroom, the right demo format).
 export function routeFor(cfg: EventConfig, answers: Record<string, string>): string | null {
-  for (const f of cfg.interest?.fields || []) { const a = answers[f.id]; if (a && f.routes?.[a]) return f.routes[a]; }
+  // Dealers first: the one whose areas cover any of the lead's answers.
+  const vals = Object.values(answers || {});
+  const d = cfg.dealers?.find((x) => x.areas.some((a) => vals.includes(a)));
+  if (d) return d.id;
+  for (const f of cfg.interest?.fields || []) { const a = answers?.[f.id]; if (a && f.routes?.[a]) return f.routes[a]; }
   return null;
 }
+// Which leads a follow-up segment holds.
+export const inSegment = (g: Segment, l: { signals: Signals; answers: Record<string, string>; variant?: string }) =>
+  (!g.variant || l.variant === g.variant) && (!g.area || Object.values(l.answers || {}).includes(g.area)) &&
+  (!g.finance || l.signals.finance) && (!g.booked || l.signals.booked) && (!g.built || l.signals.built);
 // Price strings like "RM159,000" -> 159000 and "RM".
 export const priceNum = (p: string) => Number((p.match(/[\d,.]+/) || ['0'])[0].replace(/,/g, '')) || 0;
 export const priceCur = (p: string) => (p.match(/^[^\d]*/) || [''])[0];

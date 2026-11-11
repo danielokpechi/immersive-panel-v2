@@ -759,21 +759,21 @@
           "key": "registered"
         },
         {
-          "label": "Engaged during the keynote",
+          "label": "Engaged",
           "n": 5940,
           "key": "engaged"
         },
         {
-          "label": "Requested a demo",
+          "label": "Demo",
           "n": 342,
           "key": "booked"
         },
         {
-          "label": "Started a Team trial",
+          "label": "Trial",
           "n": 126
         },
         {
-          "label": "Became a paying team",
+          "label": "Customer (reported by sales)",
           "n": 38
         }
       ],
@@ -859,7 +859,7 @@
           "following": false
         },
         "route": "sa",
-        "status": "Booked",
+        "status": "Demo done",
         "at": "Hall · 10:42",
         "seen": [
           "wheels",
@@ -1016,7 +1016,7 @@
           "following": false
         },
         "route": "pj",
-        "status": "Not now",
+        "status": "Contacted",
         "at": "Online · 10:12",
         "seen": [
           "charge"
@@ -1075,5 +1075,45 @@
         "at": "Online · 09:58"
       }
     ]
+  },
+  "leadStatuses": [
+    "New",
+    "Contacted",
+    "Demo done",
+    "Customer"
+  ],
+  "scoring": {
+    "rules": [
+      {
+        "kind": "answer",
+        "field": "role",
+        "pts": 10,
+        "label": "gave a role"
+      },
+      {
+        "kind": "answer",
+        "field": "team",
+        "pts": 10,
+        "label": "gave a team size"
+      },
+      {
+        "kind": "features",
+        "min": 3,
+        "pts": 15,
+        "label": "explored {n} features"
+      },
+      {
+        "kind": "question",
+        "pts": 10,
+        "label": "asked a question"
+      },
+      {
+        "kind": "booked",
+        "pts": 35,
+        "label": "booked a demo"
+      }
+    ],
+    "hot": 55,
+    "warm": 30
   }
 }

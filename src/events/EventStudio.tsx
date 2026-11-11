@@ -14,8 +14,8 @@ import { initials } from './EventFan';
 import {
   sponsorOf, ticketUrl, isOn, duplicateEvent, exportName,
   getEvent, audience, checkinsSeed, channelName, fanPath, homePath, abs, asset, STATES, TARGETS, revealSegIndex, qaSegIndex,
-  LEAD_STATUSES, leadScore, leadTier, scoreParts, routeFor,
-  type EventConfig, type Ms as MState, type Mode, type Target, type TriggerKind, type Lead, type LeadStatus,
+  scoreLead, statusesOf, readLeadEdits, writeLeadEdits, inSegment, routeFor, type LeadEdit, type Dealer,
+  type EventConfig, type Ms as MState, type Mode, type Target, type TriggerKind, type Lead,
 } from './config';
 
 export const Ms = ({ children, size = 18, color, style }: { children: string; size?: number; color?: string; style?: CSSProperties }) => (
@@ -46,7 +46,7 @@ interface St {
   tick: number; clock: number; log: Log[]; toast: string | null; toastIcon: string;
   questions: Q[]; regs: { venue: number; online: number }; drives: { showroom: string; slot: string; where: Mode; t: string }[];
   reacts: number[]; votes: number; follows: number; monitor: Mode;
-  me: Lead | null; leadEdits: Record<string, { route?: string; status?: LeadStatus; sent?: boolean }>; leadSel: string | null; leadFilter: string;
+  me: Lead | null; leadEdits: Record<string, LeadEdit>; leadSel: string | null; leadFilter: string; leadSort: string;
 }
 
 export function EventStudio({ id }: { id: string }) {
@@ -69,7 +69,7 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
     tick: 0, clock: 0, log: [], toast: null, toastIcon: 'bolt',
     questions: cfg.qaSeed.map((q) => ({ ...q, status: 'QUEUED' })), regs: { venue: 0, online: 0 }, drives: [],
     reacts: cfg.segments.map(() => 0), votes: 0, follows: 0, monitor: cfg.event.format === 'In person' ? 'venue' : 'online',
-    me: null, leadEdits: {}, leadSel: null, leadFilter: 'All',
+    me: null, leadEdits: typeof window !== 'undefined' ? readLeadEdits(cfg.id) : {}, leadSel: null, leadFilter: 'All', leadSort: 'score',
   }));
   const set = (p: Partial<St> | ((x: St) => Partial<St>)) => setSt((x) => ({ ...x, ...(typeof p === 'function' ? p(x) : p) }));
   const stRef = useRef(st); stRef.current = st;
@@ -176,14 +176,9 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
     log('Reminder sent', (st.remTitle.trim() || 'Update') + ' → ' + reachN.toLocaleString() + ' registered', 'notifications_active');
     say('Reminder sent to ' + reachN.toLocaleString() + ' registered attendees', 'notifications_active');
   };
-  // Follow-up for one lead. When it's this browser's fan, it lands on their event page as an update.
-  const sendFollowUp = (l: Lead, text: string, routeName: string) => {
-    set((x) => ({ leadEdits: { ...x.leadEdits, [l.id]: { ...x.leadEdits[l.id], sent: true, status: (x.leadEdits[l.id]?.status || l.status) === 'New' ? 'Contacted' : x.leadEdits[l.id]?.status || l.status } } }));
-    if (l.id === 'ME') send({ cmd: 'reminder', id: 'fu' + Date.now(), title: 'A message from ' + routeName, body: text, target: 'all' });
-    log('Follow-up sent', l.name + ' · ' + routeName, 'send');
-    say('Follow-up sent to ' + (l.id === 'ME' ? 'the fan in this browser' : l.name.split(' ')[0]), 'send');
-  };
-  const P = { cfg, st, set, goState, goSeg, fire, nextOf, qStatus, aud, reach, say, sendReminder, sendFollowUp };
+  // Lead assignments are saved in this browser, like the rest of the prototype.
+  const editLead = (lid: string, p: LeadEdit) => set((x) => { const all = { ...x.leadEdits, [lid]: { ...x.leadEdits[lid], ...p } }; writeLeadEdits(cfg.id, all); return { leadEdits: all }; });
+  const P = { cfg, st, set, goState, goSeg, fire, nextOf, qStatus, aud, reach, say, sendReminder, editLead };
   const fan = fanPath(cfg.id);
 
   return (
@@ -558,78 +553,110 @@ function IrisFacts({ cfg }: { cfg: EventConfig }) {
 // One consented profile per person, scored on what they did and routed to the
 // nearest showroom (or the right demo format), with a drafted follow-up.
 const TIER_COLOR: Record<string, [string, string]> = { Hot: ['#C0473C', '#FFFFFF'], Warm: ['#8B3DF5', '#FFFFFF'], Cold: ['#E9E9E4', '#513E66'] };
-const STATUS_COLOR: Record<string, string> = { New: '#8B3DF5', Contacted: '#513E66', Booked: '#2F7A68', Reserved: '#1B0B2D', Sold: '#1B0B2D', 'Not now': '#A79BB5' };
-const optName = (cfg: EventConfig, id: string) => cfg.cta.options.find((o) => o.id === id)?.name || id;
-function draftFor(cfg: EventConfig, l: Lead, routeName: string) {
-  const F = cfg.followUp; if (!F) return '';
+const STATUS_TONES = ['#8B3DF5', '#513E66', '#2F7A68', '#1B0B2D'];
+const statusColor = (cfg: EventConfig, x: string) => STATUS_TONES[Math.max(0, statusesOf(cfg).indexOf(x))] || '#513E66';
+// Who a lead goes to: the dealer list if the event has one, else the booking options.
+export const dealersOf = (cfg: EventConfig): Dealer[] => cfg.dealers?.length ? cfg.dealers : cfg.cta.options.map((o) => ({ id: o.id, name: o.name, area: o.sub, contact: '', areas: [] }));
+const dealerName = (cfg: EventConfig, id: string) => dealersOf(cfg).find((d) => d.id === id)?.name || id;
+function fill(t: string, _cfg: EventConfig, l: Lead, dealer: string) {
   const first = l.id === 'ME' ? 'there' : l.name.split(' ')[0];
+  return t.replace(/\{first\}/g, first).replace(/\{dealer\}/g, dealer).replace(/\{route\}/g, dealer).replace(/\{model\}/g, l.answers.model || '').replace(/\{variant\}/g, l.variant || '').replace(/\{colour\}/g, l.colour || 'your colour').replace(/\{monthly\}/g, l.monthly || '');
+}
+function draftFor(cfg: EventConfig, l: Lead, dealer: string) {
+  const F = cfg.followUp; if (!F) return '';
   const feature = cfg.hotspots.find((h) => h.id === l.seen?.[0])?.name || '';
   let extra = '';
-  if (l.variant && l.colour && F.extraBuilt) extra += F.extraBuilt.replace('{variant}', l.variant).replace('{colour}', l.colour);
-  if (l.monthly && F.extraFinance) extra += F.extraFinance.replace('{monthly}', l.monthly);
+  if (l.variant && l.colour && F.extraBuilt) extra += F.extraBuilt;
+  if (l.monthly && F.extraFinance) extra += F.extraFinance;
   else if (feature && F.extraFeature) extra += F.extraFeature.replace('{feature}', feature);
-  return F.template.replace('{first}', first).replace('{extra}', extra).replace('{route}', routeName).replace('{model}', l.answers.model || '');
+  return fill(F.template.replace('{extra}', extra), cfg, l, dealer);
+}
+// Every lead with its score, "why" line and saved assignment.
+export function scoredLeads(cfg: EventConfig, me: Lead | null, edits: Record<string, LeadEdit>) {
+  const base: Lead[] = [...(me ? [me] : []), ...(cfg.demo.leads || [])];
+  return base.map((l, order) => {
+    const e = edits[l.id] || {}; const sc = scoreLead(cfg, l);
+    const suggested = routeFor(cfg, l.answers) || l.route;
+    return { ...l, order, score: sc.score, tier: sc.tier, why: sc.why, parts: sc.parts, suggested, dealer: e.dealer || suggested, status: e.status || l.status, reminder: e.reminder || '' };
+  });
 }
 
-function Leads({ cfg, st, set, sendFollowUp }: any) {
+function Leads({ cfg, st, set, editLead, say }: any) {
   const C = cfg as EventConfig;
-  const base: Lead[] = [...(st.me ? [st.me as Lead] : []), ...(C.demo.leads || [])];
-  const leads = base.map((l) => { const e = st.leadEdits[l.id] || {}; const score = leadScore(l); return { ...l, route: e.route || l.route, status: (e.status || l.status) as LeadStatus, sent: !!e.sent, score, tier: leadTier(score) }; });
-  const shown = leads.filter((l) => st.leadFilter === 'All' || l.tier === st.leadFilter);
+  const leads = scoredLeads(C, st.me, st.leadEdits);
+  const sorters: Record<string, (a: any, b: any) => number> = { score: (a, b) => b.score - a.score, newest: (a, b) => a.order - b.order, name: (a, b) => a.name.localeCompare(b.name), reminder: (a, b) => (a.reminder || '9') .localeCompare(b.reminder || '9') };
+  const shown = leads.filter((l) => st.leadFilter === 'All' || l.tier === st.leadFilter).sort(sorters[st.leadSort] || sorters.score);
   const sel = leads.find((l) => l.id === st.leadSel) || shown[0] || leads[0];
   const LQ = C.demo.results.leadQuality || [];
   const tot = LQ.reduce((a, r) => ({ hot: a.hot + r.hot, warm: a.warm + r.warm, cold: a.cold + r.cold }), { hot: 0, warm: 0, cold: 0 });
-  const sessionHot = leads.filter((l) => l.id === 'ME' && l.tier === 'Hot').length;
   const total = tot.hot + tot.warm + tot.cold + (st.me ? 1 : 0);
-  const sent = Object.values(st.leadEdits as Record<string, { sent?: boolean }>).filter((e) => e.sent).length;
+  const DL = dealersOf(C); const ST = statusesOf(C);
   const fields = C.interest?.fields || [];
-  const edit = (id: string, p: Record<string, unknown>) => set((x: St) => ({ leadEdits: { ...x.leadEdits, [id]: { ...x.leadEdits[id], ...p } } }));
+  const segs = (C.leadSegments || []).map((g) => ({ g, members: leads.filter((l) => inSegment(g, l)) }));
   const kpis = [
     { label: 'LEADS', v: total.toLocaleString(), sub: 'Registered with interest answers' },
-    { label: 'HOT', v: (tot.hot + sessionHot).toLocaleString(), sub: 'Score 60+ · ready for a call' },
-    { label: 'WARM', v: tot.warm.toLocaleString(), sub: 'Score 35–59 · nurture' },
-    { label: 'ROUTED', v: '100%', sub: 'Every lead has a ' + C.cta.optionsLabel.toLowerCase() },
-    { label: 'FOLLOW-UPS SENT', v: String(sent), sub: 'From this session' },
+    { label: 'HOT', v: (tot.hot + leads.filter((l) => l.id === 'ME' && l.tier === 'Hot').length).toLocaleString(), sub: `Score ${(C.scoring?.hot ?? 55)}+ · ready for a call` },
+    { label: 'WARM', v: tot.warm.toLocaleString(), sub: `Score ${(C.scoring?.warm ?? 30)}–${(C.scoring?.hot ?? 55) - 1} · nurture` },
+    { label: 'ASSIGNED', v: '100%', sub: 'Every lead has a suggested ' + (C.dealers?.length ? 'dealer' : C.cta.optionsLabel.toLowerCase()) },
+    { label: 'REMINDERS SET', v: String(leads.filter((l) => l.reminder).length), sub: 'Saved in this browser' },
   ];
-  if (!leads.length) return (
-    <div style={s('padding:30px 44px 52px')}><PageHead title="Follow up" sub="Leads appear here once people register interest." /></div>
-  );
-  const routeName = optName(C, sel.route);
-  const draft = draftFor(C, sel, routeName);
-  const matched = routeFor(C, sel.answers);
+  if (!leads.length) return <div style={s('padding:30px 44px 52px')}><PageHead title="Follow up" sub="Leads appear here once people register interest." /></div>;
+  const dName = dealerName(C, sel.dealer);
+  const draft = draftFor(C, sel, dName);
   const pill = (t: string) => <span style={{ ...s("font:700 9.5px/1 'Archivo';letter-spacing:.08em;padding:5px 7px;border-radius:6px;white-space:nowrap"), background: TIER_COLOR[t][0], color: TIER_COLOR[t][1] }}>{t.toUpperCase()}</span>;
+  const copy = (t: string) => { navigator.clipboard?.writeText(t).catch(() => {}); say('Draft copied · nothing was sent', 'content_copy'); };
+  const draftOnly = <span style={s("display:inline-flex;align-items:center;gap:5px;font:600 9.5px/1 'Archivo';letter-spacing:.08em;color:#826E99;background:#F1F1EE;padding:5px 7px;border-radius:6px;white-space:nowrap")}><span className="ms" style={{ fontSize: 12 }}>edit_note</span>DRAFT ONLY, NOT SENT</span>;
+  const sel_ = 'padding:9px 10px;border-radius:9px;border:0;background:#F1F1EE;font:600 12px/1 Archivo;color:#1B0B2D';
   return (
     <div style={s('padding:30px 44px 52px;animation:stFade .3s ease both;display:flex;flex-direction:column;gap:20px')}>
-      <PageHead title={<>Follow up <Demo /></>} sub={`Every registration builds one consented profile. Leads are scored on what they did during the event and routed to the best-matched ${C.cta.optionsLabel.toLowerCase()}.`} />
+      <PageHead title={<>Follow up <Demo /></>} sub={`Every registration builds one consented profile. Each lead gets a score from simple points, a suggested ${C.dealers?.length ? 'dealer' : C.cta.optionsLabel.toLowerCase()} for their area, a status and a reminder. Nothing here sends messages.`} />
       <div style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:12px')}>{kpis.map((k) => <Stat key={k.label} label={k.label} v={k.v} sub={k.sub} />)}</div>
-      <div style={s('display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start')}>
+
+      {segs.length > 0 && (
         <Card>
-          <div style={s('display:flex;align-items:center;gap:12px')}>
-            <Cap>LATEST LEADS</Cap>
-            <div style={s('display:flex;gap:3px;padding:3px;border-radius:9px;background:#F1F1EE;margin-left:auto')}>
-              {['All', 'Hot', 'Warm', 'Cold'].map((f) => { const on = st.leadFilter === f; return <button key={f} onClick={() => set({ leadFilter: f })} style={{ ...s("padding:7px 11px;border-radius:7px;font:600 11px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66' }}>{f}</button>; })}
+          <div style={s('display:flex;align-items:center;gap:12px')}><Ms size={18} color="#8B3DF5">group_work</Ms><Cap>FOLLOW-UP SEGMENTS</Cap>{draftOnly}<Note>Ready-made groups, each with a drafted message</Note></div>
+          <div style={{ ...s('display:grid;gap:12px;margin-top:14px'), gridTemplateColumns: `repeat(${Math.min(segs.length, 3)},minmax(0,1fr))` }}>
+            {segs.map(({ g, members }) => { const ex = members[0]; const msg = ex ? fill(g.template, C, ex, dealerName(C, ex.dealer)) : g.template; return (
+              <div key={g.id} data-segment={g.id} style={s('padding:14px;border-radius:14px;background:#F7F7F4;box-shadow:inset 0 0 0 1px rgba(27,11,45,.06);display:flex;flex-direction:column')}>
+                <div style={s('display:flex;align-items:baseline;gap:8px')}><span style={s("flex:1;font:700 14px/1.25 'Archivo'")}>{g.name}</span><span style={s("font:800 20px/1 'Archivo Black';font-variant-numeric:tabular-nums")}>{members.length}</span></div>
+                <div style={s("font:500 11px/1.4 'Archivo';color:#826E99;margin-top:5px")}>{members.length ? members.map((m) => m.id === 'ME' ? 'You' : m.name.split(' ')[0]).join(', ') : 'No sample leads match yet'}</div>
+                <div style={s("margin-top:10px;padding:11px 12px;border-radius:10px;background:#FFFFFF;font:500 12px/1.5 'Archivo';color:#1B0B2D;flex:1")}>{msg}</div>
+                <div style={s('display:flex;align-items:center;gap:8px;margin-top:10px')}>{draftOnly}<button className="ah" onClick={() => copy(msg)} style={s("margin-left:auto;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:9px;font:600 11.5px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={14} color="inherit">content_copy</Ms>Copy draft</button></div>
+              </div>
+            ); })}
+          </div>
+        </Card>
+      )}
+
+      <div style={s('display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start')}>
+        <Card>
+          <div style={s('display:flex;align-items:center;gap:10px')}>
+            <Cap>LEADS</Cap>
+            <label style={s("display:flex;align-items:center;gap:6px;margin-left:auto;font:600 11px/1 'Archivo';color:#513E66")}>Sort
+              <select data-sort value={st.leadSort} onChange={(e) => set({ leadSort: e.target.value })} style={s(sel_)}><option value="score">Score, high to low</option><option value="newest">Newest first</option><option value="name">Name</option><option value="reminder">Next reminder</option></select>
+            </label>
+            <div style={s('display:flex;gap:3px;padding:3px;border-radius:9px;background:#F1F1EE')}>
+              {['All', 'Hot', 'Warm', 'Cold'].map((f) => { const on = st.leadFilter === f; return <button key={f} data-filter={f} onClick={() => set({ leadFilter: f })} style={{ ...s("padding:7px 11px;border-radius:7px;font:600 11px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66' }}>{f}{f !== 'All' ? ' · ' + leads.filter((l) => l.tier === f).length : ''}</button>; })}
             </div>
           </div>
           <div style={s('display:flex;flex-direction:column;gap:6px;margin-top:14px')}>
-            {shown.map((l) => { const on = l.id === sel.id; const sg = l.signals; return (
+            {shown.map((l) => { const on = l.id === sel.id; return (
               <button key={l.id} onClick={() => set({ leadSel: l.id })} className="ah" style={{ ...s('display:flex;align-items:center;gap:13px;padding:11px 12px;border-radius:12px;text-align:left;width:100%'), background: on ? '#F1F1EE' : l.id === 'ME' ? '#F7F2FE' : '#FFFFFF', boxShadow: on ? 'inset 0 0 0 2px #1B0B2D' : 'inset 0 0 0 1px rgba(27,11,45,.08)' }}>
                 <span style={{ ...s("width:40px;height:40px;flex:none;border-radius:10px;display:flex;align-items:center;justify-content:center;font:800 15px/1 'Archivo Black';font-variant-numeric:tabular-nums"), background: TIER_COLOR[l.tier][0], color: TIER_COLOR[l.tier][1] }}>{l.score}</span>
                 <span style={s('flex:1;min-width:0')}>
-                  <span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 13px/1.2 'Archivo';white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{l.name}</span>{l.id === 'ME' && <span style={s("font:700 8.5px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#8B3DF5;padding:4px 5px;border-radius:5px")}>LIVE</span>}{!l.consent && <span style={s("font:600 9px/1 'Archivo';color:#826E99")}>no consent</span>}</span>
-                  <span style={s("display:block;font:500 11px/1.3 'Archivo';color:#513E66;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{fields.map((f) => l.answers[f.id]).filter(Boolean).join(' · ') || 'No answers yet'}</span>
+                  <span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 13px/1.2 'Archivo';white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{l.name}</span>{pill(l.tier)}{l.id === 'ME' && <span style={s("font:700 8.5px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#8B3DF5;padding:4px 5px;border-radius:5px")}>LIVE</span>}</span>
+                  <span data-why style={s("display:block;font:500 11.5px/1.3 'Archivo';color:#1B0B2D;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{l.why}</span>
+                  <span style={s("display:block;font:400 10.5px/1.3 'Archivo';color:#826E99;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{fields.map((f) => l.answers[f.id]).filter(Boolean).join(' · ') || 'No answers yet'}</span>
                 </span>
-                <span style={s('display:flex;gap:6px;flex:none')}>
-                  {sg.features > 0 && <span title="Features explored" style={s("display:flex;align-items:center;gap:2px;font:600 10.5px/1 'Archivo';color:#513E66")}><Ms size={14} color="#826E99">my_location</Ms>{sg.features}</span>}
-                  {sg.built && <Ms size={15} color="#826E99">palette</Ms>}
-                  {sg.finance && <Ms size={15} color="#826E99">payments</Ms>}
-                  {sg.booked && <Ms size={15} color="#2F7A68">event_available</Ms>}
+                <span style={s('width:128px;flex:none;text-align:right')}>
+                  <span style={s("display:block;font:600 11px/1.25 'Archivo';color:#513E66;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{dealerName(C, l.dealer)}</span>
+                  {l.reminder && <span style={s("display:inline-flex;align-items:center;gap:3px;font:500 10px/1 'Archivo';color:#826E99;margin-top:4px")}><Ms size={12} color="#826E99">alarm</Ms>{l.reminder}</span>}
                 </span>
-                <span style={s("width:118px;flex:none;font:500 11px/1.25 'Archivo';color:#513E66;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{optName(C, l.route)}</span>
-                <span style={{ ...s("width:74px;flex:none;text-align:center;font:600 10px/1 'Archivo';letter-spacing:.04em;padding:6px 0;border-radius:6px;color:#fff"), background: STATUS_COLOR[l.status] }}>{l.status}</span>
+                <span style={{ ...s("width:92px;flex:none;text-align:center;font:600 10px/1 'Archivo';letter-spacing:.02em;padding:6px 0;border-radius:6px;color:#fff;white-space:nowrap"), background: statusColor(C, l.status) }}>{l.status}</span>
               </button>
             ); })}
           </div>
-          <div style={s("font:400 11.5px/1.45 'Archivo';color:#826E99;margin-top:12px")}>Showing the most recent {leads.length} of {total.toLocaleString()}. The row marked LIVE is the fan view open in this browser, and it rescores as they explore.</div>
+          <div style={s("font:400 11.5px/1.45 'Archivo';color:#826E99;margin-top:12px")}>Showing {shown.length} sample leads of {total.toLocaleString()}. The row marked LIVE is the fan view open in this browser; it rescores as they explore.</div>
         </Card>
 
         <div style={s('position:sticky;top:86px;display:flex;flex-direction:column;gap:20px')}>
@@ -641,29 +668,36 @@ function Leads({ cfg, st, set, sendFollowUp }: any) {
               </div>
               <div style={s('text-align:right')}><div style={s("font:800 34px/.9 'Archivo Black';font-variant-numeric:tabular-nums")}>{sel.score}</div><div style={s('margin-top:7px')}>{pill(sel.tier)}</div></div>
             </div>
-            <div style={s('margin-top:16px')}>
-              {fields.map((f) => <div key={f.id} style={s('display:flex;gap:12px;padding:9px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>{f.label}</span><span style={s("flex:1;font:600 12px/1.3 'Archivo'")}>{sel.answers[f.id] || '—'}</span></div>)}
-              {(sel.variant || sel.monthly) && <div style={s('display:flex;gap:12px;padding:9px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>Spec</span><span style={s("flex:1;font:600 12px/1.3 'Archivo'")}>{[sel.variant, sel.colour, sel.monthly && sel.monthly + ' a month'].filter(Boolean).join(' · ')}</span></div>}
-              {sel.seen && sel.seen.length > 0 && <div style={s('display:flex;gap:12px;padding:9px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>Explored</span><span style={s("flex:1;font:600 12px/1.3 'Archivo'")}>{sel.seen.map((id) => C.hotspots.find((h) => h.id === id)?.name).filter(Boolean).join(', ')}</span></div>}
-              <div style={s('display:flex;gap:12px;padding:9px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>Consent</span><span style={{ ...s("flex:1;display:flex;align-items:center;gap:5px;font:600 12px/1.3 'Archivo'"), color: sel.consent ? '#2F7A68' : '#C0473C' }}><Ms size={15} color="inherit">{sel.consent ? 'verified_user' : 'block'}</Ms>{sel.consent ? 'Can be contacted' : 'Not given · no follow-up'}</span></div>
+            <div style={s("margin-top:12px;padding:11px 12px;border-radius:10px;background:#F1F1EE;font:600 12.5px/1.4 'Archivo'")}>{sel.why}</div>
+            <div style={s('margin-top:10px;display:flex;flex-direction:column;gap:5px')}>
+              {sel.parts.map((r) => <div key={r.label} style={s("display:flex;font:500 11.5px/1.2 'Archivo';color:#513E66")}><span style={s('flex:1')}>{r.label.charAt(0).toUpperCase() + r.label.slice(1)}</span><span style={s('font-weight:700;color:#1B0B2D')}>+{r.pts}</span></div>)}
             </div>
-            <div style={s('margin-top:14px;padding:13px 14px;border-radius:12px;background:#F1F1EE')}>
-              <Cap>WHY THIS SCORE</Cap>
-              <div style={s('display:flex;flex-direction:column;gap:6px;margin-top:10px')}>
-                <div style={s("display:flex;font:500 11.5px/1.2 'Archivo';color:#513E66")}><span style={s('flex:1')}>Registered + interest answers</span><span style={s('font-weight:700;color:#1B0B2D')}>+{6 + Object.keys(sel.answers).length * 2}</span></div>
-                {scoreParts(sel.signals).map((r) => <div key={r.key} style={s("display:flex;font:500 11.5px/1.2 'Archivo';color:#513E66")}><span style={s('flex:1')}>{r.label}{r.per ? ' · ' + r.n : ''}</span><span style={s('font-weight:700;color:#1B0B2D')}>+{r.pts}</span></div>)}
-              </div>
+            <div style={s('margin-top:12px')}>
+              {fields.map((f) => <div key={f.id} style={s('display:flex;gap:12px;padding:8px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>{f.label}</span><span style={s("flex:1;font:600 12px/1.3 'Archivo'")}>{sel.answers[f.id] || '—'}</span></div>)}
+              {(sel.variant || sel.monthly) && <div style={s('display:flex;gap:12px;padding:8px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>Spec</span><span style={s("flex:1;font:600 12px/1.3 'Archivo'")}>{[sel.variant, sel.colour, sel.monthly && sel.monthly + ' a month'].filter(Boolean).join(' · ')}</span></div>}
+              <div style={s('display:flex;gap:12px;padding:8px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>Consent</span><span style={{ ...s("flex:1;display:flex;align-items:center;gap:5px;font:600 12px/1.3 'Archivo'"), color: sel.consent ? '#2F7A68' : '#C0473C' }}><Ms size={15} color="inherit">{sel.consent ? 'verified_user' : 'block'}</Ms>{sel.consent ? 'Can be contacted' : 'Not given · no follow-up'}</span></div>
             </div>
           </Card>
           <Card>
-            <div style={s('display:flex;align-items:center;gap:10px')}><Cap>ASSIGN TO</Cap>{matched && matched === sel.route && <Note>Matched by {fields.find((f) => f.routes)?.short.toLowerCase()}</Note>}</div>
-            <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:12px')}>{C.cta.options.map((o) => { const on = sel.route === o.id; return <button key={o.id} onClick={() => edit(sel.id, { route: o.id })} style={{ ...s("font:600 11.5px/1 'Archivo';padding:9px 11px;border-radius:9px"), background: on ? '#1B0B2D' : '#F1F1EE', color: on ? '#F5F5F2' : '#1B0B2D' }}>{o.name}</button>; })}</div>
+            <Cap>{C.dealers?.length ? 'DEALER' : C.cta.optionsLabel}</Cap>
+            <div style={s('display:flex;align-items:center;gap:10px;margin-top:10px')}>
+              <select data-dealer value={sel.dealer} onChange={(e) => editLead(sel.id, { dealer: e.target.value })} style={s(sel_ + ';flex:1;font-size:13px;padding:11px 12px')}>{DL.map((d) => <option key={d.id} value={d.id}>{d.name}{d.id === sel.suggested ? ' (suggested)' : ''}</option>)}</select>
+            </div>
+            <div style={s("font:500 11.5px/1.45 'Archivo';color:#826E99;margin-top:7px")}>{(() => { const d = DL.find((x) => x.id === sel.dealer); return d ? [d.area, d.contact].filter(Boolean).join(' · ') : ''; })()}{sel.dealer === sel.suggested ? ' · suggested for their area' : ''}</div>
             <div style={s('margin-top:16px')}><Cap>STATUS</Cap></div>
-            <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:12px')}>{LEAD_STATUSES.map((x) => { const on = sel.status === x; return <button key={x} onClick={() => edit(sel.id, { status: x })} style={{ ...s("font:600 11.5px/1 'Archivo';padding:9px 11px;border-radius:9px"), background: on ? STATUS_COLOR[x] : '#F1F1EE', color: on ? '#FFFFFF' : '#1B0B2D' }}>{x}</button>; })}</div>
+            <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:10px')}>{ST.map((x) => { const on = sel.status === x; return <button key={x} data-status={x} onClick={() => editLead(sel.id, { status: x })} style={{ ...s("font:600 11.5px/1 'Archivo';padding:9px 11px;border-radius:9px"), background: on ? statusColor(C, x) : '#F1F1EE', color: on ? '#FFFFFF' : '#1B0B2D' }}>{x}</button>; })}</div>
+            <div style={s('margin-top:16px')}><Cap>REMINDER</Cap></div>
+            <div style={s('display:flex;align-items:center;gap:8px;margin-top:10px')}>
+              <input data-reminder type="date" value={sel.reminder} onChange={(e) => editLead(sel.id, { reminder: e.target.value })} style={s(sel_ + ';flex:1;font-size:13px;padding:10px 12px')} />
+              {sel.reminder && <button onClick={() => editLead(sel.id, { reminder: '' })} style={s("font:600 11.5px/1 'Archivo';color:#C0473C;padding:8px")}>Clear</button>}
+            </div>
             {draft && <>
-              <div style={s('display:flex;align-items:center;gap:10px;margin-top:18px')}><Cap>FOLLOW-UP</Cap><Note>Drafted from approved facts and what they explored</Note></div>
+              <div style={s('display:flex;align-items:center;gap:10px;margin-top:18px')}><Cap>FOLLOW-UP</Cap>{draftOnly}</div>
               <div style={{ ...s("margin-top:10px;padding:13px 14px;border-radius:12px;background:#F1F1EE;font:500 12.5px/1.55 'Archivo'"), color: sel.consent ? '#1B0B2D' : '#A79BB5' }}>{draft}</div>
-              <button className="ah-ink-btn" disabled={!sel.consent || sel.sent} onClick={() => sendFollowUp(sel, draft, routeName)} style={{ ...s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:13px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#F5F5F2"), background: !sel.consent ? '#C4C4C0' : sel.sent ? '#2F7A68' : '#1B0B2D', cursor: !sel.consent || sel.sent ? 'default' : 'pointer' }}><Ms size={16} color="#F5F5F2">{sel.sent ? 'check' : 'send'}</Ms>{!sel.consent ? 'No consent to contact' : sel.sent ? 'Sent from ' + routeName : 'Send as ' + routeName}</button>
+              <div style={s('display:flex;gap:8px;margin-top:12px')}>
+                <button className="ah" disabled={!sel.consent} onClick={() => copy(draft)} style={{ ...s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:12px;font:600 12.5px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)"), opacity: sel.consent ? 1 : 0.45 }}><Ms size={16} color="inherit">content_copy</Ms>{sel.consent ? 'Copy draft' : 'No consent to contact'}</button>
+                {sel.consent && sel.status === ST[0] && <button className="ah-ink-btn" onClick={() => editLead(sel.id, { status: ST[1] })} style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:12px;background:#1B0B2D;font:600 12.5px/1 'Archivo';color:#F5F5F2")}><Ms size={16} color="#F5F5F2">done</Ms>Mark as {ST[1].toLowerCase()}</button>}
+              </div>
             </>}
           </Card>
         </div>
@@ -705,6 +739,9 @@ function Results({ cfg, st }: any) {
   const maxFeat = Math.max(...feats.map((f) => f.pct), 0);
   const sources = R.sources || []; const srcTotal = Math.max(sources.reduce((a, x) => a + x.n, 0), 1); const maxSrc = Math.max(...sources.map((x) => x.n), 1);
   const LQ = R.leadQuality || [];
+  // Leads by dealer, from the sample leads and the assignments made in Follow up.
+  const ST = statusesOf(C);
+  const byDealer = isOn(C, 'leads') ? dealersOf(C).map((d) => { const ls = scoredLeads(C, st.me, st.leadEdits).filter((l) => l.dealer === d.id); return { d, n: ls.length, hot: ls.filter((l) => l.tier === 'Hot').length, td: ls.filter((l) => ST.indexOf(l.status) >= 2 || l.signals.booked).length, sold: ls.filter((l) => l.status === ST[ST.length - 1]).length }; }) : [];
   const tixR = R.tickets; const tixClicks = (tixR?.clicks || 0) + st.tix.clicks;
   const chRows = (C.challenges || []).map((c) => ({ c, n: (R.challenges?.[c.id] || 0) + (st.chDone[c.id] || 0) })); const maxCh = Math.max(...chRows.map((x) => x.n), 1);
   const owns = (name: string) => [...C.polls.filter((p) => p.sponsor === name).map(() => 'Poll'), ...(C.challenges || []).filter((c) => c.sponsor === name).map(() => 'Challenge'), ...Object.values(C.announcements).flat().filter((m) => m.sponsor === name).map(() => 'Announcement'), ...(C.rewards || []).filter((r) => r.sponsor === name).map(() => 'Reward')];
@@ -822,6 +859,13 @@ function Results({ cfg, st }: any) {
               <span style={s('display:flex;height:10px;border-radius:6px;overflow:hidden;background:#F1F1EE')}><span style={{ ...s('display:block;background:#C0473C'), width: (r.hot / t) * 100 + '%' }} /><span style={{ ...s('display:block;background:#8B3DF5'), width: (r.warm / t) * 100 + '%' }} /><span style={s('display:block;flex:1;background:#D9D9D4')} /></span>
             </div>
           ); })}
+        </Card>
+      )}
+      {byDealer.length > 0 && (
+        <Card style={{ marginTop: 20 }}>
+          <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">storefront</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Leads by {C.dealers?.length ? 'dealer' : C.cta.optionsLabel.toLowerCase()}</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>Sample leads, with the assignments made in Follow up</span></div>
+          <div style={s("display:grid;grid-template-columns:2fr repeat(4,1fr);gap:12px;margin-top:16px;padding-bottom:9px;border-bottom:1px solid rgba(27,11,45,.08);font:600 10px/1 'Archivo';letter-spacing:.12em;color:#826E99")}><span>{C.dealers?.length ? 'DEALER' : C.cta.optionsLabel}</span><span style={s('text-align:right')}>LEADS</span><span style={s('text-align:right')}>HOT</span><span style={s('text-align:right')}>{(C.cta.title.split(' ').slice(-2).join(' ') || 'BOOKED').toUpperCase()}</span><span style={s('text-align:right')}>{ST[ST.length - 1].toUpperCase()}</span></div>
+          {byDealer.map((r) => <div key={r.d.id} style={s("display:grid;grid-template-columns:2fr repeat(4,1fr);gap:12px;padding:11px 0;border-bottom:1px solid rgba(27,11,45,.08);font:600 13px/1 'Archivo';font-variant-numeric:tabular-nums")}><span>{r.d.name}<span style={s("display:block;font:400 11px/1.3 'Archivo';color:#826E99;margin-top:4px")}>{r.d.area}</span></span><span style={s('text-align:right')}>{r.n}</span><span style={s('text-align:right;color:#C0473C')}>{r.hot}</span><span style={s('text-align:right')}>{r.td}</span><span style={s('text-align:right')}>{r.sold}</span></div>)}
         </Card>
       )}
       <Card style={{ marginTop: 20 }}>
