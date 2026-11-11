@@ -24,6 +24,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const NARROW = typeof window !== 'undefined' && window.innerWidth < 380;
 const REACTS = ['🔥', '😍', '👏', '⚡'];
 const ACC = 'var(--acc)';
+// Initials for a name or handle ("Amira Hassan" -> AH, "NADIA.KL" -> NK).
+export const initials = (n: string) => n.replace(/[^A-Za-z\s._-]/g, '').split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
 
 type ChatMsg = { id: string; user: string; text: string; where: string; tag: string; avatar?: string; me?: boolean; time: string; likes: number; ev?: { kind: string; color: string; icon: string } };
 type MyQ = { id: string; text: string; votes: number; status: string; mine: true };
@@ -133,6 +135,31 @@ function FanView({ cfg }: { cfg: EventConfig }) {
 
   // A new screen opens at its top.
   useEffect(() => { const el = document.querySelector('[data-fanscroll]'); if (el && st.route !== 'home') el.scrollTop = 0; }, [st.route]);
+  // The floating Ask IRIS tab never sits on a hero title or countdown: when one
+  // crosses its band, the tab moves just above it (or below, if there's no room).
+  const [irisLift, setIrisLift] = useState(0);
+  useEffect(() => {
+    const sc = document.querySelector('[data-fanscroll]') as HTMLElement | null; if (!sc) return;
+    const H = 40, BASE = 96, GAP = 10;
+    const calc = () => {
+      const pr = (sc.parentElement as HTMLElement).getBoundingClientRect();
+      const top = pr.top + 140, floor = pr.bottom - 60; // below the header bars, above the address pill
+      const boxes = [...sc.querySelectorAll('[data-avoid]')].map((e) => e.getBoundingClientRect()).filter((r) => r.height > 0 && r.bottom > top && r.top < floor);
+      const hit = (t: number, b: number) => boxes.filter((r) => r.top < b + GAP / 2 && r.bottom > t - GAP / 2);
+      const b0 = pr.bottom - BASE;
+      let lift = 0;
+      if (hit(b0 - H, b0).length) {
+        let up = b0; for (let i = 0; i < 6; i++) { const h = hit(up - H, up); if (!h.length) break; up = Math.min(...h.map((r) => r.top)) - GAP; }
+        if (up - H >= top) lift = b0 - up;
+        else { let dn = b0; for (let i = 0; i < 6; i++) { const h = hit(dn - H, dn); if (!h.length) break; dn = Math.max(...h.map((r) => r.bottom)) + GAP + H; } lift = dn <= floor ? b0 - dn : b0 - up; }
+      }
+      setIrisLift((x) => (Math.abs(x - lift) > 1 ? Math.round(lift) : x));
+    };
+    calc();
+    sc.addEventListener('scroll', calc, { passive: true }); window.addEventListener('resize', calc);
+    const t = window.setInterval(calc, 400);
+    return () => { sc.removeEventListener('scroll', calc); window.removeEventListener('resize', calc); window.clearInterval(t); };
+  }, []);
   const chatRef = useRef<HTMLDivElement>(null);
   const irisRef = useRef<HTMLDivElement>(null);
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [st.chat.length, st.route]);
@@ -499,7 +526,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
           )}
 
           {!st.iris && st.hotspot === null && !st.revealing && (
-            <button onClick={() => set({ iris: true })} className="fh2" style={s('position:absolute;right:0;bottom:96px;z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px')}>
+            <button onClick={() => set({ iris: true })} className="fh2" style={{ ...s('position:absolute;right:0;z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px;transition:bottom .22s cubic-bezier(.2,.8,.2,1)'), bottom: 96 + irisLift }}>
               <span style={s('width:7px;height:7px;background:var(--acc);animation:bgDot 1.6s ease-in-out infinite')} />
               <span style={s("font:800 10.5px/1 'Archivo';letter-spacing:.16em;color:var(--on-panel)")}>ASK IRIS</span>
             </button>
@@ -578,7 +605,7 @@ const kicker = (top: string, sub: string) => (
   </div>
 );
 const Digits = ({ parts }: { parts: [string, string][] }) => (
-  <div style={s('display:flex;align-items:flex-start;justify-content:center;gap:9px;margin-top:13px;animation:bgReveal .6s cubic-bezier(.2,.85,.2,1) .25s both')}>
+  <div data-avoid style={s('display:flex;align-items:flex-start;justify-content:center;gap:9px;margin-top:13px;animation:bgReveal .6s cubic-bezier(.2,.85,.2,1) .25s both')}>
     {parts.map(([v, l], i) => (
       <div key={l} style={s('display:flex;align-items:flex-start;gap:9px')}>
         {i > 0 && <span style={s("padding-top:5px;font:800 44px/.78 'Archivo Black';color:rgba(242,242,240,.26)")}>:</span>}
@@ -596,7 +623,7 @@ const audLine = (cfg: EventConfig, venue: number, online: number) => (
     <span style={s("display:flex;align-items:center;gap:5px;font:700 10px/1 'Archivo';letter-spacing:.12em;color:var(--muted-lt);font-variant-numeric:tabular-nums")}><Ms size={13} color="var(--acc-lt)">wifi</Ms>{online.toLocaleString()} ONLINE</span>
   </div>
 );
-const heroTitle = (t: string, size = 36) => <div style={s("font:800 " + (NARROW ? size - 6 : size) + "px/.9 'Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(13,5,23,.75);white-space:pre-line")}>{t}</div>;
+const heroTitle = (t: string, size = 36) => <div data-avoid style={s("font:800 " + (NARROW ? size - 6 : size) + "px/.9 'Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(13,5,23,.75);white-space:pre-line")}>{t}</div>;
 
 // ═══════════ HOME ═══════════
 function Home(P: any) {
@@ -736,7 +763,7 @@ function BeforeHome(P: any) {
           <div style={s('display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:2px')}>
             {cfg.presenters.map((p) => (
               <div key={p.name} style={s('flex:none;width:148px;background:var(--sand);overflow:hidden')}>
-                <div style={s('position:relative;height:120px;background:var(--panel)')}>{p.photo && <img src={asset(p.photo)} alt="" loading="lazy" style={s('width:100%;height:100%;object-fit:cover;display:block')} />}<span style={s('position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(transparent,rgba(27,11,45,.6))')} /></div>
+                <div style={s('position:relative;height:120px;background:linear-gradient(135deg,var(--hero) 0%,rgba(var(--acc-rgb),.75) 140%);display:flex;align-items:center;justify-content:center;overflow:hidden')}>{p.photo ? <img src={asset(p.photo)} alt="" loading="lazy" style={s('width:100%;height:100%;object-fit:cover;display:block')} /> : <span style={s("font:800 44px/1 'Archivo Black';letter-spacing:.02em;color:#fff")}>{initials(p.name)}</span>}</div>
                 <div style={s('padding:11px 12px 13px')}>
                   <div style={s("font:800 15px/1.05 'Archivo Black';color:var(--ink)")}>{p.name}</div>
                   <div style={s("font:500 11px/1.35 'Archivo';color:var(--body);margin-top:4px")}>{p.role}</div>
@@ -945,7 +972,7 @@ function CommunityHome(P: any) {
       <HeroShell>
         <div style={s('padding:16px 16px 20px')}>
           <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:var(--acc);transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--muted)")}>{C.badge}</span></div>
-          <div style={s("font:800 34px/.88 'Archivo Black';color:#fff;margin-top:12px;white-space:pre-line")}>{C.title}</div>
+          <div data-avoid style={s("font:800 34px/.88 'Archivo Black';color:#fff;margin-top:12px;white-space:pre-line")}>{C.title}</div>
           <div style={s("font:500 13px/1.5 'Archivo';color:var(--muted-lt);margin-top:10px;max-width:310px")}>{C.sub}</div>
           {audLine(cfg, 0, aud.online)}
         </div>
@@ -1123,7 +1150,7 @@ function ChatPreview({ st, go, title }: any) {
       <button onClick={go('chat')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:10px;background:var(--sand);padding:12px 14px 14px')}>
         {last.map((m: ChatMsg) => (
           <span key={m.id} style={s('display:flex;align-items:flex-start;gap:9px;padding:6px 0')}>
-            <span style={s('width:26px;height:26px;flex:none;border-radius:50%;overflow:hidden;background:var(--acc)')}>{m.avatar && <img src={asset(m.avatar)} alt="" style={s('width:100%;height:100%;object-fit:cover;display:block')} />}</span>
+            <span style={s('width:26px;height:26px;flex:none;border-radius:50%;overflow:hidden;background:var(--acc);display:flex;align-items:center;justify-content:center')}>{m.avatar ? <img src={asset(m.avatar)} alt="" loading="lazy" style={s('width:100%;height:100%;object-fit:cover;display:block')} /> : <span style={s("font:800 9.5px/1 'Archivo';color:#fff;letter-spacing:.02em")}>{initials(m.user)}</span>}</span>
             <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 9px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>{m.me ? 'YOU' : m.user} · {m.tag}</span><span style={s("display:block;font:500 13px/1.35 'Archivo';color:var(--ink);margin-top:4px")}>{m.text}</span></span>
           </span>
         ))}
@@ -1150,7 +1177,7 @@ function Chat({ cfg, st, set, post, chatRef, before, after, community }: any) {
           const me = !!m.me; const liked = !!st.likes[m.id];
           return (
             <div key={m.id} style={{ ...s('display:flex;gap:8px;animation:bgBubble .3s ease both'), justifyContent: me ? 'flex-end' : 'flex-start' }}>
-              {!me && <span style={s('width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;margin-top:12px;background:var(--acc)')}>{m.avatar && <img src={asset(m.avatar)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}</span>}
+              {!me && <span style={s('width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;margin-top:12px;background:var(--acc);display:flex;align-items:center;justify-content:center')}>{m.avatar ? <img src={asset(m.avatar)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <span style={s("font:800 11px/1 'Archivo';color:#fff;letter-spacing:.02em")}>{initials(m.user)}</span>}</span>}
               <div style={s('max-width:74%')}>
                 <div style={{ ...s('display:flex;align-items:baseline;gap:7px;padding:0 3px 4px'), justifyContent: me ? 'flex-end' : 'flex-start' }}><span style={s("font:800 9px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>{me ? 'YOU' : m.user}</span><span style={{ ...s("font:800 8px/1 'Archivo';letter-spacing:.08em"), color: m.where === 'venue' ? ACC : 'var(--label)' }}>{m.tag}</span></div>
                 <div style={{ ...s('padding:10px 12px'), background: me ? 'var(--panel)' : 'var(--sand)', borderRadius: me ? '14px 14px 3px 14px' : '3px 14px 14px 14px' }}>

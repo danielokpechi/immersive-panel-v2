@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { s } from '../voltford/admin/s';
 import QRCode from 'qrcode';
+import { initials } from './EventFan';
 import {
   sponsorOf, ticketUrl,
   getEvent, audience, checkinsSeed, channelName, fanPath, homePath, abs, asset, STATES, TARGETS, revealSegIndex, qaSegIndex,
@@ -254,7 +255,7 @@ function Plan({ cfg }: { cfg: EventConfig }) {
         </Card>
         <Card>
           <Cap>PRESENTERS</Cap>
-          <div style={s('display:flex;flex-direction:column;gap:10px;margin-top:14px')}>{cfg.presenters.map((p) => <div key={p.name} style={s('display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:#F1F1EE')}>{p.photo ? <img src={asset(p.photo)} alt="" style={s('width:40px;height:40px;border-radius:50%;object-fit:cover')} /> : <span style={s('width:40px;height:40px;border-radius:50%;background:#E9E9E4')} />}<span style={s('flex:1')}><span style={s("display:block;font:700 13px/1.2 'Archivo'")}>{p.name}</span><span style={s("display:block;font:400 11.5px/1.3 'Archivo';color:#513E66;margin-top:3px")}>{p.role}</span></span><span style={s("font:600 10.5px/1 'Archivo';color:#826E99")}>{p.slot}</span></div>)}</div>
+          <div style={s('display:flex;flex-direction:column;gap:10px;margin-top:14px')}>{cfg.presenters.map((p) => <div key={p.name} style={s('display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:#F1F1EE')}>{p.photo ? <img src={asset(p.photo)} alt="" style={s('width:40px;height:40px;border-radius:50%;object-fit:cover')} /> : <span style={{ ...s("width:40px;height:40px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 13px/1 'Archivo';color:#fff"), background: cfg.brand.accent }}>{initials(p.name)}</span>}<span style={s('flex:1')}><span style={s("display:block;font:700 13px/1.2 'Archivo'")}>{p.name}</span><span style={s("display:block;font:400 11.5px/1.3 'Archivo';color:#513E66;margin-top:3px")}>{p.role}</span></span><span style={s("font:600 10.5px/1 'Archivo';color:#826E99")}>{p.slot}</span></div>)}</div>
         </Card>
         <Card>
           <div style={s('display:flex;align-items:center;gap:10px')}><Cap>SPONSORS</Cap><Demo /></div>

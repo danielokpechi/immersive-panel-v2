@@ -329,19 +329,19 @@
       "name": "Coach Aminah Yusof",
       "role": "Head coach, Team Hawk",
       "slot": "Courtside",
-      "photo": "voltford/media/crews/av-hannah.jpg"
+      "photo": ""
     },
     {
       "name": "Coach Ben Lau",
       "role": "Head coach, Team Falcon",
       "slot": "Courtside",
-      "photo": "voltford/media/crews/av-marcus.jpg"
+      "photo": ""
     },
     {
       "name": "Farah Idris",
       "role": "Host",
       "slot": "All night",
-      "photo": "voltford/media/crews/av-priya.jpg"
+      "photo": ""
     }
   ],
   "sponsors": [
@@ -529,43 +529,37 @@
         "user": "HAWKNEST",
         "text": "Hawks in the building",
         "where": "venue",
-        "tag": "ARENA · SECTION B",
-        "avatar": "voltford/media/crews/av-r1.jpg"
+        "tag": "ARENA · SECTION B"
       },
       {
         "user": "FALCONFLOCK",
         "text": "Falcons take this one",
         "where": "online",
-        "tag": "ONLINE · KL",
-        "avatar": "voltford/media/crews/av-r2.jpg"
+        "tag": "ONLINE · KL"
       },
       {
         "user": "SARAH.K",
         "text": "Mika Tan is so fast",
         "where": "venue",
-        "tag": "ARENA · COURTSIDE",
-        "avatar": "voltford/media/crews/av-priya.jpg"
+        "tag": "ARENA · COURTSIDE"
       },
       {
         "user": "DANIEL.L",
         "text": "Watching from Penang with the whole family",
         "where": "online",
-        "tag": "ONLINE · PENANG",
-        "avatar": "voltford/media/crews/av-marcus.jpg"
+        "tag": "ONLINE · PENANG"
       },
       {
         "user": "UNIHOOPS",
         "text": "Uni Hoops crew, section D!",
         "where": "venue",
-        "tag": "ARENA · SECTION D",
-        "avatar": "voltford/media/crews/av-r3.jpg"
+        "tag": "ARENA · SECTION D"
       },
       {
         "user": "AMIRA",
         "text": "That half-court shot!!",
         "where": "online",
-        "tag": "ONLINE · SHAH ALAM",
-        "avatar": "voltford/media/crews/av-hannah.jpg"
+        "tag": "ONLINE · SHAH ALAM"
       }
     ],
     "quickBefore": [

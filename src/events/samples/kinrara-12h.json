@@ -377,19 +377,19 @@
       "name": "Aiden Raj",
       "role": "Lead commentator",
       "slot": "All three days",
-      "photo": "voltford/media/crews/av-marcus.jpg"
+      "photo": ""
     },
     {
       "name": "Mira Lau",
       "role": "Pit lane reporter",
       "slot": "Race day",
-      "photo": "voltford/media/crews/av-priya.jpg"
+      "photo": ""
     },
     {
       "name": "Hafiz Omar",
       "role": "Race control analyst",
       "slot": "Night stint",
-      "photo": "voltford/media/crews/av-declan.jpg"
+      "photo": ""
     }
   ],
   "sponsors": [
@@ -578,57 +578,49 @@
         "user": "RACEFAN_AZ",
         "text": "Grandstand C is loud already",
         "where": "venue",
-        "tag": "CIRCUIT · STAND C",
-        "avatar": "voltford/media/crews/av-r1.jpg"
+        "tag": "CIRCUIT · STAND C"
       },
       {
         "user": "NADIA.KL",
         "text": "Watching the onboard from Penang",
         "where": "online",
-        "tag": "ONLINE · PENANG",
-        "avatar": "voltford/media/crews/av-priya.jpg"
+        "tag": "ONLINE · PENANG"
       },
       {
         "user": "EMBERARMY",
         "text": "#07 all the way",
         "where": "venue",
-        "tag": "CIRCUIT · FAN ZONE",
-        "avatar": "voltford/media/crews/av-marcus.jpg"
+        "tag": "CIRCUIT · FAN ZONE"
       },
       {
         "user": "TMK",
         "text": "That pit stop was 37 seconds",
         "where": "online",
-        "tag": "ONLINE · KL",
-        "avatar": "voltford/media/crews/av-declan.jpg"
+        "tag": "ONLINE · KL"
       },
       {
         "user": "AISYAH_R",
         "text": "Night stint under the lights is unreal",
         "where": "venue",
-        "tag": "CIRCUIT · STAND B",
-        "avatar": "voltford/media/crews/av-hannah.jpg"
+        "tag": "CIRCUIT · STAND B"
       },
       {
         "user": "JUNSHENG",
         "text": "Monsoon are saving fuel",
         "where": "online",
-        "tag": "ONLINE · JB",
-        "avatar": "voltford/media/crews/av-r2.jpg"
+        "tag": "ONLINE · JB"
       },
       {
         "user": "RAVI_FAN",
         "text": "Menon is flying in sector 2",
         "where": "online",
-        "tag": "ONLINE · IPOH",
-        "avatar": "voltford/media/crews/av-r3.jpg"
+        "tag": "ONLINE · IPOH"
       },
       {
         "user": "GARUDA88",
         "text": "Pit lane walk was the best part",
         "where": "venue",
-        "tag": "CIRCUIT · PIT LANE",
-        "avatar": "voltford/media/crews/av-marcus.jpg"
+        "tag": "CIRCUIT · PIT LANE"
       }
     ],
     "quickBefore": [

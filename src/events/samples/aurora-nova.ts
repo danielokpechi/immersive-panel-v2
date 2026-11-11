@@ -2,7 +2,6 @@
 // Every word and number the Nova fan view and Studio show comes from here.
 import type { EventConfig, Lead, Signals } from '../config';
 
-const av = (f: string) => `voltford/media/crews/${f}.jpg`;
 const sg = (p: Partial<Signals>): Signals => ({ features: 0, polls: 0, iris: 0, questions: 0, built: false, finance: false, booked: false, checkedIn: false, following: false, ...p });
 const lead = (id: string, name: string, where: 'venue' | 'online', model: string, budget: string, area: string, source: string, route: string, status: Lead['status'], at: string, signals: Partial<Signals>, extra: Partial<Lead> = {}): Lead =>
   ({ id, name, where, answers: { model, budget, area }, consent: true, source, signals: sg(signals), route, status, at, ...extra });
@@ -93,9 +92,9 @@ export const AURORA_NOVA: EventConfig = {
     { title: 'Send your questions now', body: 'The most upvoted questions go to the team on stage at 20:40.', target: 'all' },
   ],
   presenters: [
-    { name: 'Amira Hassan', role: 'CEO, Aurora Motors', slot: 'Keynote · 20:00', photo: av('av-hannah') },
-    { name: 'Farid Rahman', role: 'Head of Design', slot: 'Reveal · 20:25', photo: av('av-marcus') },
-    { name: 'Lena Kwok', role: 'Chief Engineer', slot: 'Q&A · 20:40', photo: av('av-priya') },
+    { name: 'Amira Hassan', role: 'CEO, Aurora Motors', slot: 'Keynote · 20:00', photo: '' },
+    { name: 'Farid Rahman', role: 'Head of Design', slot: 'Reveal · 20:25', photo: '' },
+    { name: 'Lena Kwok', role: 'Chief Engineer', slot: 'Q&A · 20:40', photo: '' },
   ],
   sponsors: ['Gridline Charging', 'Strata Bank', 'Lumen Air', 'Kopi Lane'],
   iris: {
@@ -135,18 +134,18 @@ export const AURORA_NOVA: EventConfig = {
   },
   chat: {
     pool: [
-      { user: 'NADIA.KL', text: 'Front row energy in here tonight', where: 'venue', tag: 'HALL · ROW C', avatar: av('av-priya') },
-      { user: 'JUNSHENG88', text: 'Watching from Penang, stream is crisp', where: 'online', tag: 'ONLINE · PENANG', avatar: av('av-r1') },
-      { user: 'TMK_EV', text: 'Range in KL traffic is what I need to hear', where: 'online', tag: 'ONLINE · KL', avatar: av('av-declan') },
-      { user: 'AISYAH_R', text: 'The lighting on that stage though', where: 'venue', tag: 'HALL · ROW F', avatar: av('av-hannah') },
-      { user: 'DANIEL.L', text: 'If it is under 170k I am in', where: 'online', tag: 'ONLINE · JB', avatar: av('av-marcus') },
-      { user: 'PRIYA.M', text: 'Brought my dad, he still drives a 2009 sedan', where: 'venue', tag: 'HALL · ROW K', avatar: av('av-priya') },
-      { user: 'HAZIQ', text: 'Anyone else here for the charging numbers?', where: 'online', tag: 'ONLINE · IPOH', avatar: av('av-r2') },
-      { user: 'MEI_TAN', text: 'Booked a test drive already, no regrets', where: 'venue', tag: 'HALL · ROW B', avatar: av('av-hannah') },
-      { user: 'KAVIN_S', text: '800 volts at this price would be wild', where: 'online', tag: 'ONLINE · SHAH ALAM', avatar: av('av-r3') },
-      { user: 'SOFEA', text: 'That light bar, honestly', where: 'venue', tag: 'HALL · ROW D', avatar: av('av-priya') },
-      { user: 'RYAN_K', text: 'Glacier White or nothing', where: 'online', tag: 'ONLINE · KUCHING', avatar: av('av-r1') },
-      { user: 'LINA_Z', text: 'Wallbox included? Say it again', where: 'online', tag: 'ONLINE · MELAKA', avatar: av('av-hannah') },
+      { user: 'NADIA.KL', text: 'Front row energy in here tonight', where: 'venue', tag: 'HALL · ROW C' },
+      { user: 'JUNSHENG88', text: 'Watching from Penang, stream is crisp', where: 'online', tag: 'ONLINE · PENANG' },
+      { user: 'TMK_EV', text: 'Range in KL traffic is what I need to hear', where: 'online', tag: 'ONLINE · KL' },
+      { user: 'AISYAH_R', text: 'The lighting on that stage though', where: 'venue', tag: 'HALL · ROW F' },
+      { user: 'DANIEL.L', text: 'If it is under 170k I am in', where: 'online', tag: 'ONLINE · JB' },
+      { user: 'PRIYA.M', text: 'Brought my dad, he still drives a 2009 sedan', where: 'venue', tag: 'HALL · ROW K' },
+      { user: 'HAZIQ', text: 'Anyone else here for the charging numbers?', where: 'online', tag: 'ONLINE · IPOH' },
+      { user: 'MEI_TAN', text: 'Booked a test drive already, no regrets', where: 'venue', tag: 'HALL · ROW B' },
+      { user: 'KAVIN_S', text: '800 volts at this price would be wild', where: 'online', tag: 'ONLINE · SHAH ALAM' },
+      { user: 'SOFEA', text: 'That light bar, honestly', where: 'venue', tag: 'HALL · ROW D' },
+      { user: 'RYAN_K', text: 'Glacier White or nothing', where: 'online', tag: 'ONLINE · KUCHING' },
+      { user: 'LINA_Z', text: 'Wallbox included? Say it again', where: 'online', tag: 'ONLINE · MELAKA' },
     ],
     quickBefore: ['Can’t wait', 'Who else is in the hall?', 'Watching from home'],
     quickLive: ['That light bar 😍', 'Price please!', 'Range in traffic?', 'Hello from online'],

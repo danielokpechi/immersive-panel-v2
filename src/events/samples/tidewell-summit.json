@@ -329,19 +329,19 @@
       "name": "Maya Okafor",
       "role": "CEO, Tidewell",
       "slot": "Keynote · 09:30",
-      "photo": "voltford/media/crews/av-hannah.jpg"
+      "photo": ""
     },
     {
       "name": "Tomás Reyes",
       "role": "VP Engineering",
       "slot": "Panel · 13:00",
-      "photo": "voltford/media/crews/av-marcus.jpg"
+      "photo": ""
     },
     {
       "name": "Priya Nair",
       "role": "Head of Product",
       "slot": "Q&A · 15:00",
-      "photo": "voltford/media/crews/av-priya.jpg"
+      "photo": ""
     }
   ],
   "sponsors": [
@@ -492,71 +492,61 @@
         "user": "ANA.DEV",
         "text": "Front row for the keynote, coffee in hand",
         "where": "venue",
-        "tag": "VENUE · ROW B",
-        "avatar": "voltford/media/crews/av-priya.jpg"
+        "tag": "VENUE · ROW B"
       },
       {
         "user": "KWAME_OPS",
         "text": "Watching from Accra, stream is sharp",
         "where": "online",
-        "tag": "ONLINE · ACCRA",
-        "avatar": "voltford/media/crews/av-r1.jpg"
+        "tag": "ONLINE · ACCRA"
       },
       {
         "user": "LUCA.B",
         "text": "Hoping for monorepo support",
         "where": "online",
-        "tag": "ONLINE · MILAN",
-        "avatar": "voltford/media/crews/av-declan.jpg"
+        "tag": "ONLINE · MILAN"
       },
       {
         "user": "SOFIA_R",
         "text": "The demo pods are already busy",
         "where": "venue",
-        "tag": "VENUE · MEZZANINE",
-        "avatar": "voltford/media/crews/av-hannah.jpg"
+        "tag": "VENUE · MEZZANINE"
       },
       {
         "user": "DEVON",
         "text": "If AI review knows our lint rules I am sold",
         "where": "online",
-        "tag": "ONLINE · LEEDS",
-        "avatar": "voltford/media/crews/av-marcus.jpg"
+        "tag": "ONLINE · LEEDS"
       },
       {
         "user": "MEI.L",
         "text": "Build track or Scale track, decisions",
         "where": "venue",
-        "tag": "VENUE · ROW F",
-        "avatar": "voltford/media/crews/av-priya.jpg"
+        "tag": "VENUE · ROW F"
       },
       {
         "user": "ARJUN_K",
         "text": "Anyone else here for the pricing?",
         "where": "online",
-        "tag": "ONLINE · PUNE",
-        "avatar": "voltford/media/crews/av-r2.jpg"
+        "tag": "ONLINE · PUNE"
       },
       {
         "user": "NOOR",
         "text": "Previews per branch would save us hours",
         "where": "venue",
-        "tag": "VENUE · ROW D",
-        "avatar": "voltford/media/crews/av-hannah.jpg"
+        "tag": "VENUE · ROW D"
       },
       {
         "user": "BEN_T",
         "text": "38% faster builds is a big claim",
         "where": "online",
-        "tag": "ONLINE · DUBLIN",
-        "avatar": "voltford/media/crews/av-r3.jpg"
+        "tag": "ONLINE · DUBLIN"
       },
       {
         "user": "ZARA",
         "text": "Signing our team up for the beta today",
         "where": "venue",
-        "tag": "VENUE · ROW C",
-        "avatar": "voltford/media/crews/av-priya.jpg"
+        "tag": "VENUE · ROW C"
       }
     ],
     "quickBefore": [
