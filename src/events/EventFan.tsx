@@ -144,7 +144,18 @@ function FanView({ cfg }: { cfg: EventConfig }) {
     const calc = () => {
       const pr = (sc.parentElement as HTMLElement).getBoundingClientRect();
       const top = pr.top + 140, floor = pr.bottom - 60; // below the header bars, above the address pill
-      const boxes = [...sc.querySelectorAll('[data-avoid]')].map((e) => e.getBoundingClientRect()).filter((r) => r.height > 0 && r.bottom > top && r.top < floor);
+      // Headlines: marked hero blocks plus any large display-type text, measured by
+      // the text itself (not its full-width box), so short left-aligned titles that
+      // never reach the tab don't move it.
+      const tabLeft = pr.right - 132;
+      const els = [...sc.querySelectorAll('[data-avoid], div, span')].filter((e) => {
+        if ((e as HTMLElement).dataset.avoid !== undefined) return true;
+        const cs = getComputedStyle(e); if (!cs.fontFamily.includes('Archivo Black') || parseFloat(cs.fontSize) < 17) return false;
+        return [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent!.trim());
+      });
+      const range = document.createRange();
+      const boxes = els.map((e) => { range.selectNodeContents(e); return range.getBoundingClientRect(); })
+        .filter((r) => r.height > 0 && r.right > tabLeft && r.bottom > top && r.top < floor);
       const hit = (t: number, b: number) => boxes.filter((r) => r.top < b + GAP / 2 && r.bottom > t - GAP / 2);
       const b0 = pr.bottom - BASE;
       let lift = 0;
@@ -156,9 +167,10 @@ function FanView({ cfg }: { cfg: EventConfig }) {
       setIrisLift((x) => (Math.abs(x - lift) > 1 ? Math.round(lift) : x));
     };
     calc();
-    sc.addEventListener('scroll', calc, { passive: true }); window.addEventListener('resize', calc);
+    let raf = 0; const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(calc); };
+    sc.addEventListener('scroll', onScroll, { passive: true }); window.addEventListener('resize', calc);
     const t = window.setInterval(calc, 400);
-    return () => { sc.removeEventListener('scroll', calc); window.removeEventListener('resize', calc); window.clearInterval(t); };
+    return () => { sc.removeEventListener('scroll', onScroll); window.removeEventListener('resize', calc); window.clearInterval(t); cancelAnimationFrame(raf); };
   }, []);
   const chatRef = useRef<HTMLDivElement>(null);
   const irisRef = useRef<HTMLDivElement>(null);
