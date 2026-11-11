@@ -1,0 +1,486 @@
+{
+  "id": "halo-lumen-x1",
+  "version": 1,
+  "status": "upcoming",
+  "brand": {
+    "name": "Halo",
+    "wordmark": "HALO",
+    "wordmarkShort": "HALO",
+    "logo": "connect-events/halo/logo.png",
+    "accent": "#3D7BFF",
+    "dark": "#08101F",
+    "domain": "connect.boltos.ai/halo"
+  },
+  "event": {
+    "name": "Halo Lumen X1 Launch",
+    "template": "launch",
+    "format": "Hybrid",
+    "date": "2027-02-18",
+    "time": "20:00",
+    "dayLabel": "THU 20:00",
+    "dateShort": "THU 18 FEB",
+    "venue": "Halo Studio, TRX",
+    "venueShort": "HALO STUDIO, TRX",
+    "venueWord": "STUDIO",
+    "city": "Kuala Lumpur",
+    "kicker": "HALO",
+    "kickerSub": "LAUNCH · KUALA LUMPUR",
+    "title": "LUMEN X1",
+    "countdownLabel": "LAUNCH IN",
+    "countdownSeconds": 11640,
+    "dateLine": "THU 20:00 · HALO STUDIO, TRX · AND ONLINE",
+    "inviteTitle": "BE FIRST TO SEE IT",
+    "inviteSub": "In the studio or online, the same moment.",
+    "venueOption": "In person",
+    "venueOptionSub": "Halo Studio, TRX · doors 19:30",
+    "onlineOptionSub": "Live stream with this panel · polls, chat, Q&A",
+    "registeredVenue": "See you there. Show this panel at the door.",
+    "registeredOnline": "Watching online. This panel is your stream companion.",
+    "details": [
+      {
+        "icon": "event",
+        "k": "When",
+        "v": "Thu 18 Feb · doors 19:30, reveal 20:20"
+      },
+      {
+        "icon": "location_on",
+        "k": "Where",
+        "v": "Halo Studio, TRX, Kuala Lumpur"
+      },
+      {
+        "icon": "wifi",
+        "k": "Online",
+        "v": "Live stream on this page, same Q&A and chat"
+      }
+    ],
+    "heroImage": {
+      "src": "connect-events/halo/hero.jpg",
+      "w": 1800,
+      "h": 1125
+    }
+  },
+  "segments": [
+    {
+      "id": "s1",
+      "name": "Doors open",
+      "short": "DOORS OPEN",
+      "time": "19:30",
+      "kind": "doors",
+      "blurb": "Doors, demo tables and drinks",
+      "note": "",
+      "heroTitle": "DOORS OPEN",
+      "heroSub": ""
+    },
+    {
+      "id": "s2",
+      "name": "Keynote",
+      "short": "KEYNOTE",
+      "time": "20:00",
+      "kind": "talk",
+      "blurb": "Halo CEO on the year ahead",
+      "note": "",
+      "heroTitle": "KEYNOTE",
+      "heroSub": ""
+    },
+    {
+      "id": "s3",
+      "name": "Reveal",
+      "short": "REVEAL",
+      "time": "20:20",
+      "kind": "reveal",
+      "blurb": "Lumen X1, specs and price",
+      "note": "",
+      "heroTitle": "REVEAL",
+      "heroSub": ""
+    },
+    {
+      "id": "s4",
+      "name": "Q&A",
+      "short": "Q&A",
+      "time": "20:40",
+      "kind": "qa",
+      "blurb": "Questions for the product team",
+      "note": "",
+      "heroTitle": "Q&A",
+      "heroSub": ""
+    }
+  ],
+  "reveal": {
+    "kicker": "HALO · 18 FEB",
+    "word1": "INTRODUCING",
+    "word2": "LUMEN X1",
+    "line": "The brightest, thinnest Halo yet.",
+    "thirdNote": "From RM2,999 · tap the glowing points to explore",
+    "title": "LUMEN X1",
+    "sub": "Tap a glowing point to explore the phone.",
+    "triggerBlurb": "Reveal Lumen X1 on every screen",
+    "logo": "connect-events/halo/logo.png",
+    "media": {
+      "src": "connect-events/halo/reveal.jpg",
+      "w": 1800,
+      "h": 1125,
+      "kind": "image"
+    }
+  },
+  "product": {
+    "sectionTitle": "LUMEN X1",
+    "priceLine": "FROM RM2,999",
+    "featuresHint": "Spotlight the next feature",
+    "variants": [
+      {
+        "name": "Lumen X1 · 128 GB",
+        "price": "RM2,999",
+        "spec": "6.4\" OLED · 50 MP · 8 GB RAM"
+      },
+      {
+        "name": "Lumen X1 · 256 GB",
+        "spec": "6.4\" OLED · 50 MP · 12 GB RAM",
+        "price": "RM3,399"
+      },
+      {
+        "name": "Lumen X1 · 512 GB",
+        "spec": "6.4\" OLED · 50 MP · 12 GB RAM",
+        "price": "RM3,899"
+      }
+    ]
+  },
+  "hotspots": [
+    {
+      "id": "h1794411506645",
+      "x": 47.3,
+      "y": 23.2,
+      "name": "Halo ring",
+      "desc": "A light ring around the camera that glows for calls, alarms and charging.",
+      "stat": "360°",
+      "unit": "notification light"
+    },
+    {
+      "id": "h1794411507132",
+      "x": 50,
+      "y": 46.8,
+      "name": "LumenDisplay",
+      "desc": "A 6.4\" OLED that reaches 3,000 nits outdoors and drops to 1 nit at night.",
+      "stat": "3,000",
+      "unit": "nits peak brightness"
+    },
+    {
+      "id": "h1794411507592",
+      "x": 60,
+      "y": 74.9,
+      "name": "Titanium frame",
+      "desc": "Aerospace titanium, 7.4 mm thin and 172 g.",
+      "stat": "7.4 mm",
+      "unit": "thin"
+    },
+    {
+      "id": "h1794411508043",
+      "x": 52.8,
+      "y": 85.7,
+      "name": "All-day battery",
+      "desc": "5,000 mAh with 45 W wired charging, 50% in 18 minutes.",
+      "stat": "18 min",
+      "unit": "to 50%"
+    }
+  ],
+  "polls": [
+    {
+      "id": "p1",
+      "q": "What do you think so far?",
+      "opts": {
+        "Love it": 60,
+        "Not sure yet": 40
+      },
+      "votes": 1200
+    }
+  ],
+  "breakContent": {
+    "minutes": 10,
+    "sub": "Back shortly.",
+    "poll": {
+      "id": "break",
+      "q": "First impressions, in one word?",
+      "opts": {
+        "Great": 60,
+        "Okay": 40
+      },
+      "votes": 800
+    },
+    "reads": []
+  },
+  "announcements": {
+    "all": [
+      {
+        "kicker": "UPDATE",
+        "title": "An announcement for everyone",
+        "sub": "One line of detail"
+      }
+    ],
+    "venue": [],
+    "online": []
+  },
+  "reminders": [
+    {
+      "title": "Starting soon",
+      "body": "Keep this page open.",
+      "target": "all"
+    }
+  ],
+  "presenters": [],
+  "sponsors": [],
+  "iris": {
+    "intro": "I’m IRIS. I answer from Halo’s approved Lumen X1 facts: tonight’s running order, specs, price and instalments.",
+    "pre": [
+      {
+        "q": "When is the reveal?",
+        "a": "Lumen X1 is revealed at 20:20, straight after the keynote.",
+        "stat": "20:20",
+        "label": "REVEAL TIME"
+      }
+    ],
+    "live": [],
+    "hidden": "That is announced at the reveal.",
+    "fallback": "That isn’t in my approved facts. Send it to the Q&A."
+  },
+  "cta": {
+    "cardKicker": "NEXT STEP",
+    "title": "Book a hands-on",
+    "sub": "Fifteen minutes with a Halo specialist, in store.",
+    "button": "BOOK A HANDS-ON",
+    "screenTitle": "HANDS-ON",
+    "screenMeta": "2 STORES",
+    "intro": "Try every colour and storage size, and move your data across.",
+    "optionsLabel": "STORE",
+    "options": [
+      {
+        "id": "o1",
+        "name": "Halo Store TRX",
+        "sub": "Level 2 · next to the atrium"
+      },
+      {
+        "id": "o1794411522895",
+        "name": "Halo Store Mid Valley",
+        "sub": "Ground floor · North Court"
+      }
+    ],
+    "slotsLabel": "TIME",
+    "slots": [
+      "Sat 20 Feb · 11:00",
+      "Sat 20 Feb · 15:00",
+      "Sun 21 Feb · 12:00"
+    ],
+    "submit": "REQUEST A SLOT",
+    "doneTitle": "Hands-on booked",
+    "doneSub": "We’ll send a reminder the day before."
+  },
+  "follow": {
+    "title": "Follow for the next event",
+    "sub": "One ping when the next one is announced.",
+    "doneTitle": "Following",
+    "doneSub": "You’ll hear about the next one."
+  },
+  "after": {
+    "badge": "THAT WAS LUMEN X1",
+    "title": "LUMEN X1",
+    "sub": "From RM2,999 · in stores 1 March",
+    "stats": [
+      [
+        "6,840",
+        "WATCHED"
+      ],
+      [
+        "21.3k",
+        "REACTIONS"
+      ],
+      [
+        "184",
+        "QUESTIONS"
+      ]
+    ],
+    "recapTitle": "THE RECAP"
+  },
+  "community": {
+    "badge": "COMMUNITY · ALWAYS ON",
+    "title": "The event is over.\nThe conversation isn’t.",
+    "sub": "Chat, ask IRIS, and hear about the next event first.",
+    "next": {
+      "name": "Next event",
+      "kicker": "NEXT",
+      "date": "TBC",
+      "time": "",
+      "place": "",
+      "blurb": "Details soon.",
+      "days": 30
+    },
+    "pastLabel": "PAST EVENT",
+    "pastDate": "",
+    "pastTitle": "Your event",
+    "pastSub": "Replay and recap.",
+    "replay": "REPLAY"
+  },
+  "chat": {
+    "pool": [
+      {
+        "user": "AMIRA.T",
+        "text": "The halo ring is so clean",
+        "where": "venue",
+        "tag": "STUDIO · FRONT ROW"
+      },
+      {
+        "user": "JASON_K",
+        "text": "Watching from Penang, 0% instalments please",
+        "where": "online",
+        "tag": "ONLINE · PENANG"
+      }
+    ],
+    "quickBefore": [
+      "Can’t wait"
+    ],
+    "quickLive": [
+      "Wow"
+    ],
+    "quickAfter": [
+      "Great event"
+    ]
+  },
+  "qaSeed": [],
+  "demo": {
+    "rsvp": {
+      "venue": 400,
+      "online": 1600
+    },
+    "audienceBefore": 600,
+    "venueBySeg": [
+      200,
+      380,
+      400,
+      390
+    ],
+    "onlineBySeg": [
+      800,
+      1500,
+      1700,
+      1600
+    ],
+    "breakAud": [
+      300,
+      1200
+    ],
+    "afterAud": [
+      100,
+      600
+    ],
+    "communityOnline": 80,
+    "checkinsBySeg": [
+      180,
+      360,
+      380,
+      380
+    ],
+    "results": {
+      "reactions": 4200,
+      "questions": 60,
+      "answered": 8,
+      "conversions": 40,
+      "conversionLabel": "BOOKINGS",
+      "engagement": [
+        {
+          "seg": "Doors open",
+          "pct": 38
+        },
+        {
+          "seg": "Keynote",
+          "pct": 64
+        },
+        {
+          "seg": "Reveal",
+          "pct": 92
+        },
+        {
+          "seg": "Q&A",
+          "pct": 71
+        }
+      ],
+      "conversionsBy": [
+        {
+          "name": "Location one",
+          "n": 40
+        }
+      ],
+      "multiEvent": {
+        "total": 0,
+        "rows": []
+      },
+      "follows": 300,
+      "votes": 900
+    }
+  },
+  "layout": {
+    "live": "reveal-first"
+  },
+  "modules": {
+    "sponsors": false
+  },
+  "gallery": {
+    "title": "THE LUMEN X1",
+    "items": [
+      {
+        "src": "connect-events/halo/gallery-1.jpg",
+        "caption": "Four cameras under one sapphire island"
+      },
+      {
+        "src": "connect-events/halo/gallery-2.jpg",
+        "caption": "Titanium, Midnight and Halo Blue"
+      },
+      {
+        "src": "connect-events/halo/gallery-3.jpg",
+        "caption": "7.4 mm, the thinnest Halo yet"
+      }
+    ]
+  },
+  "showroom": {
+    "buildTitle": "BUILD YOUR LUMEN",
+    "buildSub": "Pick a colour and storage. Prices include SST.",
+    "colours": [
+      {
+        "name": "Titanium",
+        "hex": "#C9CED6"
+      },
+      {
+        "name": "Midnight",
+        "hex": "#1E2433"
+      },
+      {
+        "name": "Halo Blue",
+        "hex": "#7C93F0"
+      }
+    ],
+    "defaultVariant": 0,
+    "finance": {
+      "title": "INSTALMENTS",
+      "sub": "Interest-free instalments with Strata Pay.",
+      "rate": 0,
+      "deposits": [
+        0,
+        10,
+        20
+      ],
+      "terms": [
+        6,
+        12,
+        24
+      ],
+      "defaultDeposit": 0,
+      "defaultTerm": 12,
+      "termUnit": "months",
+      "note": "Indicative. 0% interest, subject to approval by Strata Pay."
+    }
+  },
+  "labels": {
+    "colourTrim": "Colour + storage",
+    "trim": "STORAGE",
+    "changeBuild": "CHANGE COLOUR OR STORAGE",
+    "seeMonthly": "SEE MONTHLY INSTALMENTS",
+    "monthlyCost": "Instalments",
+    "theMoment": "THE LAUNCH"
+  }
+}

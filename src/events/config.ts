@@ -13,6 +13,7 @@ import { AURORA_NOVA } from './samples/aurora-nova';
 import { TIDEWELL } from './samples/tidewell';
 // Sports samples: an endurance race over three days, and a three-stage series.
 import { SPORTS } from './samples/sports';
+import { LAUNCHES } from './samples/launches';
 // The neutral starting point for new events (no sample's content).
 import { SCAFFOLD } from './scaffold';
 
@@ -195,7 +196,7 @@ export type LabelKey = keyof typeof LABELS;
 export const lab = (c: EventConfig, k: LabelKey) => c.labels?.[k] || LABELS[k];
 
 // ── samples ──
-export const SAMPLES: EventConfig[] = [AURORA_NOVA, ...TIDEWELL, ...SPORTS];
+export const SAMPLES: EventConfig[] = [AURORA_NOVA, ...LAUNCHES, ...TIDEWELL, ...SPORTS];
 // Old links (/events/nova/) point at the Nova sample.
 export const ALIASES: Record<string, string> = { nova: AURORA_NOVA.id };
 // GitHub Pages only serves pages built ahead of time, so new events take an id
