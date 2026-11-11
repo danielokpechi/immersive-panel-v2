@@ -1,8 +1,11 @@
 // Sample event: the Aurora Nova world premiere (fictional brand, fictional car).
 // Every word and number the Nova fan view and Studio show comes from here.
-import type { EventConfig } from '../config';
+import type { EventConfig, Lead, Signals } from '../config';
 
 const av = (f: string) => `voltford/media/crews/${f}.jpg`;
+const sg = (p: Partial<Signals>): Signals => ({ features: 0, polls: 0, iris: 0, questions: 0, built: false, finance: false, booked: false, checkedIn: false, following: false, ...p });
+const lead = (id: string, name: string, where: 'venue' | 'online', model: string, budget: string, area: string, source: string, route: string, status: Lead['status'], at: string, signals: Partial<Signals>, extra: Partial<Lead> = {}): Lead =>
+  ({ id, name, where, answers: { model, budget, area }, consent: true, source, signals: sg(signals), route, status, at, ...extra });
 
 export const AURORA_NOVA: EventConfig = {
   id: 'aurora-nova',
@@ -156,6 +159,35 @@ export const AURORA_NOVA: EventConfig = {
     { id: 'q4', text: 'Can I finance the Launch Edition?', who: 'daniel.l', where: 'online', votes: 221 },
     { id: 'q5', text: 'How long is the battery warranty?', who: 'priya.m', where: 'venue', votes: 187 },
   ],
+  interest: {
+    title: 'Tell us what you’re after', sub: 'Three taps. It shapes what IRIS tells you and matches you to the nearest showroom.',
+    consent: 'Aurora Motors and its showrooms can contact me about the Nova. I can opt out any time.',
+    fields: [
+      { id: 'model', label: 'Preferred model', short: 'Model', options: ['The new Nova', 'Aurora Terra', 'Aurora Vela', 'Not sure yet'] },
+      { id: 'budget', label: 'Budget', short: 'Budget', options: ['Under RM160k', 'RM160k–190k', 'RM190k–220k', 'Over RM220k'] },
+      { id: 'area', label: 'Nearest to', short: 'Area', options: ['Kuala Lumpur', 'Petaling Jaya', 'Shah Alam', 'Elsewhere'], routes: { 'Kuala Lumpur': 'kl', 'Petaling Jaya': 'pj', 'Shah Alam': 'sa' } },
+    ],
+  },
+  showroom: {
+    buildTitle: 'BUILD YOUR NOVA', buildSub: 'Pick a colour and a trim. Prices are on the road.',
+    colours: [
+      { name: 'Glacier White', hex: '#E6E9EC' }, { name: 'Ember Orange', hex: '#E2622B' },
+      { name: 'Midnight Teal', hex: '#17646A' }, { name: 'Graphite', hex: '#44474D' },
+    ],
+    finance: {
+      title: 'MONTHLY COST', sub: 'Indicative hire purchase with Strata Bank, the launch finance partner.',
+      rate: 2.49, deposits: [10, 20, 30], terms: [5, 7, 9], defaultDeposit: 20, defaultTerm: 7,
+      note: 'Indicative only, at a 2.49% flat rate. Final terms depend on approval by Strata Bank.',
+      running: {
+        title: 'RUNNING COST', sub: 'Energy for a month of 1,500 km, typical Klang Valley driving.',
+        rows: [{ label: 'Nova, charging at home', v: 96 }, { label: 'Nova, fast chargers only', v: 288 }, { label: 'Petrol crossover, 8 L/100 km', v: 246 }],
+      },
+    },
+  },
+  followUp: {
+    template: 'Hi {first}, thanks for joining the Aurora Nova premiere. {extra}{route} has a Nova ready for a test drive this weekend, with a product specialist. Reply with a time that suits you.',
+    extraBuilt: 'You specced a {variant} in {colour}. ', extraFinance: 'At about {monthly} a month on the launch finance, launch pricing is held for 30 days. ', extraFeature: 'You spent the most time on the {feature}, so we’ll start there. ',
+  },
   demo: {
     rsvp: { venue: 1380, online: 5040 },
     audienceBefore: 2140, venueBySeg: [612, 1186, 1240, 1228], onlineBySeg: [3420, 7860, 9186, 8740],
@@ -167,6 +199,38 @@ export const AURORA_NOVA: EventConfig = {
       conversionsBy: [{ name: 'Aurora KL', n: 94 }, { name: 'Aurora Petaling Jaya', n: 61 }, { name: 'Aurora Shah Alam', n: 31 }],
       multiEvent: { total: 2140, rows: [{ name: 'Owners Day + Nova launch', n: 1320 }, { name: 'Nova launch + registered for Drive Week', n: 640 }, { name: 'All three events', n: 180 }] },
       follows: 2140, votes: 8902,
+      funnel: [
+        { label: 'Registered interest', n: 6420, key: 'registered' },
+        { label: 'Engaged during the reveal', n: 4880, key: 'engaged' },
+        { label: 'Built a Nova or checked finance', n: 1940, key: 'built' },
+        { label: 'Requested a test drive', n: 186, key: 'booked' },
+        { label: 'Reserved (RM1,000 deposit)', n: 64 },
+        { label: 'Sold, reported by showroom', n: 21 },
+      ],
+      features: { lights: 64, wheels: 38, cabin: 57, roof: 41, charge: 72 },
+      leadQuality: [
+        { name: 'Aurora KL', hot: 212, warm: 640, cold: 1380, won: 11 },
+        { name: 'Aurora Petaling Jaya', hot: 158, warm: 512, cold: 1110, won: 7 },
+        { name: 'Aurora Shah Alam', hot: 74, warm: 290, cold: 820, won: 3 },
+      ],
+      sources: [
+        { name: 'Instagram + TikTok ads', n: 2410, icon: 'campaign' }, { name: 'Search + direct', n: 1290, icon: 'search' },
+        { name: 'Aurora owners newsletter', n: 1120, icon: 'mail' }, { name: 'Showroom invites', n: 860, icon: 'storefront' },
+        { name: 'Strata Bank app (partner)', n: 740, icon: 'handshake' },
+      ],
     },
+    leads: [
+      lead('L-2041', 'Mei Tan', 'venue', 'The new Nova', 'RM160k–190k', 'Petaling Jaya', 'Showroom invites', 'pj', 'Booked', 'Hall · 21:02', { features: 5, polls: 3, iris: 2, built: true, finance: true, booked: true, checkedIn: true }, { seen: ['charge', 'lights', 'cabin', 'roof', 'wheels'], colour: 'Glacier White', variant: 'Nova Pro', monthly: 'RM2,114' }),
+      lead('L-2042', 'Tan Jun Sheng', 'online', 'The new Nova', 'RM190k–220k', 'Elsewhere', 'Instagram + TikTok ads', 'kl', 'New', 'Online · 20:58', { features: 4, polls: 2, iris: 3, questions: 1, built: true, finance: true, following: true }, { seen: ['charge', 'cabin', 'lights', 'roof'], colour: 'Midnight Teal', variant: 'Nova Launch Edition', monthly: 'RM2,449' }),
+      lead('L-2043', 'Kavin Subramaniam', 'online', 'The new Nova', 'RM160k–190k', 'Shah Alam', 'Search + direct', 'sa', 'Contacted', 'Online · 20:51', { features: 3, polls: 3, iris: 2, built: true, finance: true }, { seen: ['charge', 'wheels', 'lights'], colour: 'Graphite', variant: 'Nova Pro', monthly: 'RM2,114' }),
+      lead('L-2044', 'Nadia Kamal', 'venue', 'The new Nova', 'Over RM220k', 'Kuala Lumpur', 'Aurora owners newsletter', 'kl', 'Reserved', 'Hall · 20:47', { features: 5, polls: 2, iris: 1, built: true, booked: true, checkedIn: true, following: true }, { seen: ['lights', 'roof', 'cabin', 'charge', 'wheels'], colour: 'Ember Orange', variant: 'Nova Launch Edition' }),
+      lead('L-2045', 'Haziq Ismail', 'online', 'Not sure yet', 'Under RM160k', 'Kuala Lumpur', 'Instagram + TikTok ads', 'kl', 'New', 'Online · 20:44', { features: 2, polls: 2, iris: 3, finance: true }, { seen: ['charge', 'wheels'], variant: 'Nova Standard', monthly: 'RM1,778' }),
+      lead('L-2046', 'Priya Menon', 'venue', 'Aurora Terra', 'RM160k–190k', 'Petaling Jaya', 'Showroom invites', 'pj', 'New', 'Hall · 20:40', { features: 3, polls: 1, checkedIn: true }, { seen: ['cabin', 'roof', 'lights'] }),
+      lead('L-2047', 'Ryan Khoo', 'online', 'The new Nova', 'RM160k–190k', 'Elsewhere', 'Strata Bank app (partner)', 'kl', 'New', 'Online · 20:39', { features: 1, polls: 3, built: true }, { seen: ['lights'], colour: 'Glacier White', variant: 'Nova Standard' }),
+      lead('L-2048', 'Lina Zainal', 'online', 'The new Nova', 'Under RM160k', 'Shah Alam', 'Instagram + TikTok ads', 'sa', 'New', 'Online · 20:36', { features: 2, polls: 1, iris: 1, questions: 1 }, { seen: ['charge', 'wheels'] }),
+      lead('L-2049', 'Aisyah Rahman', 'venue', 'Aurora Vela', 'Under RM160k', 'Kuala Lumpur', 'Aurora owners newsletter', 'kl', 'Not now', 'Hall · 20:31', { features: 1, polls: 1, checkedIn: true }, { seen: ['lights'] }),
+      lead('L-2050', 'Darren Lim', 'online', 'Not sure yet', 'RM190k–220k', 'Petaling Jaya', 'Search + direct', 'pj', 'New', 'Online · 20:29', { polls: 1, iris: 1 }),
+      lead('L-2051', 'Sofea Aziz', 'online', 'Aurora Terra', 'Under RM160k', 'Elsewhere', 'Strata Bank app (partner)', 'kl', 'New', 'Online · 20:22', { polls: 1 }, { consent: false }),
+    ],
   },
 };

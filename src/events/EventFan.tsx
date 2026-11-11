@@ -12,7 +12,8 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { s } from '../voltford/admin/s';
 import {
   getEvent, themeCss, audience, channelName, asset, homePath, revealSegIndex, qaSegIndex, clockAfter,
-  type EventConfig, type Ms as MState, type Mode, type Target, type TriggerKind, type QA,
+  routeFor, priceNum, priceCur, monthlyFlat, fmtMoney,
+  type EventConfig, type Ms as MState, type Mode, type Target, type TriggerKind, type QA, type Lead, type Signals,
 } from './config';
 
 const Ms = ({ children, size = 18, color, style }: { children: string; size?: number; color?: string; style?: CSSProperties }) => (
@@ -43,6 +44,9 @@ interface ESt {
   reminders: { id: string; title: string; body: string }[];
   toast: string | null; theme: string;
   stripTarget: Target; stripOpen: boolean; ctr: { poll: number; hotspot: number; announce: number };
+  // interest + showroom (one profile, sent to the Studio as a lead)
+  answers: Record<string, string>; consent: boolean; routed: boolean; irisAsks: number;
+  colour: string; variant: number; built: boolean; deposit: number; term: number; financeSeen: boolean;
 }
 
 // Loads the event's config (a live draft when previewing in the builder).
@@ -96,6 +100,9 @@ function FanView({ cfg }: { cfg: EventConfig }) {
     event: qs.get('event') === 'next' ? 'next' : 'main', attended: readAttended(), checkedIn: checkin, nextReg: false, reminders: [],
     toast: null, theme: qs.get('theme') === 'dark' ? 'dark' : 'light',
     stripTarget: 'all', stripOpen: !embed && typeof window !== 'undefined' && window.innerWidth > 520, ctr: { poll: 0, hotspot: 0, announce: 0 },
+    answers: {}, consent: false, routed: false, irisAsks: 0,
+    colour: cfg.showroom?.colours[0]?.name || '', variant: Math.min(1, Math.max(cfg.product.variants.length - 1, 0)), built: false,
+    deposit: cfg.showroom?.finance.defaultDeposit ?? 20, term: cfg.showroom?.finance.defaultTerm ?? 7, financeSeen: false,
   }));
   const set = (p: Partial<ESt> | ((x: ESt) => Partial<ESt>)) => setSt((x) => ({ ...x, ...(typeof p === 'function' ? p(x) : p) }));
   const stRef = useRef(st); stRef.current = st;
@@ -121,6 +128,8 @@ function FanView({ cfg }: { cfg: EventConfig }) {
   }, [st.theme]);
   useEffect(() => { document.title = cfg.event.name + ' · Connect Events'; }, [cfg.event.name]);
 
+  // A new screen opens at its top.
+  useEffect(() => { const el = document.querySelector('[data-fanscroll]'); if (el && st.route !== 'home') el.scrollTop = 0; }, [st.route]);
   const chatRef = useRef<HTMLDivElement>(null);
   const irisRef = useRef<HTMLDivElement>(null);
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [st.chat.length, st.route]);
@@ -166,7 +175,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
       set({ ms: 'live', seg: REV, revealed: true, revealing: true, route: 'home', navStack: [], iris: false, hotspot: null, flash: null });
       later('reveal', 4300, () => {
         set({ revealing: false });
-        showThird({ kind: 'THE REVEAL', title: cfg.reveal.title.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()), note: cfg.reveal.thirdNote, color: ACC, icon: 'auto_awesome' }, 5200);
+        showThird({ kind: 'THE REVEAL', title: cfg.reveal.title.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()), note: cfg.reveal.thirdNote, color: ACC, icon: 'auto_awesome' }, 4600);
         burst(12);
       });
       chatMark('REVEAL', cfg.reveal.word2.charAt(0) + cfg.reveal.word2.slice(1).toLowerCase() + ' is out', 'auto_awesome');
@@ -201,7 +210,8 @@ function FanView({ cfg }: { cfg: EventConfig }) {
       if (!x.registered || !hits(m.target, x.mode)) return;
       set((p) => ({ reminders: [{ id: m.id, title: m.title, body: m.body }, ...p.reminders.filter((r) => r.id !== m.id)] }));
       notify('UPDATE · ' + String(m.title).toUpperCase());
-    } else if (m.cmd === 'qstatus') {
+    } else if (m.cmd === 'who') sendProfile.current();
+    else if (m.cmd === 'qstatus') {
       const mine = stRef.current.myQs.find((q) => q.id === m.id);
       if (mine) { set((x) => ({ myQs: x.myQs.map((q) => (q.id === m.id ? { ...q, status: m.status } : q)) })); notify(m.status === 'ON STAGE' ? 'YOUR QUESTION IS ON STAGE' : 'YOUR QUESTION WAS ANSWERED'); }
     }
@@ -215,6 +225,27 @@ function FanView({ cfg }: { cfg: EventConfig }) {
     if (stRef.current.checkedIn) { ch.postMessage({ cmd: 'checkin', where: cfg.event.venue }); markAttended(); window.setTimeout(() => notify('CHECKED IN · ' + cfg.event.venueShort), 600); }
     return () => { ch.close(); chan.current = null; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── the person's profile, sent to the Studio's Follow up tab as a lead ──
+  const signalsOf = (x: ESt): Signals => ({
+    features: Object.keys(x.seen).filter((k) => x.seen[k]).length, polls: Object.keys(x.votes).length, iris: x.irisAsks, questions: x.myQs.length,
+    built: x.built, finance: x.financeSeen, booked: x.drive.done, checkedIn: x.checkedIn, following: x.following,
+  });
+  const leadOf = (x: ESt): Lead => {
+    const v = cfg.product.variants[x.variant];
+    const price = v ? priceNum(v.price) : 0; const F = cfg.showroom?.finance;
+    return {
+      id: 'ME', name: 'You (this browser)', where: x.mode, answers: x.answers, consent: x.consent, source: 'Invite link',
+      signals: signalsOf(x), seen: Object.keys(x.seen).filter((k) => x.seen[k]),
+      colour: x.built ? x.colour : undefined, variant: x.built || x.financeSeen ? v?.name : undefined,
+      monthly: x.financeSeen && F && price ? fmtMoney(priceCur(v.price), monthlyFlat(price, x.deposit, F.rate, x.term).monthly) : undefined,
+      route: x.drive.showroom, status: x.drive.done ? 'Booked' : 'New', at: 'This session',
+    };
+  };
+  const sendProfile = useRef<() => void>(() => {});
+  sendProfile.current = () => { const x = stRef.current; if (x.registered) send({ cmd: 'profile', lead: leadOf(x) }); };
+  const profKey = JSON.stringify([st.registered, st.mode, st.answers, st.consent, signalsOf(st), st.colour, st.variant, st.drive.showroom, st.deposit, st.term]);
+  useEffect(() => { sendProfile.current(); }, [profKey]);
 
   const stripState = (ms: MState) => { applyState(ms); send({ cmd: 'state', ms, from: 'fan' }); };
   const stripSeg = (i: number) => { applySeg(i); send({ cmd: 'segment', seg: i, from: 'fan' }); };
@@ -234,10 +265,15 @@ function FanView({ cfg }: { cfg: EventConfig }) {
     set((x) => ({ draft: '', chat: [...x.chat, { id: 'me' + Date.now(), user: 'YOU', text: text.trim(), where: x.mode, tag: x.mode === 'venue' ? cfg.event.venueWord : 'ONLINE', me: true, time: clockAfter(cfg.event.time, 30 + x.n), likes: 0 }] }));
   };
   const ask = (q: string, a: string, stat?: string, statLabel?: string) => {
-    set((x) => ({ iris: true, irisTyping: true, irisDraft: '', thread: [...x.thread, { me: true, text: q }] }));
+    set((x) => ({ iris: true, irisTyping: true, irisDraft: '', irisAsks: x.irisAsks + 1, thread: [...x.thread, { me: true, text: q }] }));
     later('iris', 750, () => set((x) => ({ irisTyping: false, thread: [...x.thread, { me: false, text: a, stat, statLabel }] })));
   };
-  const register = () => { set((x) => ({ registered: true, mode: x.pick })); send({ cmd: 'register', mode: st.pick }); notify(st.pick === 'venue' ? 'SEE YOU AT ' + cfg.event.venueShort : 'YOU’RE ON THE LIST · ONLINE'); };
+  const register = () => {
+    const x = stRef.current; const r = routeFor(cfg, x.answers);
+    set((p) => ({ registered: true, mode: p.pick, routed: !!r, drive: r ? { ...p.drive, showroom: r } : p.drive }));
+    send({ cmd: 'register', mode: x.pick, answers: x.answers, consent: x.consent });
+    notify(x.pick === 'venue' ? 'SEE YOU AT ' + cfg.event.venueShort : 'YOU’RE ON THE LIST · ONLINE');
+  };
   const sendQ = () => {
     const text = st.qDraft.trim();
     if (!text) return;
@@ -276,8 +312,8 @@ function FanView({ cfg }: { cfg: EventConfig }) {
   const breakLeft = Math.max(cfg.breakContent.minutes * 60 - (st.tick - st.breakAt), 0);
   const aud = audience(cfg, ms, seg, st.tick);
   const isHome = st.route === 'home', isSub = !isHome;
-  const titles: Record<string, string> = { chat: 'LIVE CHAT', drive: cfg.cta.screenTitle, qa: 'Q&A' };
-  const metas: Record<string, string> = { chat: (aud.venue + aud.online).toLocaleString() + ' WATCHING', drive: cfg.cta.screenMeta, qa: (cfg.qaSeed.length + st.myQs.length) + ' QUESTIONS' };
+  const titles: Record<string, string> = { chat: 'LIVE CHAT', drive: cfg.cta.screenTitle, qa: 'Q&A', build: cfg.showroom?.buildTitle || '', finance: cfg.showroom?.finance.title || '' };
+  const metas: Record<string, string> = { chat: (aud.venue + aud.online).toLocaleString() + ' WATCHING', drive: cfg.cta.screenMeta, qa: (cfg.qaSeed.length + st.myQs.length) + ' QUESTIONS', build: cfg.product.variants.length + ' TRIMS', finance: 'INDICATIVE' };
   const backLabel = st.navStack.length ? (titles[st.navStack[st.navStack.length - 1]] || 'HOME') : 'HOME';
   const statusLabel = nextEv ? cfg.community.next.date : before ? cfg.event.dayLabel : live ? 'LIVE' : brk ? 'BREAK' : after ? 'ENDED' : 'ALWAYS ON';
   const segTime = cfg.segments[seg]?.time || cfg.event.time;
@@ -398,6 +434,8 @@ function FanView({ cfg }: { cfg: EventConfig }) {
             {st.route === 'chat' && <Chat {...P} />}
             {st.route === 'drive' && <Drive {...P} />}
             {st.route === 'qa' && <QABoard {...P} full />}
+            {st.route === 'build' && cfg.showroom && <Build {...P} />}
+            {st.route === 'finance' && cfg.showroom && <Finance {...P} />}
           </div>
 
           <div style={s('position:absolute;right:8px;bottom:110px;width:80px;height:10px;z-index:47;pointer-events:none')}>
@@ -589,7 +627,7 @@ function BeforeHome(P: any) {
       <div id="ev-register" style={s('padding:22px 16px 0')}>
         {sect('REGISTER INTEREST')}
         <div style={s('margin-top:10px;background:var(--sand);padding:16px')}>
-          {st.registered ? (
+          {st.registered ? (<>
             <div style={s('display:flex;align-items:center;gap:12px')}>
               <span style={s('width:40px;height:40px;flex:none;background:var(--acc);display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#fff">check</Ms></span>
               <div style={s('flex:1;min-width:0')}>
@@ -598,7 +636,13 @@ function BeforeHome(P: any) {
               </div>
               <button onClick={() => set({ registered: false })} style={s("font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--acc)")}>CHANGE</button>
             </div>
-          ) : (<>
+            {Object.keys(st.answers).length > 0 && (
+              <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:12px')}>
+                {(cfg.interest?.fields || []).filter((f) => st.answers[f.id]).map((f) => <span key={f.id} style={s("font:700 11px/1 'Archivo';color:var(--ink);background:var(--ground);padding:8px 9px")}><span style={s('color:var(--label)')}>{f.short} · </span>{st.answers[f.id]}</span>)}
+              </div>
+            )}
+            {st.routed && <div style={s("display:flex;align-items:center;gap:7px;margin-top:10px;font:600 11.5px/1.35 'Archivo';color:var(--body)")}><Ms size={15} color={ACC}>near_me</Ms>Matched to {cfg.cta.options.find((o) => o.id === st.drive.showroom)?.name}</div>}
+          </>) : (<>
             <div style={s("font:800 22px/1 'Archivo Black';color:var(--ink)")}>How are you joining?</div>
             <div style={s('margin-top:12px;display:flex;flex-direction:column;gap:7px')}>
               {([['venue', E.venueOption, E.venueOptionSub, 'location_on'], ['online', 'Online', E.onlineOptionSub, 'wifi']] as const).filter(([k]) => E.format === 'Hybrid' || (E.format === 'Online' ? k === 'online' : k === 'venue')).map(([k, t, d, icon]) => { const on = st.pick === k; return (
@@ -609,7 +653,8 @@ function BeforeHome(P: any) {
                 </button>
               ); })}
             </div>
-            {accBtn('REGISTER INTEREST', 'arrow_forward', register, 'width:100%;margin-top:12px')}
+            {cfg.interest && <InterestFields cfg={cfg} st={st} set={set} />}
+            {accBtn('REGISTER INTEREST', 'arrow_forward', register, 'width:100%;margin-top:14px')}
           </>)}
         </div>
       </div>
@@ -703,6 +748,7 @@ function LiveHome(P: any) {
           </div>
         </div>
       )}
+      {revealed && !isQa && <ShowroomCard {...P} />}
       {!isQa && <AskCard {...P} compact />}
       <IrisTeaser {...{ cfg, revealed, set, ask }} />
       <ChatPreview {...P} />
@@ -776,6 +822,7 @@ function AfterHome(P: any) {
           {done ? darkBtn('CHANGE', 'edit', go('drive'), 'margin-top:14px;background:rgba(242,242,240,.1)') : accBtn(cfg.cta.button, 'arrow_forward', go('drive'), 'margin-top:14px')}
         </div>
       </div>
+      <ShowroomCard {...P} pad="12px 16px 0" />
 
       <div style={s('padding:12px 16px 0')}>
         <button onClick={follow} className="fs" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--sand);padding:15px')}>
@@ -1069,6 +1116,13 @@ function Drive({ cfg, st, set, bookDrive }: any) {
     <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
       <div style={s("font:800 30px/.92 'Archivo Black';color:var(--ink)")}>{d.done ? C.doneTitle : C.title}</div>
       <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>{d.done ? C.doneSub : C.intro}</div>
+      {st.built && (cfg as EventConfig).product.variants[st.variant] && (
+        <div style={s('display:flex;align-items:center;gap:10px;margin-top:14px;padding:11px 13px;background:var(--sand)')}>
+          <span style={{ ...s('width:18px;height:18px;flex:none;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.15)'), background: (cfg as EventConfig).showroom?.colours.find((c) => c.name === st.colour)?.hex }} />
+          <span style={s("flex:1;min-width:0;font:700 12.5px/1.3 'Archivo';color:var(--ink)")}>{(cfg as EventConfig).product.variants[st.variant].name} · {st.colour}</span>
+          <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label)")}>YOUR SPEC</span>
+        </div>
+      )}
       {C.options.length > 0 && <>
         <div style={s('margin-top:20px')}>{label(C.optionsLabel)}</div>
         <div style={s('margin-top:9px;display:flex;flex-direction:column;gap:7px')}>
@@ -1076,6 +1130,7 @@ function Drive({ cfg, st, set, bookDrive }: any) {
             <button key={r.id} onClick={() => set((x: ESt) => ({ drive: { ...x.drive, showroom: r.id, done: false } }))} className="fw" style={{ ...s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px'), background: on ? 'var(--panel)' : 'var(--sand)' }}>
               <Ms size={20} color={on ? 'var(--acc-lt)' : 'var(--label)'}>storefront</Ms>
               <span style={s('flex:1;min-width:0')}><span style={{ ...s("display:block;font:700 14px/1.2 'Archivo'"), color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{r.name}</span><span style={{ ...s("display:block;font:500 11.5px/1.3 'Archivo';margin-top:3px"), color: on ? 'var(--muted)' : 'var(--label)' }}>{r.sub}</span></span>
+              {st.routed && routeFor(cfg, st.answers) === r.id && <span style={{ ...s("font:800 8px/1 'Archivo';letter-spacing:.1em;padding:5px 6px;white-space:nowrap"), color: on ? 'var(--on-panel)' : 'var(--ink)', background: on ? 'rgba(242,242,240,.14)' : 'var(--ground)' }}>NEAREST</span>}
               {on && <Ms size={18} color={ACC}>check_circle</Ms>}
             </button>
           ); })}
@@ -1090,6 +1145,163 @@ function Drive({ cfg, st, set, bookDrive }: any) {
       {d.done
         ? <div style={s('display:flex;align-items:center;gap:10px;margin-top:22px;padding:14px;background:var(--sand)')}><Ms size={22} color={ACC}>event_available</Ms><span style={s("font:700 13px/1.35 'Archivo';color:var(--ink)")}>{room?.name} · {d.slot}</span></div>
         : accBtn(C.submit, 'arrow_forward', bookDrive, 'width:100%;margin-top:22px')}
+    </div>
+  );
+}
+
+// Register-interest questions (model, budget, area…) and the consent tick.
+function InterestFields({ cfg, st, set }: { cfg: EventConfig; st: ESt; set: (p: any) => void }) {
+  const I = cfg.interest!;
+  return (
+    <div style={s('margin-top:18px;padding-top:16px;border-top:1.5px solid var(--hair)')}>
+      <div style={s("font:800 17px/1.05 'Archivo Black';color:var(--ink)")}>{I.title}</div>
+      <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--body);margin-top:5px")}>{I.sub}</div>
+      {I.fields.map((f) => (
+        <div key={f.id} style={s('margin-top:13px')}>
+          {label(f.label.toUpperCase())}
+          <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:8px')}>
+            {f.options.map((o) => { const on = st.answers[f.id] === o; return (
+              <button key={o} onClick={() => set((x: ESt) => ({ answers: { ...x.answers, [f.id]: on ? '' : o } }))} style={{ ...s("font:700 12px/1 'Archivo';padding:10px 11px"), background: on ? 'var(--panel)' : 'var(--ground)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{o}</button>
+            ); })}
+          </div>
+        </div>
+      ))}
+      <button onClick={() => set((x: ESt) => ({ consent: !x.consent }))} style={s('display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;margin-top:15px')}>
+        <span style={{ ...s('width:20px;height:20px;flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px'), background: st.consent ? ACC : 'var(--ground)', boxShadow: st.consent ? 'none' : 'inset 0 0 0 2px var(--sand2)' }}>{st.consent && <Ms size={14} color="#fff">check</Ms>}</span>
+        <span style={s("font:500 11.5px/1.45 'Archivo';color:var(--body)")}>{I.consent}</span>
+      </button>
+    </div>
+  );
+}
+
+// Entry to the colour + trim picker and the monthly cost, after the reveal.
+function ShowroomCard({ cfg, st, go, pad: padding = '22px 16px 0' }: any) {
+  const S = (cfg as EventConfig).showroom; const V = (cfg as EventConfig).product.variants;
+  if (!S || !V.length) return null;
+  const v = V[st.variant] || V[0]; const col = S.colours.find((c) => c.name === st.colour) || S.colours[0];
+  const low = V[0]; const lowM = monthlyFlat(priceNum(low.price), S.finance.defaultDeposit, S.finance.rate, S.finance.defaultTerm).monthly;
+  const tile = 'flex:1;min-width:0;text-align:left;background:var(--sand);padding:14px';
+  return (
+    <div style={s('padding:' + padding)}>
+      {padding.startsWith('22') && sect(S.buildTitle)}
+      <div style={s('display:flex;gap:8px;margin-top:' + (padding.startsWith('22') ? '10px' : '0'))}>
+        <button onClick={go('build')} className="fs" style={s(tile)}>
+          <span style={s('display:flex;gap:4px')}>{S.colours.map((c) => <span key={c.name} style={{ ...s('width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)'), background: c.hex }} />)}</span>
+          <span style={s("display:block;font:800 16px/1.05 'Archivo Black';color:var(--ink);margin-top:11px")}>Colour + trim</span>
+          <span style={s("display:block;font:500 11px/1.35 'Archivo';color:var(--label);margin-top:4px")}>{st.built ? v.name + ' · ' + col.name : S.colours.length + ' colours · ' + V.length + ' trims'}</span>
+        </button>
+        <button onClick={go('finance')} className="fs" style={s(tile)}>
+          <Ms size={18} color={ACC}>payments</Ms>
+          <span style={s("display:block;font:800 16px/1.05 'Archivo Black';color:var(--ink);margin-top:9px")}>Monthly cost</span>
+          <span style={s("display:block;font:500 11px/1.35 'Archivo';color:var(--label);margin-top:4px")}>From {fmtMoney(priceCur(low.price), lowM)} a month</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const chip = (text: string, on: boolean, onClick: () => void) => (
+  <button key={text} onClick={onClick} style={{ ...s("font:700 12px/1 'Archivo';padding:11px 12px;white-space:nowrap"), background: on ? ACC : 'var(--sand)', color: on ? '#fff' : 'var(--ink)' }}>{text}</button>
+);
+
+function Build({ cfg, st, set, go }: any) {
+  const S = (cfg as EventConfig).showroom!; const V = (cfg as EventConfig).product.variants;
+  const v = V[st.variant] || V[0]; const col = S.colours.find((c) => c.name === st.colour) || S.colours[0];
+  const pick = (p: Partial<ESt>) => set({ ...p, built: true });
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding-bottom:28px')}>
+      <div style={s('position:relative;background:var(--hero);overflow:hidden')}>
+        <div style={{ ...s('position:absolute;inset:0;transition:background .5s ease'), background: `radial-gradient(64% 52% at 50% 70%, ${col.hex}99, transparent 72%)` }} />
+        <CarStage cfg={cfg} revealed interactive={false} seen={{}} height={210} />
+        <div style={s('position:absolute;left:16px;right:16px;bottom:14px;display:flex;align-items:center;gap:8px')}>
+          <span style={{ ...s('width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.7)'), background: col.hex }} />
+          <span style={s("font:800 10px/1 'Archivo';letter-spacing:.16em;color:#F2F2F0")}>{col.name.toUpperCase()}</span>
+          <span style={s("margin-left:auto;font:700 9px/1 'Archivo';letter-spacing:.12em;color:var(--muted)")}>COLOUR SHOWN AS LIGHT</span>
+        </div>
+      </div>
+      <div style={s('padding:18px 16px 0')}>
+        <div style={s("font:800 30px/.92 'Archivo Black';color:var(--ink)")}>{v.name}</div>
+        <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>{S.buildSub}</div>
+        <div style={s('margin-top:20px;display:flex;align-items:center;gap:8px')}>{label('COLOUR')}<span style={s("font:700 11px/1 'Archivo';color:var(--ink);margin-left:auto")}>{col.name}</span></div>
+        <div style={s('display:flex;gap:12px;margin-top:11px')}>
+          {S.colours.map((c) => { const on = c.name === col.name; return (
+            <button key={c.name} onClick={() => pick({ colour: c.name })} aria-label={c.name} style={{ ...s('width:46px;height:46px;border-radius:50%;transition:box-shadow .18s ease'), background: c.hex, boxShadow: on ? '0 0 0 3px var(--ground),0 0 0 5px var(--acc)' : 'inset 0 0 0 1px rgba(0,0,0,.18)' }} />
+          ); })}
+        </div>
+        <div style={s('margin-top:22px')}>{label('TRIM')}</div>
+        <div style={s('margin-top:9px;display:flex;flex-direction:column;gap:7px')}>
+          {V.map((x, i) => { const on = i === st.variant; return (
+            <button key={x.name} onClick={() => pick({ variant: i })} className="fw" style={{ ...s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px'), background: on ? 'var(--panel)' : 'var(--sand)' }}>
+              <span style={s('flex:1;min-width:0')}><span style={{ ...s("display:block;font:700 14px/1.2 'Archivo'"), color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{x.name}</span><span style={{ ...s("display:block;font:500 11.5px/1.3 'Archivo';margin-top:3px"), color: on ? 'var(--muted)' : 'var(--label)' }}>{x.spec}</span></span>
+              <span style={{ ...s("font:800 13px/1 'Archivo';font-variant-numeric:tabular-nums"), color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{x.price}</span>
+            </button>
+          ); })}
+        </div>
+        <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:20px')}>
+          {accBtn('SEE THE MONTHLY COST', 'payments', () => { set({ built: true }); go('finance')(); }, 'width:100%')}
+          {darkBtn((cfg as EventConfig).cta.button, 'arrow_forward', () => { set({ built: true }); go('drive')(); }, 'width:100%')}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Finance({ cfg, st, set, go }: any) {
+  const C = cfg as EventConfig; const F = C.showroom!.finance; const V = C.product.variants;
+  const v = V[st.variant] || V[0]; const price = priceNum(v.price); const cur = priceCur(v.price);
+  const m = monthlyFlat(price, st.deposit, F.rate, st.term);
+  useEffect(() => { if (!st.financeSeen) set({ financeSeen: true }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const row = (k: string, val: string, strong = false) => (
+    <div key={k} style={s('display:flex;align-items:baseline;gap:10px;padding:10px 0;border-top:1.5px solid var(--hair)')}>
+      <span style={s("flex:1;font:500 12.5px/1.3 'Archivo';color:var(--body)")}>{k}</span>
+      <span style={{ ...s("font:800 13px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums"), fontSize: strong ? 15 : 13 }}>{val}</span>
+    </div>
+  );
+  const R = F.running; const maxR = R ? Math.max(...R.rows.map((r) => r.v), 1) : 1;
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
+      <div style={s('background:var(--panel);padding:18px 16px')}>
+        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:var(--acc);transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--muted)")}>{v.name.toUpperCase()} · {st.deposit}% DOWN · {st.term} YEARS</span></div>
+        <div style={s('display:flex;align-items:baseline;gap:8px;margin-top:12px')}>
+          <span key={m.monthly} style={s("font:800 46px/.9 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums;animation:bgReveal .35s cubic-bezier(.2,.85,.2,1) both")}>{fmtMoney(cur, m.monthly)}</span>
+          <span style={s("font:800 10px/1 'Archivo';letter-spacing:.14em;color:var(--muted)")}>A MONTH</span>
+        </div>
+        <div style={s("font:500 12px/1.45 'Archivo';color:var(--muted);margin-top:9px")}>{F.sub}</div>
+      </div>
+      <div style={s('margin-top:18px')}>{label('TRIM')}</div>
+      <div style={s('display:flex;gap:6px;margin-top:9px;flex-wrap:wrap')}>{V.map((x, i) => chip(x.name.replace(/^\S+\s/, ''), i === st.variant, () => set({ variant: i })))}</div>
+      <div style={s('display:flex;gap:18px;margin-top:16px;flex-wrap:wrap')}>
+        <div>{label('DEPOSIT')}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.deposits.map((d) => chip(d + '%', d === st.deposit, () => set({ deposit: d })))}</div></div>
+        <div>{label('TERM')}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.terms.map((t) => chip(t + ' yrs', t === st.term, () => set({ term: t })))}</div></div>
+      </div>
+      <div style={s('margin-top:18px;background:var(--sand);padding:4px 14px')}>
+        {[
+          row('On-the-road price', fmtMoney(cur, price)),
+          row('Deposit (' + st.deposit + '%)', fmtMoney(cur, price - m.loan)),
+          row('Amount financed', fmtMoney(cur, m.loan)),
+          row('Interest, ' + F.rate + '% flat over ' + st.term + ' years', fmtMoney(cur, m.interest)),
+          row('Total payable', fmtMoney(cur, m.total + price - m.loan), true),
+        ]}
+      </div>
+      {R && (
+        <div style={s('margin-top:22px')}>
+          {sect(R.title)}
+          <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--body);margin-top:8px")}>{R.sub}</div>
+          <div style={s('margin-top:10px;display:flex;flex-direction:column;gap:9px')}>
+            {R.rows.map((r, i) => (
+              <div key={r.label}>
+                <div style={s('display:flex;align-items:baseline;gap:8px')}><span style={s("flex:1;font:600 12.5px/1.3 'Archivo';color:var(--ink)")}>{r.label}</span><span style={s("font:800 12.5px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{fmtMoney(cur, r.v)}</span></div>
+                <div style={s('height:8px;background:var(--sand);margin-top:6px')}><span style={{ ...s('display:block;height:8px'), width: (r.v / maxR) * 100 + '%', background: i < R.rows.length - 1 ? ACC : 'var(--label)' }} /></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div style={s("font:500 10.5px/1.45 'Archivo';color:var(--label);margin-top:16px")}>{F.note}</div>
+      <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:16px')}>
+        {accBtn(C.cta.button, 'arrow_forward', go('drive'), 'width:100%')}
+        {darkBtn('CHANGE COLOUR OR TRIM', 'palette', go('build'), 'width:100%')}
+      </div>
     </div>
   );
 }

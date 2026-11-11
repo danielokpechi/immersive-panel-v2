@@ -12,7 +12,8 @@ import { s } from '../voltford/admin/s';
 import QRCode from 'qrcode';
 import {
   getEvent, audience, checkinsSeed, channelName, fanPath, homePath, abs, asset, STATES, TARGETS, revealSegIndex, qaSegIndex,
-  type EventConfig, type Ms as MState, type Mode, type Target, type TriggerKind,
+  LEAD_STATUSES, leadScore, leadTier, scoreParts, routeFor,
+  type EventConfig, type Ms as MState, type Mode, type Target, type TriggerKind, type Lead, type LeadStatus,
 } from './config';
 
 export const Ms = ({ children, size = 18, color, style }: { children: string; size?: number; color?: string; style?: CSSProperties }) => (
@@ -28,7 +29,7 @@ const TRIGGERS: { id: TriggerKind; name: string; icon: string; color: string }[]
   { id: 'hotspot', name: 'Hotspot', icon: 'my_location', color: '#8B3DF5' },
   { id: 'announce', name: 'Announcement', icon: 'campaign', color: '#C0473C' },
 ];
-const LIFECYCLE = [['plan', 'Plan'], ['invite', 'Invite'], ['welcome', 'Welcome'], ['control', 'Engage'], ['results', 'Improve']] as const;
+const LIFECYCLE = [['plan', 'Plan'], ['invite', 'Invite'], ['welcome', 'Welcome'], ['control', 'Engage'], ['leads', 'Follow up'], ['results', 'Improve']] as const;
 type Screen = (typeof LIFECYCLE)[number][0];
 
 type Q = { id: string; text: string; who: string; where: Mode; votes: number; status: string; fresh?: boolean };
@@ -41,6 +42,7 @@ interface St {
   tick: number; clock: number; log: Log[]; toast: string | null; toastIcon: string;
   questions: Q[]; regs: { venue: number; online: number }; drives: { showroom: string; slot: string; where: Mode; t: string }[];
   reacts: number[]; votes: number; follows: number; monitor: Mode;
+  me: Lead | null; leadEdits: Record<string, { route?: string; status?: LeadStatus; sent?: boolean }>; leadSel: string | null; leadFilter: string;
 }
 
 export function EventStudio({ id }: { id: string }) {
@@ -62,6 +64,7 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
     tick: 0, clock: 0, log: [], toast: null, toastIcon: 'bolt',
     questions: cfg.qaSeed.map((q) => ({ ...q, status: 'QUEUED' })), regs: { venue: 0, online: 0 }, drives: [],
     reacts: cfg.segments.map(() => 0), votes: 0, follows: 0, monitor: cfg.event.format === 'In person' ? 'venue' : 'online',
+    me: null, leadEdits: {}, leadSel: null, leadFilter: 'All',
   }));
   const set = (p: Partial<St> | ((x: St) => Partial<St>)) => setSt((x) => ({ ...x, ...(typeof p === 'function' ? p(x) : p) }));
   const stRef = useRef(st); stRef.current = st;
@@ -94,6 +97,7 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
       case 'testdrive': set((p) => ({ drives: [{ showroom: m.showroom, slot: m.slot, where: m.where, t: fmt(p.clock) }, ...p.drives] })); log(cfg.cta.title, [m.showroom, m.slot].filter(Boolean).join(' · '), 'event_available'); say(cfg.cta.doneTitle + (m.showroom ? ' · ' + m.showroom : ''), 'event_available'); break;
       case 'state': mirrorState(m.ms, m.seg); if (m.from === 'fan') log('State · ' + STATES.find((y) => y.id === m.ms)?.name, 'Changed from the fan demo strip', 'swap_horiz', STATE_COLOR[m.ms as MState]); break;
       case 'segment': mirrorState('live', m.seg); if (m.from === 'fan') log('Segment · ' + (cfg.segments[m.seg]?.name || ''), 'Changed from the fan demo strip', 'radio_button_checked'); break;
+      case 'profile': if (!x.me) { log('New lead', 'A fan registered interest from this browser', 'person_add'); say('New lead · see Follow up', 'person_add'); } set({ me: m.lead }); break;
       case 'trigger': mirrorTrigger(m.kind, m.idx || 0); if (m.from === 'fan') log(TRIGGERS.find((y) => y.id === m.kind)?.name || m.kind, 'Fired from the fan demo strip · ' + TARGETS.find((y) => y.id === m.target)?.name, 'bolt'); break;
     }
   };
@@ -102,6 +106,7 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
     const ch = new BroadcastChannel(channelName(cfg.id));
     chan.current = ch;
     ch.onmessage = (e) => bus.current(e.data);
+    ch.postMessage({ cmd: 'who' }); // an open fan tab replies with its profile
     return () => { ch.close(); chan.current = null; };
   }, [cfg.id]);
 
@@ -157,7 +162,14 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
     log('Reminder sent', (st.remTitle.trim() || 'Update') + ' → ' + reachN.toLocaleString() + ' registered', 'notifications_active');
     say('Reminder sent to ' + reachN.toLocaleString() + ' registered attendees', 'notifications_active');
   };
-  const P = { cfg, st, set, goState, goSeg, fire, nextOf, qStatus, aud, reach, say, sendReminder };
+  // Follow-up for one lead. When it's this browser's fan, it lands on their event page as an update.
+  const sendFollowUp = (l: Lead, text: string, routeName: string) => {
+    set((x) => ({ leadEdits: { ...x.leadEdits, [l.id]: { ...x.leadEdits[l.id], sent: true, status: (x.leadEdits[l.id]?.status || l.status) === 'New' ? 'Contacted' : x.leadEdits[l.id]?.status || l.status } } }));
+    if (l.id === 'ME') send({ cmd: 'reminder', id: 'fu' + Date.now(), title: 'A message from ' + routeName, body: text, target: 'all' });
+    log('Follow-up sent', l.name + ' · ' + routeName, 'send');
+    say('Follow-up sent to ' + (l.id === 'ME' ? 'the fan in this browser' : l.name.split(' ')[0]), 'send');
+  };
+  const P = { cfg, st, set, goState, goSeg, fire, nextOf, qStatus, aud, reach, say, sendReminder, sendFollowUp };
   const fan = fanPath(cfg.id);
 
   return (
@@ -169,7 +181,7 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
         <a className="ah-ink" href={homePath()} style={s("display:flex;align-items:center;gap:6px;font:500 13px/1 'Archivo';color:#513E66;text-decoration:none;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis")}><Ms size={16} color="inherit">arrow_back</Ms>{cfg.event.name}</a>
         <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE;margin-left:12px')}>
           {LIFECYCLE.map(([k, n], i) => { const on = st.screen === k; return (
-            <button key={k} onClick={() => set({ screen: k })} style={{ ...s("display:flex;align-items:center;gap:7px;padding:9px 13px;border-radius:9px;font:600 12px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66', boxShadow: on ? '0 1px 2px rgba(27,11,45,.08)' : 'none' }}><span style={{ ...s("width:17px;height:17px;border-radius:5px;display:flex;align-items:center;justify-content:center;font:700 9.5px/1 'Archivo'"), background: on ? '#1B0B2D' : '#E9E9E4', color: on ? '#F5F5F2' : '#513E66' }}>{i + 1}</span>{n}</button>
+            <button key={k} onClick={() => set({ screen: k })} style={{ ...s("display:flex;align-items:center;gap:7px;padding:9px 11px;white-space:nowrap;border-radius:9px;font:600 12px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66', boxShadow: on ? '0 1px 2px rgba(27,11,45,.08)' : 'none' }}><span style={{ ...s("width:17px;height:17px;border-radius:5px;display:flex;align-items:center;justify-content:center;font:700 9.5px/1 'Archivo'"), background: on ? '#1B0B2D' : '#E9E9E4', color: on ? '#F5F5F2' : '#513E66' }}>{i + 1}</span>{n}</button>
           ); })}
         </div>
         <span style={{ ...s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#F5F5F2;padding:7px 10px;border-radius:8px;margin-left:auto;white-space:nowrap"), background: STATE_COLOR[st.ms] }}>{st.ms === 'live' ? 'LIVE · ' + (cfg.segments[st.seg]?.short || '') : st.ms === 'community' ? 'ALWAYS ON' : st.ms.toUpperCase()}</span>
@@ -180,6 +192,7 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
       {st.screen === 'invite' && <Invite {...P} />}
       {st.screen === 'welcome' && <Welcome {...P} />}
       {st.screen === 'control' && <Control {...P} />}
+      {st.screen === 'leads' && <Leads {...P} />}
       {st.screen === 'results' && <Results {...P} />}
       {st.toast && (
         <div style={s('position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:13px;background:#1B0B2D;box-shadow:0 14px 34px -12px rgba(27,11,45,.7);animation:stRise .25s ease both')}>
@@ -486,7 +499,125 @@ function IrisFacts({ cfg }: { cfg: EventConfig }) {
   );
 }
 
-// ════════════ 5 IMPROVE ════════════
+// ════════════ 5 FOLLOW UP ════════════
+// One consented profile per person, scored on what they did and routed to the
+// nearest showroom (or the right demo format), with a drafted follow-up.
+const TIER_COLOR: Record<string, [string, string]> = { Hot: ['#C0473C', '#FFFFFF'], Warm: ['#8B3DF5', '#FFFFFF'], Cold: ['#E9E9E4', '#513E66'] };
+const STATUS_COLOR: Record<string, string> = { New: '#8B3DF5', Contacted: '#513E66', Booked: '#2F7A68', Reserved: '#1B0B2D', Sold: '#1B0B2D', 'Not now': '#A79BB5' };
+const optName = (cfg: EventConfig, id: string) => cfg.cta.options.find((o) => o.id === id)?.name || id;
+function draftFor(cfg: EventConfig, l: Lead, routeName: string) {
+  const F = cfg.followUp; if (!F) return '';
+  const first = l.id === 'ME' ? 'there' : l.name.split(' ')[0];
+  const feature = cfg.hotspots.find((h) => h.id === l.seen?.[0])?.name || '';
+  let extra = '';
+  if (l.variant && l.colour && F.extraBuilt) extra += F.extraBuilt.replace('{variant}', l.variant).replace('{colour}', l.colour);
+  if (l.monthly && F.extraFinance) extra += F.extraFinance.replace('{monthly}', l.monthly);
+  else if (feature && F.extraFeature) extra += F.extraFeature.replace('{feature}', feature);
+  return F.template.replace('{first}', first).replace('{extra}', extra).replace('{route}', routeName).replace('{model}', l.answers.model || '');
+}
+
+function Leads({ cfg, st, set, sendFollowUp }: any) {
+  const C = cfg as EventConfig;
+  const base: Lead[] = [...(st.me ? [st.me as Lead] : []), ...(C.demo.leads || [])];
+  const leads = base.map((l) => { const e = st.leadEdits[l.id] || {}; const score = leadScore(l); return { ...l, route: e.route || l.route, status: (e.status || l.status) as LeadStatus, sent: !!e.sent, score, tier: leadTier(score) }; });
+  const shown = leads.filter((l) => st.leadFilter === 'All' || l.tier === st.leadFilter);
+  const sel = leads.find((l) => l.id === st.leadSel) || shown[0] || leads[0];
+  const LQ = C.demo.results.leadQuality || [];
+  const tot = LQ.reduce((a, r) => ({ hot: a.hot + r.hot, warm: a.warm + r.warm, cold: a.cold + r.cold }), { hot: 0, warm: 0, cold: 0 });
+  const sessionHot = leads.filter((l) => l.id === 'ME' && l.tier === 'Hot').length;
+  const total = tot.hot + tot.warm + tot.cold + (st.me ? 1 : 0);
+  const sent = Object.values(st.leadEdits as Record<string, { sent?: boolean }>).filter((e) => e.sent).length;
+  const fields = C.interest?.fields || [];
+  const edit = (id: string, p: Record<string, unknown>) => set((x: St) => ({ leadEdits: { ...x.leadEdits, [id]: { ...x.leadEdits[id], ...p } } }));
+  const kpis = [
+    { label: 'LEADS', v: total.toLocaleString(), sub: 'Registered with interest answers' },
+    { label: 'HOT', v: (tot.hot + sessionHot).toLocaleString(), sub: 'Score 60+ · ready for a call' },
+    { label: 'WARM', v: tot.warm.toLocaleString(), sub: 'Score 35–59 · nurture' },
+    { label: 'ROUTED', v: '100%', sub: 'Every lead has a ' + C.cta.optionsLabel.toLowerCase() },
+    { label: 'FOLLOW-UPS SENT', v: String(sent), sub: 'From this session' },
+  ];
+  if (!leads.length) return (
+    <div style={s('padding:30px 44px 52px')}><PageHead title="Follow up" sub="Leads appear here once people register interest." /></div>
+  );
+  const routeName = optName(C, sel.route);
+  const draft = draftFor(C, sel, routeName);
+  const matched = routeFor(C, sel.answers);
+  const pill = (t: string) => <span style={{ ...s("font:700 9.5px/1 'Archivo';letter-spacing:.08em;padding:5px 7px;border-radius:6px;white-space:nowrap"), background: TIER_COLOR[t][0], color: TIER_COLOR[t][1] }}>{t.toUpperCase()}</span>;
+  return (
+    <div style={s('padding:30px 44px 52px;animation:stFade .3s ease both;display:flex;flex-direction:column;gap:20px')}>
+      <PageHead title={<>Follow up <Demo /></>} sub={`Every registration builds one consented profile. Leads are scored on what they did during the event and routed to the best-matched ${C.cta.optionsLabel.toLowerCase()}.`} />
+      <div style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:12px')}>{kpis.map((k) => <Stat key={k.label} label={k.label} v={k.v} sub={k.sub} />)}</div>
+      <div style={s('display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start')}>
+        <Card>
+          <div style={s('display:flex;align-items:center;gap:12px')}>
+            <Cap>LATEST LEADS</Cap>
+            <div style={s('display:flex;gap:3px;padding:3px;border-radius:9px;background:#F1F1EE;margin-left:auto')}>
+              {['All', 'Hot', 'Warm', 'Cold'].map((f) => { const on = st.leadFilter === f; return <button key={f} onClick={() => set({ leadFilter: f })} style={{ ...s("padding:7px 11px;border-radius:7px;font:600 11px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66' }}>{f}</button>; })}
+            </div>
+          </div>
+          <div style={s('display:flex;flex-direction:column;gap:6px;margin-top:14px')}>
+            {shown.map((l) => { const on = l.id === sel.id; const sg = l.signals; return (
+              <button key={l.id} onClick={() => set({ leadSel: l.id })} className="ah" style={{ ...s('display:flex;align-items:center;gap:13px;padding:11px 12px;border-radius:12px;text-align:left;width:100%'), background: on ? '#F1F1EE' : l.id === 'ME' ? '#F7F2FE' : '#FFFFFF', boxShadow: on ? 'inset 0 0 0 2px #1B0B2D' : 'inset 0 0 0 1px rgba(27,11,45,.08)' }}>
+                <span style={{ ...s("width:40px;height:40px;flex:none;border-radius:10px;display:flex;align-items:center;justify-content:center;font:800 15px/1 'Archivo Black';font-variant-numeric:tabular-nums"), background: TIER_COLOR[l.tier][0], color: TIER_COLOR[l.tier][1] }}>{l.score}</span>
+                <span style={s('flex:1;min-width:0')}>
+                  <span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 13px/1.2 'Archivo';white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{l.name}</span>{l.id === 'ME' && <span style={s("font:700 8.5px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#8B3DF5;padding:4px 5px;border-radius:5px")}>LIVE</span>}{!l.consent && <span style={s("font:600 9px/1 'Archivo';color:#826E99")}>no consent</span>}</span>
+                  <span style={s("display:block;font:500 11px/1.3 'Archivo';color:#513E66;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{fields.map((f) => l.answers[f.id]).filter(Boolean).join(' · ') || 'No answers yet'}</span>
+                </span>
+                <span style={s('display:flex;gap:6px;flex:none')}>
+                  {sg.features > 0 && <span title="Features explored" style={s("display:flex;align-items:center;gap:2px;font:600 10.5px/1 'Archivo';color:#513E66")}><Ms size={14} color="#826E99">my_location</Ms>{sg.features}</span>}
+                  {sg.built && <Ms size={15} color="#826E99">palette</Ms>}
+                  {sg.finance && <Ms size={15} color="#826E99">payments</Ms>}
+                  {sg.booked && <Ms size={15} color="#2F7A68">event_available</Ms>}
+                </span>
+                <span style={s("width:118px;flex:none;font:500 11px/1.25 'Archivo';color:#513E66;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{optName(C, l.route)}</span>
+                <span style={{ ...s("width:74px;flex:none;text-align:center;font:600 10px/1 'Archivo';letter-spacing:.04em;padding:6px 0;border-radius:6px;color:#fff"), background: STATUS_COLOR[l.status] }}>{l.status}</span>
+              </button>
+            ); })}
+          </div>
+          <div style={s("font:400 11.5px/1.45 'Archivo';color:#826E99;margin-top:12px")}>Showing the most recent {leads.length} of {total.toLocaleString()}. The row marked LIVE is the fan view open in this browser, and it rescores as they explore.</div>
+        </Card>
+
+        <div style={s('position:sticky;top:86px;display:flex;flex-direction:column;gap:20px')}>
+          <Card>
+            <div style={s('display:flex;align-items:flex-start;gap:12px')}>
+              <div style={s('flex:1;min-width:0')}>
+                <div style={s("font:700 22px/1.1 'Archivo';letter-spacing:-.015em")}>{sel.name}</div>
+                <div style={s("display:flex;align-items:center;gap:6px;font:500 11.5px/1 'Archivo';color:#513E66;margin-top:8px")}><Ms size={14} color="#826E99">{sel.where === 'venue' ? 'location_on' : 'wifi'}</Ms>{sel.at} · via {sel.source}</div>
+              </div>
+              <div style={s('text-align:right')}><div style={s("font:800 34px/.9 'Archivo Black';font-variant-numeric:tabular-nums")}>{sel.score}</div><div style={s('margin-top:7px')}>{pill(sel.tier)}</div></div>
+            </div>
+            <div style={s('margin-top:16px')}>
+              {fields.map((f) => <div key={f.id} style={s('display:flex;gap:12px;padding:9px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>{f.label}</span><span style={s("flex:1;font:600 12px/1.3 'Archivo'")}>{sel.answers[f.id] || '—'}</span></div>)}
+              {(sel.variant || sel.monthly) && <div style={s('display:flex;gap:12px;padding:9px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>Spec</span><span style={s("flex:1;font:600 12px/1.3 'Archivo'")}>{[sel.variant, sel.colour, sel.monthly && sel.monthly + ' a month'].filter(Boolean).join(' · ')}</span></div>}
+              {sel.seen && sel.seen.length > 0 && <div style={s('display:flex;gap:12px;padding:9px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>Explored</span><span style={s("flex:1;font:600 12px/1.3 'Archivo'")}>{sel.seen.map((id) => C.hotspots.find((h) => h.id === id)?.name).filter(Boolean).join(', ')}</span></div>}
+              <div style={s('display:flex;gap:12px;padding:9px 0;border-top:1px solid rgba(27,11,45,.08)')}><span style={s("width:110px;flex:none;font:600 11.5px/1.3 'Archivo';color:#513E66")}>Consent</span><span style={{ ...s("flex:1;display:flex;align-items:center;gap:5px;font:600 12px/1.3 'Archivo'"), color: sel.consent ? '#2F7A68' : '#C0473C' }}><Ms size={15} color="inherit">{sel.consent ? 'verified_user' : 'block'}</Ms>{sel.consent ? 'Can be contacted' : 'Not given · no follow-up'}</span></div>
+            </div>
+            <div style={s('margin-top:14px;padding:13px 14px;border-radius:12px;background:#F1F1EE')}>
+              <Cap>WHY THIS SCORE</Cap>
+              <div style={s('display:flex;flex-direction:column;gap:6px;margin-top:10px')}>
+                <div style={s("display:flex;font:500 11.5px/1.2 'Archivo';color:#513E66")}><span style={s('flex:1')}>Registered + interest answers</span><span style={s('font-weight:700;color:#1B0B2D')}>+{6 + Object.keys(sel.answers).length * 2}</span></div>
+                {scoreParts(sel.signals).map((r) => <div key={r.key} style={s("display:flex;font:500 11.5px/1.2 'Archivo';color:#513E66")}><span style={s('flex:1')}>{r.label}{r.per ? ' · ' + r.n : ''}</span><span style={s('font-weight:700;color:#1B0B2D')}>+{r.pts}</span></div>)}
+              </div>
+            </div>
+          </Card>
+          <Card>
+            <div style={s('display:flex;align-items:center;gap:10px')}><Cap>ASSIGN TO</Cap>{matched && matched === sel.route && <Note>Matched by {fields.find((f) => f.routes)?.short.toLowerCase()}</Note>}</div>
+            <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:12px')}>{C.cta.options.map((o) => { const on = sel.route === o.id; return <button key={o.id} onClick={() => edit(sel.id, { route: o.id })} style={{ ...s("font:600 11.5px/1 'Archivo';padding:9px 11px;border-radius:9px"), background: on ? '#1B0B2D' : '#F1F1EE', color: on ? '#F5F5F2' : '#1B0B2D' }}>{o.name}</button>; })}</div>
+            <div style={s('margin-top:16px')}><Cap>STATUS</Cap></div>
+            <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:12px')}>{LEAD_STATUSES.map((x) => { const on = sel.status === x; return <button key={x} onClick={() => edit(sel.id, { status: x })} style={{ ...s("font:600 11.5px/1 'Archivo';padding:9px 11px;border-radius:9px"), background: on ? STATUS_COLOR[x] : '#F1F1EE', color: on ? '#FFFFFF' : '#1B0B2D' }}>{x}</button>; })}</div>
+            {draft && <>
+              <div style={s('display:flex;align-items:center;gap:10px;margin-top:18px')}><Cap>FOLLOW-UP</Cap><Note>Drafted from approved facts and what they explored</Note></div>
+              <div style={{ ...s("margin-top:10px;padding:13px 14px;border-radius:12px;background:#F1F1EE;font:500 12.5px/1.55 'Archivo'"), color: sel.consent ? '#1B0B2D' : '#A79BB5' }}>{draft}</div>
+              <button className="ah-ink-btn" disabled={!sel.consent || sel.sent} onClick={() => sendFollowUp(sel, draft, routeName)} style={{ ...s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:13px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#F5F5F2"), background: !sel.consent ? '#C4C4C0' : sel.sent ? '#2F7A68' : '#1B0B2D', cursor: !sel.consent || sel.sent ? 'default' : 'pointer' }}><Ms size={16} color="#F5F5F2">{sel.sent ? 'check' : 'send'}</Ms>{!sel.consent ? 'No consent to contact' : sel.sent ? 'Sent from ' + routeName : 'Send as ' + routeName}</button>
+            </>}
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════ 6 IMPROVE ════════════
 function Results({ cfg, st }: any) {
   const C = cfg as EventConfig; const R = C.demo.results;
   const venuePeak = Math.max(...C.demo.venueBySeg, 0), onlinePeak = Math.max(...C.demo.onlineBySeg, 0);
@@ -513,6 +644,12 @@ function Results({ cfg, st }: any) {
   const byOpt = R.conversionsBy.map((d) => ({ ...d, n: d.n + st.drives.filter((x: any) => x.showroom === d.name).length }));
   const maxOpt = Math.max(...byOpt.map((d) => d.n), 1);
   const maxMulti = Math.max(...R.multiEvent.rows.map((x) => x.n), 1);
+  const sessionKey: Record<string, number> = { registered: st.regs.venue + st.regs.online, engaged: st.me && (st.me.signals.features + st.me.signals.polls) > 0 ? 1 : 0, built: st.me && (st.me.signals.built || st.me.signals.finance) ? 1 : 0, booked: st.drives.length };
+  const funnel = (R.funnel || []).map((f) => ({ ...f, n: f.n + (f.key ? sessionKey[f.key] || 0 : 0) }));
+  const feats = C.hotspots.filter((h) => R.features?.[h.id] !== undefined).map((h) => ({ name: h.name, pct: R.features![h.id] })).sort((a, b) => b.pct - a.pct);
+  const maxFeat = Math.max(...feats.map((f) => f.pct), 0);
+  const sources = R.sources || []; const srcTotal = Math.max(sources.reduce((a, x) => a + x.n, 0), 1); const maxSrc = Math.max(...sources.map((x) => x.n), 1);
+  const LQ = R.leadQuality || [];
   const bar = (pct: number, bg = '#8B3DF5') => <div style={s('height:10px;border-radius:6px;background:#F1F1EE;margin-top:9px;overflow:hidden')}><span style={{ ...s('display:block;height:10px;border-radius:6px;transition:width .8s cubic-bezier(.2,.8,.2,1)'), width: pct + '%', background: bg }} /></div>;
   const kpi = (k: { label: string; v: string; icon: string; sub: string }, big = true) => (
     <div key={k.label} style={s('padding:' + (big ? '24px' : '22px 24px') + ';background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);animation:stRise .4s ease both')}>
@@ -529,6 +666,34 @@ function Results({ cfg, st }: any) {
       </div>
       <div style={s('display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:24px')}>{kpis.map((k) => kpi(k))}</div>
       <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px')}>{kpis2.map((k) => kpi(k, false))}</div>
+      {funnel.length > 0 && (
+        <Card style={{ marginTop: 20 }}>
+          <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">filter_alt</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>From interest to sale</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>Every step from one consented profile · sales reported back by showrooms</span></div>
+          <div style={{ ...s('display:grid;gap:12px;margin-top:20px'), gridTemplateColumns: `repeat(${funnel.length},minmax(0,1fr))` }}>
+            {funnel.map((f, i) => (
+              <div key={f.label} style={s('display:flex;flex-direction:column')}>
+                <div style={s('height:120px;display:flex;align-items:flex-end;border-radius:10px;background:#F1F1EE;overflow:hidden')}><span style={{ ...s('display:block;width:100%;border-radius:10px;transition:height .8s cubic-bezier(.2,.8,.2,1)'), height: Math.max(4, Math.sqrt(f.n / funnel[0].n) * 100) + '%', background: i === funnel.length - 1 ? '#1B0B2D' : '#8B3DF5', opacity: 1 - i * 0.08 }} /></div>
+                <div style={s("font:800 24px/.9 'Archivo Black';margin-top:12px;font-variant-numeric:tabular-nums")}>{f.n.toLocaleString()}</div>
+                <div style={s("font:600 12px/1.3 'Archivo';margin-top:6px")}>{f.label}</div>
+                <div style={s("font:500 11px/1 'Archivo';color:#826E99;margin-top:6px")}>{i === 0 ? 'Start' : ((f.n / Math.max(funnel[i - 1].n, 1)) * 100).toFixed(f.n / funnel[i - 1].n < 0.1 ? 1 : 0) + '% of previous step'}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+      {(feats.length > 0 || sources.length > 0) && (
+        <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px')}>
+          {feats.length > 0 && <Card>
+            <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">my_location</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Features explored</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>Share of viewers who opened each one</span></div>
+            <div style={s('margin-top:22px;display:flex;flex-direction:column;gap:16px')}>{feats.map((f) => <div key={f.name}><div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:600 13px/1 'Archivo';flex:1")}>{f.name}</span><span style={s("font:700 13px/1 'Archivo';font-variant-numeric:tabular-nums")}>{f.pct}%</span></div>{bar(f.pct, f.pct === maxFeat ? '#1B0B2D' : '#8B3DF5')}</div>)}</div>
+            <div style={s("font:400 11.5px/1.45 'Archivo';color:#826E99;margin-top:16px")}>Used to retarget: people who opened a feature get follow-up and ads that lead with it.</div>
+          </Card>}
+          {sources.length > 0 && <Card>
+            <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">campaign</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Where registrations came from</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>By channel</span></div>
+            <div style={s('margin-top:22px;display:flex;flex-direction:column;gap:16px')}>{sources.map((x) => <div key={x.name}><div style={s('display:flex;align-items:center;gap:9px')}><Ms size={16} color="#826E99">{x.icon}</Ms><span style={s("font:600 13px/1 'Archivo';flex:1")}>{x.name}</span><span style={s("font:700 13px/1 'Archivo';font-variant-numeric:tabular-nums")}>{x.n.toLocaleString()}</span><span style={s("width:40px;text-align:right;font:500 11.5px/1 'Archivo';color:#826E99")}>{Math.round((x.n / srcTotal) * 100)}%</span></div>{bar((x.n / maxSrc) * 100)}</div>)}</div>
+          </Card>}
+        </div>
+      )}
       {R.multiEvent.rows.length > 0 && (
         <Card style={{ marginTop: 20 }}>
           <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">repeat</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Attendees across events</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>People who joined more than one {C.brand.name} event</span></div>
@@ -557,6 +722,18 @@ function Results({ cfg, st }: any) {
           )}
         </Card>
       </div>
+      {LQ.length > 0 && (
+        <Card style={{ marginTop: 20 }}>
+          <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">leaderboard</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Lead quality by {C.cta.optionsLabel.toLowerCase()}</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>Where follow-up is working, and where it needs help</span></div>
+          <div style={s("display:grid;grid-template-columns:1.6fr repeat(5,1fr) 2fr;gap:12px;margin-top:18px;padding-bottom:10px;border-bottom:1px solid rgba(27,11,45,.08);font:600 10px/1 'Archivo';letter-spacing:.12em;color:#826E99")}><span>{C.cta.optionsLabel}</span><span style={s('text-align:right')}>HOT</span><span style={s('text-align:right')}>WARM</span><span style={s('text-align:right')}>COLD</span><span style={s('text-align:right')}>WON</span><span style={s('text-align:right')}>HOT → WON</span><span>MIX</span></div>
+          {LQ.map((r) => { const t = r.hot + r.warm + r.cold; return (
+            <div key={r.name} style={s("display:grid;grid-template-columns:1.6fr repeat(5,1fr) 2fr;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid rgba(27,11,45,.08);font:600 13px/1 'Archivo';font-variant-numeric:tabular-nums")}>
+              <span>{r.name}</span><span style={s('text-align:right;color:#C0473C')}>{r.hot}</span><span style={s('text-align:right')}>{r.warm}</span><span style={s('text-align:right;color:#826E99')}>{r.cold.toLocaleString()}</span><span style={s('text-align:right')}>{r.won}</span><span style={s('text-align:right')}>{((r.won / Math.max(r.hot, 1)) * 100).toFixed(1)}%</span>
+              <span style={s('display:flex;height:10px;border-radius:6px;overflow:hidden;background:#F1F1EE')}><span style={{ ...s('display:block;background:#C0473C'), width: (r.hot / t) * 100 + '%' }} /><span style={{ ...s('display:block;background:#8B3DF5'), width: (r.warm / t) * 100 + '%' }} /><span style={s('display:block;flex:1;background:#D9D9D4')} /></span>
+            </div>
+          ); })}
+        </Card>
+      )}
       <Card style={{ marginTop: 20 }}>
         <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">help</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Top questions</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>By upvotes, venue and online combined</span></div>
         <div style={s('margin-top:18px;display:flex;flex-direction:column')}>

@@ -20,6 +20,15 @@ export type SegKind = 'doors' | 'talk' | 'reveal' | 'qa' | 'other';
 export type QA = { q: string; a: string; stat?: string; label?: string; keys?: string };
 export type Poll = { id: string; q: string; opts: Record<string, number>; votes: number };
 export type Msg = { kicker: string; title: string; sub: string };
+// Interest + lead model (proposal: one consented profile per person, scored and routed).
+export type LeadStatus = 'New' | 'Contacted' | 'Booked' | 'Reserved' | 'Sold' | 'Not now';
+export const LEAD_STATUSES: LeadStatus[] = ['New', 'Contacted', 'Booked', 'Reserved', 'Sold', 'Not now'];
+export type Signals = { features: number; polls: number; iris: number; questions: number; built: boolean; finance: boolean; booked: boolean; checkedIn: boolean; following: boolean };
+export type Lead = {
+  id: string; name: string; where: Mode; answers: Record<string, string>; consent: boolean;
+  source: string; signals: Signals; seen?: string[]; colour?: string; variant?: string; monthly?: string;
+  route: string; status: LeadStatus; at: string;
+};
 
 export interface EventConfig {
   id: string;
@@ -72,6 +81,22 @@ export interface EventConfig {
   };
   chat: { pool: { user: string; text: string; where: Mode; tag: string; avatar?: string }[]; quickBefore: string[]; quickLive: string[]; quickAfter: string[] };
   qaSeed: { id: string; text: string; who: string; where: Mode; votes: number }[];
+  // Register-interest questions asked with the RSVP. A field with `routes`
+  // maps an answer to a CTA option id (nearest showroom, right demo format).
+  interest?: {
+    title: string; sub: string; consent: string;
+    fields: { id: string; label: string; short: string; options: string[]; routes?: Record<string, string> }[];
+  };
+  // Launch extras: colour + trim picker and a finance / running-cost estimate.
+  showroom?: {
+    buildTitle: string; buildSub: string; colours: { name: string; hex: string }[];
+    finance: {
+      title: string; sub: string; rate: number; deposits: number[]; terms: number[]; defaultDeposit: number; defaultTerm: number; note: string;
+      running?: { title: string; sub: string; rows: { label: string; v: number }[] };
+    };
+  };
+  // Follow-up message drafted for a lead; {first} {model} {route} {extra} are filled in.
+  followUp?: { template: string; extraBuilt: string; extraFinance: string; extraFeature: string };
   demo: {
     rsvp: { venue: number; online: number };
     audienceBefore: number; venueBySeg: number[]; onlineBySeg: number[];
@@ -81,7 +106,12 @@ export interface EventConfig {
       reactions: number; questions: number; answered: number; conversions: number; conversionLabel: string;
       engagement: { seg: string; pct: number }[]; conversionsBy: { name: string; n: number }[];
       multiEvent: { total: number; rows: { name: string; n: number }[] }; follows: number; votes: number;
+      funnel?: { label: string; n: number; key?: 'registered' | 'engaged' | 'built' | 'booked' }[];
+      features?: Record<string, number>;                 // hotspot id -> % of viewers who opened it
+      leadQuality?: { name: string; hot: number; warm: number; cold: number; won: number }[];
+      sources?: { name: string; n: number; icon: string }[];
     };
+    leads?: Lead[];
   };
 }
 
@@ -114,14 +144,25 @@ function localMap(): Record<string, EventConfig> {
 }
 export function listEvents(): { cfg: EventConfig; sample: boolean; edited: boolean }[] {
   const local = localMap();
-  const samples = SAMPLES.map((e) => ({ cfg: local[e.id] || e, sample: true, edited: !!local[e.id] }));
+  const samples = SAMPLES.map((e) => ({ cfg: local[e.id] ? withDefaults(local[e.id]) : e, sample: true, edited: !!local[e.id] }));
   const own = Object.values(local).filter((e) => !SAMPLES.some((x) => x.id === e.id)).map((cfg) => ({ cfg, sample: false, edited: false }));
   return [...samples, ...own];
 }
+// Copies saved before interest / showroom / leads existed pick them up from their sample.
+function withDefaults(cfg: EventConfig): EventConfig {
+  const base = SAMPLES.find((e) => e.id === cfg.id);
+  if (!base) return cfg;
+  const c = cfg as any, b = clone(base) as any;
+  for (const k of ['interest', 'showroom', 'followUp']) if (c[k] === undefined && b[k] !== undefined) c[k] = b[k];
+  if (c.demo.leads === undefined && b.demo.leads) c.demo.leads = b.demo.leads;
+  for (const k of ['funnel', 'features', 'leadQuality', 'sources']) if (c.demo.results[k] === undefined && b.demo.results[k] !== undefined) c.demo.results[k] = b.demo.results[k];
+  return c;
+}
 export function getEvent(idOrAlias: string, opts: { draft?: boolean } = {}): EventConfig | null {
   const id = ALIASES[idOrAlias] || idOrAlias;
-  if (opts.draft) { const d = read(DRAFT(id)); if (d) try { return JSON.parse(d); } catch { /* fall through */ } }
-  return localMap()[id] || clone(SAMPLES.find((e) => e.id === id) || null);
+  if (opts.draft) { const d = read(DRAFT(id)); if (d) try { return withDefaults(JSON.parse(d)); } catch { /* fall through */ } }
+  const local = localMap()[id];
+  return local ? withDefaults(local) : clone(SAMPLES.find((e) => e.id === id) || null);
 }
 export function saveEvent(cfg: EventConfig) { const m = localMap(); m[cfg.id] = cfg; write(KEY, JSON.stringify(m)); write(DRAFT(cfg.id), null); }
 export function deleteEvent(id: string) { const m = localMap(); delete m[id]; write(KEY, JSON.stringify(m)); }
@@ -202,8 +243,47 @@ export function newFromTemplate(id: string, tpl: (typeof TEMPLATES)[number]): Ev
   const c = clone(AURORA_NOVA) as EventConfig;
   c.id = id; c.status = 'draft';
   c.event.template = tpl.id; c.event.format = tpl.format; c.event.name = 'Untitled ' + tpl.name.toLowerCase();
+  if (tpl.id !== 'launch') delete c.showroom; // colour, trim and finance are launch-only
   const times = ['09:00', '09:30', '10:30', '13:00', '15:00', '16:00'];
   c.segments = tpl.segments.map(([name, kind], i) => ({ id: 's' + (i + 1), name, short: name.toUpperCase(), time: times[i] || '17:00', kind, blurb: '', note: '', heroTitle: name.toUpperCase(), heroSub: '' }));
   c.demo.results.engagement = c.segments.map((g, i) => ({ seg: g.name, pct: [38, 64, 92, 71, 55, 44][i] || 40 }));
   return c;
 }
+
+// ── leads ──
+// A transparent score from what the person did: every signal is worth a fixed
+// number of points, so the organiser can see why someone is hot.
+export const SCORE_RULES: { key: keyof Signals; label: string; pts: number; per?: boolean; max?: number }[] = [
+  { key: 'booked', label: 'Booked the next step', pts: 30 },
+  { key: 'finance', label: 'Checked the monthly cost', pts: 15 },
+  { key: 'built', label: 'Picked a colour and trim', pts: 10 },
+  { key: 'features', label: 'Features explored', pts: 4, per: true, max: 20 },
+  { key: 'iris', label: 'Questions to IRIS', pts: 3, per: true, max: 9 },
+  { key: 'questions', label: 'Questions for the Q&A', pts: 3, per: true, max: 6 },
+  { key: 'polls', label: 'Poll votes', pts: 2, per: true, max: 6 },
+  { key: 'checkedIn', label: 'Checked in at the venue', pts: 8 },
+  { key: 'following', label: 'Follows the brand', pts: 4 },
+];
+export const scoreParts = (sg: Signals) => SCORE_RULES.map((r) => {
+  const v = sg[r.key]; const n = typeof v === 'number' ? v : v ? 1 : 0;
+  return { ...r, n, pts: Math.min(r.max ?? r.pts, r.per ? n * r.pts : n ? r.pts : 0) };
+}).filter((r) => r.n > 0);
+export const leadScore = (l: { signals: Signals; answers: Record<string, string> }) =>
+  Math.min(99, 6 + Object.keys(l.answers || {}).length * 2 + scoreParts(l.signals).reduce((a, r) => a + r.pts, 0));
+export const leadTier = (score: number) => (score >= 60 ? 'Hot' : score >= 35 ? 'Warm' : 'Cold');
+export const NO_SIGNALS: Signals = { features: 0, polls: 0, iris: 0, questions: 0, built: false, finance: false, booked: false, checkedIn: false, following: false };
+// Which CTA option an answer routes to (nearest showroom, the right demo format).
+export function routeFor(cfg: EventConfig, answers: Record<string, string>): string | null {
+  for (const f of cfg.interest?.fields || []) { const a = answers[f.id]; if (a && f.routes?.[a]) return f.routes[a]; }
+  return null;
+}
+// Price strings like "RM159,000" -> 159000 and "RM".
+export const priceNum = (p: string) => Number((p.match(/[\d,.]+/) || ['0'])[0].replace(/,/g, '')) || 0;
+export const priceCur = (p: string) => (p.match(/^[^\d]*/) || [''])[0];
+// Flat-rate hire purchase, the way car loans are quoted in Malaysia.
+export const monthlyFlat = (price: number, depositPct: number, ratePct: number, years: number) => {
+  const loan = price * (1 - depositPct / 100);
+  const total = loan * (1 + (ratePct / 100) * years);
+  return { loan, interest: total - loan, total, monthly: total / (years * 12) };
+};
+export const fmtMoney = (cur: string, n: number) => cur + Math.round(n).toLocaleString('en-GB');

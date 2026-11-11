@@ -613,6 +613,58 @@
       "votes": 162
     }
   ],
+  "interest": {
+    "title": "Tell us about your team",
+    "sub": "Three taps. It shapes the sessions we point you to and who follows up.",
+    "consent": "Tidewell can email me about Flow. I can unsubscribe any time.",
+    "fields": [
+      {
+        "id": "role",
+        "label": "Your role",
+        "short": "Role",
+        "options": [
+          "Engineer",
+          "Eng manager",
+          "Platform / DevOps",
+          "Founder / CTO"
+        ]
+      },
+      {
+        "id": "team",
+        "label": "Team size",
+        "short": "Team",
+        "options": [
+          "1–10",
+          "11–50",
+          "51–200",
+          "200+"
+        ],
+        "routes": {
+          "1–10": "pj",
+          "11–50": "pj",
+          "51–200": "sa",
+          "200+": "sa"
+        }
+      },
+      {
+        "id": "tool",
+        "label": "CI today",
+        "short": "CI today",
+        "options": [
+          "GitHub Actions",
+          "GitLab CI",
+          "Jenkins",
+          "Something else"
+        ]
+      }
+    ]
+  },
+  "followUp": {
+    "template": "Hi {first}, thanks for coming to Tidewell Summit. {extra}{route} is the quickest way to see Flow on your own repos. Reply with a time and we’ll set it up.",
+    "extraBuilt": "",
+    "extraFinance": "",
+    "extraFeature": "You spent the most time on {feature}, so we’ll start the demo there. "
+  },
   "demo": {
     "rsvp": {
       "venue": 900,
@@ -709,7 +761,329 @@
         ]
       },
       "follows": 1240,
-      "votes": 6110
-    }
+      "votes": 6110,
+      "funnel": [
+        {
+          "label": "Registered",
+          "n": 8100,
+          "key": "registered"
+        },
+        {
+          "label": "Engaged during the keynote",
+          "n": 5940,
+          "key": "engaged"
+        },
+        {
+          "label": "Requested a demo",
+          "n": 342,
+          "key": "booked"
+        },
+        {
+          "label": "Started a Team trial",
+          "n": 126
+        },
+        {
+          "label": "Became a paying team",
+          "n": 38
+        }
+      ],
+      "features": {
+        "lights": 58,
+        "wheels": 71,
+        "cabin": 49,
+        "roof": 33,
+        "charge": 27
+      },
+      "leadQuality": [
+        {
+          "name": "At the demo pods",
+          "hot": 180,
+          "warm": 820,
+          "cold": 2400,
+          "won": 17
+        },
+        {
+          "name": "Video call",
+          "hot": 140,
+          "warm": 760,
+          "cold": 2300,
+          "won": 12
+        },
+        {
+          "name": "With your team",
+          "hot": 96,
+          "warm": 310,
+          "cold": 1094,
+          "won": 9
+        }
+      ],
+      "sources": [
+        {
+          "name": "LinkedIn ads",
+          "n": 2650,
+          "icon": "campaign"
+        },
+        {
+          "name": "Developer newsletter",
+          "n": 1980,
+          "icon": "mail"
+        },
+        {
+          "name": "Partner meetups",
+          "n": 1240,
+          "icon": "handshake"
+        },
+        {
+          "name": "Customer referrals",
+          "n": 1120,
+          "icon": "group_add"
+        },
+        {
+          "name": "Search + direct",
+          "n": 1110,
+          "icon": "search"
+        }
+      ]
+    },
+    "leads": [
+      {
+        "id": "L-3101",
+        "name": "Inês Carvalho",
+        "where": "venue",
+        "answers": {
+          "role": "Eng manager",
+          "team": "51–200",
+          "tool": "Jenkins"
+        },
+        "consent": true,
+        "source": "Partner meetups",
+        "signals": {
+          "features": 5,
+          "polls": 3,
+          "iris": 2,
+          "questions": 0,
+          "built": false,
+          "finance": false,
+          "booked": true,
+          "checkedIn": true,
+          "following": false
+        },
+        "route": "sa",
+        "status": "Booked",
+        "at": "Hall · 10:42",
+        "seen": [
+          "wheels",
+          "lights",
+          "cabin",
+          "roof",
+          "charge"
+        ]
+      },
+      {
+        "id": "L-3102",
+        "name": "Tomás Ribeiro",
+        "where": "online",
+        "answers": {
+          "role": "Platform / DevOps",
+          "team": "200+",
+          "tool": "GitLab CI"
+        },
+        "consent": true,
+        "source": "LinkedIn ads",
+        "signals": {
+          "features": 4,
+          "polls": 2,
+          "iris": 3,
+          "questions": 1,
+          "built": false,
+          "finance": false,
+          "booked": false,
+          "checkedIn": false,
+          "following": true
+        },
+        "route": "sa",
+        "status": "New",
+        "at": "Online · 10:37",
+        "seen": [
+          "wheels",
+          "lights",
+          "roof",
+          "cabin"
+        ]
+      },
+      {
+        "id": "L-3103",
+        "name": "Amara Okafor",
+        "where": "venue",
+        "answers": {
+          "role": "Founder / CTO",
+          "team": "11–50",
+          "tool": "GitHub Actions"
+        },
+        "consent": true,
+        "source": "Customer referrals",
+        "signals": {
+          "features": 3,
+          "polls": 2,
+          "iris": 1,
+          "questions": 0,
+          "built": false,
+          "finance": false,
+          "booked": true,
+          "checkedIn": true,
+          "following": false
+        },
+        "route": "pj",
+        "status": "Contacted",
+        "at": "Hall · 10:31",
+        "seen": [
+          "lights",
+          "wheels",
+          "cabin"
+        ]
+      },
+      {
+        "id": "L-3104",
+        "name": "Lukas Brandt",
+        "where": "online",
+        "answers": {
+          "role": "Engineer",
+          "team": "51–200",
+          "tool": "GitHub Actions"
+        },
+        "consent": true,
+        "source": "Developer newsletter",
+        "signals": {
+          "features": 3,
+          "polls": 3,
+          "iris": 2,
+          "questions": 0,
+          "built": false,
+          "finance": false,
+          "booked": false,
+          "checkedIn": false,
+          "following": false
+        },
+        "route": "sa",
+        "status": "New",
+        "at": "Online · 10:25",
+        "seen": [
+          "wheels",
+          "cabin",
+          "lights"
+        ]
+      },
+      {
+        "id": "L-3105",
+        "name": "Sara Lindqvist",
+        "where": "venue",
+        "answers": {
+          "role": "Engineer",
+          "team": "11–50",
+          "tool": "Something else"
+        },
+        "consent": true,
+        "source": "Developer newsletter",
+        "signals": {
+          "features": 2,
+          "polls": 1,
+          "iris": 0,
+          "questions": 0,
+          "built": false,
+          "finance": false,
+          "booked": false,
+          "checkedIn": true,
+          "following": false
+        },
+        "route": "pj",
+        "status": "New",
+        "at": "Hall · 10:18",
+        "seen": [
+          "lights",
+          "wheels"
+        ]
+      },
+      {
+        "id": "L-3106",
+        "name": "Rafael Duarte",
+        "where": "online",
+        "answers": {
+          "role": "Eng manager",
+          "team": "1–10",
+          "tool": "GitHub Actions"
+        },
+        "consent": true,
+        "source": "Search + direct",
+        "signals": {
+          "features": 1,
+          "polls": 1,
+          "iris": 0,
+          "questions": 0,
+          "built": false,
+          "finance": false,
+          "booked": false,
+          "checkedIn": false,
+          "following": false
+        },
+        "route": "pj",
+        "status": "Not now",
+        "at": "Online · 10:12",
+        "seen": [
+          "charge"
+        ]
+      },
+      {
+        "id": "L-3107",
+        "name": "Hana Sato",
+        "where": "online",
+        "answers": {
+          "role": "Platform / DevOps",
+          "team": "200+",
+          "tool": "Jenkins"
+        },
+        "consent": true,
+        "source": "LinkedIn ads",
+        "signals": {
+          "features": 0,
+          "polls": 2,
+          "iris": 1,
+          "questions": 1,
+          "built": false,
+          "finance": false,
+          "booked": false,
+          "checkedIn": false,
+          "following": false
+        },
+        "route": "sa",
+        "status": "New",
+        "at": "Online · 10:06"
+      },
+      {
+        "id": "L-3108",
+        "name": "Noah Fischer",
+        "where": "online",
+        "answers": {
+          "role": "Engineer",
+          "team": "1–10",
+          "tool": "Something else"
+        },
+        "consent": false,
+        "source": "Search + direct",
+        "signals": {
+          "features": 0,
+          "polls": 1,
+          "iris": 0,
+          "questions": 0,
+          "built": false,
+          "finance": false,
+          "booked": false,
+          "checkedIn": false,
+          "following": false
+        },
+        "route": "pj",
+        "status": "New",
+        "at": "Online · 09:58"
+      }
+    ]
   }
 }
