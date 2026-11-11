@@ -57,40 +57,106 @@ export function StudioHome() {
   );
 }
 
-// ════════════ EVENTS LIST ════════════
+// ════════════ EVENTS GRID ════════════
+// Same layout as the Voltford Studio dashboard: KPI tiles, then a card grid.
 function EventsList({ rows, refresh, openBuilder, create, say }: any) {
   const order = ['live', 'upcoming', 'draft', 'past'];
-  const list = [...rows].sort((a: any, b: any) => order.indexOf(a.cfg.status) - order.indexOf(b.cfg.status));
-  const act = (label: string, icon: string, onClick: () => void, href?: string) => href
-    ? <a className="ah" href={href} style={s("display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:10px;font:600 12px/1 'Archivo';color:#1B0B2D;text-decoration:none;box-shadow:inset 0 0 0 1px rgba(27,11,45,.12)")}><Ms size={15} color="inherit">{icon}</Ms>{label}</a>
-    : <button className="ah" onClick={onClick} style={s("display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:10px;font:600 12px/1 'Archivo';color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.12)")}><Ms size={15} color="inherit">{icon}</Ms>{label}</button>;
+  const list: { cfg: EventConfig; sample: boolean; edited: boolean }[] = [...rows].sort((a: any, b: any) => order.indexOf(a.cfg.status) - order.indexOf(b.cfg.status));
+  const brands = new Set(list.map((r) => r.cfg.brand.name)).size;
+  const kpis = [
+    { label: 'TOTAL EVENTS', v: String(list.length), unit: 'configured', icon: 'event', color: '#1B0B2D' },
+    { label: 'LIVE NOW', v: String(list.filter((r) => r.cfg.status === 'live').length), unit: 'on air', icon: 'sensors', color: '#C0473C' },
+    { label: 'UPCOMING', v: String(list.filter((r) => r.cfg.status === 'upcoming').length), unit: 'published', icon: 'schedule', color: '#8B3DF5' },
+    { label: 'BRANDS', v: String(brands), unit: 'on one platform', icon: 'palette', color: '#8B3DF5' },
+  ];
+  const btn = "display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;font:600 12px/1 'Archivo';color:#1B0B2D;text-decoration:none;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)";
   return (
-    <div style={s('padding:34px 44px 52px;animation:stFade .3s ease both')}>
-      <div style={s('display:flex;align-items:flex-end;gap:20px')}>
-        <div style={s('flex:1')}><h1 style={s("display:flex;align-items:center;gap:12px;font:700 32px/1.05 'Archivo';letter-spacing:-.022em;margin:0")}>Events <Demo /></h1><p style={s("font:400 14px/1.5 'Archivo';color:#513E66;margin:9px 0 0")}>Every event is one config: brand, agenda, content and IRIS answers. Edit any of them, or build a new one from a template.</p></div>
-        <button className="ah-ink-btn" onClick={create} style={s("display:flex;align-items:center;gap:8px;padding:13px 18px;border-radius:12px;background:#1B0B2D;font:600 13px/1 'Archivo';color:#F5F5F2")}><Ms size={18} color="#F5F5F2">add</Ms>Create event</button>
-      </div>
-      <div style={s('display:flex;flex-direction:column;gap:14px;margin-top:24px')}>
-        {list.map(({ cfg, sample, edited }: { cfg: EventConfig; sample: boolean; edited: boolean }) => { const S = STATUS[cfg.status] || STATUS.draft; const live = cfg.status === 'live'; return (
-          <div key={cfg.id} style={{ ...s('display:flex;align-items:center;gap:20px;padding:18px 22px;border-radius:18px;background:#FFFFFF;box-shadow:0 1px 2px rgba(27,11,45,.05)'), borderLeft: live ? '4px solid #C0473C' : '4px solid transparent' }}>
-            <span style={{ ...s('width:104px;height:68px;flex:none;border-radius:10px;overflow:hidden;position:relative'), background: cfg.brand.dark }}>{cfg.event.heroImage.src && <img src={asset(cfg.event.heroImage.src)} alt="" style={s('width:100%;height:100%;object-fit:cover;mix-blend-mode:lighten')} />}<span style={{ ...s('position:absolute;left:6px;bottom:6px;width:10px;height:10px;border-radius:3px;box-shadow:0 0 0 1.5px #fff'), background: cfg.brand.accent }} /></span>
-            <span style={s('flex:1;min-width:0')}>
-              <span style={s('display:flex;align-items:center;gap:10px;flex-wrap:wrap')}><span style={s("font:700 17px/1.2 'Archivo'")}>{cfg.event.name}</span><span style={{ ...s("display:flex;align-items:center;gap:6px;font:600 9.5px/1 'Archivo';letter-spacing:.12em;padding:5px 7px;border-radius:6px"), background: S.bg, color: S.fg }}>{live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:stBlink 1.4s steps(1,end) infinite')} />}{S.label}</span>{sample && <span style={s("font:600 9.5px/1 'Archivo';letter-spacing:.1em;color:#826E99")}>{edited ? 'SAMPLE · EDITED HERE' : 'SAMPLE'}</span>}</span>
-              <span style={s("display:block;font:400 12.5px/1.4 'Archivo';color:#513E66;margin-top:5px")}>{cfg.brand.name} · {cfg.event.dateShort} · {cfg.event.venue}</span>
-              <span style={s('display:flex;gap:6px;margin-top:9px;flex-wrap:wrap')}>{[TEMPLATES.find((t) => t.id === cfg.event.template)?.name || '', cfg.event.format, cfg.segments.length + ' segments', '/events/' + cfg.id + '/'].map((c) => <span key={c} style={s("font:600 10.5px/1 'Archivo';color:#513E66;background:#F1F1EE;padding:6px 8px;border-radius:6px")}>{c}</span>)}</span>
-            </span>
-            <span style={s('display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:470px')}>
-              <a className="ah-ink-btn" href={studioPath(cfg.id)} style={s("display:flex;align-items:center;gap:6px;padding:9px 12px;border-radius:10px;font:600 12px/1 'Archivo';color:#F5F5F2;background:#1B0B2D;text-decoration:none")}><Ms size={15} color="#F5F5F2">tune</Ms>Studio</a>
-              {act('Fan view', 'smartphone', () => {}, fanPath(cfg.id))}
-              {act('Edit', 'edit', () => openBuilder(cfg))}
-              {act('Duplicate', 'content_copy', () => { const c = duplicateEvent(cfg); if (!c) { say('All demo event slots are used.'); return; } refresh(); say('Duplicated as “' + c.event.name + '”'); })}
-              {sample ? (edited && act('Reset', 'restart_alt', () => { if (window.confirm('Reset “' + cfg.event.name + '” to the built-in sample? Your edits in this browser are removed.')) { deleteEvent(cfg.id); refresh(); say('Reset to the sample'); } }))
-                : act('Delete', 'delete', () => { if (window.confirm('Delete “' + cfg.event.name + '” from this browser? This cannot be undone.')) { deleteEvent(cfg.id); refresh(); say('Event deleted'); } })}
-            </span>
+    <div>
+      <section style={s('padding:40px 44px 0;animation:stRise .4s ease both')}>
+        <div style={s('display:flex;align-items:flex-end;gap:30px')}>
+          <div style={s('flex:1;min-width:0')}>
+            <div style={s("display:flex;align-items:center;gap:10px;font:600 11px/1 'Archivo';letter-spacing:.16em;color:#826E99")}>CONNECT EVENTS · WORKSPACE <Demo /></div>
+            <h1 style={s("font:700 40px/1.02 'Archivo';letter-spacing:-.025em;margin:14px 0 0")}>Your events</h1>
+            <p style={s("font:400 15px/1.5 'Archivo';color:#513E66;margin:10px 0 0;max-width:560px")}>{list.length} events across {brands} brands. Each one is a single config: brand, agenda, content and IRIS answers. Build it once, then run it live.</p>
           </div>
-        ); })}
-      </div>
-      <div style={s("font:400 12px/1.5 'Archivo';color:#826E99;margin-top:18px")}>Events you create or edit are saved in this browser only. Samples ship with the prototype and can be reset at any time.</div>
+          <button className="ah-ink-btn" onClick={create} style={s("display:flex;align-items:center;gap:9px;padding:15px 20px;border-radius:14px;background:#1B0B2D;font:600 13.5px/1 'Archivo';color:#F5F5F2;box-shadow:0 8px 20px -10px rgba(27,11,45,.5)")}><Ms size={19} color="#F5F5F2">add</Ms>Create event</button>
+        </div>
+        <div style={s('display:flex;gap:20px;margin-top:24px')}>
+          {kpis.map((k) => (
+            <div key={k.label} style={s('flex:1;padding:18px 20px;background:#FFFFFF;border-radius:16px;box-shadow:0 1px 2px rgba(27,11,45,.05)')}>
+              <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color={k.color}>{k.icon}</Ms><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#826E99")}>{k.label}</span></div>
+              <div style={s('display:flex;align-items:baseline;gap:9px;margin-top:14px')}><span style={s("font:800 34px/.9 'Archivo Black';letter-spacing:.01em")}>{k.v}</span><span style={s("font:500 12px/1 'Archivo';color:#826E99")}>{k.unit}</span></div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={s('padding:34px 44px 20px')}>
+        <div style={s('display:flex;align-items:center;gap:10px')}>
+          <span style={s("font:600 11px/1 'Archivo';letter-spacing:.16em;color:#826E99")}>ALL EVENTS</span>
+          <span style={s('flex:1;height:1px;background:rgba(27,11,45,.08)')} />
+        </div>
+        <div style={s('display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:20px')}>
+          {list.map(({ cfg, sample, edited }) => {
+            const S = STATUS[cfg.status] || STATUS.draft;
+            const live = cfg.status === 'live';
+            const statusColor = live ? '#C0473C' : cfg.status === 'upcoming' ? '#8B3DF5' : '#826E99';
+            const tpl = TEMPLATES.find((t) => t.id === cfg.event.template)?.name || '';
+            const tags = cfg.segments.slice(0, 5).map((g) => g.name).concat(cfg.segments.length > 5 ? [`+${cfg.segments.length - 5} more`] : []);
+            const line = live ? `Live now · ${cfg.segments.length} segments · ${cfg.hotspots.length} features` : cfg.status === 'upcoming' ? `Upcoming · ${cfg.event.dateShort.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}` : cfg.status === 'past' ? 'Ended · results ready' : `Draft · ${cfg.segments.length} segments configured`;
+            const iconBtn = (icon: string, label: string, onClick: () => void) => <button className="ah-del" aria-label={label} title={label} onClick={onClick} style={s('width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.94)')}><Ms size={15} color="#1B0B2D">{icon}</Ms></button>;
+            return (
+              <div key={cfg.id} style={{ ...s('background:#FFFFFF;border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(27,11,45,.05);animation:stRise .4s ease both;display:flex;flex-direction:column'), borderTop: `3px solid ${statusColor}` }}>
+                <div style={{ ...s('position:relative;height:132px;display:flex;align-items:flex-end;padding:16px;overflow:hidden'), background: `linear-gradient(135deg,${cfg.brand.dark} 0%,${mix(cfg.brand.dark, cfg.brand.accent, 0.35)} 140%)` }}>
+                  {cfg.event.heroImage.src && <img src={asset(cfg.event.heroImage.src)} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;mix-blend-mode:lighten;opacity:.85')} />}
+                  <span style={{ ...s('position:absolute;inset:0'), background: `linear-gradient(180deg,transparent 30%,${cfg.brand.dark}E6 100%)` }} />
+                  <span style={s('position:relative;display:flex;align-items:center;gap:9px')}><img src={asset(cfg.brand.logo)} alt="" style={s('width:24px;height:24px;object-fit:contain')} /><span style={s("font:800 22px/.9 'Archivo Black';letter-spacing:.01em;color:#fff")}>{cfg.brand.name}</span></span>
+                  <span style={s('position:absolute;right:14px;top:14px;display:flex;gap:7px')}>
+                    <span style={s("display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:8px;font:600 9.5px/1 'Archivo';letter-spacing:.1em;background:rgba(255,255,255,.94);color:#1B0B2D")}><Ms size={13} color="#1B0B2D">{cfg.event.format === 'Online' ? 'wifi' : cfg.event.format === 'Hybrid' ? 'hub' : 'location_on'}</Ms>{cfg.event.format.toUpperCase()}</span>
+                    {sample ? (edited && iconBtn('restart_alt', 'Reset to sample', () => { if (window.confirm('Reset “' + cfg.event.name + '” to the built-in sample? Your edits in this browser are removed.')) { deleteEvent(cfg.id); refresh(); say('Reset to the sample'); } }))
+                      : iconBtn('delete', 'Delete', () => { if (window.confirm('Delete “' + cfg.event.name + '” from this browser? This cannot be undone.')) { deleteEvent(cfg.id); refresh(); say('Event deleted'); } })}
+                  </span>
+                  <span style={{ ...s('position:absolute;left:14px;top:14px;width:12px;height:12px;border-radius:4px;box-shadow:0 0 0 2px rgba(255,255,255,.9)'), background: cfg.brand.accent }} />
+                </div>
+                <div style={s('padding:17px 18px 18px;display:flex;flex-direction:column;flex:1')}>
+                  <div style={s('display:flex;align-items:center;gap:9px')}>
+                    <span style={s("font:700 16.5px/1.15 'Archivo';letter-spacing:-.012em;flex:1;min-width:0")}>{cfg.event.name}</span>
+                    <span style={s("font:600 9.5px/1 'Archivo';letter-spacing:.1em;color:#513E66;padding:6px 8px;border-radius:7px;background:#F1F1EE;white-space:nowrap")}>{tpl.toUpperCase()}</span>
+                  </div>
+                  <div style={s("font:400 13px/1.45 'Archivo';color:#513E66;margin-top:8px")}>{cfg.event.dateShort.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())} · {cfg.event.venue}{cfg.event.format === 'Hybrid' ? ' and online' : ''}</div>
+                  <div style={{ ...s('display:flex;align-items:center;gap:8px;margin-top:14px;padding:10px 12px;border-radius:11px'), background: live ? 'rgba(192,71,60,.08)' : 'rgba(27,11,45,.05)' }}>
+                    <span style={{ ...s('width:8px;height:8px;border-radius:50%'), background: statusColor, animation: live ? 'stPulse 2.4s ease-out infinite' : 'none' }} />
+                    <span style={{ ...s("font:600 11.5px/1 'Archivo';flex:1"), color: statusColor }}>{line}</span>
+                    <span style={{ ...s("font:600 9px/1 'Archivo';letter-spacing:.1em;padding:4px 6px;border-radius:5px"), background: S.bg, color: S.fg }}>{S.label}</span>
+                  </div>
+                  <div style={s('display:flex;flex-wrap:wrap;gap:5px;margin-top:14px')}>
+                    {tags.map((t, j) => <span key={j} style={s("font:500 11px/1 'Archivo';color:#513E66;padding:6px 8px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(27,11,45,.1)")}>{t}</span>)}
+                  </div>
+                  <div style={s("display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:13px;border-top:1px solid rgba(27,11,45,.08);font:500 11px/1 'Archivo';color:#826E99;margin-bottom:0")}>
+                    <Ms size={14} color="#826E99">{sample ? 'inventory_2' : 'save'}</Ms>{sample ? (edited ? 'Sample · edited in this browser' : 'Built-in sample') : 'Saved in this browser'}
+                    <span style={s('margin-left:auto;font-variant-numeric:tabular-nums')}>/events/{cfg.id}/</span>
+                  </div>
+                  <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px')}>
+                    <a className="ah-ink-btn" href={studioPath(cfg.id)} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;background:#1B0B2D;font:600 12px/1 'Archivo';color:#F5F5F2;text-decoration:none")}><Ms size={16} color="#F5F5F2">{live ? 'settings_input_antenna' : 'tune'}</Ms>{live ? 'Control room' : 'Studio'}</a>
+                    <a className="ah" href={fanPath(cfg.id)} style={s(btn)}><Ms size={16} color="#1B0B2D">smartphone</Ms>Fan view</a>
+                    <button className="ah" onClick={() => openBuilder(cfg)} style={s(btn)}><Ms size={16} color="#1B0B2D">edit</Ms>Edit</button>
+                    <button className="ah" onClick={() => { const c = duplicateEvent(cfg); if (!c) { say('All demo event slots are used.'); return; } refresh(); say('Duplicated as “' + c.event.name + '”'); }} style={s(btn)}><Ms size={16} color="#1B0B2D">content_copy</Ms>Duplicate</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          <button className="ah" onClick={create} style={s("display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:420px;border-radius:18px;font:600 13.5px/1.3 'Archivo';color:#513E66;box-shadow:inset 0 0 0 2px rgba(27,11,45,.12);border:0;background:transparent")}>
+            <span style={s('width:52px;height:52px;border-radius:16px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={26} color="#1B0B2D">add</Ms></span>
+            Create event
+            <span style={s("font:400 12px/1.4 'Archivo';color:#826E99;max-width:220px;text-align:center")}>Start from Product launch, Conference or Fan event</span>
+          </button>
+        </div>
+      </section>
+
+      <footer style={s("display:flex;align-items:center;gap:14px;padding:28px 44px 34px;margin-top:20px;border-top:1px solid rgba(27,11,45,.08);font:500 11.5px/1 'Archivo';color:#826E99")}>
+        <span>Events you create or edit are saved in this browser only.</span><span>·</span><span>Samples ship with the prototype and can be reset at any time.</span>
+      </footer>
     </div>
   );
 }
