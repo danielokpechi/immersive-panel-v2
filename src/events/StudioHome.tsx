@@ -359,7 +359,7 @@ function Section({ title, sub, children, open: start = true, id }: { title: stri
   );
 }
 // A list of objects, each edited with the same fields.
-type Col = { k: string; label: string; w?: number; area?: boolean; type?: string; opts?: [string, string][]; num?: boolean; image?: boolean };
+type Col = { k: string; label: string; w?: number; area?: boolean; type?: string; opts?: [string, string][]; num?: boolean; image?: boolean; csv?: boolean };
 // A small image cell for lists (presenter photos, gallery images): same compression as every upload.
 function ImageCell({ B, p }: { B: any; p: Path }) {
   const v = getAt(B.cfg, p) || '';
@@ -387,7 +387,8 @@ function List({ B, p, cols, blank, label, max }: { B: any; p: Path; cols: Col[];
               {cols.map((c) => (
                 <label key={c.k} style={s('display:block;min-width:0')}>
                   <span style={s("display:block;font:600 9px/1 'Archivo';letter-spacing:.1em;color:#A79BB6;margin-bottom:5px")}>{c.label}</span>
-                  {c.image ? <ImageCell B={B} p={[...p, i, c.k]} /> : c.opts
+                  {c.csv ? <input value={(row[c.k] || []).join(', ')} onChange={(e) => B.upd([...p, i, c.k], e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean))} style={s(fieldCss + ';padding:9px 10px')} />
+                  : c.image ? <ImageCell B={B} p={[...p, i, c.k]} /> : c.opts
                     ? <select value={row[c.k] ?? (c.num ? '0' : '')} onChange={(e) => B.upd([...p, i, c.k], c.num ? Number(e.target.value) : e.target.value)} style={s(fieldCss + ';padding:9px 10px')}>{c.opts.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>
                     : c.area
                       ? <textarea value={row[c.k] ?? ''} rows={2} onChange={(e) => B.upd([...p, i, c.k], e.target.value)} style={s(fieldCss + ';padding:9px 10px;resize:vertical')} />
@@ -607,6 +608,10 @@ function ContentStep({ cfg, upd, say }: any) {
           <div style={s('height:1px;background:rgba(27,11,45,.08)')} />
           <Grid cols={3}><Text B={B} p={['showroom', 'finance', 'title']} label="MONTHLY COST TITLE" /><Text B={B} p={['showroom', 'finance', 'rate']} label="FLAT RATE %" type="number" /><Pick B={B} p={['showroom', 'finance', 'termUnit']} label="TERMS IN" opts={[['years', 'Years'], ['months', 'Months']]} /></Grid>
           <Grid cols={3}><NumCsv B={B} p={['showroom', 'finance', 'deposits']} label="DEPOSIT OPTIONS %" /><NumCsv B={B} p={['showroom', 'finance', 'terms']} label="TERM OPTIONS" /><Grid><Text B={B} p={['showroom', 'finance', 'defaultDeposit']} label="DEFAULT %" type="number" /><Text B={B} p={['showroom', 'finance', 'defaultTerm']} label="DEFAULT TERM" type="number" /></Grid></Grid>
+          <Grid cols={2}>
+            <Grid cols={3}><Text B={B} p={['showroom', 'finance', 'depositRange', 0]} label="DEPOSIT SLIDER MIN %" type="number" /><Text B={B} p={['showroom', 'finance', 'depositRange', 1]} label="MAX %" type="number" /><Text B={B} p={['showroom', 'finance', 'depositRange', 2]} label="STEP" type="number" /></Grid>
+            <Grid cols={3}><Text B={B} p={['showroom', 'finance', 'termRange', 0]} label="TERM SLIDER MIN" type="number" /><Text B={B} p={['showroom', 'finance', 'termRange', 1]} label="MAX" type="number" /><Text B={B} p={['showroom', 'finance', 'termRange', 2]} label="STEP" type="number" /></Grid>
+          </Grid>
           <Grid><Text B={B} p={['showroom', 'finance', 'sub']} label="LINE UNDER" /><Text B={B} p={['showroom', 'finance', 'note']} label="SMALL PRINT" /></Grid>
           <List B={B} p={['showroom', 'finance', 'running', 'rows']} label="RUNNING COST ROWS (OPTIONAL)" cols={[{ k: 'label', label: 'LABEL', w: 2 }, { k: 'v', label: 'A MONTH', w: 0.8, type: 'number' }]} blank={() => ({ label: 'New row', v: 0 })} />
           <button className="ah" onClick={() => upd(['showroom'], undefined)} style={s("align-self:flex-start;padding:9px 12px;border-radius:10px;font:600 12px/1 'Archivo';color:#C0473C;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}>Remove Build your product</button>
@@ -632,6 +637,10 @@ function ContentStep({ cfg, upd, say }: any) {
       <Section title="Presenters and sponsors" open={false} id="people">
         <List B={B} p={['presenters']} cols={[{ k: 'name', label: 'NAME', w: 1.2 }, { k: 'role', label: 'ROLE', w: 1.5 }, { k: 'slot', label: 'SLOT', w: 1 }, { k: 'photo', label: 'PHOTO (OPTIONAL, ELSE INITIALS)', w: 1.6, image: true }]} blank={() => ({ name: 'New presenter', role: '', slot: '', photo: '' })} />
         <Csv B={B} p={['sponsors']} label="SPONSORS" />
+      </Section>
+      <Section title="Dealers" sub="Who leads are passed to. Each lead is suggested the dealer whose areas include their registered location; test drive bookings preselect it." open={!!c.dealers?.length} id="dealers">
+        <List B={B} p={['dealers']} cols={[{ k: 'name', label: 'NAME', w: 1.3 }, { k: 'area', label: 'ADDRESS / AREA', w: 1.6 }, { k: 'contact', label: 'CONTACT', w: 1.8 }, { k: 'areas', label: 'COVERS (REGISTRATION ANSWERS)', w: 1.6, csv: true }]} blank={() => ({ id: 'd' + Date.now(), name: 'New dealer', area: '', contact: '', areas: [] })} />
+        <Csv B={B} p={['leadStatuses']} label="LEAD STATUSES" hint="in order, e.g. New, Contacted, Test drive done, Sold" />
       </Section>
       <Section title="Call to action" sub="The After page’s main action, e.g. “Book a test drive” or “Book a demo”." open={false} id="cta">
         <Grid cols={3}><Text B={B} p={['cta', 'title']} label="TITLE" /><Text B={B} p={['cta', 'button']} label="BUTTON" /><Text B={B} p={['cta', 'cardKicker']} label="CARD KICKER" /></Grid>
