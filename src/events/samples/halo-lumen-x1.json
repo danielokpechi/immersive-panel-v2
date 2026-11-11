@@ -146,7 +146,7 @@
   },
   "hotspots": [
     {
-      "id": "h1794411506645",
+      "id": "h1794413143365",
       "x": 47.3,
       "y": 23.2,
       "name": "Halo ring",
@@ -155,7 +155,7 @@
       "unit": "notification light"
     },
     {
-      "id": "h1794411507132",
+      "id": "h1794413143921",
       "x": 50,
       "y": 46.8,
       "name": "LumenDisplay",
@@ -164,7 +164,7 @@
       "unit": "nits peak brightness"
     },
     {
-      "id": "h1794411507592",
+      "id": "h1794413144497",
       "x": 60,
       "y": 74.9,
       "name": "Titanium frame",
@@ -173,7 +173,7 @@
       "unit": "thin"
     },
     {
-      "id": "h1794411508043",
+      "id": "h1794413145005",
       "x": 52.8,
       "y": 85.7,
       "name": "All-day battery",
@@ -257,7 +257,7 @@
         "sub": "Level 2 · next to the atrium"
       },
       {
-        "id": "o1794411522895",
+        "id": "o1794413158830",
         "name": "Halo Store Mid Valley",
         "sub": "Ground floor · North Court"
       }
@@ -418,7 +418,9 @@
     "live": "reveal-first"
   },
   "modules": {
-    "sponsors": false
+    "sponsors": false,
+    "finance": false,
+    "cta": false
   },
   "gallery": {
     "title": "THE LUMEN X1",
