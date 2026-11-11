@@ -13,7 +13,7 @@ import { s } from '../voltford/admin/s';
 import {
   getEvent, themeCss, audience, channelName, asset, homePath, revealSegIndex, qaSegIndex, clockAfter,
   routeFor, priceNum, priceCur, monthlyFlat, fmtMoney,
-  readPoints, writePoints, pointsTotal, myRefCode, crewCode, ticketUrl, sponsorOf,
+  readPoints, writePoints, pointsTotal, myRefCode, crewCode, ticketUrl, sponsorOf, isOn, lab,
   type EventConfig, type Challenge, type PointsBook, type Msg, type Ms as MState, type Mode, type Target, type TriggerKind, type QA, type Lead, type Signals,
 } from './config';
 
@@ -106,7 +106,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
     stripTarget: 'all', stripOpen: !embed && typeof window !== 'undefined' && window.innerWidth > 520, ctr: { poll: 0, hotspot: 0, announce: 0, challenge: 0 },
     book: typeof window !== 'undefined' ? readPoints(cfg) : { done: {}, claimed: [] }, pushCh: null, crew: '',
     answers: {}, consent: false, routed: false, irisAsks: 0,
-    colour: cfg.showroom?.colours[0]?.name || '', variant: Math.min(1, Math.max(cfg.product.variants.length - 1, 0)), built: false,
+    colour: cfg.showroom?.colours[0]?.name || '', variant: Math.min(cfg.showroom?.defaultVariant ?? 1, Math.max(cfg.product.variants.length - 1, 0)), built: false,
     deposit: cfg.showroom?.finance.defaultDeposit ?? 20, term: cfg.showroom?.finance.defaultTerm ?? 7, financeSeen: false,
   }));
   const set = (p: Partial<ESt> | ((x: ESt) => Partial<ESt>)) => setSt((x) => ({ ...x, ...(typeof p === 'function' ? p(x) : p) }));
@@ -288,7 +288,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
       id: 'ME', name: 'You (this browser)', where: x.mode, answers: x.answers, consent: x.consent, source: 'Invite link',
       signals: signalsOf(x), seen: Object.keys(x.seen).filter((k) => x.seen[k]),
       colour: x.built ? x.colour : undefined, variant: x.built || x.financeSeen ? v?.name : undefined,
-      monthly: x.financeSeen && F && price ? fmtMoney(priceCur(v.price), monthlyFlat(price, x.deposit, F.rate, x.term).monthly) : undefined,
+      monthly: x.financeSeen && F && price ? fmtMoney(priceCur(v.price), monthlyFlat(price, x.deposit, F.rate, F.termUnit === 'months' ? x.term / 12 : x.term).monthly) : undefined,
       route: x.drive.showroom, status: x.drive.done ? 'Booked' : 'New', at: 'This session',
     };
   };
@@ -513,9 +513,9 @@ function FanView({ cfg }: { cfg: EventConfig }) {
             {st.route === 'chat' && <Chat {...P} />}
             {st.route === 'drive' && <Drive {...P} />}
             {st.route === 'qa' && <QABoard {...P} full />}
-            {st.route === 'build' && cfg.showroom && <Build {...P} />}
+            {st.route === 'build' && cfg.showroom && isOn(cfg, 'showroom') && <Build {...P} />}
             {st.route === 'challenges' && <ChallengesScreen {...P} />}
-            {st.route === 'finance' && cfg.showroom && <Finance {...P} />}
+            {st.route === 'finance' && cfg.showroom && isOn(cfg, 'finance') && <Finance {...P} />}
           </div>
 
           <div style={s('position:absolute;right:8px;bottom:110px;width:80px;height:10px;z-index:47;pointer-events:none')}>
@@ -537,10 +537,10 @@ function FanView({ cfg }: { cfg: EventConfig }) {
             </div>
           )}
 
-          {!st.iris && st.hotspot === null && !st.revealing && (
+          {!st.iris && st.hotspot === null && !st.revealing && isOn(cfg, 'iris') && (
             <button onClick={() => set({ iris: true })} className="fh2" style={{ ...s('position:absolute;right:0;z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px;transition:bottom .22s cubic-bezier(.2,.8,.2,1)'), bottom: 96 + irisLift }}>
               <span style={s('width:7px;height:7px;background:var(--acc);animation:bgDot 1.6s ease-in-out infinite')} />
-              <span style={s("font:800 10.5px/1 'Archivo';letter-spacing:.16em;color:var(--on-panel)")}>ASK IRIS</span>
+              <span style={s("font:800 10.5px/1 'Archivo';letter-spacing:.16em;color:var(--on-panel)")}>{lab(cfg, 'askIris')}</span>
             </button>
           )}
           {st.iris && <Iris {...{ cfg, st, set, ask, irisRef, closeIris, revealed }} />}
@@ -667,21 +667,21 @@ function BeforeHome(P: any) {
           <div style={s("font:700 10px/1.4 'Archivo';letter-spacing:.14em;color:var(--muted-lt);text-align:center;margin-top:17px")}>{E.dateLine}</div>
           {audLine(cfg, 0, aud.online)}
         </div>
-        <button onClick={() => document.getElementById('ev-register')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="agg" style={s('position:relative;display:flex;align-items:center;gap:13px;width:100%;text-align:left;margin-top:20px;padding:14px 16px;background:rgba(var(--acc-rgb),.14);box-shadow:inset 0 1px 0 rgba(242,242,240,.12)')}>
+        {isOn(cfg, 'register') && <button onClick={() => document.getElementById('ev-register')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="agg" style={s('position:relative;display:flex;align-items:center;gap:13px;width:100%;text-align:left;margin-top:20px;padding:14px 16px;background:rgba(var(--acc-rgb),.14);box-shadow:inset 0 1px 0 rgba(242,242,240,.12)')}>
           <span style={s('width:38px;height:38px;flex:none;background:var(--acc);display:flex;align-items:center;justify-content:center')}><Ms size={22} color="var(--hero)">event_available</Ms></span>
           <span style={s('flex:1;min-width:0')}>
             <span style={s("display:block;font:800 15px/1 'Archivo Black';letter-spacing:.03em;color:#fff")}>{st.registered ? 'YOU’RE ON THE LIST' : E.inviteTitle}</span>
             <span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:var(--muted-lt);margin-top:4px")}>{st.registered ? (st.mode === 'venue' ? 'In person · ' + E.venueShort.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'Online · we’ll ping you before it starts') : E.inviteSub}</span>
           </span>
           <Ms size={18} color="var(--acc-lt)">chevron_right</Ms>
-        </button>
+        </button>}
       </HeroShell>
       <SeriesStrip {...P} />
       <TicketCard {...P} />
 
       {st.reminders.length > 0 && (
         <div style={s('padding:22px 16px 0')}>
-          {sect('UPDATES FROM ' + cfg.brand.name.toUpperCase())}
+          {sect(lab(cfg, 'updatesFrom') + ' ' + cfg.brand.name.toUpperCase())}
           <div style={s('margin-top:10px;display:flex;flex-direction:column;gap:8px')}>
             {st.reminders.map((r: { id: string; title: string; body: string }, i: number) => (
               <div key={r.id} style={{ ...s('display:flex;gap:12px;padding:14px;background:var(--sand);animation:bgRise .35s cubic-bezier(.18,.9,.2,1) both'), boxShadow: i === 0 ? 'inset 3px 0 0 var(--acc)' : 'none' }}>
@@ -695,7 +695,7 @@ function BeforeHome(P: any) {
 
       {E.details.length > 0 && (
         <div style={s('padding:22px 16px 0')}>
-          {sect('EVENT DETAILS', <button onClick={share} style={s("display:flex;align-items:center;gap:5px;font:700 10.5px/1 'Archivo';letter-spacing:.08em;color:var(--acc)")}><Ms size={15} color={ACC}>ios_share</Ms>SHARE</button>)}
+          {sect(lab(cfg, 'details'), <button onClick={share} style={s("display:flex;align-items:center;gap:5px;font:700 10.5px/1 'Archivo';letter-spacing:.08em;color:var(--acc)")}><Ms size={15} color={ACC}>ios_share</Ms>{lab(cfg, 'share')}</button>)}
           <div style={s('margin-top:10px;background:var(--sand);padding:4px 14px')}>
             {E.details.map((d, i) => (
               <div key={d.k + i} style={{ ...s('display:flex;align-items:flex-start;gap:11px;padding:11px 0'), borderTop: i ? '1.5px solid var(--hair)' : 'none' }}>
@@ -707,17 +707,18 @@ function BeforeHome(P: any) {
         </div>
       )}
 
+      {isOn(cfg, 'register') && (
       <div id="ev-register" style={s('padding:22px 16px 0')}>
-        {sect('REGISTER INTEREST')}
+        {sect(lab(cfg, 'register'))}
         <div style={s('margin-top:10px;background:var(--sand);padding:16px')}>
           {st.registered ? (<>
             <div style={s('display:flex;align-items:center;gap:12px')}>
               <span style={s('width:40px;height:40px;flex:none;background:var(--acc);display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#fff">check</Ms></span>
               <div style={s('flex:1;min-width:0')}>
-                <div style={s("font:800 19px/1 'Archivo Black';color:var(--ink)")}>You’re on the list</div>
+                <div style={s("font:800 19px/1 'Archivo Black';color:var(--ink)")}>{lab(cfg, 'onList')}</div>
                 <div style={s("font:500 12px/1.4 'Archivo';color:var(--body);margin-top:5px")}>{st.mode === 'venue' ? E.registeredVenue : E.registeredOnline}</div>
               </div>
-              <button onClick={() => set({ registered: false })} style={s("font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--acc)")}>CHANGE</button>
+              <button onClick={() => set({ registered: false })} style={s("font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--acc)")}>{lab(cfg, 'change')}</button>
             </div>
             {Object.keys(st.answers).length > 0 && (
               <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:12px')}>
@@ -727,7 +728,7 @@ function BeforeHome(P: any) {
             {st.crew && <div style={s("display:flex;align-items:center;gap:7px;margin-top:10px;font:600 11.5px/1.35 'Archivo';color:var(--body)")}><Ms size={15} color={ACC}>group</Ms>{st.crew} · crew code <b style={s('color:var(--ink)')}>{crewCode(st.crew)}</b></div>}
             {st.routed && <div style={s("display:flex;align-items:center;gap:7px;margin-top:10px;font:600 11.5px/1.35 'Archivo';color:var(--body)")}><Ms size={15} color={ACC}>near_me</Ms>Matched to {cfg.cta.options.find((o) => o.id === st.drive.showroom)?.name}</div>}
           </>) : (<>
-            <div style={s("font:800 22px/1 'Archivo Black';color:var(--ink)")}>How are you joining?</div>
+            <div style={s("font:800 22px/1 'Archivo Black';color:var(--ink)")}>{lab(cfg, 'joinQuestion')}</div>
             <div style={s('margin-top:12px;display:flex;flex-direction:column;gap:7px')}>
               {([['venue', E.venueOption, E.venueOptionSub, 'location_on'], ['online', 'Online', E.onlineOptionSub, 'wifi']] as const).filter(([k]) => E.format === 'Hybrid' || (E.format === 'Online' ? k === 'online' : k === 'venue')).map(([k, t, d, icon]) => { const on = st.pick === k; return (
                 <button key={k} onClick={() => set({ pick: k })} className="fw" style={{ ...s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px'), background: on ? 'var(--panel)' : 'var(--ground)' }}>
@@ -737,23 +738,24 @@ function BeforeHome(P: any) {
                 </button>
               ); })}
             </div>
-            {cfg.interest && <InterestFields cfg={cfg} st={st} set={set} />}
-            {cfg.tickets && cfg.tickets.crews.length > 0 && (
+            {cfg.interest && isOn(cfg, 'interest') && <InterestFields cfg={cfg} st={st} set={set} />}
+            {cfg.tickets && isOn(cfg, 'tickets') && cfg.tickets.crews.length > 0 && (
               <div style={s('margin-top:16px;padding-top:14px;border-top:1.5px solid var(--hair)')}>
                 {label(cfg.tickets.crewLabel.toUpperCase() + ' · OPTIONAL')}
                 <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:8px')}>{cfg.tickets.crews.map((c) => { const on = st.crew === c; return <button key={c} onClick={() => set({ crew: on ? '' : c })} style={{ ...s("font:700 12px/1 'Archivo';padding:10px 11px"), background: on ? 'var(--panel)' : 'var(--ground)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{c}</button>; })}</div>
               </div>
             )}
-            {accBtn('REGISTER INTEREST', 'arrow_forward', register, 'width:100%;margin-top:14px')}
+            {accBtn(lab(cfg, 'registerButton'), 'arrow_forward', register, 'width:100%;margin-top:14px')}
           </>)}
         </div>
       </div>
+      )}
 
       <ChallengesCard {...P} />
-      <AskCard {...P} />
+      {isOn(cfg, 'qa') && <AskCard {...P} />}
 
       <div style={s('padding:22px 16px 0')}>
-        {sect('AGENDA', small(cfg.days?.length ? cfg.days.length + ' DAYS' : E.dateShort))}
+        {sect(lab(cfg, 'agenda'), small(cfg.days?.length ? cfg.days.length + ' DAYS' : E.dateShort))}
         <div style={s('margin-top:6px')}>
           {cfg.segments.map((g, gi) => (<div key={g.id}>
             {cfg.days?.length && (gi === 0 || (cfg.segments[gi - 1].day ?? 0) !== (g.day ?? 0)) && cfg.days[g.day ?? 0] ? (
@@ -762,16 +764,16 @@ function BeforeHome(P: any) {
             <div key={g.id} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}>
               <span style={s("width:44px;flex:none;font:800 15px/1 'Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>{g.time}</span>
               <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{g.name}</span>{g.blurb && <span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{g.blurb}</span>}</span>
-              {g.kind === 'reveal' && <span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:6px 7px;color:#fff;background:var(--acc)")}>THE MOMENT</span>}
+              {g.kind === 'reveal' && <span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:6px 7px;color:#fff;background:var(--acc)")}>{lab(cfg, 'theMoment')}</span>}
             </div>
           </div>))}
         </div>
       </div>
       <Stories {...P} />
 
-      {cfg.presenters.length > 0 && (
+      {isOn(cfg, 'presenters') && (
         <div style={s('padding:22px 16px 0')}>
-          {sect('PRESENTERS')}
+          {sect(lab(cfg, 'presenters'))}
           <div style={s('display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:2px')}>
             {cfg.presenters.map((p) => (
               <div key={p.name} style={s('flex:none;width:148px;background:var(--sand);overflow:hidden')}>
@@ -787,9 +789,9 @@ function BeforeHome(P: any) {
         </div>
       )}
       <ChatPreview {...P} />
-      {cfg.sponsors.length > 0 && (
+      {isOn(cfg, 'sponsors') && (
         <div style={s('padding:26px 16px 0')}>
-          <div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.18em;color:var(--label);text-align:center")}>WITH THANKS TO OUR PARTNERS</div>
+          <div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.18em;color:var(--label);text-align:center")}>{lab(cfg, 'partners')}</div>
           <div style={s('display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;margin-top:12px;padding:14px 10px;border-top:1.5px solid var(--hair);border-bottom:1.5px solid var(--hair)')}>
             {cfg.sponsors.map((n) => <span key={n} style={s("font:800 13px/1 'Archivo';letter-spacing:.02em;color:var(--label);white-space:nowrap")}>{n}</span>)}
           </div>
@@ -807,9 +809,12 @@ function LiveHome(P: any) {
   const title = isReveal && revealed ? cfg.reveal.title : g?.heroTitle || '';
   const sub = isReveal && revealed ? cfg.reveal.sub : (st.mode === 'online' && g?.heroSubOnline) || g?.heroSub || '';
   const seenN = cfg.hotspots.filter((h) => st.seen[h.id]).length;
+  // Layout option: the stream above the hero (stream-first) or below it (reveal-first).
+  const streamOn = st.mode === 'online' && isOn(cfg, 'stream');
+  const revealFirst = cfg.layout?.live === 'reveal-first';
   return (
     <section>
-      {st.mode === 'online' && cfg.event.format !== 'In person' && <StreamEmbed cfg={cfg} label={'LIVE · ' + (g?.short || '')} />}
+      {streamOn && !revealFirst && <StreamEmbed cfg={cfg} label={'LIVE · ' + (g?.short || '')} />}
       <HeroShell glow={isReveal && !revealed ? 'rgba(var(--acc-rgb),.6)' : 'rgba(214,32,42,.3)'}>
         <div style={s('display:flex;align-items:center;justify-content:center;padding-top:15px')}>
           <span style={s('display:flex;align-items:center;gap:7px;background:rgba(214,32,42,.92);padding:7px 11px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#fff")}>LIVE · {g?.short}</span></span>
@@ -818,18 +823,21 @@ function LiveHome(P: any) {
         <div style={s('padding:0 16px 16px;text-align:center')}>
           <div key={title} style={s('animation:bgReveal .5s cubic-bezier(.2,.85,.2,1) both')}>{heroTitle(title, 34)}</div>
           {sub && <div style={s("font:500 12.5px/1.4 'Archivo';color:var(--muted-lt);margin-top:8px")}>{sub}</div>}
-          {revealed && cfg.hotspots.length > 0 && <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.14em;color:var(--acc-lt);margin-top:10px")}>EXPLORED {seenN} OF {cfg.hotspots.length} FEATURES</div>}
+          {revealed && cfg.hotspots.length > 0 && <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.14em;color:var(--acc-lt);margin-top:10px")}>{lab(cfg, 'explored').replace('{n}', String(seenN)).replace('{total}', String(cfg.hotspots.length))}</div>}
           {audLine(cfg, aud.venue, aud.online)}
         </div>
+        {isOn(cfg, 'reactions') && (
         <div style={s('display:flex;align-items:center;gap:8px;padding:12px 16px;background:rgba(var(--acc-rgb),.14);box-shadow:inset 0 1px 0 rgba(242,242,240,.12)')}>
-          <span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.16em;color:var(--muted-lt);flex:1")}>REACT</span>
+          <span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.16em;color:var(--muted-lt);flex:1")}>{lab(cfg, 'react')}</span>
           {REACTS.map((e) => <button key={e} onClick={() => react(e)} className="fq" aria-label={'React ' + e} style={s('width:44px;height:40px;font-size:21px;display:flex;align-items:center;justify-content:center;background:rgba(242,242,240,.08)')}>{e}</button>)}
         </div>
+        )}
       </HeroShell>
+      {streamOn && revealFirst && <StreamEmbed cfg={cfg} label={'LIVE · ' + (g?.short || '')} />}
 
-      {st.poll !== null && cfg.polls[st.poll] && <div style={s('padding:22px 16px 0')}>{sect('LIVE POLL')}<PollCard p={cfg.polls[st.poll]} tag="LIVE" tagBg="#D6202A" {...P} /></div>}
-      {st.pushCh !== null && cfg.challenges?.[st.pushCh] && <div style={s('padding:22px 16px 0')}>{sect('LIVE CHALLENGE')}<ChallengeItem c={cfg.challenges[st.pushCh]} {...P} /></div>}
-      {isQa && <QABoard {...P} />}
+      {st.poll !== null && cfg.polls[st.poll] && <div style={s('padding:22px 16px 0')}>{sect(lab(cfg, 'livePoll'))}<PollCard p={cfg.polls[st.poll]} tag="LIVE" tagBg="#D6202A" {...P} /></div>}
+      {st.pushCh !== null && cfg.challenges?.[st.pushCh] && <div style={s('padding:22px 16px 0')}>{sect(lab(cfg, 'liveChallenge'))}<ChallengeItem c={cfg.challenges[st.pushCh]} {...P} /></div>}
+      {isQa && isOn(cfg, 'qa') && <QABoard {...P} />}
       {revealed && !isQa && cfg.hotspots.length > 0 && (
         <div style={s('padding:22px 16px 0')}>
           {sect(cfg.product.sectionTitle, small(cfg.product.priceLine))}
@@ -844,10 +852,11 @@ function LiveHome(P: any) {
           </div>
         </div>
       )}
+      {revealed && !isQa && <Gallery {...P} />}
       {revealed && !isQa && <ShowroomCard {...P} />}
       <ChallengesCard {...P} />
       <Stories {...P} />
-      {!isQa && <AskCard {...P} compact />}
+      {!isQa && isOn(cfg, 'qa') && <AskCard {...P} compact />}
       <IrisTeaser {...{ cfg, revealed, set, ask }} />
       <ChatPreview {...P} />
       <div style={s('height:64px')} />
@@ -862,19 +871,19 @@ function BreakHome(P: any) {
       <HeroShell glow="rgba(79,179,232,.3)">
         <div style={s('padding:15px 16px 20px;text-align:center')}>
           <span style={s("display:inline-block;font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#4FB3E8;background:rgba(79,179,232,.16);padding:7px 10px")}>BREAK</span>
-          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.3em;color:var(--acc-lt);margin-top:22px")}>BACK IN</div>
+          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.3em;color:var(--acc-lt);margin-top:22px")}>{lab(cfg, 'backIn')}</div>
           <Digits parts={[[pad(Math.floor(breakLeft / 60)), 'MIN'], [pad(breakLeft % 60), 'SEC']]} />
           <div style={s("font:500 12.5px/1.45 'Archivo';color:var(--muted-lt);margin-top:16px;max-width:290px;margin-left:auto;margin-right:auto")}>{cfg.breakContent.sub}</div>
           {audLine(cfg, aud.venue, aud.online)}
         </div>
       </HeroShell>
       <div style={s('padding:22px 16px 0')}>
-        {sect('QUICK POLL')}
+        {sect(lab(cfg, 'quickPoll'))}
         <PollCard p={cfg.breakContent.poll} tag="OPEN" tagBg="var(--panel)" {...P} />
       </div>
       {cfg.breakContent.reads.length > 0 && (
         <div style={s('padding:22px 16px 0')}>
-          {sect('WHILE YOU WAIT')}
+          {sect(lab(cfg, 'whileYouWait'))}
           <div style={s('margin-top:10px;display:flex;flex-direction:column;gap:8px')}>
             {cfg.breakContent.reads.map((r, i) => { const open = st.readOpen === i; return (
               <button key={r.kicker + i} onClick={() => set({ readOpen: open ? null : i })} className="fs" style={s('display:block;width:100%;text-align:left;background:var(--sand);padding:14px 15px')}>
@@ -912,25 +921,28 @@ function AfterHome(P: any) {
         </div>
       </HeroShell>
 
-      <div style={s('padding:22px 16px 0')}>
+      {isOn(cfg, 'cta') && <div style={s('padding:22px 16px 0')}>
         <div style={s('background:var(--panel);padding:18px 16px 18px')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:var(--acc);transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--muted)")}>{done ? 'BOOKED' : cfg.cta.cardKicker}</span></div>
+          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:var(--acc);transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--muted)")}>{done ? lab(cfg, 'booked') : cfg.cta.cardKicker}</span></div>
           <div style={s("font:800 30px/.9 'Archivo Black';color:var(--on-panel);margin-top:10px")}>{done ? cfg.cta.doneTitle : cfg.cta.title}</div>
           <div style={s("font:500 13px/1.5 'Archivo';color:var(--muted);margin-top:8px")}>{done ? `${room?.name || ''} · ${st.drive.slot}. ${cfg.cta.doneSub}` : cfg.cta.sub}</div>
-          {done ? darkBtn('CHANGE', 'edit', go('drive'), 'margin-top:14px;background:rgba(242,242,240,.1)') : accBtn(cfg.cta.button, 'arrow_forward', go('drive'), 'margin-top:14px')}
+          {done ? darkBtn(lab(cfg, 'change'), 'edit', go('drive'), 'margin-top:14px;background:rgba(242,242,240,.1)') : accBtn(cfg.cta.button, 'arrow_forward', go('drive'), 'margin-top:14px')}
         </div>
-      </div>
+      </div>}
       <ShowroomCard {...P} pad="12px 16px 0" />
       <TicketCard {...P} after />
       <ChallengesCard {...P} />
 
+      {isOn(cfg, 'follow') && (
       <div style={s('padding:12px 16px 0')}>
         <button onClick={follow} className="fs" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--sand);padding:15px')}>
           <span style={{ ...s('width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center'), background: st.following ? ACC : 'var(--panel)' }}><Ms size={21} color="#fff">{st.following ? 'notifications_active' : 'notifications'}</Ms></span>
           <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Archivo';color:var(--ink)")}>{st.following ? cfg.follow.doneTitle : cfg.follow.title}</span><span style={s("display:block;font:500 11.5px/1.35 'Archivo';color:var(--label);margin-top:3px")}>{st.following ? cfg.follow.doneSub : cfg.follow.sub}</span></span>
-          <span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:7px 8px"), color: st.following ? '#fff' : 'var(--on-panel)', background: st.following ? ACC : 'var(--panel)' }}>{st.following ? 'FOLLOWING' : 'FOLLOW'}</span>
+          <span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:7px 8px"), color: st.following ? '#fff' : 'var(--on-panel)', background: st.following ? ACC : 'var(--panel)' }}>{st.following ? lab(cfg, 'following') : lab(cfg, 'follow')}</span>
         </button>
       </div>
+      )}
+      <Gallery {...P} />
 
       <div style={s('padding:22px 16px 0')}>
         {sect(cfg.after.recapTitle)}
@@ -954,7 +966,7 @@ function AfterHome(P: any) {
           ))}
         </div>
       </div>
-      <ChatPreview {...P} title="THE CHAT STAYS OPEN" />
+      <ChatPreview {...P} title={lab(cfg, 'chatStaysOpen')} />
       <div style={s('height:64px')} />
     </section>
   );
@@ -989,19 +1001,19 @@ function CommunityHome(P: any) {
           {audLine(cfg, 0, aud.online)}
         </div>
       </HeroShell>
-      <div style={s('padding:22px 16px 0')}>
+      {isOn(cfg, 'community') && <div style={s('padding:22px 16px 0')}>
         <div style={s('background:var(--panel);padding:18px 16px')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:var(--acc);transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--muted)")}>NEXT EVENT · {C.next.date}</span></div>
+          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:var(--acc);transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--muted)")}>{lab(cfg, 'nextEvent')} · {C.next.date}</span></div>
           <div style={s("font:800 30px/.9 'Archivo Black';color:var(--on-panel);margin-top:10px")}>{C.next.name}</div>
           <div style={s("font:500 13px/1.5 'Archivo';color:var(--muted);margin-top:8px")}>{C.next.blurb}</div>
           <div style={s('display:flex;gap:8px;margin-top:14px;flex-wrap:wrap')}>
             {st.nextReg
               ? <span style={s("display:inline-flex;align-items:center;gap:7px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:#fff;background:rgba(var(--acc-rgb),.3);padding:13px 15px")}><Ms size={15} color="#fff">check</Ms>REGISTERED</span>
-              : accBtn('REGISTER', 'arrow_forward', () => set({ nextReg: true }))}
-            {darkBtn('OPEN EVENT PAGE', 'open_in_new', () => set({ event: 'next', route: 'home', navStack: [] }), 'background:rgba(242,242,240,.1)')}
+              : accBtn(lab(cfg, 'registerNext'), 'arrow_forward', () => set({ nextReg: true }))}
+            {darkBtn(lab(cfg, 'openEventPage'), 'open_in_new', () => set({ event: 'next', route: 'home', navStack: [] }), 'background:rgba(242,242,240,.1)')}
           </div>
         </div>
-      </div>
+      </div>}
       <div style={s('padding:22px 16px 0')}>
         {sect(C.pastLabel, small(C.pastDate))}
         <div style={s('margin-top:10px;background:var(--sand)')}>
@@ -1018,7 +1030,7 @@ function CommunityHome(P: any) {
       <SeriesStrip {...P} />
       <ChallengesCard {...P} />
       <IrisTeaser {...{ cfg, revealed: true, set, ask }} />
-      <ChatPreview {...P} title="COMMUNITY CHAT" />
+      <ChatPreview {...P} title={lab(cfg, 'communityChat')} />
       <div style={s('height:64px')} />
     </section>
   );
@@ -1087,9 +1099,9 @@ function AskCard({ cfg, st, set, sendQ, go, compact }: any) {
   const qa = (cfg as EventConfig).segments.find((g) => g.kind === 'qa');
   return (
     <div style={s('padding:22px 16px 0')}>
-      {sect('ASK THE TEAM', <button onClick={go('qa')} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.08em;color:var(--acc)")}>SEE ALL</button>)}
+      {sect(lab(cfg, 'askTeam'), <button onClick={go('qa')} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.08em;color:var(--acc)")}>{lab(cfg, 'seeAll')}</button>)}
       <div style={s('margin-top:10px;background:var(--sand);padding:16px')}>
-        {!compact && <div style={s("font:800 20px/1.02 'Archivo Black';color:var(--ink)")}>Send a question for the Q&A</div>}
+        {!compact && <div style={s("font:800 20px/1.02 'Archivo Black';color:var(--ink)")}>{lab(cfg, 'askTitle')}</div>}
         <div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:" + (compact ? '0' : '7px'))}>The most upvoted questions are put to the team on stage{qa ? ' at ' + qa.time : ''}.</div>
         <div style={s('display:flex;gap:8px;align-items:center;margin-top:12px')}>
           <div style={s('flex:1;display:flex;align-items:center;padding:11px 14px;background:var(--ground);border-radius:100px')}><input value={st.qDraft} onChange={(e) => set({ qDraft: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter') sendQ(); }} placeholder="Type your question" style={s("flex:1;min-width:0;font:500 13.5px/1.2 'Archivo';color:var(--ink)")} /></div>
@@ -1141,11 +1153,11 @@ function QABoard(P: any) {
 
 function IrisTeaser({ cfg, revealed, set, ask }: any) {
   const list: QA[] = revealed ? (cfg as EventConfig).iris.live : (cfg as EventConfig).iris.pre;
-  if (!list.length) return null;
+  if (!list.length || !isOn(cfg, 'iris')) return null;
   return (
     <div style={s('padding:22px 16px 0')}>
       <div style={s('background:var(--panel);padding:16px')}>
-        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;background:var(--acc);animation:bgDot 1.6s ease-in-out infinite')} /><span style={s("font:800 18px/1 'Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>ASK IRIS</span><span style={s("font:700 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--muted);margin-left:auto")}>APPROVED FACTS ONLY</span></div>
+        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;background:var(--acc);animation:bgDot 1.6s ease-in-out infinite')} /><span style={s("font:800 18px/1 'Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>{lab(cfg, 'askIris')}</span><span style={s("font:700 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--muted);margin-left:auto")}>{lab(cfg, 'approvedOnly')}</span></div>
         <div style={s('display:flex;gap:6px;margin-top:12px;flex-wrap:wrap')}>
           {list.map((x) => <button key={x.q} onClick={() => { set({ iris: true }); ask(x.q, x.a, x.stat, x.label); }} className="fq" style={s("font:700 11px/1 'Archivo';color:var(--on-panel);background:rgba(242,242,240,.08);padding:9px 11px")}>{x.q}</button>)}
         </div>
@@ -1154,11 +1166,12 @@ function IrisTeaser({ cfg, revealed, set, ask }: any) {
   );
 }
 
-function ChatPreview({ st, go, title }: any) {
+function ChatPreview({ st, go, title, cfg }: any) {
+  if (!isOn(cfg, 'chat')) return null;
   const last = st.chat.filter((m: ChatMsg) => !m.ev).slice(-3);
   return (
     <div style={s('padding:22px 16px 0')}>
-      {sect(title || 'LIVE CHAT', small('IN PERSON + ONLINE'))}
+      {sect(title || lab(cfg, 'liveChat'), small('IN PERSON + ONLINE'))}
       <button onClick={go('chat')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:10px;background:var(--sand);padding:12px 14px 14px')}>
         {last.map((m: ChatMsg) => (
           <span key={m.id} style={s('display:flex;align-items:flex-start;gap:9px;padding:6px 0')}>
@@ -1166,7 +1179,7 @@ function ChatPreview({ st, go, title }: any) {
             <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 9px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>{m.me ? 'YOU' : m.user} · {m.tag}</span><span style={s("display:block;font:500 13px/1.35 'Archivo';color:var(--ink);margin-top:4px")}>{m.text}</span></span>
           </span>
         ))}
-        <span style={s("display:inline-flex;align-items:center;gap:6px;margin-top:8px;font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:9px 10px")}><Ms size={13} color="var(--on-panel)">forum</Ms>JOIN THE CHAT</span>
+        <span style={s("display:inline-flex;align-items:center;gap:6px;margin-top:8px;font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:9px 10px")}><Ms size={13} color="var(--on-panel)">forum</Ms>{lab(cfg, 'joinChat')}</span>
       </button>
     </div>
   );
@@ -1252,6 +1265,24 @@ function Drive({ cfg, st, set, bookDrive }: any) {
   );
 }
 
+// Product gallery: a row of images with captions, after the reveal and in the recap.
+function Gallery({ cfg }: any) {
+  const G = (cfg as EventConfig).gallery; if (!G?.items?.length || !isOn(cfg, 'gallery')) return null;
+  return (
+    <div style={s('padding:22px 16px 0')}>
+      {sect(G.title || lab(cfg, 'gallery'))}
+      <div style={s('display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:2px')}>
+        {G.items.map((x, i) => (
+          <figure key={i} style={s('flex:none;width:240px;margin:0;background:var(--sand)')}>
+            <div style={s('height:150px;background:var(--hero);overflow:hidden')}>{x.src && <img src={asset(x.src)} alt={x.caption} loading="lazy" style={s('width:100%;height:100%;object-fit:cover;display:block')} />}</div>
+            {x.caption && <figcaption style={s("padding:10px 12px 12px;font:600 12px/1.35 'Archivo';color:var(--ink)")}>{x.caption}</figcaption>}
+          </figure>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ═══════════ sports blocks ═══════════
 // A sponsor's placeholder badge: their colour and initials, no real logos.
 function SponsorTag({ cfg, name, dark }: { cfg: EventConfig; name: string; dark?: boolean }) {
@@ -1266,7 +1297,7 @@ function SponsorTag({ cfg, name, dark }: { cfg: EventConfig; name: string; dark?
 }
 
 function SeriesStrip({ cfg }: any) {
-  const S = (cfg as EventConfig).series; if (!S) return null;
+  const S = (cfg as EventConfig).series; if (!S || !isOn(cfg, 'series')) return null;
   return (
     <div style={s('padding:16px 16px 0')}>
       <div style={s('background:var(--sand);padding:13px 14px')}>
@@ -1286,7 +1317,7 @@ function SeriesStrip({ cfg }: any) {
 }
 
 function TicketCard({ cfg, st, buyTickets, refCode, after }: any) {
-  const T = (cfg as EventConfig).tickets; if (!T) return null;
+  const T = (cfg as EventConfig).tickets; if (!T || !isOn(cfg, 'tickets')) return null;
   const code = st.crew ? crewCode(st.crew) : refCode;
   const shareRef = async () => {
     const url = window.location.origin + window.location.pathname + '?ref=' + code;
@@ -1295,12 +1326,12 @@ function TicketCard({ cfg, st, buyTickets, refCode, after }: any) {
   return (
     <div style={s('padding:' + (after ? '12px' : '16px') + ' 16px 0')}>
       <div style={s('background:var(--panel);padding:16px')}>
-        <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color="var(--acc-lt)">confirmation_number</Ms><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.16em;color:var(--muted)")}>{after ? 'NEXT · TICKETS' : 'TICKETS'}</span><span style={s("margin-left:auto;font:800 11px/1 'Archivo';color:var(--on-panel)")}>{T.priceFrom}</span></div>
+        <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color="var(--acc-lt)">confirmation_number</Ms><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.16em;color:var(--muted)")}>{after ? 'NEXT · ' + lab(cfg, 'tickets') : lab(cfg, 'tickets')}</span><span style={s("margin-left:auto;font:800 11px/1 'Archivo';color:var(--on-panel)")}>{T.priceFrom}</span></div>
         <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--muted);margin-top:8px")}>{T.sub}</div>
         {accBtn(T.label.toUpperCase(), 'open_in_new', buyTickets, 'width:100%;margin-top:12px')}
         <button onClick={shareRef} style={s('display:flex;align-items:center;gap:9px;width:100%;margin-top:10px;padding:10px 12px;background:rgba(242,242,240,.08);text-align:left')}>
           <Ms size={16} color="var(--acc-lt)">{st.crew ? 'group' : 'person'}</Ms>
-          <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--muted)")}>{st.crew ? 'YOUR CREW CODE' : 'YOUR REFERRAL CODE'}</span><span style={s("display:block;font:800 15px/1 'Archivo Black';letter-spacing:.08em;color:var(--on-panel);margin-top:5px")}>{code}</span></span>
+          <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--muted)")}>{st.crew ? lab(cfg, 'crewCode') : lab(cfg, 'refCode')}</span><span style={s("display:block;font:800 15px/1 'Archivo Black';letter-spacing:.08em;color:var(--on-panel);margin-top:5px")}>{code}</span></span>
           <span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--acc-lt)")}>SHARE</span>
         </button>
       </div>
@@ -1309,7 +1340,7 @@ function TicketCard({ cfg, st, buyTickets, refCode, after }: any) {
 }
 
 function Stories({ cfg }: any) {
-  const S = (cfg as EventConfig).stories; if (!S?.items.length) return null;
+  const S = (cfg as EventConfig).stories; if (!S?.items?.length || !isOn(cfg, 'stories')) return null;
   return (
     <div style={s('padding:22px 16px 0')}>
       {sect(S.title)}
@@ -1363,16 +1394,16 @@ function ChallengeItem({ c, cfg, st, complete, vote, compact }: any) {
 
 function ChallengesCard(P: any) {
   const { cfg, st, go } = P; const C = cfg as EventConfig;
-  if (!C.challenges?.length) return null;
+  if (!C.challenges?.length || !isOn(C, 'challenges')) return null;
   const left = C.challenges.filter((c) => !st.book.done[C.id + ':' + c.id]);
   const total = pointsTotal(st.book);
   const next = C.rewards?.filter((r) => r.points > total).sort((a, b) => a.points - b.points)[0];
   return (
     <div style={s('padding:22px 16px 0')}>
-      {sect('CHALLENGES', <button onClick={go('challenges')} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.08em;color:var(--acc)")}>REWARDS</button>)}
+      {sect(lab(C, 'challenges'), <button onClick={go('challenges')} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.08em;color:var(--acc)")}>{lab(C, 'rewards')}</button>)}
       <button onClick={go('challenges')} className="fp" style={s('display:flex;align-items:center;gap:12px;width:100%;margin-top:10px;padding:14px;background:var(--panel);text-align:left')}>
         <span style={s('flex:1;min-width:0')}>
-          <span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--muted)")}>{C.series ? 'SERIES POINTS' : 'YOUR POINTS'}</span>
+          <span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--muted)")}>{C.series ? lab(C, 'seriesPoints') : lab(C, 'points')}</span>
           <span style={s("display:block;font:800 34px/.9 'Archivo Black';color:var(--on-panel);margin-top:7px;font-variant-numeric:tabular-nums")}>{total}</span>
         </span>
         <span style={s("font:600 11px/1.35 'Archivo';color:var(--muted);text-align:right;max-width:150px")}>{next ? (next.points - total) + ' to ' + next.name : C.rewards?.length ? 'Every reward unlocked' : left.length + ' challenges left'}</span>
@@ -1400,10 +1431,10 @@ function ChallengesScreen(P: any) {
         )}
         {C.series && <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--muted);margin-top:10px")}>Points carry across every stage of the series.</div>}
       </div>
-      <div style={s('margin-top:20px')}>{sect('CHALLENGES', small((C.challenges || []).filter((c) => st.book.done[C.id + ':' + c.id]).length + ' OF ' + (C.challenges || []).length + ' DONE'))}</div>
+      <div style={s('margin-top:20px')}>{sect(lab(C, 'challenges'), small((C.challenges || []).filter((c) => st.book.done[C.id + ':' + c.id]).length + ' OF ' + (C.challenges || []).length + ' DONE'))}</div>
       {(C.challenges || []).map((c) => <ChallengeItem key={c.id} c={c} {...P} />)}
       {(C.rewards || []).length > 0 && <>
-        <div style={s('margin-top:24px')}>{sect('REWARDS')}</div>
+        <div style={s('margin-top:24px')}>{sect(lab(C, 'rewards'))}</div>
         <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:10px')}>
           {(C.rewards || []).map((r) => { const ok = total >= r.points, got = st.book.claimed.includes(r.id); return (
             <div key={r.id} style={s('background:var(--sand);padding:14px')}>
@@ -1414,7 +1445,7 @@ function ChallengesScreen(P: any) {
               </div>
               {r.sponsor && <div style={s('margin-top:9px')}><SponsorTag cfg={C} name={r.sponsor} /></div>}
               <div style={s('height:6px;background:var(--ground);margin-top:11px')}><span style={{ ...s('display:block;height:6px;transition:width .6s ease'), width: Math.min(100, (total / r.points) * 100) + '%', background: ok ? ACC : 'var(--sand2)' }} /></div>
-              {ok && <button disabled={got} onClick={() => claim(r.id, r.name)} style={{ ...s("display:inline-flex;align-items:center;gap:6px;margin-top:11px;font:800 10.5px/1 'Archivo';letter-spacing:.08em;padding:10px 12px"), background: got ? 'var(--ground)' : ACC, color: got ? 'var(--ink)' : '#fff' }}><Ms size={14} color={got ? ACC : '#fff'}>{got ? 'check' : 'redeem'}</Ms>{got ? 'CLAIMED · SHOW AT THE DESK' : 'CLAIM'}</button>}
+              {ok && <button disabled={got} onClick={() => claim(r.id, r.name)} style={{ ...s("display:inline-flex;align-items:center;gap:6px;margin-top:11px;font:800 10.5px/1 'Archivo';letter-spacing:.08em;padding:10px 12px"), background: got ? 'var(--ground)' : ACC, color: got ? 'var(--ink)' : '#fff' }}><Ms size={14} color={got ? ACC : '#fff'}>{got ? 'check' : 'redeem'}</Ms>{got ? 'CLAIMED · SHOW AT THE DESK' : lab(C, 'claim')}</button>}
             </div>
           ); })}
         </div>
@@ -1451,24 +1482,25 @@ function InterestFields({ cfg, st, set }: { cfg: EventConfig; st: ESt; set: (p: 
 // Entry to the colour + trim picker and the monthly cost, after the reveal.
 function ShowroomCard({ cfg, st, go, pad: padding = '22px 16px 0' }: any) {
   const S = (cfg as EventConfig).showroom; const V = (cfg as EventConfig).product.variants;
-  if (!S || !V.length) return null;
+  const showBuild = isOn(cfg, 'showroom'), showFin = isOn(cfg, 'finance');
+  if (!S || !V.length || (!showBuild && !showFin)) return null;
   const v = V[st.variant] || V[0]; const col = S.colours.find((c) => c.name === st.colour) || S.colours[0];
-  const low = V[0]; const lowM = monthlyFlat(priceNum(low.price), S.finance.defaultDeposit, S.finance.rate, S.finance.defaultTerm).monthly;
+  const low = V[0]; const lowM = monthlyFlat(priceNum(low.price), S.finance.defaultDeposit, S.finance.rate, S.finance.termUnit === 'months' ? S.finance.defaultTerm / 12 : S.finance.defaultTerm).monthly;
   const tile = 'flex:1;min-width:0;text-align:left;background:var(--sand);padding:14px';
   return (
     <div style={s('padding:' + padding)}>
       {padding.startsWith('22') && sect(S.buildTitle)}
       <div style={s('display:flex;gap:8px;margin-top:' + (padding.startsWith('22') ? '10px' : '0'))}>
-        <button onClick={go('build')} className="fs" style={s(tile)}>
+        {showBuild && <button onClick={go('build')} className="fs" style={s(tile)}>
           <span style={s('display:flex;gap:4px')}>{S.colours.map((c) => <span key={c.name} style={{ ...s('width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)'), background: c.hex }} />)}</span>
-          <span style={s("display:block;font:800 16px/1.05 'Archivo Black';color:var(--ink);margin-top:11px")}>Colour + trim</span>
+          <span style={s("display:block;font:800 16px/1.05 'Archivo Black';color:var(--ink);margin-top:11px")}>{lab(cfg, 'colourTrim')}</span>
           <span style={s("display:block;font:500 11px/1.35 'Archivo';color:var(--label);margin-top:4px")}>{st.built ? v.name + ' · ' + col.name : S.colours.length + ' colours · ' + V.length + ' trims'}</span>
-        </button>
-        <button onClick={go('finance')} className="fs" style={s(tile)}>
+        </button>}
+        {showFin && <button onClick={go('finance')} className="fs" style={s(tile)}>
           <Ms size={18} color={ACC}>payments</Ms>
-          <span style={s("display:block;font:800 16px/1.05 'Archivo Black';color:var(--ink);margin-top:9px")}>Monthly cost</span>
+          <span style={s("display:block;font:800 16px/1.05 'Archivo Black';color:var(--ink);margin-top:9px")}>{lab(cfg, 'monthlyCost')}</span>
           <span style={s("display:block;font:500 11px/1.35 'Archivo';color:var(--label);margin-top:4px")}>From {fmtMoney(priceCur(low.price), lowM)} a month</span>
-        </button>
+        </button>}
       </div>
     </div>
   );
@@ -1490,19 +1522,19 @@ function Build({ cfg, st, set, go }: any) {
         <div style={s('position:absolute;left:16px;right:16px;bottom:14px;display:flex;align-items:center;gap:8px')}>
           <span style={{ ...s('width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.7)'), background: col.hex }} />
           <span style={s("font:800 10px/1 'Archivo';letter-spacing:.16em;color:#F2F2F0")}>{col.name.toUpperCase()}</span>
-          <span style={s("margin-left:auto;font:700 9px/1 'Archivo';letter-spacing:.12em;color:var(--muted)")}>COLOUR SHOWN AS LIGHT</span>
+          <span style={s("margin-left:auto;font:700 9px/1 'Archivo';letter-spacing:.12em;color:var(--muted)")}>{lab(cfg, 'colourNote')}</span>
         </div>
       </div>
       <div style={s('padding:18px 16px 0')}>
         <div style={s("font:800 30px/.92 'Archivo Black';color:var(--ink)")}>{v.name}</div>
         <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>{S.buildSub}</div>
-        <div style={s('margin-top:20px;display:flex;align-items:center;gap:8px')}>{label('COLOUR')}<span style={s("font:700 11px/1 'Archivo';color:var(--ink);margin-left:auto")}>{col.name}</span></div>
+        <div style={s('margin-top:20px;display:flex;align-items:center;gap:8px')}>{label(lab(cfg, 'colour'))}<span style={s("font:700 11px/1 'Archivo';color:var(--ink);margin-left:auto")}>{col.name}</span></div>
         <div style={s('display:flex;gap:12px;margin-top:11px')}>
           {S.colours.map((c) => { const on = c.name === col.name; return (
             <button key={c.name} onClick={() => pick({ colour: c.name })} aria-label={c.name} style={{ ...s('width:46px;height:46px;border-radius:50%;transition:box-shadow .18s ease'), background: c.hex, boxShadow: on ? '0 0 0 3px var(--ground),0 0 0 5px var(--acc)' : 'inset 0 0 0 1px rgba(0,0,0,.18)' }} />
           ); })}
         </div>
-        <div style={s('margin-top:22px')}>{label('TRIM')}</div>
+        <div style={s('margin-top:22px')}>{label(lab(cfg, 'trim'))}</div>
         <div style={s('margin-top:9px;display:flex;flex-direction:column;gap:7px')}>
           {V.map((x, i) => { const on = i === st.variant; return (
             <button key={x.name} onClick={() => pick({ variant: i })} className="fw" style={{ ...s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px'), background: on ? 'var(--panel)' : 'var(--sand)' }}>
@@ -1512,7 +1544,7 @@ function Build({ cfg, st, set, go }: any) {
           ); })}
         </div>
         <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:20px')}>
-          {accBtn('SEE THE MONTHLY COST', 'payments', () => { set({ built: true }); go('finance')(); }, 'width:100%')}
+          {accBtn(lab(cfg, 'seeMonthly'), 'payments', () => { set({ built: true }); go('finance')(); }, 'width:100%')}
           {darkBtn((cfg as EventConfig).cta.button, 'arrow_forward', () => { set({ built: true }); go('drive')(); }, 'width:100%')}
         </div>
       </div>
@@ -1523,7 +1555,9 @@ function Build({ cfg, st, set, go }: any) {
 function Finance({ cfg, st, set, go }: any) {
   const C = cfg as EventConfig; const F = C.showroom!.finance; const V = C.product.variants;
   const v = V[st.variant] || V[0]; const price = priceNum(v.price); const cur = priceCur(v.price);
-  const m = monthlyFlat(price, st.deposit, F.rate, st.term);
+  const yrs = (t: number) => (F.termUnit === 'months' ? t / 12 : t);
+  const unit = (t: number) => (F.termUnit === 'months' ? t + ' mo' : t + ' yrs');
+  const m = monthlyFlat(price, st.deposit, F.rate, yrs(st.term));
   useEffect(() => { if (!st.financeSeen) set({ financeSeen: true }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const row = (k: string, val: string, strong = false) => (
     <div key={k} style={s('display:flex;align-items:baseline;gap:10px;padding:10px 0;border-top:1.5px solid var(--hair)')}>
@@ -1535,25 +1569,25 @@ function Finance({ cfg, st, set, go }: any) {
   return (
     <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
       <div style={s('background:var(--panel);padding:18px 16px')}>
-        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:var(--acc);transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--muted)")}>{v.name.toUpperCase()} · {st.deposit}% DOWN · {st.term} YEARS</span></div>
+        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:var(--acc);transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--muted)")}>{v.name.toUpperCase()} · {st.deposit}% DOWN · {F.termUnit === 'months' ? st.term + ' MONTHS' : st.term + ' YEARS'}</span></div>
         <div style={s('display:flex;align-items:baseline;gap:8px;margin-top:12px')}>
           <span key={m.monthly} style={s("font:800 46px/.9 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums;animation:bgReveal .35s cubic-bezier(.2,.85,.2,1) both")}>{fmtMoney(cur, m.monthly)}</span>
-          <span style={s("font:800 10px/1 'Archivo';letter-spacing:.14em;color:var(--muted)")}>A MONTH</span>
+          <span style={s("font:800 10px/1 'Archivo';letter-spacing:.14em;color:var(--muted)")}>{lab(cfg, 'aMonth')}</span>
         </div>
         <div style={s("font:500 12px/1.45 'Archivo';color:var(--muted);margin-top:9px")}>{F.sub}</div>
       </div>
-      <div style={s('margin-top:18px')}>{label('TRIM')}</div>
+      <div style={s('margin-top:18px')}>{label(lab(cfg, 'trim'))}</div>
       <div style={s('display:flex;gap:6px;margin-top:9px;flex-wrap:wrap')}>{V.map((x, i) => chip(x.name.replace(/^\S+\s/, ''), i === st.variant, () => set({ variant: i })))}</div>
       <div style={s('display:flex;gap:18px;margin-top:16px;flex-wrap:wrap')}>
-        <div>{label('DEPOSIT')}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.deposits.map((d) => chip(d + '%', d === st.deposit, () => set({ deposit: d })))}</div></div>
-        <div>{label('TERM')}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.terms.map((t) => chip(t + ' yrs', t === st.term, () => set({ term: t })))}</div></div>
+        <div>{label(lab(cfg, 'deposit'))}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.deposits.map((d) => chip(d + '%', d === st.deposit, () => set({ deposit: d })))}</div></div>
+        <div>{label(lab(cfg, 'term'))}<div style={s('display:flex;gap:6px;margin-top:9px')}>{F.terms.map((t) => chip(unit(t), t === st.term, () => set({ term: t })))}</div></div>
       </div>
       <div style={s('margin-top:18px;background:var(--sand);padding:4px 14px')}>
         {[
           row('On-the-road price', fmtMoney(cur, price)),
           row('Deposit (' + st.deposit + '%)', fmtMoney(cur, price - m.loan)),
           row('Amount financed', fmtMoney(cur, m.loan)),
-          row('Interest, ' + F.rate + '% flat over ' + st.term + ' years', fmtMoney(cur, m.interest)),
+          row('Interest, ' + F.rate + '% flat over ' + (F.termUnit === 'months' ? st.term + ' months' : st.term + ' years'), fmtMoney(cur, m.interest)),
           row('Total payable', fmtMoney(cur, m.total + price - m.loan), true),
         ]}
       </div>
@@ -1574,7 +1608,7 @@ function Finance({ cfg, st, set, go }: any) {
       <div style={s("font:500 10.5px/1.45 'Archivo';color:var(--label);margin-top:16px")}>{F.note}</div>
       <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:16px')}>
         {accBtn(C.cta.button, 'arrow_forward', go('drive'), 'width:100%')}
-        {darkBtn('CHANGE COLOUR OR TRIM', 'palette', go('build'), 'width:100%')}
+        {darkBtn(lab(cfg, 'changeBuild'), 'palette', go('build'), 'width:100%')}
       </div>
     </div>
   );
@@ -1608,16 +1642,21 @@ function HotspotSheet({ cfg, st, close, openHotspot, set, ask }: any) {
 }
 
 function RevealMoment({ cfg, skip }: { cfg: EventConfig; skip: () => void }) {
-  const im = cfg.event.heroImage; const R = cfg.reveal;
+  const R = cfg.reveal;
+  const md = R.media?.src ? R.media : null;
+  const im = md && md.kind === 'image' ? { src: md.src, w: md.w || 1600, h: md.h || 1000 } : cfg.event.heroImage;
   return (
     <button onClick={skip} aria-label="Skip reveal" style={s('position:absolute;inset:0;z-index:70;background:var(--hero-deep);overflow:hidden;display:block;text-align:left;cursor:pointer;animation:evRevealOut .5s ease 3.8s both')}>
       <div style={s('position:absolute;inset:0;background:radial-gradient(70% 45% at 50% 52%,rgba(var(--acc-rgb),.45),transparent 70%);animation:evGlow 3.2s ease both')} />
       <div style={{ ...s('position:absolute;left:50%;top:50%;width:150%;transform:translate(-50%,-46%)'), aspectRatio: `${im.w}/${im.h}` }}>
-        {im.src && <img src={asset(im.src)} alt={R.title} style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:evCar 3.4s cubic-bezier(.2,.7,.2,1) both')} />}
+        {md?.kind === 'video'
+          ? <video src={asset(md.src)} autoPlay muted playsInline loop style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:evCar 3.4s cubic-bezier(.2,.7,.2,1) both')} />
+          : im.src && <img src={asset(im.src)} alt={R.title} style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:evCar 3.4s cubic-bezier(.2,.7,.2,1) both')} />}
       </div>
       <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,var(--hero-deep) 0%,var(--hero-deep) 33%,rgba(var(--hero-deep-rgb),0) 47%,rgba(var(--hero-deep-rgb),0) 64%,var(--hero-deep) 90%)')} />
       <div style={s('position:absolute;top:0;bottom:0;left:-60%;width:50%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-14deg);animation:evLight 1.5s cubic-bezier(.3,.7,.3,1) 1.2s both')} />
       <div style={s('position:absolute;left:0;right:0;top:15%;text-align:center;padding:0 16px')}>
+        {R.logo && <img src={asset(R.logo)} alt="" style={s('width:46px;height:46px;object-fit:contain;display:block;margin:0 auto 14px;animation:evText .8s cubic-bezier(.2,.85,.2,1) .2s both')} />}
         <div style={s("font:800 10px/1.4 'Archivo';letter-spacing:.42em;color:var(--acc-lt);animation:evText .8s cubic-bezier(.2,.85,.2,1) .4s both")}>{R.kicker}</div>
       </div>
       <div style={s('position:absolute;left:0;right:0;bottom:16%;text-align:center;padding:0 12px')}>

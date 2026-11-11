@@ -12,7 +12,7 @@ import { s } from '../voltford/admin/s';
 import QRCode from 'qrcode';
 import { initials } from './EventFan';
 import {
-  sponsorOf, ticketUrl,
+  sponsorOf, ticketUrl, isOn, duplicateEvent, exportName,
   getEvent, audience, checkinsSeed, channelName, fanPath, homePath, abs, asset, STATES, TARGETS, revealSegIndex, qaSegIndex,
   LEAD_STATUSES, leadScore, leadTier, scoreParts, routeFor,
   type EventConfig, type Ms as MState, type Mode, type Target, type TriggerKind, type Lead, type LeadStatus,
@@ -194,12 +194,14 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
         <span style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
         <a className="ah-ink" href={homePath()} style={s("display:flex;align-items:center;gap:6px;font:500 13px/1 'Archivo';color:#513E66;text-decoration:none;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis")}><Ms size={16} color="inherit">arrow_back</Ms>{cfg.event.name}</a>
         <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE;margin-left:12px')}>
-          {LIFECYCLE.filter(([k]) => k !== 'leads' || cfg.interest || cfg.demo.leads?.length).map(([k, n], i) => { const on = st.screen === k; return (
+          {LIFECYCLE.filter(([k]) => k !== 'leads' || isOn(cfg, 'leads')).map(([k, n], i) => { const on = st.screen === k; return (
             <button key={k} onClick={() => set({ screen: k })} style={{ ...s("display:flex;align-items:center;gap:7px;padding:9px 11px;white-space:nowrap;border-radius:9px;font:600 12px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66', boxShadow: on ? '0 1px 2px rgba(27,11,45,.08)' : 'none' }}><span style={{ ...s("width:17px;height:17px;border-radius:5px;display:flex;align-items:center;justify-content:center;font:700 9.5px/1 'Archivo'"), background: on ? '#1B0B2D' : '#E9E9E4', color: on ? '#F5F5F2' : '#513E66' }}>{i + 1}</span>{n}</button>
           ); })}
         </div>
         <span style={{ ...s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#F5F5F2;padding:7px 10px;border-radius:8px;margin-left:auto;white-space:nowrap"), background: STATE_COLOR[st.ms] }}>{st.ms === 'live' ? 'LIVE · ' + (cfg.segments[st.seg]?.short || '') : st.ms === 'community' ? 'ALWAYS ON' : st.ms.toUpperCase()}</span>
         <a className="ah" href={homePath() + '?edit=' + cfg.id} style={s("display:flex;align-items:center;gap:7px;padding:11px 13px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14);text-decoration:none")}><Ms size={16} color="inherit">edit</Ms>Edit</a>
+        <button className="ah" title="Duplicate event" aria-label="Duplicate event" onClick={() => { const c = duplicateEvent(cfg); if (!c) { say('All demo event slots are used', 'error'); return; } window.location.href = homePath() + '?edit=' + c.id; }} style={s('display:flex;align-items:center;padding:11px;border-radius:12px;color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)')}><Ms size={16} color="inherit">content_copy</Ms></button>
+        <button className="ah" title="Export config (JSON)" aria-label="Export config" onClick={() => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' })); a.download = exportName(cfg); a.click(); say('Config exported', 'download'); }} style={s('display:flex;align-items:center;padding:11px;border-radius:12px;color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)')}><Ms size={16} color="inherit">download</Ms></button>
         <button className="ah" onClick={() => { window.open(fan, '_blank', 'noopener'); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 15px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#1B0B2D;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14);white-space:nowrap")}><Ms size={16} color="inherit">open_in_new</Ms>Fan view</button>
       </header>
       {st.screen === 'plan' && <Plan cfg={cfg} />}
@@ -451,8 +453,8 @@ function Control({ cfg, st, set, goState, goSeg, fire, nextOf, qStatus, aud, rea
               ); })}
             </div>
           </div>
-          <div style={{ ...s('display:grid;gap:12px;margin-top:16px'), gridTemplateColumns: `repeat(${C.challenges?.length ? 5 : 4},minmax(0,1fr))` }}>
-            {TRIGGERS.filter((t) => t.id !== 'challenge' || C.challenges?.length).map((t) => (
+          <div style={{ ...s('display:grid;gap:12px;margin-top:16px'), gridTemplateColumns: `repeat(${isOn(C, 'challenges') ? 5 : 4},minmax(0,1fr))` }}>
+            {TRIGGERS.filter((t) => t.id !== 'challenge' || isOn(C, 'challenges')).map((t) => (
               <button key={t.id} className="ah2" onClick={() => fire(t.id)} style={s('display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px;border-radius:12px;background:#F1F1EE;box-shadow:inset 0 0 0 1px rgba(27,11,45,.08);text-align:left;min-width:0')}>
                 <Ms size={22} color={t.color}>{t.icon}</Ms>
                 <span><span style={s("display:block;font:700 13.5px/1.2 'Archivo';color:#1B0B2D")}>{t.name}</span><span style={s("display:block;font:400 11px/1.35 'Archivo';color:#513E66;margin-top:5px")}>{nextOf(t.id)}</span></span>

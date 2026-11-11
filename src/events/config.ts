@@ -13,6 +13,8 @@ import { AURORA_NOVA } from './samples/aurora-nova';
 import { TIDEWELL } from './samples/tidewell';
 // Sports samples: an endurance race over three days, and a three-stage series.
 import { SPORTS } from './samples/sports';
+// The neutral starting point for new events (no sample's content).
+import { SCAFFOLD } from './scaffold';
 
 export type Ms = 'before' | 'live' | 'break' | 'after' | 'community';
 export type Mode = 'venue' | 'online';
@@ -77,7 +79,18 @@ export interface EventConfig {
   rewards?: Reward[];
   sponsorKit?: SponsorBadge[];
   // litBefore: the hero image is lit (and its points tappable) before the reveal, e.g. a race car on the grid.
-  reveal: { kicker: string; word1: string; word2: string; line: string; thirdNote: string; title: string; sub: string; triggerBlurb: string; litBefore?: boolean };
+  reveal: {
+    kicker: string; word1: string; word2: string; line: string; thirdNote: string; title: string; sub: string; triggerBlurb: string; litBefore?: boolean;
+    logo?: string;                                               // shown in the reveal moment (optional)
+    media?: { kind: 'image' | 'video'; src: string; w?: number; h?: number }; // reveal moment visual; defaults to the hero image
+  };
+  // Module switches and layout. Anything not set falls back to "on if its content exists".
+  modules?: Partial<Record<ModuleKey, boolean>>;
+  layout?: { live?: 'stream-first' | 'reveal-first' };
+  // Every fixed label on the fan view can be reworded per event.
+  labels?: Partial<Record<LabelKey, string>>;
+  // Product gallery shown after the reveal and in the recap.
+  gallery?: { title: string; items: { src: string; caption: string }[] };
   product: { sectionTitle: string; priceLine: string; featuresHint: string; variants: { name: string; price: string; spec: string }[] };
   hotspots: { id: string; x: number; y: number; name: string; desc: string; stat: string; unit: string }[];
   polls: Poll[];
@@ -109,9 +122,10 @@ export interface EventConfig {
   };
   // Launch extras: colour + trim picker and a finance / running-cost estimate.
   showroom?: {
-    buildTitle: string; buildSub: string; colours: { name: string; hex: string }[];
+    buildTitle: string; buildSub: string; colours: { name: string; hex: string }[]; defaultVariant?: number;
     finance: {
       title: string; sub: string; rate: number; deposits: number[]; terms: number[]; defaultDeposit: number; defaultTerm: number; note: string;
+      termUnit?: 'years' | 'months';
       running?: { title: string; sub: string; rows: { label: string; v: number }[] };
     };
   };
@@ -138,9 +152,50 @@ export interface EventConfig {
   };
 }
 
+// ── modules ──
+// Every event uses the same fan view and Studio. Modules switch blocks on or off;
+// by default a module is on when the event has its content.
+export type ModuleKey = 'register' | 'interest' | 'tickets' | 'challenges' | 'showroom' | 'finance' | 'cta' | 'gallery' | 'stories' | 'presenters' | 'sponsors' | 'qa' | 'chat' | 'iris' | 'stream' | 'reactions' | 'follow' | 'community' | 'series' | 'leads';
+export const MODULES: { key: ModuleKey; name: string; blurb: string; has: (c: EventConfig) => boolean }[] = [
+  { key: 'register', name: 'Registration', blurb: 'In person or online sign-up on the event page', has: () => true },
+  { key: 'interest', name: 'Interest questions', blurb: 'Model, budget, area (or role, team…) with consent', has: (c) => !!c.interest?.fields?.length },
+  { key: 'tickets', name: 'Tickets', blurb: 'Buy tickets link with referral and crew codes', has: (c) => !!c.tickets },
+  { key: 'challenges', name: 'Challenges + rewards', blurb: 'Points for predictions, check-ins, trivia, votes', has: (c) => !!c.challenges?.length },
+  { key: 'showroom', name: 'Build your product', blurb: 'Colour swatches and trims with prices', has: (c) => !!c.showroom },
+  { key: 'finance', name: 'Monthly cost', blurb: 'Deposit, term and monthly estimate', has: (c) => !!c.showroom?.finance },
+  { key: 'cta', name: 'Booking', blurb: 'Test drive, demo or presale: locations and slots', has: (c) => !!c.cta.options.length },
+  { key: 'gallery', name: 'Product gallery', blurb: 'Images after the reveal and in the recap', has: (c) => !!c.gallery?.items?.length },
+  { key: 'stories', name: 'Story cards', blurb: 'Teams, drivers, players or makers', has: (c) => !!c.stories?.items?.length },
+  { key: 'presenters', name: 'Presenters', blurb: 'Speakers and hosts on the event page', has: (c) => c.presenters.length > 0 },
+  { key: 'sponsors', name: 'Partner strip', blurb: 'Partner names at the foot of the page', has: (c) => c.sponsors.length > 0 },
+  { key: 'qa', name: 'Q&A', blurb: 'Questions with upvotes, put on stage', has: () => true },
+  { key: 'chat', name: 'Live chat', blurb: 'Venue and online chat', has: () => true },
+  { key: 'iris', name: 'IRIS', blurb: 'Answers only from approved facts', has: (c) => c.iris.pre.length + c.iris.live.length > 0 },
+  { key: 'stream', name: 'Livestream embed', blurb: 'YouTube or Vimeo player for online fans', has: (c) => c.event.format !== 'In person' },
+  { key: 'reactions', name: 'Reactions', blurb: 'Emoji reactions during live', has: () => true },
+  { key: 'follow', name: 'Follow', blurb: 'One ping for the next event', has: () => true },
+  { key: 'community', name: 'Always-on community', blurb: 'Next event, replay and chat after it ends', has: () => true },
+  { key: 'series', name: 'Series', blurb: 'Stages and shared points', has: (c) => !!c.series },
+  { key: 'leads', name: 'Follow up (Studio)', blurb: 'Scored leads and drafted follow-up', has: (c) => !!c.interest || !!c.demo.leads?.length },
+];
+export const isOn = (c: EventConfig, k: ModuleKey) => { const m = MODULES.find((x) => x.key === k)!; return (c.modules?.[k] ?? true) && m.has(c); };
+
+// ── fan view labels (defaults; each event can reword any of them) ──
+export const LABELS = {
+  register: 'REGISTER INTEREST', registerButton: 'REGISTER INTEREST', joinQuestion: 'How are you joining?', onList: 'You’re on the list', change: 'CHANGE',
+  updatesFrom: 'UPDATES FROM', details: 'EVENT DETAILS', share: 'SHARE', agenda: 'AGENDA', theMoment: 'THE MOMENT', presenters: 'PRESENTERS', partners: 'WITH THANKS TO OUR PARTNERS',
+  askTeam: 'ASK THE TEAM', askTitle: 'Send a question for the Q&A', seeAll: 'SEE ALL', livePoll: 'LIVE POLL', liveChallenge: 'LIVE CHALLENGE', explored: 'EXPLORED {n} OF {total} FEATURES',
+  react: 'REACT', quickPoll: 'QUICK POLL', whileYouWait: 'WHILE YOU WAIT', backIn: 'BACK IN', booked: 'BOOKED', follow: 'FOLLOW', following: 'FOLLOWING',
+  liveChat: 'LIVE CHAT', joinChat: 'JOIN THE CHAT', chatStaysOpen: 'THE CHAT STAYS OPEN', communityChat: 'COMMUNITY CHAT', askIris: 'ASK IRIS', approvedOnly: 'APPROVED FACTS ONLY',
+  colourTrim: 'Colour + trim', monthlyCost: 'Monthly cost', colour: 'COLOUR', trim: 'TRIM', deposit: 'DEPOSIT', term: 'TERM', seeMonthly: 'SEE THE MONTHLY COST', changeBuild: 'CHANGE COLOUR OR TRIM', colourNote: 'COLOUR SHOWN AS LIGHT', aMonth: 'A MONTH',
+  challenges: 'CHALLENGES', rewards: 'REWARDS', claim: 'CLAIM', points: 'YOUR POINTS', seriesPoints: 'SERIES POINTS', tickets: 'TICKETS', refCode: 'YOUR REFERRAL CODE', crewCode: 'YOUR CREW CODE',
+  nextEvent: 'NEXT EVENT', openEventPage: 'OPEN EVENT PAGE', registerNext: 'REGISTER', gallery: 'GALLERY',
+};
+export type LabelKey = keyof typeof LABELS;
+export const lab = (c: EventConfig, k: LabelKey) => c.labels?.[k] || LABELS[k];
+
 // ── samples ──
 export const SAMPLES: EventConfig[] = [AURORA_NOVA, ...TIDEWELL, ...SPORTS];
-export const DEFAULT_ID = AURORA_NOVA.id;
 // Old links (/events/nova/) point at the Nova sample.
 export const ALIASES: Record<string, string> = { nova: AURORA_NOVA.id };
 // GitHub Pages only serves pages built ahead of time, so new events take an id
@@ -210,11 +265,12 @@ const hex = (h: string) => { const c = h.replace('#', ''); const f = c.length ==
 const toHex = (r: number[]) => '#' + r.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
 export const mix = (a: string, b: string, t: number) => { const A = hex(a), B = hex(b); return toHex(A.map((v, i) => v + (B[i] - v) * t)); };
 const rgb = (h: string) => hex(h).join(',');
-export const NOVA_COLOURS = { accent: '#8B3DF5', dark: '#160925' };
+// The Connect default palette (the fan view's built-in tokens). Any other pair re-derives them.
+export const BASE_PALETTE = { accent: '#8B3DF5', dark: '#160925' };
 
 export function themeCss(brand: { accent: string; dark: string }): string {
   const acc = brand.accent, dk = brand.dark;
-  if (acc.toLowerCase() === NOVA_COLOURS.accent.toLowerCase() && dk.toLowerCase() === NOVA_COLOURS.dark.toLowerCase()) return '';
+  if (acc.toLowerCase() === BASE_PALETTE.accent.toLowerCase() && dk.toLowerCase() === BASE_PALETTE.dark.toLowerCase()) return '';
   const ink = mix(dk, '#000000', 0.05);
   const deep = mix(dk, '#000000', 0.6);
   const muted = mix(mix(dk, '#ffffff', 0.58), acc, 0.12);
@@ -263,13 +319,13 @@ export const TEMPLATES = [
     segments: [['Gates open', 'doors'], ['Main stage', 'talk'], ['The drop', 'reveal'], ['Meet & greet', 'qa']] as [string, SegKind][] },
 ];
 
-// A fresh event from a template: Nova's structure as the scaffold, with the
+// A fresh event from a template: the neutral scaffold, with the
 // brand and the template's segments swapped in. Every field stays editable.
 export function newFromTemplate(id: string, tpl: (typeof TEMPLATES)[number]): EventConfig {
-  const c = clone(AURORA_NOVA) as EventConfig;
+  const c = clone(SCAFFOLD) as EventConfig;
   c.id = id; c.status = 'draft';
   c.event.template = tpl.id; c.event.format = tpl.format; c.event.name = 'Untitled ' + tpl.name.toLowerCase();
-  if (tpl.id !== 'launch') { delete c.showroom; delete c.interest; delete c.followUp; delete c.demo.leads; } // car-launch only
+  if (tpl.id !== 'launch') { delete c.showroom; delete c.gallery; } // product-launch modules
   if (tpl.id === 'sport') sportStarter(c);
   const times = ['09:00', '09:30', '10:30', '13:00', '15:00', '16:00'];
   c.segments = tpl.segments.map(([name, kind], i) => ({ id: 's' + (i + 1), name, short: name.toUpperCase(), time: times[i] || '17:00', kind, blurb: '', note: '', heroTitle: name.toUpperCase(), heroSub: '' }));
@@ -356,3 +412,18 @@ export function dateLabels(date: string, time: string) {
   const mon = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][d.getMonth()];
   return { dayLabel: day + ' ' + (time || '00:00'), dateShort: day + ' ' + d.getDate() + ' ' + mon };
 }
+
+// ── import / export ──
+// A config exported from one browser can be loaded in another. Pages only serves
+// prebuilt ids, so an import keeps its id when that's a free pool id, else takes the next free one.
+export function importEvent(json: string): { cfg?: EventConfig; error?: string } {
+  let v: any; try { v = JSON.parse(json); } catch { return { error: 'That file isn’t valid JSON.' }; }
+  for (const k of ['brand', 'event', 'segments', 'reveal', 'product', 'hotspots', 'polls', 'iris', 'cta', 'demo']) if (!v || v[k] === undefined) return { error: 'Not a Connect Events config (missing “' + k + '”).' };
+  const used = new Set(listEvents().map((e) => e.cfg.id));
+  const id = POOL_IDS.includes(v.id) && !used.has(v.id) ? v.id : nextFreeId();
+  if (!id) return { error: 'All 40 event slots are used. Delete one first.' };
+  const cfg = { ...v, id, status: v.status || 'draft' } as EventConfig;
+  if (!saveEvent(cfg)) return { error: 'This browser is out of room for that config.' };
+  return { cfg };
+}
+export const exportName = (c: EventConfig) => (c.event.name || c.id).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.connect-event.json';
