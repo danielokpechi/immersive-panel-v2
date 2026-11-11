@@ -13,7 +13,8 @@ import { s } from '../voltford/admin/s';
 import {
   getEvent, themeCss, audience, channelName, asset, homePath, revealSegIndex, qaSegIndex, clockAfter,
   routeFor, priceNum, priceCur, monthlyFlat, fmtMoney,
-  type EventConfig, type Ms as MState, type Mode, type Target, type TriggerKind, type QA, type Lead, type Signals,
+  readPoints, writePoints, pointsTotal, myRefCode, crewCode, ticketUrl, sponsorOf,
+  type EventConfig, type Challenge, type PointsBook, type Msg, type Ms as MState, type Mode, type Target, type TriggerKind, type QA, type Lead, type Signals,
 } from './config';
 
 const Ms = ({ children, size = 18, color, style }: { children: string; size?: number; color?: string; style?: CSSProperties }) => (
@@ -33,7 +34,7 @@ interface ESt {
   mode: Mode; registered: boolean; pick: Mode;
   tick: number; n: number; chat: ChatMsg[]; draft: string; likes: Record<string, boolean>;
   iris: boolean; irisOut: boolean; irisTyping: boolean; irisDraft: string; thread: { me: boolean; text: string; stat?: string; statLabel?: string }[];
-  third: Third | null; flash: { kicker: string; title: string; sub: string } | null; flashOut: boolean;
+  third: Third | null; flash: Msg | null; flashOut: boolean;
   revealing: boolean; hotspot: number | null; hsOut: boolean; seen: Record<string, boolean>;
   poll: number | null; votes: Record<string, string>;
   qDraft: string; myQs: MyQ[]; upvotes: Record<string, boolean>;
@@ -43,7 +44,8 @@ interface ESt {
   event: 'main' | 'next'; attended: boolean; checkedIn: boolean; nextReg: boolean;
   reminders: { id: string; title: string; body: string }[];
   toast: string | null; theme: string;
-  stripTarget: Target; stripOpen: boolean; ctr: { poll: number; hotspot: number; announce: number };
+  stripTarget: Target; stripOpen: boolean; ctr: { poll: number; hotspot: number; announce: number; challenge: number };
+  book: PointsBook; pushCh: number | null; crew: string;
   // interest + showroom (one profile, sent to the Studio as a lead)
   answers: Record<string, string>; consent: boolean; routed: boolean; irisAsks: number;
   colour: string; variant: number; built: boolean; deposit: number; term: number; financeSeen: boolean;
@@ -99,7 +101,8 @@ function FanView({ cfg }: { cfg: EventConfig }) {
     following: false, readOpen: null,
     event: qs.get('event') === 'next' ? 'next' : 'main', attended: readAttended(), checkedIn: checkin, nextReg: false, reminders: [],
     toast: null, theme: qs.get('theme') === 'dark' ? 'dark' : 'light',
-    stripTarget: 'all', stripOpen: !embed && typeof window !== 'undefined' && window.innerWidth > 520, ctr: { poll: 0, hotspot: 0, announce: 0 },
+    stripTarget: 'all', stripOpen: !embed && typeof window !== 'undefined' && window.innerWidth > 520, ctr: { poll: 0, hotspot: 0, announce: 0, challenge: 0 },
+    book: typeof window !== 'undefined' ? readPoints(cfg) : { done: {}, claimed: [] }, pushCh: null, crew: '',
     answers: {}, consent: false, routed: false, irisAsks: 0,
     colour: cfg.showroom?.colours[0]?.name || '', variant: Math.min(1, Math.max(cfg.product.variants.length - 1, 0)), built: false,
     deposit: cfg.showroom?.finance.defaultDeposit ?? 20, term: cfg.showroom?.finance.defaultTerm ?? 7, financeSeen: false,
@@ -180,9 +183,16 @@ function FanView({ cfg }: { cfg: EventConfig }) {
       });
       chatMark('REVEAL', cfg.reveal.word2.charAt(0) + cfg.reveal.word2.slice(1).toLowerCase() + ' is out', 'auto_awesome');
       markAttended();
+    } else if (kind === 'challenge' && cfg.challenges?.length) {
+      const i = idx % cfg.challenges.length; const c = cfg.challenges[i];
+      set({ pushCh: i });
+      showThird({ kind: 'CHALLENGE', title: c.title, note: '+' + c.points + ' points' + (c.sponsor ? ' · presented by ' + c.sponsor : ''), color: ACC, icon: 'emoji_events' });
+      chatMark('CHALLENGE', c.title, 'emoji_events');
+      if (c.sponsor) send({ cmd: 'sponsor', name: c.sponsor, what: 'view' });
     } else if (kind === 'poll' && cfg.polls.length) {
       const p = cfg.polls[idx % cfg.polls.length];
       set({ poll: idx % cfg.polls.length });
+      if (p.sponsor) send({ cmd: 'sponsor', name: p.sponsor, what: 'view' });
       showThird({ kind: 'LIVE POLL', title: 'Vote now', note: p.q, color: ACC, icon: 'bar_chart' });
       chatMark('POLL', p.q, 'bar_chart');
     } else if (kind === 'hotspot' && cfg.hotspots.length) {
@@ -193,6 +203,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
       const list = cfg.announcements[target];
       if (!list?.length) return true;
       set({ flash: list[idx % list.length], flashOut: false });
+      if (list[idx % list.length].sponsor) send({ cmd: 'sponsor', name: list[idx % list.length].sponsor, what: 'view' });
       later('flash', 14000, () => closeFlash());
     }
     return true;
@@ -247,6 +258,9 @@ function FanView({ cfg }: { cfg: EventConfig }) {
   const profKey = JSON.stringify([st.registered, st.mode, st.answers, st.consent, signalsOf(st), st.colour, st.variant, st.drive.showroom, st.deposit, st.term]);
   useEffect(() => { sendProfile.current(); }, [profKey]);
 
+  useEffect(() => { if (st.checkedIn) cfg.challenges?.filter((c) => c.kind === 'checkin').forEach((c) => complete(c)); }, [st.checkedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const f = () => set({ book: readPoints(cfg) }); window.addEventListener('storage', f); return () => window.removeEventListener('storage', f); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const stripState = (ms: MState) => { applyState(ms); send({ cmd: 'state', ms, from: 'fan' }); };
   const stripSeg = (i: number) => { applySeg(i); send({ cmd: 'segment', seg: i, from: 'fan' }); };
   const stripTrigger = (kind: TriggerKind) => {
@@ -286,7 +300,33 @@ function FanView({ cfg }: { cfg: EventConfig }) {
     if (st.votes[pollId]) return;
     set((x) => ({ votes: { ...x.votes, [pollId]: opt } }));
     send({ cmd: 'vote', poll: pollId, opt });
+    const sp = [...cfg.polls, cfg.breakContent.poll].find((p) => p.id === pollId)?.sponsor;
+    if (sp) send({ cmd: 'sponsor', name: sp, what: 'tap' });
+    cfg.challenges?.filter((c) => c.kind === 'poll' && c.poll === pollId).forEach((c) => complete(c, opt));
   };
+  // ── points: challenges complete once, points carry across a series ──
+  const chKey = (c: Challenge) => cfg.id + ':' + c.id;
+  const complete = (c: Challenge, pick?: string) => {
+    const b = stRef.current.book; if (b.done[chKey(c)]) return;
+    const pts = c.kind === 'trivia' ? (pick === c.answer ? c.points : 0) : c.points;
+    const book = { ...b, done: { ...b.done, [chKey(c)]: { pts, ev: cfg.id, pick } } };
+    writePoints(cfg, book); stRef.current = { ...stRef.current, book }; set({ book });
+    send({ cmd: 'challenge', id: c.id, pts });
+    if (c.sponsor) send({ cmd: 'sponsor', name: c.sponsor, what: 'tap' });
+    notify(pts ? '+' + pts + ' POINTS · ' + c.title.toUpperCase() : 'NOT QUITE · ANSWER: ' + (c.answer || '').toUpperCase());
+  };
+  const claim = (id: string, name: string) => {
+    const b = stRef.current.book; if (b.claimed.includes(id)) return;
+    const book = { ...b, claimed: [...b.claimed, id] };
+    writePoints(cfg, book); set({ book }); send({ cmd: 'claim', name }); notify('CLAIMED · ' + name.toUpperCase());
+  };
+  const refCode = typeof window !== 'undefined' ? myRefCode(cfg) : '';
+  const buyTickets = () => {
+    const x = stRef.current;
+    window.open(ticketUrl(cfg, x.crew ? crewCode(x.crew) : refCode), '_blank', 'noopener');
+    send({ cmd: 'ticket', crew: x.crew || '' });
+  };
+  const sponsorTap = (name?: string) => { if (name) send({ cmd: 'sponsor', name, what: 'tap' }); };
   const react = (e: string) => { float(e); set((x) => ({ myReacts: x.myReacts + 1 })); send({ cmd: 'react', e, seg: st.ms === 'live' ? st.seg : -1 }); };
   const openHotspot = (i: number) => set((x) => ({ hotspot: i, hsOut: false, seen: { ...x.seen, [cfg.hotspots[i].id]: true } }));
   const bookDrive = () => {
@@ -312,8 +352,8 @@ function FanView({ cfg }: { cfg: EventConfig }) {
   const breakLeft = Math.max(cfg.breakContent.minutes * 60 - (st.tick - st.breakAt), 0);
   const aud = audience(cfg, ms, seg, st.tick);
   const isHome = st.route === 'home', isSub = !isHome;
-  const titles: Record<string, string> = { chat: 'LIVE CHAT', drive: cfg.cta.screenTitle, qa: 'Q&A', build: cfg.showroom?.buildTitle || '', finance: cfg.showroom?.finance.title || '' };
-  const metas: Record<string, string> = { chat: (aud.venue + aud.online).toLocaleString() + ' WATCHING', drive: cfg.cta.screenMeta, qa: (cfg.qaSeed.length + st.myQs.length) + ' QUESTIONS', build: cfg.product.variants.length + ' TRIMS', finance: 'INDICATIVE' };
+  const titles: Record<string, string> = { challenges: 'POINTS', chat: 'LIVE CHAT', drive: cfg.cta.screenTitle, qa: 'Q&A', build: cfg.showroom?.buildTitle || '', finance: cfg.showroom?.finance.title || '' };
+  const metas: Record<string, string> = { challenges: pointsTotal(st.book) + ' PTS', chat: (aud.venue + aud.online).toLocaleString() + ' WATCHING', drive: cfg.cta.screenMeta, qa: (cfg.qaSeed.length + st.myQs.length) + ' QUESTIONS', build: cfg.product.variants.length + ' TRIMS', finance: 'INDICATIVE' };
   const backLabel = st.navStack.length ? (titles[st.navStack[st.navStack.length - 1]] || 'HOME') : 'HOME';
   const statusLabel = nextEv ? cfg.community.next.date : before ? cfg.event.dayLabel : live ? 'LIVE' : brk ? 'BREAK' : after ? 'ENDED' : 'ALWAYS ON';
   const segTime = cfg.segments[seg]?.time || cfg.event.time;
@@ -321,7 +361,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
   const clockLabel = nextEv || community ? '09:12' : before ? clockAfter(cfg.event.time, -194) : live ? clockAfter(segTime, 8) : brk ? clockAfter(lastTime, -10) : clockAfter(lastTime, 44);
   const qBoard = [...cfg.qaSeed.map((q) => ({ ...q, mine: false, status: '' })), ...st.myQs.map((q) => ({ ...q, who: 'you', where: st.mode }))]
     .map((q) => ({ ...q, votes: q.votes + (st.upvotes[q.id] ? 1 : 0) })).sort((a, b) => b.votes - a.votes);
-  const P = { cfg, st, set, go, before, live, brk, after, community, nextEv, seg, revealed, cd, breakLeft, aud, post, ask, register, sendQ, vote, react, openHotspot, bookDrive, follow, share, qBoard, chatRef };
+  const P = { complete, claim, buyTickets, refCode, sponsorTap, cfg, st, set, go, before, live, brk, after, community, nextEv, seg, revealed, cd, breakLeft, aud, post, ask, register, sendQ, vote, react, openHotspot, bookDrive, follow, share, qBoard, chatRef };
 
   const opBtn = (label: string, onClick: () => void, bg = 'rgba(242,242,240,.12)', color = 'var(--on-panel)', on = false) => (
     <button onClick={onClick} style={{ ...s("font:800 10px/1 'Archivo';letter-spacing:.04em;padding:8px 6px"), background: on ? ACC : bg, color: on ? '#fff' : color }}>{label}</button>
@@ -411,7 +451,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
               </div>
               {isHome && live && !nextEv && (
                 <div style={s('display:flex;height:28px;background:var(--chrome)')}>
-                  {cfg.segments.map((g, i) => { const on = i === seg, done = i < seg; const many = cfg.segments.length > 4; return (
+                  {cfg.segments.map((g, i) => { const on = i === seg, done = i < seg; const many = cfg.segments.filter((x) => (x.day ?? 0) === (cfg.segments[seg]?.day ?? 0)).length > 4; if ((g.day ?? 0) !== (cfg.segments[seg]?.day ?? 0)) return null; return (
                     <div key={g.id} style={{ ...s('flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;position:relative;overflow:hidden'), background: on ? 'rgba(var(--acc-rgb),.22)' : 'transparent' }}>
                       {on && <span style={s('width:5px;height:5px;flex:none;border-radius:50%;background:var(--acc-lt);animation:bgBlink 1.6s steps(1,end) infinite')} />}
                       {done && !many && <Ms size={12} color="var(--label)">check</Ms>}
@@ -435,6 +475,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
             {st.route === 'drive' && <Drive {...P} />}
             {st.route === 'qa' && <QABoard {...P} full />}
             {st.route === 'build' && cfg.showroom && <Build {...P} />}
+            {st.route === 'challenges' && <ChallengesScreen {...P} />}
             {st.route === 'finance' && cfg.showroom && <Finance {...P} />}
           </div>
 
@@ -450,6 +491,7 @@ function FanView({ cfg }: { cfg: EventConfig }) {
                   <div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--acc-lt)")}>{st.flash.kicker}</div>
                   <div style={s("font:700 13px/1.25 'Archivo';color:var(--on-panel);margin-top:5px")}>{st.flash.title}</div>
                   <div style={s("font:500 10.5px/1.3 'Archivo';color:var(--muted);margin-top:3px")}>{st.flash.sub}</div>
+                  {st.flash.sponsor && <div style={s('margin-top:7px')}><SponsorTag cfg={cfg} name={st.flash.sponsor} dark /></div>}
                 </div>
                 <button onClick={() => closeFlash()} aria-label="Dismiss" style={s('width:28px;height:28px;flex:none;border-radius:50%;background:rgba(242,242,240,.12);display:flex;align-items:center;justify-content:center')}><Ms size={16} color="var(--muted)">close</Ms></button>
               </div>
@@ -578,7 +620,7 @@ function BeforeHome(P: any) {
     <section>
       <HeroShell>
         <div style={s('padding:16px 16px 0')}>{kicker(E.kicker, E.kickerSub)}</div>
-        <CarStage cfg={cfg} revealed={false} interactive={false} seen={{}} height={176} />
+        <CarStage cfg={cfg} revealed={!!cfg.reveal.litBefore} interactive={false} seen={{}} height={176} />
         <div style={s('padding:0 16px')}>
           {heroTitle(E.title)}
           <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.3em;color:var(--acc-lt);text-align:center;margin-top:22px")}>{E.countdownLabel}</div>
@@ -595,6 +637,8 @@ function BeforeHome(P: any) {
           <Ms size={18} color="var(--acc-lt)">chevron_right</Ms>
         </button>
       </HeroShell>
+      <SeriesStrip {...P} />
+      <TicketCard {...P} />
 
       {st.reminders.length > 0 && (
         <div style={s('padding:22px 16px 0')}>
@@ -641,6 +685,7 @@ function BeforeHome(P: any) {
                 {(cfg.interest?.fields || []).filter((f) => st.answers[f.id]).map((f) => <span key={f.id} style={s("font:700 11px/1 'Archivo';color:var(--ink);background:var(--ground);padding:8px 9px")}><span style={s('color:var(--label)')}>{f.short} · </span>{st.answers[f.id]}</span>)}
               </div>
             )}
+            {st.crew && <div style={s("display:flex;align-items:center;gap:7px;margin-top:10px;font:600 11.5px/1.35 'Archivo';color:var(--body)")}><Ms size={15} color={ACC}>group</Ms>{st.crew} · crew code <b style={s('color:var(--ink)')}>{crewCode(st.crew)}</b></div>}
             {st.routed && <div style={s("display:flex;align-items:center;gap:7px;margin-top:10px;font:600 11.5px/1.35 'Archivo';color:var(--body)")}><Ms size={15} color={ACC}>near_me</Ms>Matched to {cfg.cta.options.find((o) => o.id === st.drive.showroom)?.name}</div>}
           </>) : (<>
             <div style={s("font:800 22px/1 'Archivo Black';color:var(--ink)")}>How are you joining?</div>
@@ -654,25 +699,36 @@ function BeforeHome(P: any) {
               ); })}
             </div>
             {cfg.interest && <InterestFields cfg={cfg} st={st} set={set} />}
+            {cfg.tickets && cfg.tickets.crews.length > 0 && (
+              <div style={s('margin-top:16px;padding-top:14px;border-top:1.5px solid var(--hair)')}>
+                {label(cfg.tickets.crewLabel.toUpperCase() + ' · OPTIONAL')}
+                <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:8px')}>{cfg.tickets.crews.map((c) => { const on = st.crew === c; return <button key={c} onClick={() => set({ crew: on ? '' : c })} style={{ ...s("font:700 12px/1 'Archivo';padding:10px 11px"), background: on ? 'var(--panel)' : 'var(--ground)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{c}</button>; })}</div>
+              </div>
+            )}
             {accBtn('REGISTER INTEREST', 'arrow_forward', register, 'width:100%;margin-top:14px')}
           </>)}
         </div>
       </div>
 
+      <ChallengesCard {...P} />
       <AskCard {...P} />
 
       <div style={s('padding:22px 16px 0')}>
-        {sect('AGENDA', small(E.dateShort))}
+        {sect('AGENDA', small(cfg.days?.length ? cfg.days.length + ' DAYS' : E.dateShort))}
         <div style={s('margin-top:6px')}>
-          {cfg.segments.map((g) => (
+          {cfg.segments.map((g, gi) => (<div key={g.id}>
+            {cfg.days?.length && (gi === 0 || (cfg.segments[gi - 1].day ?? 0) !== (g.day ?? 0)) && cfg.days[g.day ?? 0] ? (
+              <div style={s('display:flex;align-items:baseline;gap:8px;padding:16px 0 4px')}><span style={s("font:800 13px/1 'Archivo Black';letter-spacing:.04em;color:var(--acc)")}>{cfg.days[g.day ?? 0].label.toUpperCase()}</span><span style={s("font:700 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>{cfg.days[g.day ?? 0].date} · {cfg.days[g.day ?? 0].sub.toUpperCase()}</span></div>
+            ) : null}
             <div key={g.id} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}>
               <span style={s("width:44px;flex:none;font:800 15px/1 'Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>{g.time}</span>
               <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{g.name}</span>{g.blurb && <span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{g.blurb}</span>}</span>
               {g.kind === 'reveal' && <span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:6px 7px;color:#fff;background:var(--acc)")}>THE MOMENT</span>}
             </div>
-          ))}
+          </div>))}
         </div>
       </div>
+      <Stories {...P} />
 
       {cfg.presenters.length > 0 && (
         <div style={s('padding:22px 16px 0')}>
@@ -719,7 +775,7 @@ function LiveHome(P: any) {
         <div style={s('display:flex;align-items:center;justify-content:center;padding-top:15px')}>
           <span style={s('display:flex;align-items:center;gap:7px;background:rgba(214,32,42,.92);padding:7px 11px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#fff")}>LIVE · {g?.short}</span></span>
         </div>
-        <CarStage cfg={cfg} revealed={revealed} interactive={revealed} seen={st.seen} openHotspot={openHotspot} height={revealed ? 236 : 190} />
+        <CarStage cfg={cfg} revealed={revealed || !!cfg.reveal.litBefore} interactive={revealed || !!cfg.reveal.litBefore} seen={st.seen} openHotspot={openHotspot} height={revealed || cfg.reveal.litBefore ? 236 : 190} />
         <div style={s('padding:0 16px 16px;text-align:center')}>
           <div key={title} style={s('animation:bgReveal .5s cubic-bezier(.2,.85,.2,1) both')}>{heroTitle(title, 34)}</div>
           {sub && <div style={s("font:500 12.5px/1.4 'Archivo';color:var(--muted-lt);margin-top:8px")}>{sub}</div>}
@@ -733,6 +789,7 @@ function LiveHome(P: any) {
       </HeroShell>
 
       {st.poll !== null && cfg.polls[st.poll] && <div style={s('padding:22px 16px 0')}>{sect('LIVE POLL')}<PollCard p={cfg.polls[st.poll]} tag="LIVE" tagBg="#D6202A" {...P} /></div>}
+      {st.pushCh !== null && cfg.challenges?.[st.pushCh] && <div style={s('padding:22px 16px 0')}>{sect('LIVE CHALLENGE')}<ChallengeItem c={cfg.challenges[st.pushCh]} {...P} /></div>}
       {isQa && <QABoard {...P} />}
       {revealed && !isQa && cfg.hotspots.length > 0 && (
         <div style={s('padding:22px 16px 0')}>
@@ -749,6 +806,8 @@ function LiveHome(P: any) {
         </div>
       )}
       {revealed && !isQa && <ShowroomCard {...P} />}
+      <ChallengesCard {...P} />
+      <Stories {...P} />
       {!isQa && <AskCard {...P} compact />}
       <IrisTeaser {...{ cfg, revealed, set, ask }} />
       <ChatPreview {...P} />
@@ -823,6 +882,8 @@ function AfterHome(P: any) {
         </div>
       </div>
       <ShowroomCard {...P} pad="12px 16px 0" />
+      <TicketCard {...P} after />
+      <ChallengesCard {...P} />
 
       <div style={s('padding:12px 16px 0')}>
         <button onClick={follow} className="fs" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--sand);padding:15px')}>
@@ -915,6 +976,8 @@ function CommunityHome(P: any) {
           </div>
         </div>
       </div>
+      <SeriesStrip {...P} />
+      <ChallengesCard {...P} />
       <IrisTeaser {...{ cfg, revealed: true, set, ask }} />
       <ChatPreview {...P} title="COMMUNITY CHAT" />
       <div style={s('height:64px')} />
@@ -961,12 +1024,13 @@ function NextEventHome(P: any) {
 }
 
 // ═══════════ blocks ═══════════
-function PollCard({ p, tag, tagBg, st, vote }: any) {
+function PollCard({ p, tag, tagBg, st, vote, cfg }: any) {
   const mine = st.votes[p.id];
   const total = Object.values(p.opts as Record<string, number>).reduce((a, b) => a + b, 0) + (mine ? 1 : 0);
   return (
     <div style={s('margin-top:10px;background:var(--sand);padding:16px;animation:bgRise .35s cubic-bezier(.18,.9,.2,1) both')}>
       <div style={s('display:flex;align-items:center;gap:8px')}><span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:#fff;padding:5px 6px"), background: tagBg }}>{tag}</span><span style={s("font:700 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label);margin-left:auto")}>{(p.votes + (mine ? 1 : 0)).toLocaleString()} VOTES</span></div>
+      {p.sponsor && <div style={s('margin-top:10px')}><SponsorTag cfg={cfg} name={p.sponsor} /></div>}
       <div style={s("font:800 22px/1 'Archivo Black';color:var(--ink);margin-top:11px")}>{p.q}</div>
       <div style={s('margin-top:12px;display:flex;flex-direction:column;gap:7px')}>
         {Object.keys(p.opts).map((k) => { const v = p.opts[k] + (mine === k ? 1 : 0); const pct = Math.round(v / Math.max(total, 1) * 100); const on = mine === k; return (
@@ -1145,6 +1209,177 @@ function Drive({ cfg, st, set, bookDrive }: any) {
       {d.done
         ? <div style={s('display:flex;align-items:center;gap:10px;margin-top:22px;padding:14px;background:var(--sand)')}><Ms size={22} color={ACC}>event_available</Ms><span style={s("font:700 13px/1.35 'Archivo';color:var(--ink)")}>{room?.name} · {d.slot}</span></div>
         : accBtn(C.submit, 'arrow_forward', bookDrive, 'width:100%;margin-top:22px')}
+    </div>
+  );
+}
+
+// ═══════════ sports blocks ═══════════
+// A sponsor's placeholder badge: their colour and initials, no real logos.
+function SponsorTag({ cfg, name, dark }: { cfg: EventConfig; name: string; dark?: boolean }) {
+  const b = sponsorOf(cfg, name); if (!b) return null;
+  return (
+    <span style={s('display:inline-flex;align-items:center;gap:7px')}>
+      <span style={s("font:800 8px/1 'Archivo';letter-spacing:.14em;color:" + (dark ? 'var(--muted)' : 'var(--label)'))}>PRESENTED BY</span>
+      <span style={{ ...s("display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:18px;padding:0 5px;font:900 9px/1 'Archivo';letter-spacing:.04em;color:#fff"), background: b.color }}>{b.short}</span>
+      <span style={s("font:800 10px/1 'Archivo';letter-spacing:.06em;color:" + (dark ? 'var(--on-panel)' : 'var(--ink)'))}>{b.name.toUpperCase()}</span>
+    </span>
+  );
+}
+
+function SeriesStrip({ cfg }: any) {
+  const S = (cfg as EventConfig).series; if (!S) return null;
+  return (
+    <div style={s('padding:16px 16px 0')}>
+      <div style={s('background:var(--sand);padding:13px 14px')}>
+        <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={16} color={ACC}>trophy</Ms><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.16em;color:var(--label)")}>{S.name.toUpperCase()}</span><span style={s("margin-left:auto;font:800 9px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>{S.order} OF {S.total}</span></div>
+        <div style={s('display:flex;gap:4px;margin-top:11px')}>
+          {S.stages.map((n, i) => { const on = i + 1 === S.order, done = i + 1 < S.order; return (
+            <div key={n} style={s('flex:1;min-width:0')}>
+              <div style={{ ...s('height:4px'), background: on ? 'var(--acc)' : done ? 'var(--ink)' : 'var(--sand2)' }} />
+              <div style={{ ...s("font:800 9.5px/1.2 'Archivo';letter-spacing:.04em;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"), color: on ? 'var(--ink)' : 'var(--label)' }}>{done ? '✓ ' : ''}{n}</div>
+            </div>
+          ); })}
+        </div>
+        <div style={s("font:500 11px/1.4 'Archivo';color:var(--body);margin-top:9px")}>One community and one points total across the series.</div>
+      </div>
+    </div>
+  );
+}
+
+function TicketCard({ cfg, st, buyTickets, refCode, after }: any) {
+  const T = (cfg as EventConfig).tickets; if (!T) return null;
+  const code = st.crew ? crewCode(st.crew) : refCode;
+  const shareRef = async () => {
+    const url = window.location.origin + window.location.pathname + '?ref=' + code;
+    try { if (navigator.share) { await navigator.share({ title: cfg.event.name, url }); return; } await navigator.clipboard.writeText(url); } catch { /* dismissed */ }
+  };
+  return (
+    <div style={s('padding:' + (after ? '12px' : '16px') + ' 16px 0')}>
+      <div style={s('background:var(--panel);padding:16px')}>
+        <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color="var(--acc-lt)">confirmation_number</Ms><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.16em;color:var(--muted)")}>{after ? 'NEXT · TICKETS' : 'TICKETS'}</span><span style={s("margin-left:auto;font:800 11px/1 'Archivo';color:var(--on-panel)")}>{T.priceFrom}</span></div>
+        <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--muted);margin-top:8px")}>{T.sub}</div>
+        {accBtn(T.label.toUpperCase(), 'open_in_new', buyTickets, 'width:100%;margin-top:12px')}
+        <button onClick={shareRef} style={s('display:flex;align-items:center;gap:9px;width:100%;margin-top:10px;padding:10px 12px;background:rgba(242,242,240,.08);text-align:left')}>
+          <Ms size={16} color="var(--acc-lt)">{st.crew ? 'group' : 'person'}</Ms>
+          <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--muted)")}>{st.crew ? 'YOUR CREW CODE' : 'YOUR REFERRAL CODE'}</span><span style={s("display:block;font:800 15px/1 'Archivo Black';letter-spacing:.08em;color:var(--on-panel);margin-top:5px")}>{code}</span></span>
+          <span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--acc-lt)")}>SHARE</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Stories({ cfg }: any) {
+  const S = (cfg as EventConfig).stories; if (!S?.items.length) return null;
+  return (
+    <div style={s('padding:22px 16px 0')}>
+      {sect(S.title)}
+      <div style={s('display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:2px')}>
+        {S.items.map((x) => (
+          <div key={x.title} style={s('flex:none;width:224px;background:var(--sand);overflow:hidden;display:flex;flex-direction:column')}>
+            <div style={{ ...s('height:5px'), background: x.color || 'var(--acc)' }} />
+            <div style={s('padding:13px 14px 15px;display:flex;flex-direction:column;flex:1')}>
+              <div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{x.kicker}</div>
+              <div style={s("font:800 17px/1.05 'Archivo Black';color:var(--ink);margin-top:8px")}>{x.title}</div>
+              <div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:7px;flex:1")}>{x.body}</div>
+              {x.stat && <div style={s('display:flex;align-items:baseline;gap:7px;margin-top:11px;padding-top:9px;border-top:1.5px solid var(--hair)')}><span style={s("font:800 20px/.9 'Archivo Black';color:var(--acc)")}>{x.stat}</span><span style={s("font:700 8.5px/1.2 'Archivo';letter-spacing:.1em;color:var(--label)")}>{(x.unit || '').toUpperCase()}</span></div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const CH_ICON: Record<string, string> = { predict: 'online_prediction', checkin: 'qr_code_scanner', trivia: 'quiz', poll: 'how_to_vote' };
+function ChallengeItem({ c, cfg, st, complete, vote, compact }: any) {
+  const C = cfg as EventConfig; const ch = c as Challenge;
+  const done = st.book.done[C.id + ':' + ch.id];
+  const poll = ch.kind === 'poll' ? C.polls.find((p) => p.id === ch.poll) : null;
+  const opts = ch.kind === 'poll' ? Object.keys(poll?.opts || {}) : ch.options || [];
+  const picked = ch.kind === 'poll' ? st.votes[ch.poll || ''] || done?.pick : done?.pick;
+  return (
+    <div style={{ ...s('margin-top:8px;background:var(--sand);padding:14px'), boxShadow: done ? 'inset 3px 0 0 var(--acc)' : 'none' }}>
+      <div style={s('display:flex;align-items:flex-start;gap:11px')}>
+        <span style={{ ...s('width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center'), background: done ? ACC : 'var(--panel)' }}><Ms size={18} color="#fff">{done ? 'check' : CH_ICON[ch.kind]}</Ms></span>
+        <span style={s('flex:1;min-width:0')}>
+          <span style={s("display:block;font:700 14px/1.2 'Archivo';color:var(--ink)")}>{ch.title}</span>
+          <span style={s("display:block;font:500 11.5px/1.35 'Archivo';color:var(--label);margin-top:3px")}>{ch.sub}</span>
+        </span>
+        <span style={{ ...s("font:800 10px/1 'Archivo';letter-spacing:.06em;padding:6px 7px;white-space:nowrap"), color: done ? '#fff' : 'var(--ink)', background: done ? ACC : 'var(--ground)' }}>{done ? '+' + done.pts : '+' + ch.points} PTS</span>
+      </div>
+      {ch.sponsor && <div style={s('margin-top:10px')}><SponsorTag cfg={C} name={ch.sponsor} /></div>}
+      {!compact && opts.length > 0 && (
+        <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:12px')}>
+          {opts.map((o) => { const on = picked === o; const right = ch.kind === 'trivia' && done && o === ch.answer; return (
+            <button key={o} disabled={!!done} onClick={() => (ch.kind === 'poll' ? vote(ch.poll, o) : complete(ch, o))} style={{ ...s("font:700 12px/1 'Archivo';padding:10px 11px"), background: on ? 'var(--panel)' : right ? 'rgba(var(--acc-rgb),.18)' : 'var(--ground)', color: on ? 'var(--on-panel)' : 'var(--ink)', opacity: done && !on && !right ? 0.55 : 1 }}>{o}{right && !on ? ' ✓' : ''}</button>
+          ); })}
+        </div>
+      )}
+      {!compact && ch.kind === 'checkin' && !done && <div style={s("display:flex;align-items:center;gap:7px;margin-top:11px;font:600 11.5px/1.35 'Archivo';color:var(--body)")}><Ms size={15} color={ACC}>qr_code_2</Ms>Scan the QR at the fan zone. It checks you in and adds the points.</div>}
+      {done && ch.kind === 'trivia' && <div style={s("font:600 11.5px/1.35 'Archivo';color:var(--body);margin-top:9px")}>{done.pts ? 'Correct.' : 'Not this time. The answer is ' + ch.answer + '.'}</div>}
+    </div>
+  );
+}
+
+function ChallengesCard(P: any) {
+  const { cfg, st, go } = P; const C = cfg as EventConfig;
+  if (!C.challenges?.length) return null;
+  const left = C.challenges.filter((c) => !st.book.done[C.id + ':' + c.id]);
+  const total = pointsTotal(st.book);
+  const next = C.rewards?.filter((r) => r.points > total).sort((a, b) => a.points - b.points)[0];
+  return (
+    <div style={s('padding:22px 16px 0')}>
+      {sect('CHALLENGES', <button onClick={go('challenges')} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.08em;color:var(--acc)")}>REWARDS</button>)}
+      <button onClick={go('challenges')} className="fp" style={s('display:flex;align-items:center;gap:12px;width:100%;margin-top:10px;padding:14px;background:var(--panel);text-align:left')}>
+        <span style={s('flex:1;min-width:0')}>
+          <span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--muted)")}>{C.series ? 'SERIES POINTS' : 'YOUR POINTS'}</span>
+          <span style={s("display:block;font:800 34px/.9 'Archivo Black';color:var(--on-panel);margin-top:7px;font-variant-numeric:tabular-nums")}>{total}</span>
+        </span>
+        <span style={s("font:600 11px/1.35 'Archivo';color:var(--muted);text-align:right;max-width:150px")}>{next ? (next.points - total) + ' to ' + next.name : C.rewards?.length ? 'Every reward unlocked' : left.length + ' challenges left'}</span>
+        <Ms size={18} color="var(--muted)">chevron_right</Ms>
+      </button>
+      {left.slice(0, 1).map((c) => <ChallengeItem key={c.id} c={c} {...P} />)}
+    </div>
+  );
+}
+
+function ChallengesScreen(P: any) {
+  const { cfg, st, claim } = P; const C = cfg as EventConfig;
+  const total = pointsTotal(st.book);
+  const byEv: Record<string, number> = {};
+  Object.values(st.book.done as PointsBook['done']).forEach((d) => { byEv[d.ev] = (byEv[d.ev] || 0) + d.pts; });
+  return (
+    <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
+      <div style={s('background:var(--panel);padding:18px 16px')}>
+        <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.16em;color:var(--muted)")}>{C.series ? C.series.name.toUpperCase() + ' · SERIES POINTS' : 'YOUR POINTS'}</div>
+        <div style={s("font:800 52px/.9 'Archivo Black';color:var(--on-panel);margin-top:10px;font-variant-numeric:tabular-nums")}>{total}</div>
+        {C.series && Object.keys(byEv).length > 0 && (
+          <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:12px')}>
+            {Object.entries(byEv).map(([ev, n]) => <span key={ev} style={s("font:700 10.5px/1 'Archivo';color:var(--on-panel);background:rgba(242,242,240,.1);padding:7px 8px")}>{(getEvent(ev)?.series?.stage || ev)} · {n}</span>)}
+          </div>
+        )}
+        {C.series && <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--muted);margin-top:10px")}>Points carry across every stage of the series.</div>}
+      </div>
+      <div style={s('margin-top:20px')}>{sect('CHALLENGES', small((C.challenges || []).filter((c) => st.book.done[C.id + ':' + c.id]).length + ' OF ' + (C.challenges || []).length + ' DONE'))}</div>
+      {(C.challenges || []).map((c) => <ChallengeItem key={c.id} c={c} {...P} />)}
+      {(C.rewards || []).length > 0 && <>
+        <div style={s('margin-top:24px')}>{sect('REWARDS')}</div>
+        <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:10px')}>
+          {(C.rewards || []).map((r) => { const ok = total >= r.points, got = st.book.claimed.includes(r.id); return (
+            <div key={r.id} style={s('background:var(--sand);padding:14px')}>
+              <div style={s('display:flex;align-items:flex-start;gap:11px')}>
+                <Ms size={22} color={ok ? ACC : 'var(--label)'}>{got ? 'verified' : ok ? 'redeem' : 'lock'}</Ms>
+                <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Archivo';color:var(--ink)")}>{r.name}</span><span style={s("display:block;font:500 11.5px/1.35 'Archivo';color:var(--label);margin-top:3px")}>{r.sub} · {r.stock} left</span></span>
+                <span style={s("font:800 11px/1 'Archivo';color:var(--ink);white-space:nowrap")}>{r.points} PTS</span>
+              </div>
+              {r.sponsor && <div style={s('margin-top:9px')}><SponsorTag cfg={C} name={r.sponsor} /></div>}
+              <div style={s('height:6px;background:var(--ground);margin-top:11px')}><span style={{ ...s('display:block;height:6px;transition:width .6s ease'), width: Math.min(100, (total / r.points) * 100) + '%', background: ok ? ACC : 'var(--sand2)' }} /></div>
+              {ok && <button disabled={got} onClick={() => claim(r.id, r.name)} style={{ ...s("display:inline-flex;align-items:center;gap:6px;margin-top:11px;font:800 10.5px/1 'Archivo';letter-spacing:.08em;padding:10px 12px"), background: got ? 'var(--ground)' : ACC, color: got ? 'var(--ink)' : '#fff' }}><Ms size={14} color={got ? ACC : '#fff'}>{got ? 'check' : 'redeem'}</Ms>{got ? 'CLAIMED · SHOW AT THE DESK' : 'CLAIM'}</button>}
+            </div>
+          ); })}
+        </div>
+      </>}
     </div>
   );
 }

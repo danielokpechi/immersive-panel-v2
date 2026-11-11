@@ -15,7 +15,8 @@ import {
 } from './config';
 import { Ms, Card, Cap, Note, Demo, ADMIN_CSS } from './EventStudio';
 
-const STEPS = ['Brand', 'Event', 'Content', 'IRIS', 'Preview', 'Publish'] as const;
+const STEPS = ['Brand', 'Event', 'Content', 'Rewards', 'IRIS', 'Preview', 'Publish'] as const;
+const SI = (n: (typeof STEPS)[number]) => STEPS.indexOf(n);
 const STATUS: Record<string, { label: string; bg: string; fg: string }> = {
   live: { label: 'LIVE NOW', bg: '#C0473C', fg: '#F5F5F2' }, upcoming: { label: 'UPCOMING', bg: '#1B0B2D', fg: '#F5F5F2' },
   past: { label: 'PAST', bg: '#E9E9E4', fg: '#513E66' }, draft: { label: 'DRAFT', bg: '#F3ECFE', fg: '#6A2BC4' },
@@ -61,7 +62,10 @@ export function StudioHome() {
 // Same layout as the Voltford Studio dashboard: KPI tiles, then a card grid.
 function EventsList({ rows, refresh, openBuilder, create, say }: any) {
   const order = ['live', 'upcoming', 'draft', 'past'];
-  const list: { cfg: EventConfig; sample: boolean; edited: boolean }[] = [...rows].sort((a: any, b: any) => order.indexOf(a.cfg.status) - order.indexOf(b.cfg.status));
+  // By status, with the stages of a series kept together in order.
+  const rank = (c: EventConfig) => order.indexOf(c.status);
+  const groupRank = (c: EventConfig) => (c.series ? Math.min(...rows.filter((r: any) => r.cfg.series?.id === c.series!.id).map((r: any) => rank(r.cfg))) : rank(c));
+  const list: { cfg: EventConfig; sample: boolean; edited: boolean }[] = [...rows].sort((a: any, b: any) => groupRank(a.cfg) - groupRank(b.cfg) || (a.cfg.series?.id || a.cfg.id).localeCompare(b.cfg.series?.id || b.cfg.id) || (a.cfg.series?.order || 0) - (b.cfg.series?.order || 0));
   const brands = new Set(list.map((r) => r.cfg.brand.name)).size;
   const kpis = [
     { label: 'TOTAL EVENTS', v: String(list.length), unit: 'configured', icon: 'event', color: '#1B0B2D' },
@@ -123,6 +127,7 @@ function EventsList({ rows, refresh, openBuilder, create, say }: any) {
                     <span style={s("font:700 16.5px/1.15 'Archivo';letter-spacing:-.012em;flex:1;min-width:0")}>{cfg.event.name}</span>
                     <span style={s("font:600 9.5px/1 'Archivo';letter-spacing:.1em;color:#513E66;padding:6px 8px;border-radius:7px;background:#F1F1EE;white-space:nowrap")}>{tpl.toUpperCase()}</span>
                   </div>
+                  {cfg.series && <div style={s("display:flex;align-items:center;gap:6px;margin-top:9px;font:600 11px/1 'Archivo';color:#6A2BC4")}><Ms size={14} color="#8B3DF5">trophy</Ms>{cfg.series.name} · {cfg.series.stage} · {cfg.series.order} of {cfg.series.total}</div>}
                   <div style={s("font:400 13px/1.45 'Archivo';color:#513E66;margin-top:8px")}>{cfg.event.dateShort.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())} · {cfg.event.venue}{cfg.event.format === 'Hybrid' ? ' and online' : ''}</div>
                   <div style={{ ...s('display:flex;align-items:center;gap:8px;margin-top:14px;padding:10px 12px;border-radius:11px'), background: live ? 'rgba(192,71,60,.08)' : 'rgba(27,11,45,.05)' }}>
                     <span style={{ ...s('width:8px;height:8px;border-radius:50%'), background: statusColor, animation: live ? 'stPulse 2.4s ease-out infinite' : 'none' }} />
@@ -149,7 +154,7 @@ function EventsList({ rows, refresh, openBuilder, create, say }: any) {
           <button className="ah" onClick={create} style={s("display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:420px;border-radius:18px;font:600 13.5px/1.3 'Archivo';color:#513E66;box-shadow:inset 0 0 0 2px rgba(27,11,45,.12);border:0;background:transparent")}>
             <span style={s('width:52px;height:52px;border-radius:16px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={26} color="#1B0B2D">add</Ms></span>
             Create event
-            <span style={s("font:400 12px/1.4 'Archivo';color:#826E99;max-width:220px;text-align:center")}>Start from Product launch, Conference or Fan event</span>
+            <span style={s("font:400 12px/1.4 'Archivo';color:#826E99;max-width:220px;text-align:center")}>Start from Product launch, Conference, Sports or Fan event</span>
           </button>
         </div>
       </section>
@@ -181,8 +186,9 @@ function Builder({ draft, setDraft, step, setStep, isNew, say, close, refresh }:
   const B = { cfg, upd, setDraft, say };
   const publish = (status?: EventConfig['status']) => {
     const out = status ? { ...cfg, status } : cfg;
-    if (!out.event.name.trim()) { say('Give the event a name first'); setStep(1); return; }
-    saveEvent(out); setDraft(out); refresh();
+    if (!out.event.name.trim()) { say('Give the event a name first'); setStep(SI('Event')); return; }
+    if (!saveEvent(out)) { say('Not saved: this browser is out of room. Try a smaller image.'); return; }
+    setDraft(out); refresh();
     say(isSample(out.id) ? 'Saved. This browser now uses your edited sample.' : 'Saved to this browser');
   };
   return (
@@ -193,19 +199,20 @@ function Builder({ draft, setDraft, step, setStep, isNew, say, close, refresh }:
           <h1 style={s("font:700 26px/1.1 'Archivo';letter-spacing:-.02em;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{isNew ? 'Create event' : cfg.event.name}</h1>
           <button className="ah" onClick={() => publish()} style={s("display:flex;align-items:center;gap:7px;padding:11px 14px;border-radius:12px;font:600 12.5px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={16} color="inherit">save</Ms>Save</button>
         </div>
-        <div style={s('display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:5px;border-radius:14px;background:#EAEAE6')}>
+        <div style={s('display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:5px;border-radius:14px;background:#EAEAE6')}>
           {STEPS.map((n, i) => { const on = i === step, done = i < step; return (
             <button key={n} data-step={n} onClick={() => setStep(i)} style={{ ...s("display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 6px;border-radius:10px;font:600 12.5px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66', boxShadow: on ? '0 1px 2px rgba(27,11,45,.08)' : 'none' }}>
               <span style={{ ...s("width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font:700 10px/1 'Archivo'"), background: on ? '#1B0B2D' : done ? '#8B3DF5' : '#DCDCD7', color: on || done ? '#fff' : '#513E66' }}>{done ? <Ms size={13} color="#fff">check</Ms> : i + 1}</span>{n}
             </button>
           ); })}
         </div>
-        {step === 0 && <BrandStep {...B} />}
-        {step === 1 && <EventStep {...B} />}
-        {step === 2 && <ContentStep {...B} />}
-        {step === 3 && <IrisStep {...B} />}
-        {step === 4 && <PreviewStep {...B} />}
-        {step === 5 && <PublishStep {...B} publish={publish} />}
+        {step === SI('Brand') && <BrandStep {...B} />}
+        {step === SI('Event') && <EventStep {...B} />}
+        {step === SI('Content') && <ContentStep {...B} />}
+        {step === SI('Rewards') && <RewardsStep {...B} />}
+        {step === SI('IRIS') && <IrisStep {...B} />}
+        {step === SI('Preview') && <PreviewStep {...B} />}
+        {step === SI('Publish') && <PublishStep {...B} publish={publish} />}
         <div style={s('display:flex;justify-content:space-between;gap:12px')}>
           <button className="ah" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} style={{ ...s("display:flex;align-items:center;gap:7px;padding:13px 16px;border-radius:12px;font:600 13px/1 'Archivo';box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)"), opacity: step === 0 ? 0.4 : 1 }}><Ms size={16} color="inherit">arrow_back</Ms>Back</button>
           {step < STEPS.length - 1
@@ -213,7 +220,7 @@ function Builder({ draft, setDraft, step, setStep, isNew, say, close, refresh }:
             : <button className="ah-ink-btn" data-publish onClick={() => publish(cfg.status === 'draft' ? 'upcoming' : cfg.status)} style={s("display:flex;align-items:center;gap:8px;padding:13px 18px;border-radius:12px;background:#8B3DF5;font:600 13px/1 'Archivo';color:#fff")}><Ms size={16} color="#fff">rocket_launch</Ms>Publish</button>}
         </div>
       </div>
-      {step !== 4 && (
+      {step !== SI('Preview') && (
         <aside style={s('width:330px;flex:none;position:sticky;top:86px')}>
           <div style={s('display:flex;align-items:center;gap:8px;margin-bottom:10px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#C0473C;animation:stBlink 1.6s steps(1,end) infinite')} /><Cap>LIVE PREVIEW</Cap><Note>Updates as you type</Note></div>
           <PhoneFrame cfg={cfg} width={330} height={640} />
@@ -273,10 +280,29 @@ function ImageField({ B, p, label, onSize, square }: { B: any; p: Path; label: s
   const v = getAt(B.cfg, p) || '';
   const file = useRef<HTMLInputElement>(null);
   const load = (src: string) => { if (!onSize) return; const im = new Image(); im.onload = () => onSize(im.naturalWidth || 1600, im.naturalHeight || 1000); im.src = asset(src); };
+  // An uploaded file is stored inside the event as a data URL. Photos are scaled
+  // to at most 1800px and saved as JPEG so they fit in this browser's storage;
+  // SVGs and small images are kept as they are.
   const pick = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return;
-    if (f.size > 1.5e6) B.say('That image is large; this browser may not have room to save it');
-    const r = new FileReader(); r.onload = () => { B.upd(p, String(r.result)); load(String(r.result)); }; r.readAsDataURL(f);
+    const r = new FileReader();
+    r.onload = () => {
+      const raw = String(r.result);
+      const keep = (v: string) => { B.upd(p, v); load(v); B.say('Image added · saved with the event'); };
+      if (f.type === 'image/svg+xml' || f.size < 350e3) { keep(raw); return; }
+      const im = new Image();
+      im.onload = () => {
+        const max = square ? 512 : 1800; const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+        const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+        const g = c.getContext('2d'); if (!g) { keep(raw); return; }
+        g.drawImage(im, 0, 0, c.width, c.height);
+        keep(f.type === 'image/png' && square ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.86));
+      };
+      im.onerror = () => keep(raw);
+      im.src = raw;
+    };
+    r.readAsDataURL(f);
+    e.target.value = '';
   };
   return (
     <div data-field={p.join('.')}><Lbl hint="a path, a URL or an upload">{label}</Lbl>
@@ -303,7 +329,7 @@ function Section({ title, sub, children, open: start = true, id }: { title: stri
   );
 }
 // A list of objects, each edited with the same fields.
-type Col = { k: string; label: string; w?: number; area?: boolean; type?: string; opts?: [string, string][] };
+type Col = { k: string; label: string; w?: number; area?: boolean; type?: string; opts?: [string, string][]; num?: boolean };
 function List({ B, p, cols, blank, label, max }: { B: any; p: Path; cols: Col[]; blank: () => any; label?: string; max?: number }) {
   const arr: any[] = getAt(B.cfg, p) || [];
   const move = (i: number, d: number) => { const a = arr.slice(); const j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; B.upd(p, a); };
@@ -319,7 +345,7 @@ function List({ B, p, cols, blank, label, max }: { B: any; p: Path; cols: Col[];
                 <label key={c.k} style={s('display:block;min-width:0')}>
                   <span style={s("display:block;font:600 9px/1 'Archivo';letter-spacing:.1em;color:#A79BB6;margin-bottom:5px")}>{c.label}</span>
                   {c.opts
-                    ? <select value={row[c.k]} onChange={(e) => B.upd([...p, i, c.k], e.target.value)} style={s(fieldCss + ';padding:9px 10px')}>{c.opts.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>
+                    ? <select value={row[c.k] ?? (c.num ? '0' : '')} onChange={(e) => B.upd([...p, i, c.k], c.num ? Number(e.target.value) : e.target.value)} style={s(fieldCss + ';padding:9px 10px')}>{c.opts.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>
                     : c.area
                       ? <textarea value={row[c.k] ?? ''} rows={2} onChange={(e) => B.upd([...p, i, c.k], e.target.value)} style={s(fieldCss + ';padding:9px 10px;resize:vertical')} />
                       : <input type={c.type || 'text'} value={row[c.k] ?? ''} onChange={(e) => B.upd([...p, i, c.k], c.type === 'number' ? Number(e.target.value) : e.target.value)} style={s(fieldCss + ';padding:9px 10px')} />}
@@ -396,7 +422,7 @@ function EventStep({ cfg, upd, setDraft }: any) {
   return (
     <>
       <Section title="Template" sub="A starting point: it pre-fills the format and running order. Everything stays editable.">
-        <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px')}>
+        <div style={s('display:grid;grid-template-columns:repeat(4,1fr);gap:12px')}>
           {TEMPLATES.map((t) => { const on = c.event.template === t.id; return (
             <button key={t.id} data-template={t.id} onClick={() => applyTpl(t.id)} className="ah" style={{ ...s('display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:15px;border-radius:14px;text-align:left'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: on ? 'inset 0 0 0 2px #1B0B2D' : 'inset 0 0 0 1px rgba(27,11,45,.12)' }}>
               <Ms size={22} color="#8B3DF5">{t.icon}</Ms><span style={s("font:700 14px/1.2 'Archivo'")}>{t.name}</span><span style={s("font:400 11.5px/1.45 'Archivo';color:#513E66")}>{t.blurb}</span>
@@ -416,8 +442,18 @@ function EventStep({ cfg, upd, setDraft }: any) {
         <Grid cols={2}><Text B={B} p={['event', 'venueShort']} label="VENUE, SHORT" hint="caps" /><Text B={B} p={['event', 'venueWord']} label="VENUE WORD" hint="“IN THE HALL”" /></Grid>
       </Section>
       <Section title="Running order" sub="Segments the organiser moves through live. Mark one as the reveal moment and one as Q&A.">
-        <List B={B} p={['segments']} cols={[{ k: 'time', label: 'TIME', w: 0.7 }, { k: 'name', label: 'NAME', w: 1.4 }, { k: 'short', label: 'SHORT', w: 1 }, { k: 'kind', label: 'TYPE', w: 1.2, opts: kinds }, { k: 'blurb', label: 'AGENDA LINE', w: 2 }]} blank={() => ({ id: 's' + Date.now(), name: 'New segment', short: 'NEW', time: '12:00', kind: 'talk' as SegKind, blurb: '', note: '', heroTitle: 'NEW SEGMENT', heroSub: '' })} />
+        <List B={B} p={['segments']} cols={[...(c.days?.length ? [{ k: 'day', label: 'DAY', w: 0.9, opts: c.days.map((d, i) => [String(i), d.label] as [string, string]), num: true }] : []), { k: 'time', label: 'TIME', w: 0.7 }, { k: 'name', label: 'NAME', w: 1.4 }, { k: 'short', label: 'SHORT', w: 1 }, { k: 'kind', label: 'TYPE', w: 1.2, opts: kinds }, { k: 'blurb', label: 'AGENDA LINE', w: 2 }]} blank={() => ({ id: 's' + Date.now(), name: 'New segment', short: 'NEW', time: '12:00', kind: 'talk' as SegKind, blurb: '', note: '', heroTitle: 'NEW SEGMENT', heroSub: '' })} />
         <List B={B} p={['segments']} label="WHAT FANS SEE IN EACH SEGMENT" cols={[{ k: 'heroTitle', label: 'HERO TITLE', w: 1.2 }, { k: 'heroSub', label: 'HERO LINE', w: 2 }, { k: 'heroSubOnline', label: 'LINE FOR ONLINE FANS', w: 2 }, { k: 'note', label: 'BANNER NOTE', w: 1.6 }]} blank={() => ({ id: 's' + Date.now(), name: 'New segment', short: 'NEW', time: '12:00', kind: 'talk', blurb: '', note: '', heroTitle: 'NEW', heroSub: '' })} />
+      </Section>
+      <Section title="Days" sub="For multi-day events. Each segment then picks its day, and the agenda and Studio group by day." open={!!c.days?.length} id="days">
+        <List B={B} p={['days']} cols={[{ k: 'label', label: 'LABEL', w: 1 }, { k: 'date', label: 'DATE', w: 1 }, { k: 'sub', label: 'WHAT HAPPENS', w: 2 }]} blank={() => ({ label: 'Day ' + ((c.days?.length || 0) + 1), date: '', sub: '' })} />
+      </Section>
+      <Section title="Series" sub="Group events into a series. They share one community and points carry across every stage." open={!!c.series} id="series">
+        {c.series ? <>
+          <Grid cols={3}><Text B={B} p={['series', 'name']} label="SERIES NAME" /><Text B={B} p={['series', 'id']} label="SERIES ID" hint="same on every stage" /><Text B={B} p={['series', 'stage']} label="THIS STAGE" /></Grid>
+          <Grid cols={3}><Text B={B} p={['series', 'order']} label="STAGE NUMBER" type="number" /><Text B={B} p={['series', 'total']} label="STAGES IN TOTAL" type="number" /><Csv B={B} p={['series', 'stages']} label="ALL STAGES" /></Grid>
+          <button className="ah" onClick={() => upd(['series'], undefined)} style={s("align-self:flex-start;padding:9px 12px;border-radius:10px;font:600 12px/1 'Archivo';color:#C0473C;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}>Remove from series</button>
+        </> : <button className="ah" data-add="series" onClick={() => upd(['series'], { id: 'series-' + c.id, name: c.event.name + ' series', stage: 'Stage 1', order: 1, total: 3, stages: ['Stage 1', 'Stage 2', 'Final'] })} style={s("padding:11px;border-radius:12px;font:600 12px/1 'Archivo';color:#513E66;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}>Make this part of a series</button>}
       </Section>
       <Section title="Event page (Before)" sub="The countdown hero, registration and details." open={false} id="before">
         <Grid cols={3}><Text B={B} p={['event', 'kicker']} label="KICKER" /><Text B={B} p={['event', 'kickerSub']} label="KICKER LINE" /><Text B={B} p={['event', 'title']} label="HERO TITLE" /></Grid>
@@ -473,15 +509,19 @@ function ContentStep({ cfg, upd, say }: any) {
       <Section title="Polls" sub="Pushed one at a time with the Poll trigger. Options as “Option: starting share”, one per line." open={false} id="polls">
         {c.polls.map((pl, i) => (
           <div key={pl.id} style={s('display:grid;grid-template-columns:2fr 1.4fr 0.6fr auto;gap:10px;align-items:start;padding:10px;border-radius:12px;background:#F7F7F4')}>
-            <Text B={B} p={['polls', i, 'q']} label={'POLL ' + (i + 1)} /><div><Lbl>OPTIONS</Lbl><PollOpts B={B} p={['polls', i, 'opts']} /></div><Text B={B} p={['polls', i, 'votes']} label="VOTES" type="number" />
+            <div style={s('display:flex;flex-direction:column;gap:10px')}><Text B={B} p={['polls', i, 'q']} label={'POLL ' + (i + 1)} />{c.sponsorKit?.length ? <SponsorPick B={B} p={['polls', i, 'sponsor']} /> : null}</div><div><Lbl>OPTIONS</Lbl><PollOpts B={B} p={['polls', i, 'opts']} /></div><Text B={B} p={['polls', i, 'votes']} label="VOTES" type="number" />
             <button aria-label="Remove poll" onClick={() => upd(['polls'], c.polls.filter((_, k) => k !== i))} style={s('display:flex;padding:24px 4px 0;color:#C0473C')}><Ms size={17} color="inherit">close</Ms></button>
           </div>
         ))}
         <button className="ah" data-add="polls" onClick={() => upd(['polls'], [...c.polls, { id: 'p' + Date.now(), q: 'New question?', opts: { Yes: 50, No: 50 }, votes: 1000 }])} style={s("padding:11px;border-radius:12px;font:600 12px/1 'Archivo';color:#513E66;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}>Add poll</button>
       </Section>
       <Section title="Announcements and reminders" sub="Banners for the Announcement trigger, by audience, and the reminder presets in Invite." open={false} id="announce">
-        {(['all', 'venue', 'online'] as Target[]).map((t) => <List key={t} B={B} p={['announcements', t]} label={'ANNOUNCEMENTS · ' + T(t).toUpperCase()} cols={[{ k: 'kicker', label: 'KICKER', w: 1 }, { k: 'title', label: 'TITLE', w: 1.6 }, { k: 'sub', label: 'LINE', w: 2.4 }]} blank={() => ({ kicker: 'UPDATE', title: 'New announcement', sub: '' })} />)}
+        {(['all', 'venue', 'online'] as Target[]).map((t) => <List key={t} B={B} p={['announcements', t]} label={'ANNOUNCEMENTS · ' + T(t).toUpperCase()} cols={[{ k: 'kicker', label: 'KICKER', w: 1 }, { k: 'title', label: 'TITLE', w: 1.6 }, { k: 'sub', label: 'LINE', w: 2.4 }, ...(c.sponsorKit?.length ? [{ k: 'sponsor', label: 'SPONSOR', w: 1.1, opts: sponsorOpts(c) }] : [])]} blank={() => ({ kicker: 'UPDATE', title: 'New announcement', sub: '' })} />)}
         <List B={B} p={['reminders']} label="REMINDER PRESETS" cols={[{ k: 'title', label: 'TITLE', w: 1.4 }, { k: 'body', label: 'MESSAGE', w: 3, area: true }, { k: 'target', label: 'AUDIENCE', w: 1, opts: TARGETS.map((x) => [x.id, x.name]) }]} blank={() => ({ title: 'New reminder', body: '', target: 'all' })} />
+      </Section>
+      <Section title="Story cards" sub="Teams, drivers or players, each with a short story and one number." open={!!c.stories?.items.length} id="stories">
+        <Text B={B} p={['stories', 'title']} label="SECTION TITLE" ph="TEAMS + DRIVERS" />
+        <List B={B} p={['stories', 'items']} cols={[{ k: 'kicker', label: 'KICKER', w: 1 }, { k: 'title', label: 'TITLE', w: 1.2 }, { k: 'body', label: 'STORY', w: 2.6, area: true }, { k: 'stat', label: 'NUMBER', w: 0.7 }, { k: 'unit', label: 'UNIT', w: 1 }, { k: 'color', label: 'COLOUR', w: 0.8 }]} blank={() => ({ kicker: 'TEAM', title: 'New story', body: '', stat: '', unit: '', color: '' })} />
       </Section>
       <Section title="Presenters and sponsors" open={false} id="people">
         <List B={B} p={['presenters']} cols={[{ k: 'name', label: 'NAME', w: 1.2 }, { k: 'role', label: 'ROLE', w: 1.5 }, { k: 'slot', label: 'SLOT', w: 1 }, { k: 'photo', label: 'PHOTO (PATH OR URL)', w: 1.6 }]} blank={() => ({ name: 'New presenter', role: '', slot: '', photo: '' })} />
@@ -522,7 +562,55 @@ function ContentStep({ cfg, upd, say }: any) {
   );
 }
 
-// ── 4 IRIS ──
+// ── 4 REWARDS: tickets, sponsors, challenges, rewards ──
+const sponsorOpts = (c: EventConfig): [string, string][] => [['', 'No sponsor'], ...(c.sponsorKit || []).map((x) => [x.name, x.name] as [string, string])];
+function SponsorPick({ B, p }: { B: any; p: Path }) {
+  return <label style={s('display:block')}><Lbl>SPONSOR</Lbl><select value={getAt(B.cfg, p) || ''} onChange={(e) => B.upd(p, e.target.value || undefined)} style={s(fieldCss + ';padding:9px 10px')}>{sponsorOpts(B.cfg).map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select></label>;
+}
+function RewardsStep({ cfg, upd }: any) {
+  const B = { cfg, upd };
+  const c = cfg as EventConfig;
+  const kinds: [string, string][] = [['predict', 'Prediction'], ['checkin', 'Check in'], ['trivia', 'Trivia'], ['poll', 'Vote in a poll']];
+  const ch = c.challenges || [];
+  const addBtn = (label: string, onClick: () => void, key: string) => <button className="ah" data-add={key} onClick={onClick} style={s("display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:12px;font:600 12px/1 'Archivo';color:#513E66;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}><Ms size={16} color="inherit">add</Ms>{label}</button>;
+  return (
+    <>
+      <Section title="Tickets" sub="A Buy tickets button that links to your ticketing site. Every attendee and every crew gets a referral code on the link." id="tickets">
+        {c.tickets ? <>
+          <Text B={B} p={['tickets', 'url']} label="TICKETING LINK" ph="https://tickets.example.com/event" />
+          <Grid cols={3}><Text B={B} p={['tickets', 'label']} label="BUTTON" ph="Buy tickets" /><Text B={B} p={['tickets', 'priceFrom']} label="PRICE LINE" ph="From RM80" /><Text B={B} p={['tickets', 'sub']} label="LINE UNDER" ph="Official ticketing partner" /></Grid>
+          <Grid cols={2}><Text B={B} p={['tickets', 'crewLabel']} label="CREW QUESTION" ph="Join a crew" /><Csv B={B} p={['tickets', 'crews']} label="CREWS" hint="fans pick one; each gets a code" /></Grid>
+          <button className="ah" onClick={() => upd(['tickets'], undefined)} style={s("align-self:flex-start;padding:9px 12px;border-radius:10px;font:600 12px/1 'Archivo';color:#C0473C;box-shadow:inset 0 0 0 1px rgba(27,11,45,.14)")}>Remove tickets</button>
+        </> : addBtn('Add a Buy tickets button', () => upd(['tickets'], { url: 'https://tickets.example.com/' + c.id, label: 'Buy tickets', sub: 'Official ticketing partner', priceFrom: 'From RM50', crewLabel: 'Join a crew', crews: [] }), 'tickets')}
+      </Section>
+      <Section title="Sponsors" sub="Placeholder badges (a colour and initials). A sponsor can own a poll, challenge, announcement or reward." id="sponsorkit">
+        <List B={B} p={['sponsorKit']} cols={[{ k: 'name', label: 'NAME', w: 1.6 }, { k: 'short', label: 'INITIALS', w: 0.7 }, { k: 'color', label: 'COLOUR', w: 0.9 }]} blank={() => ({ name: 'New sponsor', short: 'NS', color: '#2F7CF6' })} />
+      </Section>
+      <Section title="Challenges" sub="Each one is worth points. Check-ins complete when the fan scans the venue QR; poll challenges complete when they vote." id="challenges">
+        {ch.map((x, i) => (
+          <div key={x.id} data-challenge={i} style={s('display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;background:#F7F7F4;box-shadow:inset 0 0 0 1px rgba(27,11,45,.06)')}>
+            <div style={s('display:grid;grid-template-columns:2fr 1.3fr .7fr 1.2fr auto;gap:10px;align-items:end')}>
+              <Text B={B} p={['challenges', i, 'title']} label={'CHALLENGE ' + (i + 1)} />
+              <label style={s('display:block')}><Lbl>TYPE</Lbl><select value={x.kind} onChange={(e) => upd(['challenges', i, 'kind'], e.target.value)} style={s(fieldCss + ';padding:9px 10px')}>{kinds.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select></label>
+              <Text B={B} p={['challenges', i, 'points']} label="POINTS" type="number" />
+              {c.sponsorKit?.length ? <SponsorPick B={B} p={['challenges', i, 'sponsor']} /> : <span />}
+              <button aria-label="Remove challenge" onClick={() => upd(['challenges'], ch.filter((_, k) => k !== i))} style={s('display:flex;padding:0 4px 10px;color:#C0473C')}><Ms size={17} color="inherit">close</Ms></button>
+            </div>
+            <Text B={B} p={['challenges', i, 'sub']} label="LINE UNDER" />
+            {(x.kind === 'predict' || x.kind === 'trivia') && <Grid cols={x.kind === 'trivia' ? 2 : 1}><Csv B={B} p={['challenges', i, 'options']} label="OPTIONS" />{x.kind === 'trivia' && <Text B={B} p={['challenges', i, 'answer']} label="RIGHT ANSWER" hint="must match an option" />}</Grid>}
+            {x.kind === 'poll' && <label style={s('display:block')}><Lbl>WHICH POLL</Lbl><select value={x.poll || ''} onChange={(e) => upd(['challenges', i, 'poll'], e.target.value)} style={s(fieldCss + ';padding:9px 10px')}><option value="">Pick a poll</option>{c.polls.map((p) => <option key={p.id} value={p.id}>{p.q}</option>)}</select></label>}
+          </div>
+        ))}
+        {addBtn('Add challenge', () => upd(['challenges'], [...ch, { id: 'c' + Date.now(), kind: 'predict', title: 'New challenge', sub: '', points: 20, options: ['Option A', 'Option B'] }]), 'challenges')}
+      </Section>
+      <Section title="Rewards" sub="Unlocked at a points total. For a series, points carry across every stage." id="rewards">
+        <List B={B} p={['rewards']} cols={[{ k: 'name', label: 'REWARD', w: 1.5 }, { k: 'sub', label: 'HOW TO COLLECT', w: 2 }, { k: 'points', label: 'POINTS', w: 0.7, type: 'number' }, { k: 'stock', label: 'STOCK', w: 0.6, type: 'number' }, ...(c.sponsorKit?.length ? [{ k: 'sponsor', label: 'SPONSOR', w: 1.1, opts: sponsorOpts(c) }] : [])]} blank={() => ({ id: 'r' + Date.now(), name: 'New reward', sub: '', points: 100, stock: 20 })} />
+      </Section>
+    </>
+  );
+}
+
+// ── 5 IRIS ──
 function IrisStep({ cfg, upd }: any) {
   const B = { cfg, upd };
   return (
@@ -554,7 +642,7 @@ function PreviewStep({ cfg }: any) {
         <div style={s('flex:1;display:flex;flex-direction:column;gap:12px')}>
           <div style={s("font:700 18px/1.2 'Archivo'")}>{c.event.name}</div>
           <div style={s("font:400 13px/1.5 'Archivo';color:#513E66")}>This is the draft you are editing, not yet saved. The bar above the phone switches Before, Live, Break, After and Always-on, and fires the triggers.</div>
-          {[['Brand', c.brand.name], ['Template', TEMPLATES.find((t) => t.id === c.event.template)?.name], ['Format', c.event.format], ['Segments', c.segments.map((g) => g.name).join(' → ')], ['Features', c.hotspots.length + ' points'], ['Polls', String(c.polls.length)], ['IRIS answers', String(c.iris.pre.length + c.iris.live.length)], ['Call to action', c.cta.title]].map(([k, v]) => (
+          {[['Brand', c.brand.name], ['Template', TEMPLATES.find((t) => t.id === c.event.template)?.name], ['Format', c.event.format], ['Segments', c.segments.map((g) => g.name).join(' → ')], ['Features', c.hotspots.length + ' points'], ['Polls', String(c.polls.length)], ['Days', c.days?.length ? c.days.map((d) => d.label).join(' · ') : 'One day'], ['Series', c.series ? c.series.name + ' · ' + c.series.stage : 'None'], ['Challenges', (c.challenges || []).map((x) => x.title + ' (+' + x.points + ')').join(', ') || 'None'], ['Rewards', (c.rewards || []).map((x) => x.name).join(', ') || 'None'], ['Tickets', c.tickets ? c.tickets.priceFrom + ' · ' + c.tickets.url : 'None'], ['IRIS answers', String(c.iris.pre.length + c.iris.live.length)], ['Call to action', c.cta.title]].map(([k, v]) => (
             <div key={k} style={s('display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(27,11,45,.08)')}><span style={s("width:120px;flex:none;font:600 12px/1.4 'Archivo';color:#826E99")}>{k}</span><span style={s("flex:1;font:500 12.5px/1.4 'Archivo'")}>{v}</span></div>
           ))}
         </div>

@@ -1,0 +1,877 @@
+{
+  "id": "skyhawks-semis",
+  "version": 1,
+  "status": "live",
+  "brand": {
+    "name": "Skyhawks",
+    "wordmark": "SKYHAWKS",
+    "wordmarkShort": "SKYHAWKS",
+    "logo": "connect-events/skyhawks/logo.svg",
+    "accent": "#3DD6F5",
+    "dark": "#0B0820",
+    "domain": "connect.boltos.ai/skyhawks"
+  },
+  "event": {
+    "name": "Skyhawks Celebrity Series · Semi-finals",
+    "template": "sport",
+    "format": "Hybrid",
+    "date": "2026-11-14",
+    "time": "19:00",
+    "dayLabel": "SAT 19:00",
+    "dateShort": "SAT 14 NOV",
+    "venue": "Setia City Hall",
+    "venueShort": "SETIA CITY HALL",
+    "venueWord": "ARENA",
+    "city": "Kuala Lumpur",
+    "kicker": "SKYHAWKS CELEBRITY SERIES",
+    "kickerSub": "SEMI-FINALS · 2 OF 3",
+    "title": "SEMI-FINALS",
+    "countdownLabel": "TIP-OFF IN",
+    "countdownSeconds": 8800,
+    "dateLine": "SAT 14 NOV · SETIA CITY HALL · AND ONLINE",
+    "inviteTitle": "PICK YOUR TEAM",
+    "inviteSub": "Courtside or online. Your points carry to the Final.",
+    "venueOption": "In the arena",
+    "venueOptionSub": "Setia City Hall · doors 18:00",
+    "onlineOptionSub": "Live stream with this panel · votes, chat, Q&A",
+    "registeredVenue": "See you courtside. Scan the fan zone QR at the doors for points.",
+    "registeredOnline": "Watching online. Vote and predict here, your points still count.",
+    "details": [
+      {
+        "icon": "event",
+        "k": "When",
+        "v": "Sat 14 nov · tip-off 19:30"
+      },
+      {
+        "icon": "location_on",
+        "k": "Where",
+        "v": "Setia City Hall, Kuala Lumpur"
+      },
+      {
+        "icon": "emoji_events",
+        "k": "Series",
+        "v": "Qualifiers, Semi-finals, Final. Points carry across all three."
+      },
+      {
+        "icon": "volunteer_activism",
+        "k": "For",
+        "v": "Every ticket funds community courts in the Klang Valley"
+      }
+    ],
+    "heroImage": {
+      "src": "connect-events/skyhawks/hero.svg",
+      "w": 1600,
+      "h": 1000
+    }
+  },
+  "series": {
+    "id": "skyhawks-2026",
+    "name": "Skyhawks Celebrity Series",
+    "stage": "Semi-finals",
+    "order": 2,
+    "total": 3,
+    "stages": [
+      "Qualifiers",
+      "Semi-finals",
+      "Final"
+    ]
+  },
+  "segments": [
+    {
+      "id": "s1",
+      "name": "Doors open",
+      "short": "DOORS OPEN",
+      "time": "18:00",
+      "kind": "doors",
+      "blurb": "DJ set, fan zone, warm-ups",
+      "note": "Doors are open. Scan in at the fan zone",
+      "heroTitle": "DOORS OPEN",
+      "heroSub": "Warm-ups on court."
+    },
+    {
+      "id": "s2",
+      "name": "Celebrity line-up",
+      "short": "CELEBRITY LINE-UP",
+      "time": "19:15",
+      "kind": "reveal",
+      "blurb": "Who plays tonight",
+      "note": "Meet the Hawks and the Falcons",
+      "heroTitle": "THE LINE-UP",
+      "heroSub": "Six celebrities. Who plays tonight?"
+    },
+    {
+      "id": "s3",
+      "name": "First half",
+      "short": "FIRST HALF",
+      "time": "19:30",
+      "kind": "other",
+      "blurb": "Two 10-minute quarters",
+      "note": "Tip-off",
+      "heroTitle": "FIRST HALF",
+      "heroSub": "Vote for your MVP as you watch."
+    },
+    {
+      "id": "s4",
+      "name": "Half-time show",
+      "short": "HALF-TIME SHOW",
+      "time": "20:00",
+      "kind": "other",
+      "blurb": "Dance crew and the shooting challenge",
+      "note": "Fans on court for the shooting challenge",
+      "heroTitle": "HALF-TIME",
+      "heroSub": "Shooting challenge on court."
+    },
+    {
+      "id": "s5",
+      "name": "Second half",
+      "short": "SECOND HALF",
+      "time": "20:15",
+      "kind": "other",
+      "blurb": "Two more quarters",
+      "note": "Final 20 minutes",
+      "heroTitle": "SECOND HALF",
+      "heroSub": "It’s close. Keep voting."
+    },
+    {
+      "id": "s6",
+      "name": "Result",
+      "short": "RESULT",
+      "time": "20:50",
+      "kind": "other",
+      "blurb": "Who goes through",
+      "note": "Final score",
+      "heroTitle": "THE RESULT",
+      "heroSub": "One team goes through."
+    }
+  ],
+  "reveal": {
+    "kicker": "SEMI-FINALS · CELEBRITY LINE-UP",
+    "word1": "MEET THE",
+    "word2": "HAWKS",
+    "line": "Six celebrities. Two teams. One court.",
+    "thirdNote": "Tap the court to explore tonight’s game",
+    "title": "GAME ON",
+    "sub": "Tap the court to explore. Vote for your team below.",
+    "triggerBlurb": "Reveal the line-up on every screen"
+  },
+  "product": {
+    "sectionTitle": "THE COURT",
+    "priceLine": "TEAM HAWK VS TEAM FALCON",
+    "featuresHint": "Spotlight one part of the court",
+    "variants": [
+      {
+        "name": "Team Hawk",
+        "spec": "Rayna Kassim, Theo Marlin, Ivy Song",
+        "price": "1 win"
+      },
+      {
+        "name": "Team Falcon",
+        "spec": "Danial Haris, Mika Tan, Jojo Rahim",
+        "price": "1 win"
+      }
+    ]
+  },
+  "hotspots": [
+    {
+      "id": "rim",
+      "x": 50,
+      "y": 37,
+      "name": "The rim",
+      "desc": "Regulation height. Celebrities get one practice shot each before tip-off.",
+      "stat": "3.05 m",
+      "unit": "rim height"
+    },
+    {
+      "id": "ball",
+      "x": 66,
+      "y": 52,
+      "name": "Match ball",
+      "desc": "Signed by all six players after the game and given to one fan.",
+      "stat": "1",
+      "unit": "ball, one winner"
+    },
+    {
+      "id": "paint",
+      "x": 50,
+      "y": 63,
+      "name": "The paint",
+      "desc": "Where Mika Tan has scored most of her points this series.",
+      "stat": "14",
+      "unit": "points in the paint"
+    },
+    {
+      "id": "centre",
+      "x": 50,
+      "y": 77,
+      "name": "Centre court",
+      "desc": "Half-time shooting challenge: fans who checked in can be picked.",
+      "stat": "6",
+      "unit": "fans on court"
+    },
+    {
+      "id": "stand",
+      "x": 15,
+      "y": 46,
+      "name": "Fan stand",
+      "desc": "Crews sit together here. The loudest crew wins signed jerseys.",
+      "stat": "4",
+      "unit": "crews tonight"
+    }
+  ],
+  "polls": [
+    {
+      "id": "team",
+      "q": "Which team gets your vote?",
+      "opts": {
+        "Team Hawk": 54,
+        "Team Falcon": 46
+      },
+      "votes": 4920,
+      "sponsor": "Pulse Sports Drink"
+    },
+    {
+      "id": "mvp",
+      "q": "MVP of the first half?",
+      "opts": {
+        "Rayna Kassim": 28,
+        "Theo Marlin": 21,
+        "Mika Tan": 33,
+        "Danial Haris": 18
+      },
+      "votes": 3810
+    },
+    {
+      "id": "shot",
+      "q": "Half-time: who makes the half-court shot?",
+      "opts": {
+        "Ivy Song": 36,
+        "Jojo Rahim": 41,
+        "Nobody": 23
+      },
+      "votes": 1980,
+      "sponsor": "Gema Mobile"
+    }
+  ],
+  "breakContent": {
+    "minutes": 12,
+    "sub": "Half-time. Shooting challenge on court, dance crew next.",
+    "poll": {
+      "id": "break",
+      "q": "Second half: who closes it out?",
+      "opts": {
+        "Team Hawk": 51,
+        "Team Falcon": 49
+      },
+      "votes": 1460
+    },
+    "reads": [
+      {
+        "kicker": "THE SERIES",
+        "title": "Three nights, one cup",
+        "body": "Qualifiers, Semi-finals, Final. Your points from every stage add up to the rewards."
+      },
+      {
+        "kicker": "FOR THE COURTS",
+        "title": "Where the money goes",
+        "body": "Every ticket funds resurfacing community courts. Four courts so far this year."
+      }
+    ]
+  },
+  "announcements": {
+    "all": [
+      {
+        "kicker": "HALF-TIME",
+        "title": "Shooting challenge picks are in",
+        "sub": "Six fans who checked in, check your panel",
+        "sponsor": "Gema Mobile"
+      },
+      {
+        "kicker": "VOTE",
+        "title": "Team vote closes at the final whistle",
+        "sub": "10 points for voting, carried to the Final"
+      }
+    ],
+    "venue": [
+      {
+        "kicker": "IN THE ARENA",
+        "title": "Merch stand by gate 2",
+        "sub": "Claim rewards here with your panel",
+        "sponsor": "Pulse Sports Drink"
+      }
+    ],
+    "online": [
+      {
+        "kicker": "ONLINE",
+        "title": "Courtside camera is live",
+        "sub": "Switch views in the player settings"
+      }
+    ]
+  },
+  "reminders": [
+    {
+      "title": "Doors at 18:00",
+      "body": "Scan the fan zone QR for 30 points.",
+      "target": "venue"
+    },
+    {
+      "title": "Stream starts with the line-up",
+      "body": "Keep this page open.",
+      "target": "online"
+    },
+    {
+      "title": "Make your prediction",
+      "body": "Predictions lock at tip-off.",
+      "target": "all"
+    }
+  ],
+  "presenters": [
+    {
+      "name": "Coach Aminah Yusof",
+      "role": "Head coach, Team Hawk",
+      "slot": "Courtside",
+      "photo": "voltford/media/crews/av-hannah.jpg"
+    },
+    {
+      "name": "Coach Ben Lau",
+      "role": "Head coach, Team Falcon",
+      "slot": "Courtside",
+      "photo": "voltford/media/crews/av-marcus.jpg"
+    },
+    {
+      "name": "Farah Idris",
+      "role": "Host",
+      "slot": "All night",
+      "photo": "voltford/media/crews/av-priya.jpg"
+    }
+  ],
+  "sponsors": [
+    "Pulse Sports Drink",
+    "Gema Mobile",
+    "Kopi Lane"
+  ],
+  "stories": {
+    "title": "THE CELEBRITY ROSTER",
+    "items": [
+      {
+        "kicker": "TEAM HAWK · RADIO HOST",
+        "title": "Rayna Kassim",
+        "body": "Played in college, then went into radio. Calls her own shots.",
+        "stat": "12",
+        "unit": "points this series",
+        "color": "#3DD6F5"
+      },
+      {
+        "kicker": "TEAM HAWK · ACTOR",
+        "title": "Theo Marlin",
+        "body": "Trained for a basketball film last year. Still has the jump shot.",
+        "stat": "9",
+        "unit": "points this series",
+        "color": "#3DD6F5"
+      },
+      {
+        "kicker": "TEAM HAWK · SINGER",
+        "title": "Ivy Song",
+        "body": "Tallest on the court. Blocks more than she scores.",
+        "stat": "7",
+        "unit": "points this series",
+        "color": "#3DD6F5"
+      },
+      {
+        "kicker": "TEAM FALCON · COMEDIAN",
+        "title": "Danial Haris",
+        "body": "Talks the whole game. Somehow still scores.",
+        "stat": "8",
+        "unit": "points this series",
+        "color": "#FF6A1A"
+      },
+      {
+        "kicker": "TEAM FALCON · OLYMPIC SWIMMER",
+        "title": "Mika Tan",
+        "body": "Olympic swimmer, fastest on the break.",
+        "stat": "14",
+        "unit": "points this series",
+        "color": "#FF6A1A"
+      },
+      {
+        "kicker": "TEAM FALCON · CHEF AND TV HOST",
+        "title": "Jojo Rahim",
+        "body": "Runs a restaurant, runs the point. Sees every pass.",
+        "stat": "10",
+        "unit": "points this series",
+        "color": "#FF6A1A"
+      }
+    ]
+  },
+  "iris": {
+    "intro": "I’m IRIS. I answer from the organiser’s approved facts: the series, tonight’s game, tickets, points and rewards.",
+    "pre": [
+      {
+        "q": "How does the series work?",
+        "a": "Three nights: Qualifiers, Semi-finals and the Final. Your points from every night add up.",
+        "stat": "3",
+        "label": "STAGES"
+      },
+      {
+        "q": "How do I earn points?",
+        "a": "Predict the winner, vote for your team, answer the trivia and scan the fan zone QR at the arena.",
+        "stat": "110",
+        "label": "POINTS TONIGHT"
+      },
+      {
+        "q": "Who is playing?",
+        "a": "The line-up is revealed on court before tip-off. Stay with the panel.",
+        "stat": "6",
+        "label": "CELEBRITIES"
+      }
+    ],
+    "live": [
+      {
+        "q": "What is the score format?",
+        "a": "Four 10-minute quarters with running clock, and a 2-minute overtime if tied.",
+        "stat": "4 × 10",
+        "label": "MINUTES",
+        "keys": "quarter|format|long|minutes"
+      },
+      {
+        "q": "Where does the money go?",
+        "a": "Every ticket funds community courts in the Klang Valley. Four resurfaced this year.",
+        "stat": "4",
+        "label": "COURTS FUNDED",
+        "keys": "money|charity|fund|courts"
+      }
+    ],
+    "hidden": "That lands at the line-up reveal. Keep the panel open.",
+    "fallback": "I only answer from the organiser’s approved facts, and that one isn’t in them. Send it to the Q&A."
+  },
+  "cta": {
+    "cardKicker": "NEXT IN THE SERIES",
+    "title": "Get Final-week tickets first",
+    "sub": "Presale for the Final opens to fans who played tonight.",
+    "button": "GET PRESALE ACCESS",
+    "screenTitle": "PRESALE",
+    "screenMeta": "FINAL",
+    "intro": "Pick where you want to sit and we’ll hold presale access for you.",
+    "optionsLabel": "SECTION",
+    "options": [
+      {
+        "id": "kl",
+        "name": "Courtside",
+        "sub": "Rows A to C"
+      },
+      {
+        "id": "pj",
+        "name": "Lower bowl",
+        "sub": "Rows D to M"
+      },
+      {
+        "id": "sa",
+        "name": "Upper bowl",
+        "sub": "Best for crews"
+      }
+    ],
+    "slotsLabel": "WHEN",
+    "slots": [
+      "Presale opens Mon 09:00"
+    ],
+    "submit": "HOLD MY PRESALE",
+    "doneTitle": "Presale held",
+    "doneSub": "You’ll get a link before general sale."
+  },
+  "follow": {
+    "title": "Follow the Skyhawks",
+    "sub": "Pings for each stage of the series. Nothing else.",
+    "doneTitle": "Following the Skyhawks",
+    "doneSub": "You’ll hear about every stage first."
+  },
+  "after": {
+    "badge": "SEMI-FINALS · FULL TIME",
+    "title": "HAWKS GO THROUGH",
+    "sub": "Team Hawk 52, Team Falcon 50",
+    "stats": [
+      [
+        "3,400",
+        "IN THE ARENA"
+      ],
+      [
+        "21.8k",
+        "WATCHED"
+      ],
+      [
+        "9.6k",
+        "VOTES"
+      ]
+    ],
+    "recapTitle": "THE TEAMS"
+  },
+  "community": {
+    "badge": "SKYHAWKS SERIES · ALWAYS ON",
+    "title": "One series.\nOne community.",
+    "sub": "Your points, the crews and the chat carry across Qualifiers, Semi-finals and the Final.",
+    "next": {
+      "name": "Skyhawks Final",
+      "kicker": "SERIES · 3 OF 3",
+      "date": "SAT 28 NOV",
+      "time": "20:00",
+      "place": "KUALA LUMPUR ARENA + ONLINE",
+      "blurb": "Same teams, higher stakes. Your points carry over.",
+      "days": 14
+    },
+    "pastLabel": "PAST STAGE",
+    "pastDate": "SAT 14 NOV",
+    "pastTitle": "Skyhawks Semi-finals",
+    "pastSub": "Full game replay with the line-up reveal and the half-time challenge.",
+    "replay": "REPLAY · 1:48:20"
+  },
+  "chat": {
+    "pool": [
+      {
+        "user": "HAWKNEST",
+        "text": "Hawks in the building",
+        "where": "venue",
+        "tag": "ARENA · SECTION B",
+        "avatar": "voltford/media/crews/av-r1.jpg"
+      },
+      {
+        "user": "FALCONFLOCK",
+        "text": "Falcons take this one",
+        "where": "online",
+        "tag": "ONLINE · KL",
+        "avatar": "voltford/media/crews/av-r2.jpg"
+      },
+      {
+        "user": "SARAH.K",
+        "text": "Mika Tan is so fast",
+        "where": "venue",
+        "tag": "ARENA · COURTSIDE",
+        "avatar": "voltford/media/crews/av-priya.jpg"
+      },
+      {
+        "user": "DANIEL.L",
+        "text": "Watching from Penang with the whole family",
+        "where": "online",
+        "tag": "ONLINE · PENANG",
+        "avatar": "voltford/media/crews/av-marcus.jpg"
+      },
+      {
+        "user": "UNIHOOPS",
+        "text": "Uni Hoops crew, section D!",
+        "where": "venue",
+        "tag": "ARENA · SECTION D",
+        "avatar": "voltford/media/crews/av-r3.jpg"
+      },
+      {
+        "user": "AMIRA",
+        "text": "That half-court shot!!",
+        "where": "online",
+        "tag": "ONLINE · SHAH ALAM",
+        "avatar": "voltford/media/crews/av-hannah.jpg"
+      }
+    ],
+    "quickBefore": [
+      "Hawks!",
+      "Falcons!",
+      "Who’s here?"
+    ],
+    "quickLive": [
+      "What a shot",
+      "Defence!",
+      "MVP Mika"
+    ],
+    "quickAfter": [
+      "See you at the Final",
+      "What a game",
+      "Points banked"
+    ]
+  },
+  "qaSeed": [
+    {
+      "id": "q1",
+      "text": "Do points from the Qualifiers still count at the Final?",
+      "who": "hawknest",
+      "where": "venue",
+      "votes": 288
+    },
+    {
+      "id": "q2",
+      "text": "How are the half-time shooters picked?",
+      "who": "amira",
+      "where": "online",
+      "votes": 201
+    },
+    {
+      "id": "q3",
+      "text": "Will there be a series next year?",
+      "who": "unihoops",
+      "where": "venue",
+      "votes": 154
+    }
+  ],
+  "tickets": {
+    "url": "https://tickets.example.com/skyhawks/skyhawks-semis",
+    "label": "Buy tickets",
+    "sub": "Official ticketing partner (placeholder link)",
+    "priceFrom": "From RM35",
+    "crewLabel": "Your crew",
+    "crews": [
+      "Hawk Nest",
+      "Falcon Flock",
+      "Uni Hoops",
+      "Office League"
+    ]
+  },
+  "sponsorKit": [
+    {
+      "name": "Pulse Sports Drink",
+      "short": "PS",
+      "color": "#E6372E"
+    },
+    {
+      "name": "Gema Mobile",
+      "short": "GM",
+      "color": "#6C4CF5"
+    }
+  ],
+  "challenges": [
+    {
+      "id": "c1",
+      "kind": "predict",
+      "title": "Predict tonight’s winner",
+      "sub": "Locks at tip-off.",
+      "points": 40,
+      "options": [
+        "Team Hawk",
+        "Team Falcon"
+      ]
+    },
+    {
+      "id": "c2",
+      "kind": "poll",
+      "title": "Vote for your team",
+      "sub": "Counts toward the crowd award.",
+      "points": 10,
+      "poll": "team",
+      "sponsor": "Pulse Sports Drink"
+    },
+    {
+      "id": "c3",
+      "kind": "checkin",
+      "title": "Check in at the fan zone",
+      "sub": "Scan the QR by the arena doors.",
+      "points": 30
+    },
+    {
+      "id": "c4",
+      "kind": "trivia",
+      "title": "How many courts has the series funded?",
+      "sub": "One try.",
+      "points": 20,
+      "options": [
+        "2",
+        "4",
+        "6"
+      ],
+      "answer": "4",
+      "sponsor": "Gema Mobile"
+    },
+    {
+      "id": "c5",
+      "kind": "poll",
+      "title": "Pick the first-half MVP",
+      "sub": "Opens at tip-off.",
+      "points": 10,
+      "poll": "mvp"
+    }
+  ],
+  "rewards": [
+    {
+      "id": "r1",
+      "name": "Skyhawks cap",
+      "sub": "Merch stand by gate 2",
+      "points": 60,
+      "stock": 300
+    },
+    {
+      "id": "r2",
+      "name": "Signed jersey",
+      "sub": "Picked up at the Final",
+      "points": 150,
+      "stock": 30,
+      "sponsor": "Pulse Sports Drink"
+    },
+    {
+      "id": "r3",
+      "name": "Meet the celebrities",
+      "sub": "After the Final, 20 fans",
+      "points": 220,
+      "stock": 20
+    },
+    {
+      "id": "r4",
+      "name": "Courtside seats at the Final",
+      "sub": "Two seats, row A",
+      "points": 300,
+      "stock": 10,
+      "sponsor": "Gema Mobile"
+    }
+  ],
+  "demo": {
+    "rsvp": {
+      "venue": 2600,
+      "online": 16400
+    },
+    "audienceBefore": 2400,
+    "venueBySeg": [
+      1170,
+      2730,
+      2990,
+      2860,
+      2990,
+      2925
+    ],
+    "onlineBySeg": [
+      4800,
+      14700,
+      16800,
+      12600,
+      18150,
+      15900
+    ],
+    "breakAud": [
+      2100,
+      8200
+    ],
+    "afterAud": [
+      800,
+      3400
+    ],
+    "communityOnline": 540,
+    "checkinsBySeg": [
+      880,
+      2050,
+      2240,
+      2240,
+      2240,
+      2240
+    ],
+    "results": {
+      "reactions": 24600,
+      "questions": 210,
+      "answered": 14,
+      "conversions": 880,
+      "conversionLabel": "PRESALE SIGN-UPS",
+      "engagement": [
+        {
+          "seg": "Doors open",
+          "pct": 34
+        },
+        {
+          "seg": "Celebrity line-up",
+          "pct": 94
+        },
+        {
+          "seg": "First half",
+          "pct": 71
+        },
+        {
+          "seg": "Half-time show",
+          "pct": 63
+        },
+        {
+          "seg": "Second half",
+          "pct": 78
+        },
+        {
+          "seg": "Result",
+          "pct": 69
+        }
+      ],
+      "conversionsBy": [
+        {
+          "name": "Courtside",
+          "n": 180
+        },
+        {
+          "name": "Lower bowl",
+          "n": 290
+        },
+        {
+          "name": "Upper bowl",
+          "n": 150
+        }
+      ],
+      "multiEvent": {
+        "total": 4100,
+        "rows": [
+          {
+            "name": "Qualifiers + Semi-finals",
+            "n": 4100
+          }
+        ]
+      },
+      "follows": 3200,
+      "votes": 9600,
+      "features": {
+        "rim": 48,
+        "ball": 62,
+        "paint": 41,
+        "centre": 57,
+        "stand": 36
+      },
+      "tickets": {
+        "clicks": 5600,
+        "sales": 820,
+        "top": [
+          {
+            "name": "Uni Hoops",
+            "crew": true,
+            "clicks": 820,
+            "sales": 141
+          },
+          {
+            "name": "Hawk Nest",
+            "crew": true,
+            "clicks": 690,
+            "sales": 118
+          },
+          {
+            "name": "Office League",
+            "crew": true,
+            "clicks": 410,
+            "sales": 66
+          },
+          {
+            "name": "Falcon Flock",
+            "crew": true,
+            "clicks": 380,
+            "sales": 59
+          },
+          {
+            "name": "Aiman R.",
+            "crew": false,
+            "clicks": 88,
+            "sales": 14
+          }
+        ]
+      },
+      "challenges": {
+        "c1": 6400,
+        "c2": 9800,
+        "c3": 2100,
+        "c4": 5200,
+        "c5": 7300
+      },
+      "sponsors": [
+        {
+          "name": "Pulse Sports Drink",
+          "views": 26400,
+          "taps": 11800
+        },
+        {
+          "name": "Gema Mobile",
+          "views": 19800,
+          "taps": 6100
+        }
+      ]
+    }
+  }
+}

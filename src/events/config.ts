@@ -11,15 +11,23 @@ import { BASE } from '../base';
 import { AURORA_NOVA } from './samples/aurora-nova';
 // Second sample, built through the Studio builder and exported as JSON.
 import { TIDEWELL } from './samples/tidewell';
+// Sports samples: an endurance race over three days, and a three-stage series.
+import { SPORTS } from './samples/sports';
 
 export type Ms = 'before' | 'live' | 'break' | 'after' | 'community';
 export type Mode = 'venue' | 'online';
 export type Target = 'all' | 'venue' | 'online';
-export type TriggerKind = 'reveal' | 'poll' | 'hotspot' | 'announce';
+export type TriggerKind = 'reveal' | 'poll' | 'hotspot' | 'announce' | 'challenge';
 export type SegKind = 'doors' | 'talk' | 'reveal' | 'qa' | 'other';
 export type QA = { q: string; a: string; stat?: string; label?: string; keys?: string };
-export type Poll = { id: string; q: string; opts: Record<string, number>; votes: number };
-export type Msg = { kicker: string; title: string; sub: string };
+export type Poll = { id: string; q: string; opts: Record<string, number>; votes: number; sponsor?: string };
+export type Msg = { kicker: string; title: string; sub: string; sponsor?: string };
+// Sports extras. Challenges earn points; rewards unlock at a points total.
+// A challenge, poll or announcement can be owned by a sponsor (sponsorKit name).
+export type ChallengeKind = 'predict' | 'checkin' | 'trivia' | 'poll';
+export type Challenge = { id: string; kind: ChallengeKind; title: string; sub: string; points: number; options?: string[]; answer?: string; poll?: string; sponsor?: string };
+export type Reward = { id: string; name: string; sub: string; points: number; stock: number; sponsor?: string };
+export type SponsorBadge = { name: string; short: string; color: string };
 // Interest + lead model (proposal: one consented profile per person, scored and routed).
 export type LeadStatus = 'New' | 'Contacted' | 'Booked' | 'Reserved' | 'Sold' | 'Not now';
 export const LEAD_STATUSES: LeadStatus[] = ['New', 'Contacted', 'Booked', 'Reserved', 'Sold', 'Not now'];
@@ -44,7 +52,7 @@ export interface EventConfig {
     domain: string;          // the address pill at the foot of the fan view
   };
   event: {
-    name: string; template: 'launch' | 'conference' | 'fan'; format: 'In person' | 'Online' | 'Hybrid';
+    name: string; template: 'launch' | 'conference' | 'fan' | 'sport'; format: 'In person' | 'Online' | 'Hybrid';
     date: string; time: string; dayLabel: string;   // dayLabel: "TUE 20:00"
     dateShort: string;                               // "TUE 10 NOV"
     venue: string; venueShort: string; venueWord: string; city: string;
@@ -56,8 +64,20 @@ export interface EventConfig {
     details: { icon: string; k: string; v: string }[];
     heroImage: { src: string; w: number; h: number };
   };
-  segments: { id: string; name: string; short: string; time: string; kind: SegKind; blurb: string; note: string; heroTitle: string; heroSub: string; heroSubOnline?: string }[];
-  reveal: { kicker: string; word1: string; word2: string; line: string; thirdNote: string; title: string; sub: string; triggerBlurb: string };
+  segments: { id: string; name: string; short: string; time: string; kind: SegKind; blurb: string; note: string; heroTitle: string; heroSub: string; heroSubOnline?: string; day?: number }[];
+  // Multi-day events: segments carry a day index into this list.
+  days?: { label: string; date: string; sub: string }[];
+  // Events grouped into a series share a community and a points total.
+  series?: { id: string; name: string; stage: string; order: number; total: number; stages: string[] };
+  // Team / driver / player story cards.
+  stories?: { title: string; items: { kicker: string; title: string; body: string; stat?: string; unit?: string; color?: string }[] };
+  // External ticketing with referral codes per attendee and per crew.
+  tickets?: { url: string; label: string; sub: string; priceFrom: string; crewLabel: string; crews: string[] };
+  challenges?: Challenge[];
+  rewards?: Reward[];
+  sponsorKit?: SponsorBadge[];
+  // litBefore: the hero image is lit (and its points tappable) before the reveal, e.g. a race car on the grid.
+  reveal: { kicker: string; word1: string; word2: string; line: string; thirdNote: string; title: string; sub: string; triggerBlurb: string; litBefore?: boolean };
   product: { sectionTitle: string; priceLine: string; featuresHint: string; variants: { name: string; price: string; spec: string }[] };
   hotspots: { id: string; x: number; y: number; name: string; desc: string; stat: string; unit: string }[];
   polls: Poll[];
@@ -110,13 +130,16 @@ export interface EventConfig {
       features?: Record<string, number>;                 // hotspot id -> % of viewers who opened it
       leadQuality?: { name: string; hot: number; warm: number; cold: number; won: number }[];
       sources?: { name: string; n: number; icon: string }[];
+      tickets?: { clicks: number; sales: number; top: { name: string; crew: boolean; clicks: number; sales: number }[] };
+      challenges?: Record<string, number>;               // challenge id -> completions
+      sponsors?: { name: string; views: number; taps: number }[];
     };
     leads?: Lead[];
   };
 }
 
 // ── samples ──
-export const SAMPLES: EventConfig[] = [AURORA_NOVA, ...TIDEWELL];
+export const SAMPLES: EventConfig[] = [AURORA_NOVA, ...TIDEWELL, ...SPORTS];
 export const DEFAULT_ID = AURORA_NOVA.id;
 // Old links (/events/nova/) point at the Nova sample.
 export const ALIASES: Record<string, string> = { nova: AURORA_NOVA.id };
@@ -136,7 +159,7 @@ export const asset = (p: string) => (/^(data:|https?:|\/)/.test(p) ? p : BASE + 
 const KEY = 'connect-events:events:v1';
 const DRAFT = (id: string) => `connect-events:draft:${id}`;
 const read = (k: string) => { try { return typeof window === 'undefined' ? null : window.localStorage.getItem(k); } catch { return null; } };
-const write = (k: string, v: string | null) => { try { if (v === null) window.localStorage.removeItem(k); else window.localStorage.setItem(k, v); } catch { /* storage blocked */ } };
+const write = (k: string, v: string | null): boolean => { try { if (v === null) window.localStorage.removeItem(k); else window.localStorage.setItem(k, v); return true; } catch { return false; /* storage blocked or full */ } };
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 
 function localMap(): Record<string, EventConfig> {
@@ -164,7 +187,8 @@ export function getEvent(idOrAlias: string, opts: { draft?: boolean } = {}): Eve
   const local = localMap()[id];
   return local ? withDefaults(local) : clone(SAMPLES.find((e) => e.id === id) || null);
 }
-export function saveEvent(cfg: EventConfig) { const m = localMap(); m[cfg.id] = cfg; write(KEY, JSON.stringify(m)); write(DRAFT(cfg.id), null); }
+// Returns false when this browser has no room left (e.g. very large uploaded images).
+export function saveEvent(cfg: EventConfig): boolean { const m = localMap(); m[cfg.id] = cfg; const ok = write(KEY, JSON.stringify(m)); if (ok) write(DRAFT(cfg.id), null); return ok; }
 export function deleteEvent(id: string) { const m = localMap(); delete m[id]; write(KEY, JSON.stringify(m)); }
 export function saveDraft(cfg: EventConfig) { write(DRAFT(cfg.id), JSON.stringify(cfg)); }
 export function isSample(id: string) { return SAMPLES.some((e) => e.id === id); }
@@ -233,6 +257,8 @@ export const TEMPLATES = [
     segments: [['Doors open', 'doors'], ['Keynote', 'talk'], ['Reveal', 'reveal'], ['Q&A', 'qa']] as [string, SegKind][] },
   { id: 'conference' as const, name: 'Conference', icon: 'co_present', blurb: 'Agenda by session, a keynote announcement, speaker Q&A, polls and recaps afterwards.', format: 'Hybrid' as const,
     segments: [['Registration', 'doors'], ['Opening keynote', 'reveal'], ['Sessions', 'talk'], ['Panel', 'talk'], ['Q&A', 'qa']] as [string, SegKind][] },
+  { id: 'sport' as const, name: 'Sports event', icon: 'sports_score', blurb: 'Days and live segments, team stories, predictions and challenges for points, rewards, tickets and sponsor moments.', format: 'Hybrid' as const,
+    segments: [['Gates open', 'doors'], ['Build-up', 'talk'], ['Start', 'reveal'], ['Live action', 'other'], ['Result', 'other']] as [string, SegKind][] },
   { id: 'fan' as const, name: 'Fan event', icon: 'celebration', blurb: 'Door check-in, a main-stage running order, a drop moment, chat and a community that stays on.', format: 'In person' as const,
     segments: [['Gates open', 'doors'], ['Main stage', 'talk'], ['The drop', 'reveal'], ['Meet & greet', 'qa']] as [string, SegKind][] },
 ];
@@ -243,7 +269,16 @@ export function newFromTemplate(id: string, tpl: (typeof TEMPLATES)[number]): Ev
   const c = clone(AURORA_NOVA) as EventConfig;
   c.id = id; c.status = 'draft';
   c.event.template = tpl.id; c.event.format = tpl.format; c.event.name = 'Untitled ' + tpl.name.toLowerCase();
-  if (tpl.id !== 'launch') delete c.showroom; // colour, trim and finance are launch-only
+  if (tpl.id !== 'launch') { delete c.showroom; delete c.interest; delete c.followUp; delete c.demo.leads; } // car-launch only
+  if (tpl.id === 'sport') {
+    c.challenges = [
+      { id: 'c1', kind: 'predict', title: 'Predict the winner', sub: 'Locks when it starts.', points: 50, options: ['Team A', 'Team B'] },
+      { id: 'c2', kind: 'checkin', title: 'Check in at the fan zone', sub: 'Scan the venue QR.', points: 30 },
+      { id: 'c3', kind: 'trivia', title: 'Trivia', sub: 'One question, one go.', points: 20, options: ['A', 'B', 'C'], answer: 'A' },
+    ];
+    c.rewards = [{ id: 'r1', name: 'Signed merch', sub: 'Collect at the merch stand.', points: 80, stock: 50 }];
+    c.tickets = { url: 'https://tickets.example.com/event', label: 'Buy tickets', sub: 'Official ticketing partner', priceFrom: 'From RM50', crewLabel: 'Join a crew', crews: [] };
+  }
   const times = ['09:00', '09:30', '10:30', '13:00', '15:00', '16:00'];
   c.segments = tpl.segments.map(([name, kind], i) => ({ id: 's' + (i + 1), name, short: name.toUpperCase(), time: times[i] || '17:00', kind, blurb: '', note: '', heroTitle: name.toUpperCase(), heroSub: '' }));
   c.demo.results.engagement = c.segments.map((g, i) => ({ seg: g.name, pct: [38, 64, 92, 71, 55, 44][i] || 40 }));
@@ -287,3 +322,25 @@ export const monthlyFlat = (price: number, depositPct: number, ratePct: number, 
   return { loan, interest: total - loan, total, monthly: total / (years * 12) };
 };
 export const fmtMoney = (cur: string, n: number) => cur + Math.round(n).toLocaleString('en-GB');
+
+// ── points, referral codes ──
+// Points live in this browser per series (or per event), so they carry across a series.
+export const pointsKey = (cfg: EventConfig) => 'connect-events:points:' + (cfg.series?.id || cfg.id);
+export type PointsBook = { done: Record<string, { pts: number; ev: string; pick?: string }>; claimed: string[] };
+export function readPoints(cfg: EventConfig): PointsBook {
+  try { const v = JSON.parse(read(pointsKey(cfg)) || 'null'); if (v && v.done) return { done: v.done, claimed: v.claimed || [] }; } catch { /* empty */ }
+  return { done: {}, claimed: [] };
+}
+export const writePoints = (cfg: EventConfig, b: PointsBook) => write(pointsKey(cfg), JSON.stringify(b));
+export const pointsTotal = (b: PointsBook) => Object.values(b.done).reduce((a, x) => a + x.pts, 0);
+// Short, readable codes. Crew codes are stable per crew name.
+const ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+export function myRefCode(cfg: EventConfig): string {
+  const k = 'connect-events:ref:' + (cfg.series?.id || cfg.id);
+  const have = read(k); if (have) return have;
+  const c = Array.from({ length: 5 }, () => ALPHA[Math.floor(Math.random() * ALPHA.length)]).join('');
+  write(k, c); return c;
+}
+export const crewCode = (crew: string) => 'CREW-' + crew.toUpperCase().replace(/[^A-Z0-9]+/g, '').slice(0, 12);
+export const ticketUrl = (cfg: EventConfig, ref: string) => { const u = cfg.tickets?.url || ''; return u + (u.includes('?') ? '&' : '?') + 'ref=' + encodeURIComponent(ref); };
+export const sponsorOf = (cfg: EventConfig, name?: string) => (name ? cfg.sponsorKit?.find((x) => x.name === name) || { name, short: name.slice(0, 2).toUpperCase(), color: '#555555' } : null);

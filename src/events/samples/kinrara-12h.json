@@ -1,0 +1,979 @@
+{
+  "id": "kinrara-12h",
+  "version": 1,
+  "status": "upcoming",
+  "brand": {
+    "name": "Kinrara 12 Hours",
+    "wordmark": "KINRARA 12H",
+    "wordmarkShort": "K12H",
+    "logo": "connect-events/kinrara/logo.svg",
+    "accent": "#FF5A1F",
+    "dark": "#0B1020",
+    "domain": "connect.boltos.ai/kinrara12h"
+  },
+  "event": {
+    "name": "Kinrara 12 Hours 2026",
+    "template": "sport",
+    "format": "Hybrid",
+    "date": "2026-12-11",
+    "time": "09:00",
+    "dayLabel": "FRI 09:00",
+    "dateShort": "FRI 11 DEC",
+    "venue": "Kinrara International Circuit",
+    "venueShort": "KINRARA CIRCUIT",
+    "venueWord": "CIRCUIT",
+    "city": "Selangor",
+    "kicker": "KINRARA 12 HOURS",
+    "kickerSub": "3 DAYS · 12 HOURS · ONE FINISH",
+    "title": "KINRARA 12H",
+    "countdownLabel": "GATES OPEN IN",
+    "countdownSeconds": 24072,
+    "dateLine": "FRI 11 – SUN 13 DEC · KINRARA CIRCUIT · AND ONLINE",
+    "inviteTitle": "BE THERE FOR LIGHTS OUT",
+    "inviteSub": "Grandstand, fan zone or the live stream.",
+    "venueOption": "At the circuit",
+    "venueOptionSub": "Grandstands and fan zone · gates 08:00",
+    "onlineOptionSub": "Live timing companion · predictions, chat, Q&A",
+    "registeredVenue": "See you at the circuit. Scan the fan zone QR when you arrive.",
+    "registeredOnline": "Watching online. This panel is your live timing companion.",
+    "details": [
+      {
+        "icon": "event",
+        "k": "When",
+        "v": "Fri 11 to Sun 13 Dec · race starts Sun 11:00"
+      },
+      {
+        "icon": "location_on",
+        "k": "Where",
+        "v": "Kinrara International Circuit, Selangor"
+      },
+      {
+        "icon": "wifi",
+        "k": "Online",
+        "v": "Live stream and timing on this page, same predictions and Q&A"
+      },
+      {
+        "icon": "confirmation_number",
+        "k": "Entry",
+        "v": "Tickets from RM60. Under 12s free with an adult."
+      }
+    ],
+    "heroImage": {
+      "src": "connect-events/kinrara/hero.svg",
+      "w": 1600,
+      "h": 1000
+    }
+  },
+  "days": [
+    {
+      "label": "Day 1",
+      "date": "FRI 11 DEC",
+      "sub": "Practice"
+    },
+    {
+      "label": "Day 2",
+      "date": "SAT 12 DEC",
+      "sub": "Qualifying"
+    },
+    {
+      "label": "Day 3",
+      "date": "SUN 13 DEC",
+      "sub": "The race"
+    }
+  ],
+  "segments": [
+    {
+      "id": "s1",
+      "name": "Free practice",
+      "short": "FREE PRACTICE",
+      "time": "10:00",
+      "kind": "doors",
+      "blurb": "Three hours of running, all classes",
+      "note": "Cars on track for the first time this weekend",
+      "heroTitle": "PRACTICE",
+      "heroSub": "Learn the cars before they race.",
+      "day": 0
+    },
+    {
+      "id": "s2",
+      "name": "Night practice",
+      "short": "NIGHT PRACTICE",
+      "time": "19:00",
+      "kind": "other",
+      "blurb": "The only night running before the race",
+      "note": "Lights on. Watch the braking zones glow",
+      "heroTitle": "NIGHT PRACTICE",
+      "heroSub": "The circuit after dark.",
+      "day": 0
+    },
+    {
+      "id": "s3",
+      "name": "Qualifying",
+      "short": "QUALIFYING",
+      "time": "14:00",
+      "kind": "other",
+      "blurb": "Fastest lap sets the grid",
+      "note": "One lap each. Pole is worth a lot here",
+      "heroTitle": "QUALIFYING",
+      "heroSub": "Who starts at the front?",
+      "day": 1
+    },
+    {
+      "id": "s4",
+      "name": "Pit lane walk",
+      "short": "PIT LANE WALK",
+      "time": "17:00",
+      "kind": "other",
+      "blurb": "Fans on the pit lane, cars in the garages",
+      "note": "Grandstand tickets, gate C",
+      "heroTitle": "PIT LANE WALK",
+      "heroSub": "Meet the crews in their garages.",
+      "day": 1
+    },
+    {
+      "id": "s5",
+      "name": "Lights out",
+      "short": "LIGHTS OUT",
+      "time": "11:00",
+      "kind": "reveal",
+      "blurb": "The 12-hour race starts",
+      "note": "Twelve hours start now",
+      "heroTitle": "ON THE GRID",
+      "heroSub": "Rolling start. Formation lap under way.",
+      "day": 2
+    },
+    {
+      "id": "s6",
+      "name": "Night stint",
+      "short": "NIGHT STINT",
+      "time": "18:30",
+      "kind": "other",
+      "blurb": "Hours 8 to 10, under the lights",
+      "note": "Headlights on, track temps falling",
+      "heroTitle": "NIGHT STINT",
+      "heroSub": "The race changes after dark.",
+      "day": 2
+    },
+    {
+      "id": "s7",
+      "name": "Final hour",
+      "short": "FINAL HOUR",
+      "time": "22:00",
+      "kind": "other",
+      "blurb": "Sixty minutes left",
+      "note": "Last stops decide it",
+      "heroTitle": "FINAL HOUR",
+      "heroSub": "Every second counts now.",
+      "day": 2
+    },
+    {
+      "id": "s8",
+      "name": "Podium",
+      "short": "PODIUM",
+      "time": "23:15",
+      "kind": "other",
+      "blurb": "Chequered flag and trophies",
+      "note": "Champagne on the main straight",
+      "heroTitle": "PODIUM",
+      "heroSub": "The top three, on the main straight.",
+      "day": 2
+    }
+  ],
+  "reveal": {
+    "kicker": "SUN 13 DEC · 11:00",
+    "word1": "LIGHTS",
+    "word2": "OUT",
+    "line": "34 cars. 12 hours. One finish line.",
+    "thirdNote": "Tap the car to see what the crews manage",
+    "title": "LIGHTS OUT",
+    "sub": "The 12 hours start now. Tap the car to explore.",
+    "triggerBlurb": "Lights out on every screen",
+    "litBefore": true
+  },
+  "product": {
+    "sectionTitle": "THE CAR",
+    "priceLine": "#07 · GT3 PRO",
+    "featuresHint": "Spotlight one part of the car",
+    "variants": [
+      {
+        "name": "GT3 Pro",
+        "spec": "Factory drivers · 14 cars",
+        "price": "Overall win"
+      },
+      {
+        "name": "GT3 Am",
+        "spec": "Gentleman drivers · 12 cars",
+        "price": "Class win"
+      },
+      {
+        "name": "GT4",
+        "spec": "Rising drivers · 8 cars",
+        "price": "Class win"
+      }
+    ]
+  },
+  "hotspots": [
+    {
+      "id": "lights",
+      "x": 26,
+      "y": 76.5,
+      "name": "Night lights",
+      "desc": "Race headlights are set wider than road lights, so drivers see the apex at night.",
+      "stat": "1.2 km",
+      "unit": "of light down the straight"
+    },
+    {
+      "id": "front",
+      "x": 32.5,
+      "y": 80.6,
+      "name": "Front tyres",
+      "desc": "Tyres are the race. Each car gets a fixed allocation for all 12 hours.",
+      "stat": "4",
+      "unit": "sets for the whole race"
+    },
+    {
+      "id": "cockpit",
+      "x": 55,
+      "y": 63,
+      "name": "Driver swap",
+      "desc": "Three drivers share each car. Swaps happen with the refuel.",
+      "stat": "38 s",
+      "unit": "target pit stop"
+    },
+    {
+      "id": "fuel",
+      "x": 64,
+      "y": 73,
+      "name": "Fuel window",
+      "desc": "A full tank lasts about an hour. Stopping one lap late can win the race.",
+      "stat": "65 min",
+      "unit": "between stops"
+    },
+    {
+      "id": "wing",
+      "x": 77,
+      "y": 61,
+      "name": "Rear wing",
+      "desc": "Set low for the long back straight, high enough to hold the fast corners.",
+      "stat": "281",
+      "unit": "km/h top speed"
+    }
+  ],
+  "polls": [
+    {
+      "id": "winner",
+      "q": "Who takes the overall win?",
+      "opts": {
+        "#07 Ember Racing": 34,
+        "#21 Tanjung GT": 29,
+        "#88 Monsoon Motorsport": 23,
+        "#3 Garuda Works": 14
+      },
+      "votes": 4210,
+      "sponsor": "Bayu Tyres"
+    },
+    {
+      "id": "night",
+      "q": "Driver of the night stint?",
+      "opts": {
+        "Nur Aleya": 38,
+        "Kai Fernandez": 33,
+        "Ravi Menon": 29
+      },
+      "votes": 2980,
+      "sponsor": "Sinar Telco"
+    },
+    {
+      "id": "moment",
+      "q": "Best moment so far?",
+      "opts": {
+        "The start": 31,
+        "The pit stop battle": 42,
+        "The night pass": 27
+      },
+      "votes": 2140
+    }
+  ],
+  "breakContent": {
+    "minutes": 15,
+    "sub": "Red flag. Cars wait in the pit lane while the barrier at turn 9 is repaired.",
+    "poll": {
+      "id": "break",
+      "q": "Restart: who gains?",
+      "opts": {
+        "Ember Racing": 44,
+        "Tanjung GT": 36,
+        "Nobody, it stays the same": 20
+      },
+      "votes": 1620
+    },
+    "reads": [
+      {
+        "kicker": "WHY 12 HOURS",
+        "title": "Longer than a working day",
+        "body": "Endurance racing is about the car lasting, not just going fast. Most winners never set the fastest lap."
+      },
+      {
+        "kicker": "THE NIGHT",
+        "title": "Why the night stint matters",
+        "body": "Track temperatures fall after sunset, tyres last longer and lap times drop. Teams save their best driver for it."
+      },
+      {
+        "kicker": "CLASSES",
+        "title": "Three races in one",
+        "body": "GT3 Pro, GT3 Am and GT4 run together. Each class has its own winner and its own podium."
+      }
+    ]
+  },
+  "announcements": {
+    "all": [
+      {
+        "kicker": "FAN ZONE",
+        "title": "Hydration stop is open",
+        "sub": "Free cold drinks at the fan zone, behind grandstand B",
+        "sponsor": "Arus Energy"
+      },
+      {
+        "kicker": "COMING UP",
+        "title": "Night stint starts at 18:30",
+        "sub": "Headlights on. Predict the driver of the stint for 10 points"
+      }
+    ],
+    "venue": [
+      {
+        "kicker": "AT THE CIRCUIT",
+        "title": "Pit lane walk at 17:00",
+        "sub": "Grandstand ticket holders, gate C. Wristband required"
+      }
+    ],
+    "online": [
+      {
+        "kicker": "ONLINE",
+        "title": "Onboard camera is live",
+        "sub": "Switch to the #07 onboard in the player settings",
+        "sponsor": "Sinar Telco"
+      }
+    ]
+  },
+  "reminders": [
+    {
+      "title": "Gates open at 08:00",
+      "body": "Scan the fan zone QR when you arrive for 30 points.",
+      "target": "venue"
+    },
+    {
+      "title": "Lights out at 11:00 Sunday",
+      "body": "The stream starts at 10:30 with the grid walk.",
+      "target": "online"
+    },
+    {
+      "title": "Make your prediction",
+      "body": "Predictions lock at lights out. 50 points for the right winner.",
+      "target": "all"
+    }
+  ],
+  "presenters": [
+    {
+      "name": "Aiden Raj",
+      "role": "Lead commentator",
+      "slot": "All three days",
+      "photo": "voltford/media/crews/av-marcus.jpg"
+    },
+    {
+      "name": "Mira Lau",
+      "role": "Pit lane reporter",
+      "slot": "Race day",
+      "photo": "voltford/media/crews/av-priya.jpg"
+    },
+    {
+      "name": "Hafiz Omar",
+      "role": "Race control analyst",
+      "slot": "Night stint",
+      "photo": "voltford/media/crews/av-declan.jpg"
+    }
+  ],
+  "sponsors": [
+    "Arus Energy",
+    "Bayu Tyres",
+    "Sinar Telco",
+    "Kopi Lane"
+  ],
+  "stories": {
+    "title": "TEAMS + DRIVERS",
+    "items": [
+      {
+        "kicker": "TEAM · #07 · GT3 PRO",
+        "title": "Ember Racing",
+        "body": "Last year they lost by 1.8 seconds after 12 hours. Same three drivers, one more go.",
+        "stat": "2nd",
+        "unit": "last year",
+        "color": "#FF5A1F"
+      },
+      {
+        "kicker": "DRIVER · EMBER RACING",
+        "title": "Nur Aleya",
+        "body": "Youngest driver in the field at 21, and the fastest on the night stint in testing.",
+        "stat": "1:58.4",
+        "unit": "best night lap",
+        "color": "#FF5A1F"
+      },
+      {
+        "kicker": "TEAM · #21 · GT3 PRO",
+        "title": "Tanjung GT",
+        "body": "A local team on its first full season. Built the car in a shop in Shah Alam.",
+        "stat": "1st",
+        "unit": "season",
+        "color": "#2F7CF6"
+      },
+      {
+        "kicker": "TEAM · #88 · GT3 PRO",
+        "title": "Monsoon Motorsport",
+        "body": "Two-time winners. Known for the fastest pit stops in the paddock.",
+        "stat": "36.8 s",
+        "unit": "best stop",
+        "color": "#17C3B2"
+      },
+      {
+        "kicker": "DRIVER · GARUDA WORKS",
+        "title": "Ravi Menon",
+        "body": "Moved from karting to GT4 to GT3 in three seasons. Strongest in the wet.",
+        "stat": "3",
+        "unit": "class wins",
+        "color": "#E8B400"
+      }
+    ]
+  },
+  "iris": {
+    "intro": "I’m IRIS. I answer from the race organiser’s approved facts: schedule, classes, the car, tickets and the fan zone.",
+    "pre": [
+      {
+        "q": "When does the race start?",
+        "a": "Lights out is Sunday 13 Dec at 11:00. Practice is Friday and qualifying is Saturday.",
+        "stat": "11:00",
+        "label": "SUNDAY START"
+      },
+      {
+        "q": "How much are tickets?",
+        "a": "Grandstand tickets start at RM60 a day. Under 12s go free with an adult.",
+        "stat": "RM60",
+        "label": "FROM, PER DAY"
+      },
+      {
+        "q": "What is the fan zone?",
+        "a": "Behind grandstand B: food, the hydration stop, team merch and a sim racing rig. Scan its QR for 30 points.",
+        "stat": "30",
+        "label": "POINTS FOR CHECKING IN"
+      }
+    ],
+    "live": [
+      {
+        "q": "How many cars are racing?",
+        "a": "34 cars in three classes: 14 GT3 Pro, 12 GT3 Am and 8 GT4.",
+        "stat": "34",
+        "label": "CARS",
+        "keys": "cars|grid|how many"
+      },
+      {
+        "q": "How often do they stop?",
+        "a": "About every 65 minutes for fuel, tyres and a driver change. A target stop is 38 seconds.",
+        "stat": "65 min",
+        "label": "BETWEEN STOPS",
+        "keys": "stop|pit|fuel"
+      },
+      {
+        "q": "Who won last year?",
+        "a": "Monsoon Motorsport, by 1.8 seconds from Ember Racing after 341 laps.",
+        "stat": "1.8 s",
+        "label": "WINNING MARGIN",
+        "keys": "last year|won|winner"
+      }
+    ],
+    "hidden": "That is confirmed at lights out on Sunday. Keep the panel open and I’ll have it then.",
+    "fallback": "I only answer from the organiser’s approved race facts, and that one isn’t in them. Send it to the Q&A and the team can answer."
+  },
+  "cta": {
+    "cardKicker": "NEXT STEP",
+    "title": "Book a track day",
+    "sub": "Drive the Kinrara circuit yourself, with an instructor.",
+    "button": "BOOK A TRACK DAY",
+    "screenTitle": "TRACK DAY",
+    "screenMeta": "3 DATES",
+    "intro": "Four 20-minute sessions in your own car, with a briefing and an instructor.",
+    "optionsLabel": "PACKAGE",
+    "options": [
+      {
+        "id": "kl",
+        "name": "Taster",
+        "sub": "Two sessions · RM350"
+      },
+      {
+        "id": "pj",
+        "name": "Full day",
+        "sub": "Four sessions · RM690"
+      },
+      {
+        "id": "sa",
+        "name": "Full day + coaching",
+        "sub": "With data review · RM990"
+      }
+    ],
+    "slotsLabel": "DATE",
+    "slots": [
+      "Sat 9 Jan",
+      "Sat 23 Jan",
+      "Sat 6 Feb"
+    ],
+    "submit": "BOOK TRACK DAY",
+    "doneTitle": "Track day booked",
+    "doneSub": "We’ll email your briefing pack and gate pass."
+  },
+  "follow": {
+    "title": "Follow Kinrara Racing",
+    "sub": "One ping when next year’s dates and tickets land.",
+    "doneTitle": "Following Kinrara Racing",
+    "doneSub": "You’ll hear first about next year’s race."
+  },
+  "after": {
+    "badge": "CHEQUERED FLAG",
+    "title": "#07 WINS",
+    "sub": "Ember Racing, after 341 laps and 12 hours",
+    "stats": [
+      [
+        "341",
+        "LAPS"
+      ],
+      [
+        "62.4k",
+        "REACTIONS"
+      ],
+      [
+        "18.2k",
+        "WATCHED"
+      ]
+    ],
+    "recapTitle": "CLASS WINNERS"
+  },
+  "community": {
+    "badge": "KINRARA RACING · ALWAYS ON",
+    "title": "The race is over.\nThe paddock isn’t.",
+    "sub": "Replays, the team stories, IRIS on the approved facts, and first access to next year.",
+    "next": {
+      "name": "Kinrara Track Day",
+      "kicker": "FAN EVENT",
+      "date": "SAT 9 JAN",
+      "time": "08:00",
+      "place": "KINRARA CIRCUIT",
+      "blurb": "Drive the circuit in your own car, with instructors from the race teams.",
+      "days": 27
+    },
+    "pastLabel": "PAST EVENT",
+    "pastDate": "SUN 13 DEC",
+    "pastTitle": "Kinrara 12 Hours 2026",
+    "pastSub": "#07 Ember Racing won by 4.2 seconds. 41,300 at the circuit over three days.",
+    "replay": "REPLAY · 12:00:00"
+  },
+  "chat": {
+    "pool": [
+      {
+        "user": "RACEFAN_AZ",
+        "text": "Grandstand C is loud already",
+        "where": "venue",
+        "tag": "CIRCUIT · STAND C",
+        "avatar": "voltford/media/crews/av-r1.jpg"
+      },
+      {
+        "user": "NADIA.KL",
+        "text": "Watching the onboard from Penang",
+        "where": "online",
+        "tag": "ONLINE · PENANG",
+        "avatar": "voltford/media/crews/av-priya.jpg"
+      },
+      {
+        "user": "EMBERARMY",
+        "text": "#07 all the way",
+        "where": "venue",
+        "tag": "CIRCUIT · FAN ZONE",
+        "avatar": "voltford/media/crews/av-marcus.jpg"
+      },
+      {
+        "user": "TMK",
+        "text": "That pit stop was 37 seconds",
+        "where": "online",
+        "tag": "ONLINE · KL",
+        "avatar": "voltford/media/crews/av-declan.jpg"
+      },
+      {
+        "user": "AISYAH_R",
+        "text": "Night stint under the lights is unreal",
+        "where": "venue",
+        "tag": "CIRCUIT · STAND B",
+        "avatar": "voltford/media/crews/av-hannah.jpg"
+      },
+      {
+        "user": "JUNSHENG",
+        "text": "Monsoon are saving fuel",
+        "where": "online",
+        "tag": "ONLINE · JB",
+        "avatar": "voltford/media/crews/av-r2.jpg"
+      },
+      {
+        "user": "RAVI_FAN",
+        "text": "Menon is flying in sector 2",
+        "where": "online",
+        "tag": "ONLINE · IPOH",
+        "avatar": "voltford/media/crews/av-r3.jpg"
+      },
+      {
+        "user": "GARUDA88",
+        "text": "Pit lane walk was the best part",
+        "where": "venue",
+        "tag": "CIRCUIT · PIT LANE",
+        "avatar": "voltford/media/crews/av-marcus.jpg"
+      }
+    ],
+    "quickBefore": [
+      "Who’s at the circuit?",
+      "#07 for the win",
+      "Watching from home"
+    ],
+    "quickLive": [
+      "What a stop!",
+      "Lights look amazing",
+      "Gap to the leader?"
+    ],
+    "quickAfter": [
+      "What a race",
+      "See you next year",
+      "Ember deserved it"
+    ]
+  },
+  "qaSeed": [
+    {
+      "id": "q1",
+      "text": "How do teams decide who drives the night stint?",
+      "who": "tmk",
+      "where": "online",
+      "votes": 312
+    },
+    {
+      "id": "q2",
+      "text": "Can kids join the pit lane walk?",
+      "who": "aisyah_r",
+      "where": "venue",
+      "votes": 244
+    },
+    {
+      "id": "q3",
+      "text": "How many sets of tyres does each car get?",
+      "who": "racefan_az",
+      "where": "venue",
+      "votes": 198
+    },
+    {
+      "id": "q4",
+      "text": "Where is the best grandstand for the night?",
+      "who": "nadia.kl",
+      "where": "online",
+      "votes": 151
+    }
+  ],
+  "tickets": {
+    "url": "https://tickets.example.com/kinrara-12h",
+    "label": "Buy tickets",
+    "sub": "Official ticketing partner (placeholder link)",
+    "priceFrom": "From RM60",
+    "crewLabel": "Your crew",
+    "crews": [
+      "Ember Army",
+      "Monsoon Crew",
+      "Garuda Faithful",
+      "Uni Motorsport Club"
+    ]
+  },
+  "sponsorKit": [
+    {
+      "name": "Arus Energy",
+      "short": "AE",
+      "color": "#1FA25A"
+    },
+    {
+      "name": "Bayu Tyres",
+      "short": "BT",
+      "color": "#D99A00"
+    },
+    {
+      "name": "Sinar Telco",
+      "short": "ST",
+      "color": "#E63B7A"
+    }
+  ],
+  "challenges": [
+    {
+      "id": "c1",
+      "kind": "predict",
+      "title": "Predict the overall winner",
+      "sub": "Locks at lights out on Sunday.",
+      "points": 50,
+      "options": [
+        "#07 Ember Racing",
+        "#21 Tanjung GT",
+        "#88 Monsoon Motorsport",
+        "#3 Garuda Works"
+      ],
+      "sponsor": "Bayu Tyres"
+    },
+    {
+      "id": "c2",
+      "kind": "checkin",
+      "title": "Check in at the fan zone",
+      "sub": "Behind grandstand B. Scan the QR at the arch.",
+      "points": 30,
+      "sponsor": "Arus Energy"
+    },
+    {
+      "id": "c3",
+      "kind": "trivia",
+      "title": "How many laps did last year’s winner do?",
+      "sub": "One try.",
+      "points": 20,
+      "options": [
+        "298",
+        "341",
+        "356"
+      ],
+      "answer": "341"
+    },
+    {
+      "id": "c4",
+      "kind": "poll",
+      "title": "Vote: driver of the night stint",
+      "sub": "Opens at 18:30 on race day.",
+      "points": 10,
+      "poll": "night",
+      "sponsor": "Sinar Telco"
+    },
+    {
+      "id": "c5",
+      "kind": "predict",
+      "title": "How many safety cars?",
+      "sub": "Over the full 12 hours.",
+      "points": 30,
+      "options": [
+        "0 to 1",
+        "2 to 3",
+        "4 or more"
+      ]
+    }
+  ],
+  "rewards": [
+    {
+      "id": "r1",
+      "name": "Team cap, signed",
+      "sub": "Collect at the merch tent",
+      "points": 60,
+      "stock": 150
+    },
+    {
+      "id": "r2",
+      "name": "Pit lane walk upgrade",
+      "sub": "Front of the queue on Saturday",
+      "points": 100,
+      "stock": 40,
+      "sponsor": "Arus Energy"
+    },
+    {
+      "id": "r3",
+      "name": "Grid walk pass",
+      "sub": "On the grid before lights out",
+      "points": 140,
+      "stock": 12
+    }
+  ],
+  "demo": {
+    "rsvp": {
+      "venue": 14200,
+      "online": 38600
+    },
+    "audienceBefore": 6200,
+    "venueBySeg": [
+      5200,
+      3800,
+      9600,
+      7400,
+      13800,
+      12600,
+      13100,
+      12900
+    ],
+    "onlineBySeg": [
+      8200,
+      6900,
+      14100,
+      9800,
+      21400,
+      17800,
+      24600,
+      22300
+    ],
+    "breakAud": [
+      11800,
+      15200
+    ],
+    "afterAud": [
+      4100,
+      9800
+    ],
+    "communityOnline": 860,
+    "checkinsBySeg": [
+      4900,
+      5300,
+      9100,
+      9300,
+      13200,
+      13400,
+      13500,
+      13500
+    ],
+    "results": {
+      "reactions": 62400,
+      "questions": 540,
+      "answered": 28,
+      "conversions": 410,
+      "conversionLabel": "TRACK DAY BOOKINGS",
+      "engagement": [
+        {
+          "seg": "Free practice",
+          "pct": 31
+        },
+        {
+          "seg": "Night practice",
+          "pct": 44
+        },
+        {
+          "seg": "Qualifying",
+          "pct": 66
+        },
+        {
+          "seg": "Pit lane walk",
+          "pct": 58
+        },
+        {
+          "seg": "Lights out",
+          "pct": 93
+        },
+        {
+          "seg": "Night stint",
+          "pct": 72
+        },
+        {
+          "seg": "Final hour",
+          "pct": 89
+        },
+        {
+          "seg": "Podium",
+          "pct": 61
+        }
+      ],
+      "conversionsBy": [
+        {
+          "name": "Taster",
+          "n": 196
+        },
+        {
+          "name": "Full day",
+          "n": 152
+        },
+        {
+          "name": "Full day + coaching",
+          "n": 62
+        }
+      ],
+      "multiEvent": {
+        "total": 9200,
+        "rows": [
+          {
+            "name": "All three days",
+            "n": 5100
+          },
+          {
+            "name": "2025 race + 2026 race",
+            "n": 3400
+          },
+          {
+            "name": "Race + booked a track day",
+            "n": 410
+          }
+        ]
+      },
+      "follows": 6200,
+      "votes": 18400,
+      "features": {
+        "lights": 52,
+        "front": 61,
+        "cockpit": 74,
+        "fuel": 69,
+        "wing": 38
+      },
+      "tickets": {
+        "clicks": 9840,
+        "sales": 1260,
+        "top": [
+          {
+            "name": "Ember Army",
+            "crew": true,
+            "clicks": 1420,
+            "sales": 238
+          },
+          {
+            "name": "Uni Motorsport Club",
+            "crew": true,
+            "clicks": 980,
+            "sales": 164
+          },
+          {
+            "name": "Monsoon Crew",
+            "crew": true,
+            "clicks": 760,
+            "sales": 121
+          },
+          {
+            "name": "Hafiz A.",
+            "crew": false,
+            "clicks": 140,
+            "sales": 22
+          },
+          {
+            "name": "Mei L.",
+            "crew": false,
+            "clicks": 96,
+            "sales": 15
+          }
+        ]
+      },
+      "challenges": {
+        "c1": 21400,
+        "c2": 9100,
+        "c3": 14600,
+        "c4": 11200,
+        "c5": 8800
+      },
+      "sponsors": [
+        {
+          "name": "Bayu Tyres",
+          "views": 48200,
+          "taps": 21900
+        },
+        {
+          "name": "Arus Energy",
+          "views": 31600,
+          "taps": 9800
+        },
+        {
+          "name": "Sinar Telco",
+          "views": 40100,
+          "taps": 12400
+        }
+      ]
+    }
+  }
+}

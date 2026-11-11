@@ -11,6 +11,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { s } from '../voltford/admin/s';
 import QRCode from 'qrcode';
 import {
+  sponsorOf, ticketUrl,
   getEvent, audience, checkinsSeed, channelName, fanPath, homePath, abs, asset, STATES, TARGETS, revealSegIndex, qaSegIndex,
   LEAD_STATUSES, leadScore, leadTier, scoreParts, routeFor,
   type EventConfig, type Ms as MState, type Mode, type Target, type TriggerKind, type Lead, type LeadStatus,
@@ -28,6 +29,7 @@ const TRIGGERS: { id: TriggerKind; name: string; icon: string; color: string }[]
   { id: 'poll', name: 'Poll', icon: 'bar_chart', color: '#8B3DF5' },
   { id: 'hotspot', name: 'Hotspot', icon: 'my_location', color: '#8B3DF5' },
   { id: 'announce', name: 'Announcement', icon: 'campaign', color: '#C0473C' },
+  { id: 'challenge', name: 'Challenge', icon: 'emoji_events', color: '#8B3DF5' },
 ];
 const LIFECYCLE = [['plan', 'Plan'], ['invite', 'Invite'], ['welcome', 'Welcome'], ['control', 'Engage'], ['leads', 'Follow up'], ['results', 'Improve']] as const;
 type Screen = (typeof LIFECYCLE)[number][0];
@@ -38,7 +40,8 @@ interface St {
   screen: Screen;
   sent: { id: string; title: string; target: Target; t: string; reach: number }[]; remText: string; remTitle: string; remTarget: Target; copied: boolean;
   checkins: number; ms: MState; seg: number; revealed: boolean; poll: number | null;
-  target: Target; ctr: { poll: number; hotspot: number; announce: number };
+  target: Target; ctr: { poll: number; hotspot: number; announce: number; challenge: number };
+  tix: { clicks: number; crews: Record<string, number> }; chDone: Record<string, number>; spTaps: Record<string, number>; spViews: Record<string, number>; claims: number;
   tick: number; clock: number; log: Log[]; toast: string | null; toastIcon: string;
   questions: Q[]; regs: { venue: number; online: number }; drives: { showroom: string; slot: string; where: Mode; t: string }[];
   reacts: number[]; votes: number; follows: number; monitor: Mode;
@@ -60,7 +63,8 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
   const [st, setSt] = useState<St>(() => ({
     screen: initial && LIFECYCLE.some(([k]) => k === initial) ? initial : 'control',
     checkins: 0, sent: [], remTitle: cfg.reminders[0]?.title || '', remText: cfg.reminders[0]?.body || '', remTarget: cfg.reminders[0]?.target || 'all', copied: false,
-    ms: 'before', seg: 0, revealed: false, poll: null, target: 'all', ctr: { poll: 0, hotspot: 0, announce: 0 },
+    ms: 'before', seg: 0, revealed: false, poll: null, target: 'all', ctr: { poll: 0, hotspot: 0, announce: 0, challenge: 0 },
+    tix: { clicks: 0, crews: {} }, chDone: {}, spTaps: {}, spViews: {}, claims: 0,
     tick: 0, clock: 0, log: [], toast: null, toastIcon: 'bolt',
     questions: cfg.qaSeed.map((q) => ({ ...q, status: 'QUEUED' })), regs: { venue: 0, online: 0 }, drives: [],
     reacts: cfg.segments.map(() => 0), votes: 0, follows: 0, monitor: cfg.event.format === 'In person' ? 'venue' : 'online',
@@ -97,6 +101,10 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
       case 'testdrive': set((p) => ({ drives: [{ showroom: m.showroom, slot: m.slot, where: m.where, t: fmt(p.clock) }, ...p.drives] })); log(cfg.cta.title, [m.showroom, m.slot].filter(Boolean).join(' · '), 'event_available'); say(cfg.cta.doneTitle + (m.showroom ? ' · ' + m.showroom : ''), 'event_available'); break;
       case 'state': mirrorState(m.ms, m.seg); if (m.from === 'fan') log('State · ' + STATES.find((y) => y.id === m.ms)?.name, 'Changed from the fan demo strip', 'swap_horiz', STATE_COLOR[m.ms as MState]); break;
       case 'segment': mirrorState('live', m.seg); if (m.from === 'fan') log('Segment · ' + (cfg.segments[m.seg]?.name || ''), 'Changed from the fan demo strip', 'radio_button_checked'); break;
+      case 'ticket': set((p) => ({ tix: { clicks: p.tix.clicks + 1, crews: m.crew ? { ...p.tix.crews, [m.crew]: (p.tix.crews[m.crew] || 0) + 1 } : p.tix.crews } })); log('Ticket link opened', m.crew ? 'With crew code · ' + m.crew : 'With a personal referral code', 'confirmation_number'); say('A fan opened the ticket link', 'confirmation_number'); break;
+      case 'challenge': set((p) => ({ chDone: { ...p.chDone, [m.id]: (p.chDone[m.id] || 0) + 1 } })); log('Challenge completed', (cfg.challenges?.find((c) => c.id === m.id)?.title || m.id) + ' · +' + m.pts + ' pts', 'emoji_events'); break;
+      case 'claim': set((p) => ({ claims: p.claims + 1 })); log('Reward claimed', m.name, 'redeem'); say('Reward claimed · ' + m.name, 'redeem'); break;
+      case 'sponsor': if (m.what === 'tap') set((p) => ({ spTaps: { ...p.spTaps, [m.name]: (p.spTaps[m.name] || 0) + 1 } })); else set((p) => ({ spViews: { ...p.spViews, [m.name]: (p.spViews[m.name] || 0) + 1 } })); break;
       case 'profile': if (!x.me) { log('New lead', 'A fan registered interest from this browser', 'person_add'); say('New lead · see Follow up', 'person_add'); } set({ me: m.lead }); break;
       case 'trigger': mirrorTrigger(m.kind, m.idx || 0); if (m.from === 'fan') log(TRIGGERS.find((y) => y.id === m.kind)?.name || m.kind, 'Fired from the fan demo strip · ' + TARGETS.find((y) => y.id === m.target)?.name, 'bolt'); break;
     }
@@ -120,6 +128,7 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
     if (kind === 'reveal') return { ms: 'live', seg: REV, revealed: true };
     if (kind === 'poll') return { poll: cfg.polls.length ? idx % cfg.polls.length : null, ctr: { ...x.ctr, poll: idx + 1 } };
     if (kind === 'hotspot') return { revealed: true, ctr: { ...x.ctr, hotspot: idx + 1 } };
+    if (kind === 'challenge') return { ctr: { ...x.ctr, challenge: idx + 1 } };
     return { ctr: { ...x.ctr, announce: idx + 1 } };
   });
 
@@ -136,7 +145,11 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
   };
   const nextOf = (k: TriggerKind) => {
     const a = cfg.announcements[st.target] || [];
-    return k === 'poll' ? (cfg.polls[st.ctr.poll % Math.max(cfg.polls.length, 1)]?.q || 'No polls set up') : k === 'hotspot' ? (cfg.hotspots[st.ctr.hotspot % Math.max(cfg.hotspots.length, 1)]?.name || 'No features set up') : k === 'announce' ? (a[st.ctr.announce % Math.max(a.length, 1)]?.title || 'No message for this audience') : st.revealed ? 'Replay the reveal moment' : cfg.reveal.triggerBlurb;
+    const by = (sp?: string) => (sp ? ' · by ' + sp : '');
+    if (k === 'poll') { const p = cfg.polls[st.ctr.poll % Math.max(cfg.polls.length, 1)]; return p ? p.q + by(p.sponsor) : 'No polls set up'; }
+    if (k === 'announce') { const m = a[st.ctr.announce % Math.max(a.length, 1)]; return m ? m.title + by(m.sponsor) : 'No message for this audience'; }
+    if (k === 'challenge') { const C = cfg.challenges || []; const c = C[st.ctr.challenge % Math.max(C.length, 1)]; return c ? c.title + ' · +' + c.points + by(c.sponsor) : 'No challenges set up'; }
+    return k === 'hotspot' ? (cfg.hotspots[st.ctr.hotspot % Math.max(cfg.hotspots.length, 1)]?.name || 'No features set up') : st.revealed ? 'Replay the reveal moment' : cfg.reveal.triggerBlurb;
   };
   const fire = (kind: TriggerKind) => {
     const idx = kind === 'reveal' ? 0 : st.ctr[kind];
@@ -180,7 +193,7 @@ function StudioFor({ cfg }: { cfg: EventConfig }) {
         <span style={s('width:1px;height:22px;background:rgba(27,11,45,.12)')} />
         <a className="ah-ink" href={homePath()} style={s("display:flex;align-items:center;gap:6px;font:500 13px/1 'Archivo';color:#513E66;text-decoration:none;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis")}><Ms size={16} color="inherit">arrow_back</Ms>{cfg.event.name}</a>
         <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE;margin-left:12px')}>
-          {LIFECYCLE.map(([k, n], i) => { const on = st.screen === k; return (
+          {LIFECYCLE.filter(([k]) => k !== 'leads' || cfg.interest || cfg.demo.leads?.length).map(([k, n], i) => { const on = st.screen === k; return (
             <button key={k} onClick={() => set({ screen: k })} style={{ ...s("display:flex;align-items:center;gap:7px;padding:9px 11px;white-space:nowrap;border-radius:9px;font:600 12px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#1B0B2D' : '#513E66', boxShadow: on ? '0 1px 2px rgba(27,11,45,.08)' : 'none' }}><span style={{ ...s("width:17px;height:17px;border-radius:5px;display:flex;align-items:center;justify-content:center;font:700 9.5px/1 'Archivo'"), background: on ? '#1B0B2D' : '#E9E9E4', color: on ? '#F5F5F2' : '#513E66' }}>{i + 1}</span>{n}</button>
           ); })}
         </div>
@@ -221,7 +234,7 @@ const Stat = ({ label, v, sub }: { label: string; v: string; sub?: string }) => 
 
 // ════════════ 1 PLAN ════════════
 function Plan({ cfg }: { cfg: EventConfig }) {
-  const tpl = { launch: 'Product launch', conference: 'Conference', fan: 'Fan event' }[cfg.event.template];
+  const tpl = { launch: 'Product launch', conference: 'Conference', fan: 'Fan event', sport: 'Sports event' }[cfg.event.template];
   return (
     <div style={s('padding:30px 44px 52px;animation:stFade .3s ease both;display:flex;flex-direction:column;gap:20px')}>
       <PageHead title="Plan" sub={`What fans see on the event page before it starts. Set up from the ${tpl} template.`}>
@@ -279,6 +292,7 @@ function Invite({ cfg, st, set, say, sendReminder }: any) {
         </div>
         <div style={s('display:flex;height:8px;border-radius:5px;overflow:hidden;margin-top:14px;background:#F1F1EE')}><span style={{ ...s('display:block;background:#1B0B2D'), width: (r.venue / Math.max(r.total, 1)) * 100 + '%' }} /><span style={s('display:block;flex:1;background:#8B3DF5')} /></div>
       </Card>
+      {C.tickets && <TicketsCard cfg={C} st={st} />}
       <div style={s('display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start')}>
         <Card>
           <div style={s('display:flex;align-items:center;gap:12px')}><Cap>SEND A REMINDER OR UPDATE</Cap><Note>Registered attendees only</Note></div>
@@ -301,6 +315,39 @@ function Invite({ cfg, st, set, say, sendReminder }: any) {
         </Card>
       </div>
     </div>
+  );
+}
+
+// Ticket link clicks and referrals (each attendee and each crew has a code).
+function TicketsCard({ cfg, st }: { cfg: EventConfig; st: St }) {
+  const T = cfg.tickets!; const R = cfg.demo.results.tickets || { clicks: 0, sales: 0, top: [] };
+  const clicks = R.clicks + st.tix.clicks;
+  const top = [...R.top, ...Object.entries(st.tix.crews).map(([name, n]) => ({ name: name + ' (this session)', crew: true, clicks: n, sales: 0 }))].sort((a, b) => b.clicks - a.clicks).slice(0, 6);
+  const maxC = Math.max(...top.map((x) => x.clicks), 1);
+  return (
+    <Card>
+      <div style={s('display:flex;align-items:center;gap:12px')}><Ms size={17} color="#8B3DF5">confirmation_number</Ms><Cap>TICKETS · CLICKS AND REFERRALS</Cap><Demo /><Note>Ticketing stays with {T.sub.replace(/^official /i, 'the official ').toLowerCase()}</Note></div>
+      <div style={s('display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;border-radius:12px;background:#F1F1EE')}>
+        <Ms size={16} color="#513E66">link</Ms><span style={s("flex:1;min-width:0;font:500 12.5px/1 'Archivo';overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{ticketUrl(cfg, 'CODE')}</span><span style={s("font:600 10.5px/1 'Archivo';color:#826E99")}>Every fan and crew gets their own code</span>
+      </div>
+      <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px')}>
+        <Stat label="TICKET LINK CLICKS" v={clicks.toLocaleString()} sub={st.tix.clicks ? '+' + st.tix.clicks + ' from this session' : 'From the event page'} />
+        <Stat label="SALES FROM REFERRALS" v={R.sales.toLocaleString()} sub="Reported back by ticketing" />
+        <Stat label="CLICK TO SALE" v={((R.sales / Math.max(clicks, 1)) * 100).toFixed(1) + '%'} sub="Referral codes only" />
+      </div>
+      <div style={s('margin-top:16px')}><Cap>TOP REFERRERS</Cap></div>
+      <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:10px')}>
+        {top.map((x) => (
+          <div key={x.name} style={s('display:grid;grid-template-columns:1.4fr 70px 2fr 70px 70px;gap:12px;align-items:center')}>
+            <span style={s("font:600 12.5px/1.2 'Archivo';white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{x.name}</span>
+            <span style={{ ...s("font:600 9.5px/1 'Archivo';letter-spacing:.08em;padding:5px 6px;border-radius:6px;text-align:center"), background: x.crew ? '#1B0B2D' : '#F1F1EE', color: x.crew ? '#F5F5F2' : '#513E66' }}>{x.crew ? 'CREW' : 'FAN'}</span>
+            <span style={s('height:8px;border-radius:5px;background:#F1F1EE;overflow:hidden')}><span style={{ ...s('display:block;height:8px;background:#8B3DF5'), width: (x.clicks / maxC) * 100 + '%' }} /></span>
+            <span style={s("font:600 12px/1 'Archivo';text-align:right;font-variant-numeric:tabular-nums")}>{x.clicks} clicks</span>
+            <span style={s("font:700 12px/1 'Archivo';text-align:right;font-variant-numeric:tabular-nums")}>{x.sales} sold</span>
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 }
 
@@ -377,14 +424,19 @@ function Control({ cfg, st, set, goState, goSeg, fire, nextOf, qStatus, aud, rea
 
         <Card>
           <div style={s('display:flex;align-items:center;gap:12px')}><Cap>LIVE SEGMENTS</Cap><Note>{st.ms === 'live' ? 'Jump to any segment' : 'Choosing a segment takes the event live'}</Note></div>
-          <div style={{ ...s('display:grid;gap:12px;margin-top:16px'), gridTemplateColumns: `repeat(${Math.min(n, 5)},minmax(0,1fr))` }}>
-            {C.segments.map((g, i) => { const on = st.ms === 'live' && st.seg === i; return (
+          {(C.days?.length ? C.days.map((d, di) => ({ d, di })) : [{ d: null, di: 0 }]).map(({ d, di }) => { const segs = C.segments.map((g, i) => ({ g, i })).filter(({ g }) => !C.days?.length || (g.day ?? 0) === di); return (
+          <div key={di}>
+          {d && <div style={s("display:flex;align-items:baseline;gap:10px;margin-top:16px;font:700 12px/1 'Archivo'")}><span>{d.label}</span><span style={s("font:500 11px/1 'Archivo';color:#826E99")}>{d.date} · {d.sub}</span></div>}
+          <div style={{ ...s('display:grid;gap:12px;margin-top:' + (d ? '10px' : '16px')), gridTemplateColumns: `repeat(${Math.min(Math.max(segs.length, d ? 4 : 1), 5)},minmax(0,1fr))` }}>
+            {segs.map(({ g, i }) => { const on = st.ms === 'live' && st.seg === i; return (
               <button key={g.id} className="ah" onClick={() => goSeg(i)} style={{ ...s('display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:14px;border-radius:12px;text-align:left;min-width:0'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: on ? 'inset 0 0 0 2px #C0473C' : 'inset 0 0 0 1px rgba(27,11,45,.12)' }}>
                 <span style={s("font:600 10px/1 'Archivo';letter-spacing:.1em;color:#826E99;font-variant-numeric:tabular-nums")}>{g.time}{g.kind === 'reveal' ? ' · REVEAL' : g.kind === 'qa' ? ' · Q&A' : ''}</span>
                 <span style={s('display:flex;align-items:center;gap:7px;width:100%')}><span style={s("flex:1;font:700 13.5px/1.15 'Archivo';color:#1B0B2D")}>{g.name}</span>{on && <span style={s('width:7px;height:7px;flex:none;border-radius:50%;background:#C0473C;animation:stBlink 1.4s steps(1,end) infinite')} />}</span>
               </button>
             ); })}
           </div>
+          </div>
+          ); })}
           <button className="ah-ink-btn" onClick={() => goSeg(st.ms === 'live' ? Math.min(st.seg + 1, n - 1) : 0)} style={s("display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:16px;padding:16px;border-radius:12px;background:#1B0B2D;font:700 13.5px/1 'Archivo';color:#F5F5F2")}>{st.ms !== 'live' ? 'Go live · ' + (C.segments[0]?.name || '') : st.seg < n - 1 ? 'Advance to ' + C.segments[st.seg + 1].name : 'On the last segment'}<Ms size={18} color="#F5F5F2">arrow_forward</Ms></button>
         </Card>
 
@@ -398,8 +450,8 @@ function Control({ cfg, st, set, goState, goSeg, fire, nextOf, qStatus, aud, rea
               ); })}
             </div>
           </div>
-          <div style={s('display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px')}>
-            {TRIGGERS.map((t) => (
+          <div style={{ ...s('display:grid;gap:12px;margin-top:16px'), gridTemplateColumns: `repeat(${C.challenges?.length ? 5 : 4},minmax(0,1fr))` }}>
+            {TRIGGERS.filter((t) => t.id !== 'challenge' || C.challenges?.length).map((t) => (
               <button key={t.id} className="ah2" onClick={() => fire(t.id)} style={s('display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px;border-radius:12px;background:#F1F1EE;box-shadow:inset 0 0 0 1px rgba(27,11,45,.08);text-align:left;min-width:0')}>
                 <Ms size={22} color={t.color}>{t.icon}</Ms>
                 <span><span style={s("display:block;font:700 13.5px/1.2 'Archivo';color:#1B0B2D")}>{t.name}</span><span style={s("display:block;font:400 11px/1.35 'Archivo';color:#513E66;margin-top:5px")}>{nextOf(t.id)}</span></span>
@@ -650,6 +702,10 @@ function Results({ cfg, st }: any) {
   const maxFeat = Math.max(...feats.map((f) => f.pct), 0);
   const sources = R.sources || []; const srcTotal = Math.max(sources.reduce((a, x) => a + x.n, 0), 1); const maxSrc = Math.max(...sources.map((x) => x.n), 1);
   const LQ = R.leadQuality || [];
+  const tixR = R.tickets; const tixClicks = (tixR?.clicks || 0) + st.tix.clicks;
+  const chRows = (C.challenges || []).map((c) => ({ c, n: (R.challenges?.[c.id] || 0) + (st.chDone[c.id] || 0) })); const maxCh = Math.max(...chRows.map((x) => x.n), 1);
+  const owns = (name: string) => [...C.polls.filter((p) => p.sponsor === name).map(() => 'Poll'), ...(C.challenges || []).filter((c) => c.sponsor === name).map(() => 'Challenge'), ...Object.values(C.announcements).flat().filter((m) => m.sponsor === name).map(() => 'Announcement'), ...(C.rewards || []).filter((r) => r.sponsor === name).map(() => 'Reward')];
+  const spRows = (R.sponsors || []).map((x) => ({ ...x, views: x.views + (st.spViews[x.name] || 0), taps: x.taps + (st.spTaps[x.name] || 0), owns: Array.from(new Set(owns(x.name))) }));
   const bar = (pct: number, bg = '#8B3DF5') => <div style={s('height:10px;border-radius:6px;background:#F1F1EE;margin-top:9px;overflow:hidden')}><span style={{ ...s('display:block;height:10px;border-radius:6px;transition:width .8s cubic-bezier(.2,.8,.2,1)'), width: pct + '%', background: bg }} /></div>;
   const kpi = (k: { label: string; v: string; icon: string; sub: string }, big = true) => (
     <div key={k.label} style={s('padding:' + (big ? '24px' : '22px 24px') + ';background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(27,11,45,.05);animation:stRise .4s ease both')}>
@@ -682,7 +738,7 @@ function Results({ cfg, st }: any) {
         </Card>
       )}
       {(feats.length > 0 || sources.length > 0) && (
-        <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px')}>
+        <div style={{ ...s('display:grid;gap:20px;margin-top:20px'), gridTemplateColumns: feats.length > 0 && sources.length > 0 ? '1fr 1fr' : '1fr' }}>
           {feats.length > 0 && <Card>
             <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">my_location</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Features explored</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>Share of viewers who opened each one</span></div>
             <div style={s('margin-top:22px;display:flex;flex-direction:column;gap:16px')}>{feats.map((f) => <div key={f.name}><div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:600 13px/1 'Archivo';flex:1")}>{f.name}</span><span style={s("font:700 13px/1 'Archivo';font-variant-numeric:tabular-nums")}>{f.pct}%</span></div>{bar(f.pct, f.pct === maxFeat ? '#1B0B2D' : '#8B3DF5')}</div>)}</div>
@@ -693,6 +749,37 @@ function Results({ cfg, st }: any) {
             <div style={s('margin-top:22px;display:flex;flex-direction:column;gap:16px')}>{sources.map((x) => <div key={x.name}><div style={s('display:flex;align-items:center;gap:9px')}><Ms size={16} color="#826E99">{x.icon}</Ms><span style={s("font:600 13px/1 'Archivo';flex:1")}>{x.name}</span><span style={s("font:700 13px/1 'Archivo';font-variant-numeric:tabular-nums")}>{x.n.toLocaleString()}</span><span style={s("width:40px;text-align:right;font:500 11.5px/1 'Archivo';color:#826E99")}>{Math.round((x.n / srcTotal) * 100)}%</span></div>{bar((x.n / maxSrc) * 100)}</div>)}</div>
           </Card>}
         </div>
+      )}
+      {(tixR || chRows.length > 0) && (
+        <div style={{ ...s('display:grid;gap:20px;margin-top:20px'), gridTemplateColumns: tixR && chRows.length > 0 ? '1fr 1.3fr' : '1fr' }}>
+          {tixR && <Card>
+            <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">confirmation_number</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Tickets and referrals</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>Clicks out to ticketing</span></div>
+            <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px')}>
+              <Stat label="CLICKS" v={tixClicks.toLocaleString()} />
+              <Stat label="REFERRAL SALES" v={tixR.sales.toLocaleString()} />
+              <Stat label="BY CREWS" v={Math.round((tixR.top.filter((x) => x.crew).reduce((a, x) => a + x.sales, 0) / Math.max(tixR.top.reduce((a, x) => a + x.sales, 0), 1)) * 100) + '%'} sub="of top-referrer sales" />
+            </div>
+            <div style={s('margin-top:16px;display:flex;flex-direction:column;gap:12px')}>{tixR.top.slice(0, 4).map((x) => <div key={x.name}><div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:600 13px/1 'Archivo';flex:1")}>{x.name}</span><span style={s("font:600 10px/1 'Archivo';color:#826E99")}>{x.crew ? 'CREW' : 'FAN'}</span><span style={s("width:64px;text-align:right;font:700 13px/1 'Archivo';font-variant-numeric:tabular-nums")}>{x.sales} sold</span></div>{bar((x.sales / Math.max(tixR.top[0].sales, 1)) * 100)}</div>)}</div>
+          </Card>}
+          {chRows.length > 0 && <Card>
+            <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">emoji_events</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Challenge completions</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>{st.claims ? st.claims + ' reward claimed this session · ' : ''}{(C.rewards || []).length} rewards on offer</span></div>
+            <div style={s('margin-top:20px;display:flex;flex-direction:column;gap:14px')}>{chRows.map(({ c, n }) => <div key={c.id}><div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:600 13px/1 'Archivo';flex:1")}>{c.title}</span>{c.sponsor && <span style={s("font:600 10px/1 'Archivo';color:#826E99")}>by {c.sponsor}</span>}<span style={s("width:50px;text-align:right;font:600 11px/1 'Archivo';color:#826E99")}>+{c.points}</span><span style={s("width:60px;text-align:right;font:700 13px/1 'Archivo';font-variant-numeric:tabular-nums")}>{n.toLocaleString()}</span></div>{bar((n / maxCh) * 100)}</div>)}</div>
+          </Card>}
+        </div>
+      )}
+      {spRows.length > 0 && (
+        <Card style={{ marginTop: 20 }}>
+          <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color="#1B0B2D">handshake</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Sponsor moments</span><span style={s("font:400 12px/1 'Archivo';color:#826E99;margin-left:auto")}>Views and taps on the moments each sponsor owns</span></div>
+          <div style={s("display:grid;grid-template-columns:1.6fr 2fr 1fr 1fr 1fr 2fr;gap:12px;margin-top:18px;padding-bottom:10px;border-bottom:1px solid rgba(27,11,45,.08);font:600 10px/1 'Archivo';letter-spacing:.12em;color:#826E99")}><span>SPONSOR</span><span>OWNS</span><span style={s('text-align:right')}>VIEWS</span><span style={s('text-align:right')}>TAPS</span><span style={s('text-align:right')}>TAP RATE</span><span>SHARE OF TAPS</span></div>
+          {spRows.map((x) => { const b = sponsorOf(C, x.name)!; const all = Math.max(spRows.reduce((a, y) => a + y.taps, 0), 1); return (
+            <div key={x.name} style={s("display:grid;grid-template-columns:1.6fr 2fr 1fr 1fr 1fr 2fr;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid rgba(27,11,45,.08);font:600 13px/1 'Archivo';font-variant-numeric:tabular-nums")}>
+              <span style={s('display:flex;align-items:center;gap:9px')}><span style={{ ...s("display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 5px;border-radius:5px;font:900 9.5px/1 'Archivo';color:#fff"), background: b.color }}>{b.short}</span>{x.name}</span>
+              <span style={s("font:500 12px/1.3 'Archivo';color:#513E66")}>{x.owns.join(', ') || '—'}</span>
+              <span style={s('text-align:right')}>{x.views.toLocaleString()}</span><span style={s('text-align:right')}>{x.taps.toLocaleString()}</span><span style={s('text-align:right')}>{((x.taps / Math.max(x.views, 1)) * 100).toFixed(1)}%</span>
+              <span style={s('height:10px;border-radius:6px;background:#F1F1EE;overflow:hidden')}><span style={{ ...s('display:block;height:10px;border-radius:6px'), width: (x.taps / all) * 100 + '%', background: b.color }} /></span>
+            </div>
+          ); })}
+        </Card>
       )}
       {R.multiEvent.rows.length > 0 && (
         <Card style={{ marginTop: 20 }}>
