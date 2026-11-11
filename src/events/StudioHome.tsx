@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent
 import { s } from '../voltford/admin/s';
 import {
   listEvents, getEvent, saveEvent, saveDraft, deleteEvent, duplicateEvent, nextFreeId, isSample, newFromTemplate,
-  fanPath, studioPath, abs, asset, mix, TEMPLATES, TARGETS,
+  fanPath, studioPath, abs, asset, mix, TEMPLATES, TARGETS, sportStarter, dateLabels,
   type EventConfig, type SegKind, type Target,
 } from './config';
 import { Ms, Card, Cap, Note, Demo, ADMIN_CSS } from './EventStudio';
@@ -180,7 +180,15 @@ const setAt = (o: any, p: Path, v: any): any => {
 
 function Builder({ draft, setDraft, step, setStep, isNew, say, close, refresh }: any) {
   const cfg = draft as EventConfig;
-  const upd = (p: Path, v: any) => setDraft((d: EventConfig) => setAt(d, p, v));
+  // Fields that follow others until they're edited by hand: the hero title and
+  // kicker follow the event and brand names; the short date labels follow the date.
+  const upd = (p: Path, v: any) => setDraft((d: EventConfig) => {
+    let n = setAt(d, p, v); const k = p.join('.');
+    if (k === 'event.name' && (d.event.title === d.event.name.toUpperCase() || isNewish(d))) n = setAt(n, ['event', 'title'], String(v).toUpperCase());
+    if (k === 'brand.name' && (d.event.kicker === d.brand.name.toUpperCase() || isNewish(d))) n = setAt(n, ['event', 'kicker'], String(v).toUpperCase());
+    if (k === 'event.date' || k === 'event.time') { const L = dateLabels(n.event.date, n.event.time); if (L) { n = setAt(n, ['event', 'dayLabel'], L.dayLabel); n = setAt(n, ['event', 'dateShort'], L.dateShort); } }
+    return n;
+  });
   // Keep the live preview in step with the form (the fan view reloads drafts).
   useEffect(() => { const t = window.setTimeout(() => saveDraft(cfg), 180); return () => window.clearTimeout(t); }, [cfg]);
   const B = { cfg, upd, setDraft, say };
@@ -230,6 +238,8 @@ function Builder({ draft, setDraft, step, setStep, isNew, say, close, refresh }:
   );
 }
 
+// A new event still carrying the template's sample hero text.
+const isNewish = (d: EventConfig) => !isSample(d.id) && (d.event.title === 'AURORA NOVA' || d.event.kicker === 'AURORA MOTORS');
 function PhoneFrame({ cfg, width, height, state }: { cfg: EventConfig; width: number; height: number; state?: string }) {
   return (
     <div style={{ ...s('padding:9px;border-radius:30px;background:#0E0B12;box-shadow:0 20px 50px -24px rgba(27,11,45,.6)'), width }}>
@@ -415,7 +425,8 @@ function EventStep({ cfg, upd, setDraft }: any) {
     setDraft((d: EventConfig) => {
       const times = ['09:00', '09:30', '10:30', '13:00', '15:00', '16:00'];
       const segs = t.segments.map(([name, kind], i) => ({ id: 's' + (i + 1), name, short: name.toUpperCase(), time: times[i] || '17:00', kind, blurb: '', note: '', heroTitle: name.toUpperCase(), heroSub: '' }));
-      return { ...d, event: { ...d.event, template: t.id, format: t.format }, segments: segs, demo: { ...d.demo, results: { ...d.demo.results, engagement: segs.map((g, i) => ({ seg: g.name, pct: [38, 64, 92, 71, 55, 44][i] || 40 })) } } };
+      const next = { ...d, event: { ...d.event, template: t.id, format: t.format }, segments: segs, demo: { ...d.demo, results: { ...d.demo.results, engagement: segs.map((g, i) => ({ seg: g.name, pct: [38, 64, 92, 71, 55, 44][i] || 40 })) } } };
+      return t.id === 'sport' ? sportStarter(JSON.parse(JSON.stringify(next))) : next;
     });
   };
   const kinds: [string, string][] = [['doors', 'Doors / arrival'], ['talk', 'Talk'], ['reveal', 'Reveal moment'], ['qa', 'Q&A'], ['other', 'Other']];

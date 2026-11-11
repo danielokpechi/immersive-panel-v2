@@ -270,15 +270,7 @@ export function newFromTemplate(id: string, tpl: (typeof TEMPLATES)[number]): Ev
   c.id = id; c.status = 'draft';
   c.event.template = tpl.id; c.event.format = tpl.format; c.event.name = 'Untitled ' + tpl.name.toLowerCase();
   if (tpl.id !== 'launch') { delete c.showroom; delete c.interest; delete c.followUp; delete c.demo.leads; } // car-launch only
-  if (tpl.id === 'sport') {
-    c.challenges = [
-      { id: 'c1', kind: 'predict', title: 'Predict the winner', sub: 'Locks when it starts.', points: 50, options: ['Team A', 'Team B'] },
-      { id: 'c2', kind: 'checkin', title: 'Check in at the fan zone', sub: 'Scan the venue QR.', points: 30 },
-      { id: 'c3', kind: 'trivia', title: 'Trivia', sub: 'One question, one go.', points: 20, options: ['A', 'B', 'C'], answer: 'A' },
-    ];
-    c.rewards = [{ id: 'r1', name: 'Signed merch', sub: 'Collect at the merch stand.', points: 80, stock: 50 }];
-    c.tickets = { url: 'https://tickets.example.com/event', label: 'Buy tickets', sub: 'Official ticketing partner', priceFrom: 'From RM50', crewLabel: 'Join a crew', crews: [] };
-  }
+  if (tpl.id === 'sport') sportStarter(c);
   const times = ['09:00', '09:30', '10:30', '13:00', '15:00', '16:00'];
   c.segments = tpl.segments.map(([name, kind], i) => ({ id: 's' + (i + 1), name, short: name.toUpperCase(), time: times[i] || '17:00', kind, blurb: '', note: '', heroTitle: name.toUpperCase(), heroSub: '' }));
   c.demo.results.engagement = c.segments.map((g, i) => ({ seg: g.name, pct: [38, 64, 92, 71, 55, 44][i] || 40 }));
@@ -344,3 +336,23 @@ export function myRefCode(cfg: EventConfig): string {
 export const crewCode = (crew: string) => 'CREW-' + crew.toUpperCase().replace(/[^A-Z0-9]+/g, '').slice(0, 12);
 export const ticketUrl = (cfg: EventConfig, ref: string) => { const u = cfg.tickets?.url || ''; return u + (u.includes('?') ? '&' : '?') + 'ref=' + encodeURIComponent(ref); };
 export const sponsorOf = (cfg: EventConfig, name?: string) => (name ? cfg.sponsorKit?.find((x) => x.name === name) || { name, short: name.slice(0, 2).toUpperCase(), color: '#555555' } : null);
+
+// Starter challenges, a reward and a ticket button for a new sports event.
+export function sportStarter(c: EventConfig): EventConfig {
+  if (c.challenges?.length) return c;
+  c.challenges = [
+    { id: 'c1', kind: 'predict', title: 'Predict the winner', sub: 'Locks when it starts.', points: 50, options: ['Team A', 'Team B'] },
+    { id: 'c2', kind: 'checkin', title: 'Check in at the fan zone', sub: 'Scan the venue QR.', points: 30 },
+    { id: 'c3', kind: 'trivia', title: 'Trivia', sub: 'One question, one go.', points: 20, options: ['A', 'B', 'C'], answer: 'A' },
+  ];
+  c.rewards = [{ id: 'r1', name: 'Signed merch', sub: 'Collect at the merch stand.', points: 80, stock: 50 }];
+  c.tickets = c.tickets || { url: 'https://tickets.example.com/event', label: 'Buy tickets', sub: 'Official ticketing partner', priceFrom: 'From RM50', crewLabel: 'Join a crew', crews: [] };
+  return c;
+}
+// Labels derived from the date and start time: "SAT 20:00" and "SAT 9 JAN".
+export function dateLabels(date: string, time: string) {
+  const d = new Date(date + 'T12:00:00'); if (isNaN(d.getTime())) return null;
+  const day = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()];
+  const mon = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][d.getMonth()];
+  return { dayLabel: day + ' ' + (time || '00:00'), dateShort: day + ' ' + d.getDate() + ' ' + mon };
+}
