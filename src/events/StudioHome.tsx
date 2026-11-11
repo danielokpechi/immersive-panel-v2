@@ -187,6 +187,10 @@ function Builder({ draft, setDraft, step, setStep, isNew, say, close, refresh }:
     if (k === 'event.name' && (d.event.title === d.event.name.toUpperCase() || isNewish(d))) n = setAt(n, ['event', 'title'], String(v).toUpperCase());
     if (k === 'brand.name' && (d.event.kicker === d.brand.name.toUpperCase() || isNewish(d))) n = setAt(n, ['event', 'kicker'], String(v).toUpperCase());
     if (k === 'event.date' || k === 'event.time') { const L = dateLabels(n.event.date, n.event.time); if (L) { n = setAt(n, ['event', 'dayLabel'], L.dayLabel); n = setAt(n, ['event', 'dateShort'], L.dateShort); } }
+    // While a new event still has the template's sample lines, keep them in step with its own details.
+    if (!isSample(d.id) && (d.event.kickerSub === TPL_KICKER_SUB || d.event.kickerSub === autoKickerSub(d)) && ['event.city', 'event.template', 'event.format'].includes(k)) n = setAt(n, ['event', 'kickerSub'], autoKickerSub(n));
+    if (!isSample(d.id) && (d.event.dateLine === TPL_DATE_LINE || d.event.dateLine === autoDateLine(d)) && ['event.date', 'event.time', 'event.venue', 'event.venueShort', 'event.format'].includes(k)) n = setAt(n, ['event', 'dateLine'], autoDateLine(n));
+    if (!isSample(d.id) && k.startsWith('event.venue') && d.event.venueShort === 'AURORA HALL, KL' && k !== 'event.venueShort') n = setAt(n, ['event', 'venueShort'], String(n.event.venue).toUpperCase());
     return n;
   });
   // Keep the live preview in step with the form (the fan view reloads drafts).
@@ -238,6 +242,10 @@ function Builder({ draft, setDraft, step, setStep, isNew, say, close, refresh }:
   );
 }
 
+const TPL_KICKER_SUB = 'WORLD PREMIERE · KUALA LUMPUR';
+const TPL_DATE_LINE = 'TUE 20:00 · AURORA HALL, KL · AND ONLINE';
+const autoKickerSub = (d: EventConfig) => ((TEMPLATES.find((t) => t.id === d.event.template)?.name || 'Event') + (d.event.city ? ' · ' + d.event.city : '')).toUpperCase();
+const autoDateLine = (d: EventConfig) => [d.event.dayLabel, (d.event.venueShort || d.event.venue).toUpperCase(), d.event.format === 'Hybrid' ? 'AND ONLINE' : d.event.format === 'Online' ? 'ONLINE' : ''].filter(Boolean).join(' · ');
 // A new event still carrying the template's sample hero text.
 const isNewish = (d: EventConfig) => !isSample(d.id) && (d.event.title === 'AURORA NOVA' || d.event.kicker === 'AURORA MOTORS');
 function PhoneFrame({ cfg, width, height, state }: { cfg: EventConfig; width: number; height: number; state?: string }) {
@@ -426,7 +434,11 @@ function EventStep({ cfg, upd, setDraft }: any) {
       const times = ['09:00', '09:30', '10:30', '13:00', '15:00', '16:00'];
       const segs = t.segments.map(([name, kind], i) => ({ id: 's' + (i + 1), name, short: name.toUpperCase(), time: times[i] || '17:00', kind, blurb: '', note: '', heroTitle: name.toUpperCase(), heroSub: '' }));
       const next = { ...d, event: { ...d.event, template: t.id, format: t.format }, segments: segs, demo: { ...d.demo, results: { ...d.demo.results, engagement: segs.map((g, i) => ({ seg: g.name, pct: [38, 64, 92, 71, 55, 44][i] || 40 })) } } };
-      return t.id === 'sport' ? sportStarter(JSON.parse(JSON.stringify(next))) : next;
+      if (t.id !== 'sport') return next;
+      const sp = sportStarter(JSON.parse(JSON.stringify(next)));
+      if (sp.event.countdownLabel === 'REVEAL IN') { sp.event.countdownLabel = 'STARTS IN'; sp.event.inviteTitle = 'BE THERE FOR THE START'; sp.event.inviteSub = 'In person or online, the same moment.'; }
+      if (sp.event.kickerSub === TPL_KICKER_SUB) sp.event.kickerSub = autoKickerSub(sp);
+      return sp;
     });
   };
   const kinds: [string, string][] = [['doors', 'Doors / arrival'], ['talk', 'Talk'], ['reveal', 'Reveal moment'], ['qa', 'Q&A'], ['other', 'Other']];
