@@ -14,3 +14,8 @@ export const MatchdayFan = dynamic(() => import('../fan/MatchdayFan').then((m) =
 // need not show Manchester City. The City screens above stay untouched.
 export const VoltfordStudio = dynamic(() => import('../voltford/admin/PanelStudio').then((m) => m.PanelStudio), { ssr: false });
 export const VoltfordFan = dynamic(() => import('../voltford/fan/MatchdayFan').then((m) => m.MatchdayFan), { ssr: false });
+
+// Pogoń Szczecin copy of the Voltford Studio and fan panel (src/pogon), for the
+// Pogoń demo: operator console at /pogon/control/<id>/, fan link at /pogon/p/<id>/.
+export const PogonStudio = dynamic(() => import('../pogon/admin/PanelStudio').then((m) => m.PanelStudio), { ssr: false });
+export const PogonFan = dynamic(() => import('../pogon/fan/MatchdayFan').then((m) => m.MatchdayFan), { ssr: false });
