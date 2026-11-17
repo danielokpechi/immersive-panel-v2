@@ -538,7 +538,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   const shown = st.chat;
   const previewMsgs = st.chat.filter((m) => !m.ev).slice(-5).map((m) => ({ user: m.me ? 'YOU' : m.user, text: m.text, initials: m.me ? 'YO' : m.user.slice(0, 2), avBg: TEAM[m.t].bg, avFg: TEAM[m.t].fg }));
 
-  const statusLabel = inactive ? (NARROW ? 'SAT 08 AUG · 17:30' : 'NEXT: SAT 08 AUG, 17:30') : pre ? '20:00' : live ? minute + "'" : ht ? 'HT' : 'FT';
+  const statusLabel = inactive ? (NARROW ? 'SUN 29 NOV · 14:45' : 'NEXT: SUN 29 NOV, 14:45') : pre ? '20:30' : live ? minute + "'" : ht ? 'HT' : 'FT';
   const myCrewCount = ALL_CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).length;
   const crewGatedLocked = activeCrewData.gated && !st.boxUnlocked;
   const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'POGOŃ STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), createCrew: 'START A CREW', crewSettings: 'CREW SETTINGS', invite: 'INVITE', room: 'ROOM', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
