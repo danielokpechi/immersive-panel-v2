@@ -736,10 +736,15 @@ function Control({ st, setState, say, broadcast }: Props) {
     const bus = openBus(p.id.toLowerCase(), () => {}, (sync) => setState({ sync }));
     chanRef.current = bus;
     // Sync the freshly-loaded monitor (and any phones) to the current session.
-    const t = window.setTimeout(() => bus.post({ cmd: 'state', ms: phaseToMs((sess[st.liveIdx] || {}).phase) }), 900);
+    const t = window.setTimeout(() => bus.post({ cmd: 'state', ms: phaseToMs((sess[st.liveIdx] || {}).phase), theme: fanThemeRef.current }), 900);
     return () => { window.clearTimeout(t); bus.close(); chanRef.current = null; };
   }, [p.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  const send = (msg: { cmd: string; ms?: string; kind?: string; route?: string; action?: string; crewId?: string; player?: string; duration?: number; type?: string }) => chanRef.current?.post(msg);
+  // Fans' display mode (Avinash: dark by default, selectable from the console). Sent with every
+  // state message so phones that join later pick it up from the relay's replay too.
+  const [fanTheme, setFanTheme] = useState<string>(() => { try { return localStorage.getItem('pogon-fan-theme') || 'dark'; } catch { return 'dark'; } });
+  const fanThemeRef = useRef(fanTheme); fanThemeRef.current = fanTheme;
+  const send = (msg: { cmd: string; ms?: string; kind?: string; route?: string; action?: string; crewId?: string; player?: string; duration?: number; type?: string; theme?: string }) => chanRef.current?.post(msg.cmd === 'state' ? { ...msg, theme: fanThemeRef.current } : msg);
+  const pickFanTheme = (k: string) => { setFanTheme(k); fanThemeRef.current = k; try { localStorage.setItem('pogon-fan-theme', k); } catch { /* private mode */ } chanRef.current?.post({ cmd: 'state', ms: phaseToMs((sess[st.liveIdx] || {}).phase), theme: k }); say(`Fans switched to ${k === 'auto' ? 'their phone setting' : k + ' mode'}`, k === 'light' ? 'light_mode' : k === 'dark' ? 'dark_mode' : 'contrast'); };
 
   // The real, scannable QR for the same absolute fan URL shown in the link field.
   const [shareUrl, setShareUrl] = useState('');
@@ -824,6 +829,18 @@ function Control({ st, setState, say, broadcast }: Props) {
                 <div className="m-ml0" style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE;margin-left:auto')}>{['1×', '2×', '5×', '10×'].map((x) => { const on = st.speed === x; return <button key={x} onClick={() => setState({ speed: x })} style={dk({ ...s("padding:9px 12px;border-radius:9px;font:600 11.5px/1 'Archivo';font-variant-numeric:tabular-nums"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#0B1A2D' : '#3D5067' })}>{x}</button>; })}</div>
               </div>
               <div style={s("font:400 12px/1.5 'Archivo';color:#3D5067;margin-top:16px")}>{st.mode === 'manual' ? 'Manual: nothing advances unless you advance it. Safest during a live match.' : 'Auto: sessions advance on the match clock, you can still fire events and override.'}</div>
+            </Card>
+
+            <Card>
+              <div className="m-col" style={s('display:flex;align-items:center;gap:16px')}>
+                <div style={s('flex:1;min-width:0')}>
+                  <div style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>FAN DISPLAY</div>
+                  <div style={s("font:400 12px/1.5 'Archivo';color:#3D5067;margin-top:8px")}>The look every phone uses. Dark is the default; Auto follows each fan’s phone setting.</div>
+                </div>
+                <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE')}>{[{ k: 'dark', name: 'Dark', icon: 'dark_mode' }, { k: 'light', name: 'Light', icon: 'light_mode' }, { k: 'auto', name: 'Auto', icon: 'contrast' }].map((o) => { const on = fanTheme === o.k; return (
+                  <button key={o.k} onClick={() => pickFanTheme(o.k)} style={dk({ ...s("display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:9px;font:600 12.5px/1 'Archivo'"), background: on ? '#0B1A2D' : 'transparent', color: on ? '#F5F5F2' : '#3D5067' })}><Ms size={15} color={on ? '#F5F5F2' : ctx('#3D5067')}>{o.icon}</Ms>{o.name}</button>
+                ); })}</div>
+              </div>
             </Card>
 
             <Card>

@@ -217,7 +217,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
     chat: POOL.slice(0, 7).map((m, i) => ({ ...m, id: 's' + i, time: '20:' + pad(11 + i * 3), likes: 1 + (i % 4) })),
     draft: '', room: 'ALL FANS', likes: {}, votes: {}, pred: { h: 2, a: 1, s: 'Grosicki', done: false },
     size: 'M', basket: [], ordered: false, food: {}, foodPlaced: false, foodEta: 6,
-    photos: 9, reels: {}, read: null, flash: null, flashOut: false, irisOut: false, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('theme') === 'dark') ? 'dark' : 'light', quests: {}, toast: null, toastXp: '',
+    photos: 9, reels: {}, read: null, flash: null, flashOut: false, irisOut: false, routeOn: false, prefs: { goals: true, ht: true, rewards: false }, theme: (() => { const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('theme') : null; return q === 'light' || q === 'auto' ? q : 'dark'; })(), quests: {}, toast: null, toastXp: '',
     crewsJoined: { msb: true, northtier: true }, activeCrew: 'msb', crewDraft: '', crewMsgsExtra: {},
     navStack: [], customCrews: [], newCrewName: '', newCrewDesc: '', newCrewPrivacy: 'public', inviteSent: {},
     onboardingSkipped: false, crewsIntroSeen: false, forceCrewsIntro: false,
@@ -322,6 +322,9 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
     // In the marketing autoplay the panel is self-driving; ignore control-room
     // broadcasts (they'd inject goals/cards + the flash-drop pop-up on top).
     if (autoplay) return;
+    // The console picks the fans' display mode; it rides on every state message so late joiners get it too.
+    if ((m.theme === 'auto' || m.theme === 'light' || m.theme === 'dark')) set({ theme: m.theme });
+    if (m.cmd === 'theme') return;
     if (m.cmd === 'state' && m.ms) applyState(m.ms);
     else if (m.cmd === 'event' && m.kind) applyEventCmd(m.kind);
     // Operator prompt: send fans straight to a screen (Crews, Spot Kick…).
