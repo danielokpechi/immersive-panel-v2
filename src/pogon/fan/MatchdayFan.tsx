@@ -42,20 +42,21 @@ const Badge = ({ club, size = 38, bare = false }: { club: 'home' | 'away'; size?
 function Slot({ id, label }: { id: string; label: string }) {
   const src = mediaFor(id);
   if (src) return <img src={src} alt={label} loading="lazy" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />;
-  return <span style={s("position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{label}</span>;
+  return <span style={s("position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 8.5px/1 'Inter';letter-spacing:.14em;color:var(--label)")}>{label}</span>;
 }
 
-// Cinematic matchday backdrop: Pogoń crowd, floodlight grade + vignette, one-shot sweep.
-// Shared by the PRE/LIVE/HT/FT hero heads so every match state feels like one broadcast.
-function HeroBg({ pos = '50% 8%', glow = 'rgba(237,32,60,.46)', sweep = true }: { pos?: string; glow?: string; sweep?: boolean }) {
+
+// Sepang-style quick actions: round icon buttons with a caption underneath.
+function QuickRow({ items }: { items: { icon: string; label: string; go: () => void; primary?: boolean }[] }) {
   return (
-    <>
-      <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:' + pos)} />
-      <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,22,37,.46) 0%,rgba(9,22,37,.62) 24%,rgba(7,18,31,.9) 52%,#091625 88%)')} />
-      <div style={{ ...s('position:absolute;inset:0'), background: 'radial-gradient(120% 72% at 50% -14%,' + glow + ',transparent 56%)', animation: 'bgFloods 5s ease-in-out infinite' }} />
-      <div style={s('position:absolute;inset:0;background:radial-gradient(140% 88% at 50% 26%,transparent 42%,rgba(6,14,24,.5))')} />
-      {sweep && <div style={s('position:absolute;top:0;bottom:0;left:-45%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);transform:skewX(-12deg);animation:bgSweep 1.6s cubic-bezier(.3,.7,.3,1) .3s both;pointer-events:none')} />}
-    </>
+    <div style={s('display:flex;justify-content:space-between;gap:6px;padding:18px 16px 0')}>
+      {items.map((x) => (
+        <button key={x.label} onClick={x.go} style={s('flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px')}>
+          <span style={{ ...s('width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center'), background: x.primary ? '#E32A2D' : 'var(--sand3)', boxShadow: x.primary ? '0 0 0 3px rgba(227,42,45,.25)' : 'inset 0 0 0 1px var(--hair)' }}><Ms size={22} color={x.primary ? '#fff' : 'var(--ink)'}>{x.icon}</Ms></span>
+          <span style={{ ...s("font:500 12px/1 'Inter';white-space:nowrap"), color: x.primary ? 'var(--ink)' : 'var(--label)' }}>{x.label}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -83,11 +84,11 @@ const CHAT_AV: Record<string, string> = {
   TOMEK: media.avR1, JANEK_84: media.avR2, GRZESIEK: media.avR3, LUCJA_C: media.avPaula, AGA_K: media.avHania,
   STASZEK: media.avR1, RADEK: media.avR2, DAWID_SB: media.avR3, NEUTRAL_JO: media.avR1, BLOCK112: media.avR2,
 };
-const TEAM: Record<string, { bg: string; fg: string }> = { h: { bg: '#C8102E', fg: '#fff' }, s: { bg: '#1B324F', fg: '#fff' }, n: { bg: '#C3B69A', fg: '#0B1A2D' } };
+const TEAM: Record<string, { bg: string; fg: string }> = { h: { bg: '#C8102E', fg: '#fff' }, s: { bg: '#2A2E36', fg: '#fff' }, n: { bg: '#C3B69A', fg: '#0B0C0E' } };
 const EV: Record<string, { icon: string; color: string }> = {
   GOAL: { icon: 'sports_soccer', color: '#C8102E' }, YELLOW: { icon: '', color: '#F4C400' }, 'RED CARD': { icon: '', color: '#D6202A' },
-  'VAR CHECK': { icon: 'videocam', color: '#C8102E' }, 'NO PENALTY': { icon: 'gavel', color: '#F2F2F0' }, PENALTY: { icon: 'gavel', color: '#C8102E' }, OFFSIDE: { icon: 'flag', color: '#F4C400' },
-  SUBSTITUTION: { icon: 'swap_vert', color: '#F2F2F0' }, 'DRINKS BREAK': { icon: 'local_drink', color: '#899EB7' }, CHANCE: { icon: 'crisis_alert', color: '#899EB7' },
+  'VAR CHECK': { icon: 'videocam', color: '#C8102E' }, 'NO PENALTY': { icon: 'gavel', color: '#F2F3F5' }, PENALTY: { icon: 'gavel', color: '#C8102E' }, OFFSIDE: { icon: 'flag', color: '#F4C400' },
+  SUBSTITUTION: { icon: 'swap_vert', color: '#F2F3F5' }, 'DRINKS BREAK': { icon: 'local_drink', color: '#A3A8B3' }, CHANCE: { icon: 'crisis_alert', color: '#A3A8B3' },
   PLAYER: { icon: 'verified', color: '#C8102E' },
 };
 const ARTICLES = [
@@ -104,7 +105,7 @@ const REACTION_EMOJIS = ['❤️', '😂', '🔥'];
 const Avatar = ({ src, initials, bg, size = 26, style }: { src?: string; initials?: string; bg?: string; size?: number; style?: CSSProperties }) => (
   src
     ? <img src={src} alt="" loading="lazy" style={{ width: size, height: size, flex: 'none', borderRadius: '50%', objectFit: 'cover', ...style }} />
-    : <span style={{ width: size, height: size, flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg || '#C8102E', color: '#fff', fontFamily: "'Archivo'", fontWeight: 800, fontSize: Math.round(size * 0.34), lineHeight: 1, ...style }}>{initials}</span>
+    : <span style={{ width: size, height: size, flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg || '#C8102E', color: '#fff', fontFamily: "'Inter'", fontWeight: 800, fontSize: Math.round(size * 0.34), lineHeight: 1, ...style }}>{initials}</span>
 );
 type CrewRec = { id: string; name: string; initials: string; members: number; official: boolean; gated: boolean; unlockHint: string; latest: string; isCustom?: boolean; rules?: string; privacy?: string; status?: 'pending' | 'approved' };
 const CREWS: CrewRec[] = [
@@ -130,14 +131,14 @@ const MEMBER_PHOTO: Record<string, string> = { MAREK_92: media.avMarek, PAULA_S:
 const ROSTER_PHOTOS = [media.avR1, media.avR2, media.avR3, media.avMarek, media.avPaula, media.avDarek, media.avHania];
 const CREW_MSGS: CrewMsg[] = [
   { id: 'cm1', user: 'MAREK_92', text: 'Coach seats are filling fast, get in now, who else is in?', avBg: '#C8102E', initials: 'MA', photo: media.avMarek, isText: true },
-  { id: 'cm2', user: 'PAULA_S', text: 'Anyone know if the Portowa pub takes bookings?', avBg: '#1B324F', initials: 'PA', photo: media.avPaula, isText: true },
+  { id: 'cm2', user: 'PAULA_S', text: 'Anyone know if the Portowa pub takes bookings?', avBg: '#2A2E36', initials: 'PA', photo: media.avPaula, isText: true },
   { id: 'cm3', user: 'DAREK_K', text: 'Saved you a seat on the coach mate', avBg: '#C8102E', initials: 'DA', photo: media.avDarek, isText: true, replyToId: 'cm1', baseReactions: { '❤️': 3 } },
-  { id: 'cm4', user: 'HANIA_M', text: 'Away hotel prices are criminal right now', avBg: '#1B324F', initials: 'HA', photo: media.avHania, isText: true },
+  { id: 'cm4', user: 'HANIA_M', text: 'Away hotel prices are criminal right now', avBg: '#2A2E36', initials: 'HA', photo: media.avHania, isText: true },
   { id: 'cm5', user: 'MAREK_92', text: 'Yeah booked mine last week, prices only go up from here', avBg: '#C8102E', initials: 'MA', photo: media.avMarek, isText: true, replyToId: 'cm4' },
   { id: 'cm6', user: 'TOMEK_R', text: 'Kids strip finally arrived, my lad is buzzing', avBg: '#C8102E', initials: 'TO', photo: media.avR1, isText: true },
-  { id: 'cm7', user: 'PAULA_S', text: 'Can we get a group order in for the away scarves?', avBg: '#1B324F', initials: 'PA', photo: media.avPaula, isText: true },
+  { id: 'cm7', user: 'PAULA_S', text: 'Can we get a group order in for the away scarves?', avBg: '#2A2E36', initials: 'PA', photo: media.avPaula, isText: true },
   { id: 'cm8', user: 'DAREK_K', text: 'Count me in for two', avBg: '#C8102E', initials: 'DA', photo: media.avDarek, isText: true, replyToId: 'cm7' },
-  { id: 'cm9', user: 'HANIA_M', text: 'Same, put me down for one', avBg: '#1B324F', initials: 'HA', photo: media.avHania, isText: true, replyToId: 'cm7' },
+  { id: 'cm9', user: 'HANIA_M', text: 'Same, put me down for one', avBg: '#2A2E36', initials: 'HA', photo: media.avHania, isText: true, replyToId: 'cm7' },
   { id: 'cm10', user: 'SZYMON_W', text: 'Anyone watching the reserves on Tuesday?', avBg: '#C8102E', initials: 'SA', photo: media.avR2, isText: true },
   { id: 'cm11', user: 'MAREK_92', text: 'Yeah, streaming it from the usual spot', avBg: '#C8102E', initials: 'MA', photo: media.avMarek, isText: true, replyToId: 'cm10' },
   { id: 'cm12', user: 'TOMEK_R', text: 'This Crew is more active than my actual group chat', avBg: '#C8102E', initials: 'TO', photo: media.avR1, isText: true, baseReactions: { '😂': 5 } },
@@ -155,16 +156,16 @@ const PLAYER_MSGS: Record<string, CrewMsg[]> = {
 };
 const LB_CREW = [
   { name: 'Marek_92', score: 5, initials: 'MA', bg: '#C8102E' },
-  { name: 'You', score: 4, initials: 'YO', bg: '#0B1A2D', me: true },
-  { name: 'Paula_S', score: 4, initials: 'PA', bg: '#1B324F' },
+  { name: 'You', score: 4, initials: 'YO', bg: '#0B0C0E', me: true },
+  { name: 'Paula_S', score: 4, initials: 'PA', bg: '#2A2E36' },
   { name: 'Darek_K', score: 3, initials: 'DA', bg: '#C8102E' },
-  { name: 'Hania_M', score: 3, initials: 'HA', bg: '#1B324F' },
+  { name: 'Hania_M', score: 3, initials: 'HA', bg: '#2A2E36' },
 ];
 const LB_GLOBAL = [
   { name: 'kuba_szn', score: 5, initials: 'KY', bg: '#0E4D2A' },
   { name: 'Marek_92', score: 5, initials: 'MA', bg: '#C8102E' },
   { name: 'zosia_pogon', score: 5, initials: 'SO', bg: '#0E4D2A' },
-  { name: 'You', score: 4, initials: 'YO', bg: '#0B1A2D', me: true },
+  { name: 'You', score: 4, initials: 'YO', bg: '#0B0C0E', me: true },
   { name: 'grzesiek', score: 4, initials: 'GA', bg: '#C8102E' },
   { name: 'janek_84', score: 3, initials: 'JE', bg: '#C8102E' },
 ];
@@ -416,7 +417,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
     if (!text.trim()) return;
     const crewId = st.activeCrew;
     set((sp) => {
-      const msg: CrewMsg = { id: 'you-' + Date.now(), user: 'YOU', text: text.trim(), avBg: '#0B1A2D', initials: 'YO', isText: true, ...(sp.replyDraftId ? { replyToId: sp.replyDraftId } : {}) };
+      const msg: CrewMsg = { id: 'you-' + Date.now(), user: 'YOU', text: text.trim(), avBg: '#0B0C0E', initials: 'YO', isText: true, ...(sp.replyDraftId ? { replyToId: sp.replyDraftId } : {}) };
       return { crewDraft: '', replyDraftId: null, crewMsgsExtra: { ...sp.crewMsgsExtra, [crewId]: [...(sp.crewMsgsExtra[crewId] || []), msg] } };
     });
   };
@@ -538,17 +539,17 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   const shown = st.chat;
   const previewMsgs = st.chat.filter((m) => !m.ev).slice(-5).map((m) => ({ user: m.me ? 'YOU' : m.user, text: m.text, initials: m.me ? 'YO' : m.user.slice(0, 2), avBg: TEAM[m.t].bg, avFg: TEAM[m.t].fg }));
 
+  const [scrolled, setScrolled] = useState(false);
   const statusLabel = inactive ? (NARROW ? 'SUN 29 NOV · 14:45' : 'NEXT: SUN 29 NOV, 14:45') : pre ? '20:30' : live ? minute + "'" : ht ? 'HT' : 'FT';
   const myCrewCount = ALL_CREWS.filter((c) => st.crewsJoined[c.id] || c.gated).length;
   const crewGatedLocked = activeCrewData.gated && !st.boxUnlocked;
   const titles: Record<string, string> = { chat: 'FAN CHAT', intel: 'MATCH INTEL', pred: 'PREDICTIONS', polls: 'FAN POLLS', shop: 'POGOŃ STORE', food: 'ORDER FOOD', photos: 'PHOTO POOL', reactions: 'FAN REACTIONS', reads: 'READS', seat: 'YOUR SEAT', profile: 'YOUR PROFILE', community: 'CREWS', crew: activeCrewData.name.toUpperCase(), createCrew: 'START A CREW', crewSettings: 'CREW SETTINGS', invite: 'INVITE', room: 'ROOM', spotkick: 'SPOT KICK', spotkickResult: 'YOUR RESULT', leaderboard: 'LEADERBOARD' };
   const metas: Record<string, string> = { chat: (298 + (st.n % 40)) + ' TALKING NOW', intel: 'PREPARED BY IRIS', pred: pre ? 'CLOSES AT KICK-OFF' : 'LOCKED', polls: '40 XP PER VOTE', shop: 'COLLECT AT GATE 4', food: 'DELIVERS TO 112–J', photos: '25 XP PER PHOTO', reactions: '3 NEW REELS', reads: '4 PIECES TONIGHT', seat: 'SOUTH STAND', profile: 'SEASON TICKET', community: myCrewCount + ' CREWS', crew: crewGatedLocked ? 'LOCKED' : activeCrewData.members.toLocaleString() + ' MEMBERS', createCrew: 'FAN-RUN', crewSettings: activeCrewData.name.toUpperCase(), invite: activeCrewData.name.toUpperCase(), room: 'LIVE', spotkick: 'BEST OF 5', spotkickResult: '', leaderboard: st.lbScope === 'crew' ? 'YOUR CREW' : 'GLOBAL' };
   const isHome = st.route === 'home', isSub = st.route !== 'home';
-  const backLabel = st.navStack.length ? (titles[st.navStack[st.navStack.length - 1]] || 'HOME') : 'HOME';
   const showCrewsIntro = st.forceCrewsIntro || ((st.route === 'community' || st.route === 'crew') && !st.crewsIntroSeen);
 
   const opBtn = (label: string, onClick: () => void, bg: string, color: string, pad = '8px 10px') => (
-    <button onClick={onClick} style={{ ...s("font:800 10px/1 'Archivo';letter-spacing:.08em;padding:" + pad), background: bg, color }}>{label}</button>
+    <button onClick={onClick} style={{ ...s("font:800 10px/1 'Inter';letter-spacing:.08em;padding:" + pad), background: bg, color }}>{label}</button>
   );
 
   // Embed mode (control-room monitor iframe): fill the frame, no operator strip / bezel.
@@ -569,7 +570,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
   const showOperator = !embedParam && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('ops') === '1';
   const wrapStyle = frameless ? s('height:100dvh;background:var(--ground);display:flex;justify-content:center') : s('min-height:100vh;background:var(--desk);display:flex;justify-content:center;padding:28px 16px 40px');
   const colStyle = frameless ? s('display:flex;flex-direction:column;height:100%;width:100%;max-width:520px') : s('display:flex;flex-direction:column;gap:12px');
-  const phoneStyle = frameless ? s('position:relative;flex:1;min-height:0;width:100%;background:var(--ground);overflow:hidden') : s('position:relative;width:393px;height:844px;background:var(--ground);border-radius:44px;overflow:hidden;box-shadow:0 2px 2px rgba(11,26,45,.06),0 26px 56px -18px rgba(11,26,45,.4),0 0 0 9px #0B1A2D,0 0 0 10px #15283F');
+  const phoneStyle = frameless ? s('position:relative;flex:1;min-height:0;width:100%;background:var(--ground);overflow:hidden') : s('position:relative;width:393px;height:844px;background:var(--ground);border-radius:44px;overflow:hidden;box-shadow:0 2px 2px rgba(11,12,14,.06),0 26px 56px -18px rgba(11,12,14,.4),0 0 0 9px #0B0C0E,0 0 0 10px #1D2026');
 
   return (
     <div style={wrapStyle}>
@@ -579,23 +580,23 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
         {/* operator strip (demo): match states + a goal drop */}
         <div style={{ ...s('display:flex;flex-direction:column;gap:7px;padding:9px 10px'), width: frameless ? '100%' : '393px', background: 'var(--panel)' }}>
           <div style={s('display:flex;align-items:center;gap:8px')}>
-            <span style={s("font:800 10px/1 'Archivo';letter-spacing:.18em;color:#899EB7;padding-left:4px")}>STATE</span>
+            <span style={s("font:800 10px/1 'Inter';letter-spacing:.18em;color:#A3A8B3;padding-left:4px")}>STATE</span>
             <div style={s('display:flex;gap:4px;margin-left:auto')}>
-              {opBtn('PRE', () => applyState('pre'), 'rgba(242,242,240,.12)', 'var(--on-panel)')}
-              {opBtn('LIVE', () => applyState('live'), 'rgba(242,242,240,.12)', 'var(--on-panel)')}
-              {opBtn('HT', () => applyState('ht'), 'rgba(242,242,240,.12)', 'var(--on-panel)')}
-              {opBtn('FT', () => applyState('ft'), 'rgba(242,242,240,.12)', 'var(--on-panel)')}
+              {opBtn('PRE', () => applyState('pre'), 'rgba(242,243,245,.12)', 'var(--on-panel)')}
+              {opBtn('LIVE', () => applyState('live'), 'rgba(242,243,245,.12)', 'var(--on-panel)')}
+              {opBtn('HT', () => applyState('ht'), 'rgba(242,243,245,.12)', 'var(--on-panel)')}
+              {opBtn('FT', () => applyState('ft'), 'rgba(242,243,245,.12)', 'var(--on-panel)')}
             </div>
           </div>
           <div style={s('display:flex;align-items:center;gap:8px')}>
-            <span style={s("font:800 10px/1 'Archivo';letter-spacing:.18em;color:#899EB7;padding-left:4px")}>EVENT</span>
+            <span style={s("font:800 10px/1 'Inter';letter-spacing:.18em;color:#A3A8B3;padding-left:4px")}>EVENT</span>
             <div style={s('display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end')}>
               {opBtn('GOAL', () => applyEventCmd('goal'), '#C8102E', '#fff', '8px 7px')}
-              {opBtn('YELLOW', () => applyEventCmd('card'), '#F4C400', '#0B1A2D', '8px 7px')}
+              {opBtn('YELLOW', () => applyEventCmd('card'), '#F4C400', '#0B0C0E', '8px 7px')}
               {opBtn('RED', () => applyEventCmd('red'), '#D6202A', '#fff', '8px 7px')}
-              {opBtn('OFFSIDE', () => applyEventCmd('offside'), 'rgba(242,242,240,.12)', 'var(--on-panel)', '8px 7px')}
-              {opBtn('VAR', () => applyEventCmd('var'), 'rgba(242,242,240,.12)', 'var(--on-panel)', '8px 7px')}
-              {opBtn('SUB', () => applyEventCmd('sub'), 'rgba(242,242,240,.12)', 'var(--on-panel)', '8px 7px')}
+              {opBtn('OFFSIDE', () => applyEventCmd('offside'), 'rgba(242,243,245,.12)', 'var(--on-panel)', '8px 7px')}
+              {opBtn('VAR', () => applyEventCmd('var'), 'rgba(242,243,245,.12)', 'var(--on-panel)', '8px 7px')}
+              {opBtn('SUB', () => applyEventCmd('sub'), 'rgba(242,243,245,.12)', 'var(--on-panel)', '8px 7px')}
             </div>
           </div>
         </div>
@@ -605,70 +606,50 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
         <div style={phoneStyle}>
           {autoplay && <AutoChip interacting={autoplayState.interacting} />}
           {cursor.node}
-          <div data-fanscroll style={s('position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(20px + env(safe-area-inset-bottom))')}>
+          <div data-fanscroll onScroll={(e) => { const y = (e.currentTarget as HTMLElement).scrollTop > 40; if (y !== scrolled) setScrolled(y); }} style={s('position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(20px + env(safe-area-inset-bottom))')}>
             {/* event lower-third */}
             {st.event && (() => { const e = st.event!; const color = EV[e.kind]?.color || '#C8102E'; const isCard = e.kind === 'YELLOW' || e.kind === 'RED CARD'; const hasIcon = !!EV[e.kind]?.icon; return (
               <div style={s('position:sticky;top:0;z-index:45;overflow:hidden')}>
                 <div style={s('animation:bgThird 4.6s cubic-bezier(.18,.9,.2,1) both;display:flex;align-items:stretch;background:var(--panel)')}>
-                  <div style={{ ...s('width:14px;transform:skewX(-8deg) translateX(-3px)'), background: color }} />
+                  <div style={{ ...s('width:14px;border-radius:3px translateX(-3px)'), background: color }} />
                   <div style={s('flex:1;padding:14px 4px 16px 8px;min-width:0')}>
                     <div style={s('display:flex;align-items:center;gap:8px')}>
-                      {isCard && <span style={{ ...s('width:13px;height:18px;border-radius:2px;display:inline-block'), background: color }} />}
+                      {isCard && <span style={{ ...s('width:13px;height:18px;border-radius:14px;display:inline-block'), background: color }} />}
                       {hasIcon && <Ms size={17} color={color}>{EV[e.kind].icon}</Ms>}
-                      <span style={{ ...s("font:800 15px/1 'Archivo Black';letter-spacing:.14em"), color }}>{e.kind}</span>
-                      <span style={s("font:700 11px/1 'Archivo';letter-spacing:.1em;color:#899EB7")}>{e.minute}′ · {e.team}</span>
+                      <span style={{ ...s("font:800 15px/1 'Space Grotesk';letter-spacing:.14em"), color }}>{e.kind}</span>
+                      <span style={s("font:700 11px/1 'Inter';letter-spacing:.1em;color:#A3A8B3")}>{e.minute}′ · {e.team}</span>
                     </div>
-                    <div style={s("font:800 40px/.86 'Archivo Black';letter-spacing:.008em;color:var(--on-panel);margin-top:9px")}>{e.who}</div>
-                    <div style={s("font:500 11.5px/1.3 'Archivo';color:#899EB7;margin-top:7px")}>{e.note}</div>
+                    <div style={s("font:800 40px/.86 'Space Grotesk';letter-spacing:.008em;color:var(--on-panel);margin-top:9px")}>{e.who}</div>
+                    <div style={s("font:500 11.5px/1.3 'Inter';color:#A3A8B3;margin-top:7px")}>{e.note}</div>
                   </div>
-                  {e.kind === 'GOAL' && <div style={s("display:flex;align-items:center;padding:0 18px 0 6px;font:800 50px/.8 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.hs}–{st.as}</div>}
+                  {e.kind === 'GOAL' && <div style={s("display:flex;align-items:center;padding:0 18px 0 6px;font:800 50px/.8 'Space Grotesk';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.hs}–{st.as}</div>}
                 </div>
               </div>
             ); })()}
 
-            {/* score bug + header */}
-            <div style={s('position:sticky;top:0;z-index:40;background:var(--panel)')}>
-              <div style={s('display:flex;align-items:stretch;height:44px')}>
-                {isSub && <button data-cur="fanback" onClick={goBack} className="fh" style={s("display:flex;align-items:center;gap:6px;padding:0 10px 0 15px;font:800 10px/1 'Archivo';letter-spacing:.14em;color:#899EB7")}><Ms size={15} color="inherit">arrow_back</Ms>{backLabel}</button>}
-                {inactive ? (<>
-                  <div style={s('display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding-left:14px')}>
-                    <span style={s('width:6px;height:18px;background:#C8102E;transform:skewX(-8deg);display:inline-block')} />
-                    {NARROW ? <Badge club="home" size={22} bare /> : <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 10px")}>POGOŃ</span>}
-                  </div>
-                  <div style={s('display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--chrome)')}>
-                    <Ms size={14} color="#899EB7">event</Ms>
-                    <span style={s("font:800 11px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel)")}>{statusLabel}</span>
-                  </div>
-                </>) : (<>
-                  <div style={s('display:flex;align-items:center;flex:1;min-width:0;padding-left:14px;overflow:hidden')}>
-                    <Badge club="home" size={22} bare />
-                    {!isSub && !NARROW && <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>POG</span>}
-                    <span style={s("font:800 19px/1 'Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums;padding-left:" + (isSub ? '8px' : '0'))}>{st.hs}</span>
-                    <span style={s("font:700 13px/1 'Archivo';color:var(--label);padding:0 6px")}>–</span>
-                    <span style={s("font:800 19px/1 'Archivo';color:var(--on-panel);font-variant-numeric:tabular-nums;padding-right:" + (isSub ? '8px' : '0'))}>{st.as}</span>
-                    {!isSub && !NARROW && <span style={s("font:800 15px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);padding:0 8px 0 8px")}>ŚLĄ</span>}
-                    <Badge club="away" size={22} bare />
-                  </div>
-                  <div style={{ ...s('display:flex;align-items:center;gap:6px;padding:0 12px'), background: live ? '#D6202A' : 'rgba(242,242,240,.14)' }}>
-                    {live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:bgBlink 1.6s steps(1,end) infinite')} />}
-                    <span style={s("font:800 12px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);font-variant-numeric:tabular-nums")}>{statusLabel}</span>
-                  </div>
-                </>)}
-                <button onClick={() => set((x) => ({ theme: x.theme === 'auto' ? 'light' : x.theme === 'light' ? 'dark' : 'auto' }))} className="fh2" style={s('display:flex;align-items:center;padding:0 9px;background:var(--chrome)')}><Ms size={17} color="#899EB7">{st.theme === 'dark' ? 'dark_mode' : st.theme === 'light' ? 'light_mode' : 'brightness_auto'}</Ms></button>
-                <button onClick={go('profile')} className="fh2" style={s('display:flex;align-items:center;padding:0 12px 0 9px;background:var(--chrome)')}><span style={s("width:26px;height:26px;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font:800 9.5px/1 'Archivo';color:#fff")}>AJ</span></button>
-              </div>
-              {isHome && (
-                <div style={s('display:flex;overflow:hidden;height:26px;background:var(--chrome);align-items:center')}>
-                  <div style={s('display:flex;white-space:nowrap;animation:bgTicker 34s linear infinite')}>
-                    {[0, 1].map((k) => <span key={k} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.1em;color:#9CB0C8")}>{`  PKO BP EKSTRAKLASA  ·  ROUND 15  ·  POG ${st.hs} – ${st.as} ŚLĄ  ·  80TH LEAGUE MEETING  ·  MATCH SPONSOR: RECA SOLAR  ·  LAST HOME GAME: POG 4 – 3 RAD  ·  NEXT: LECH POZNAŃ (A) 29 NOV  ·  ATTENDANCE 18,950  ·`}</span>)}
-                  </div>
+            {/* header: Sepang-style floating bar (IRIS tile · score pill · status · theme · you) */}
+            <div style={{ ...s('position:sticky;top:0;z-index:40;transition:background .25s ease,box-shadow .25s ease'), ...(isHome && !scrolled ? { background: 'linear-gradient(rgba(11,12,14,.55),transparent)', marginBottom: -64 } : { background: 'rgba(11,12,14,.82)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 1px 0 rgba(255,255,255,.07)' }) }}>
+              <div style={s('display:flex;align-items:center;gap:8px;height:64px;padding:0 14px')}>
+                {isSub
+                  ? <button data-cur="fanback" onClick={goBack} aria-label="Back" style={s('width:40px;height:40px;flex:none;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#F2F3F5">arrow_back</Ms></button>
+                  : <button onClick={() => set({ iris: true })} aria-label="Ask IRIS" style={s('width:40px;height:40px;flex:none;border-radius:12px;background:var(--iris);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center')}><Ms size={21} color="var(--iris-ink)">auto_awesome</Ms></button>}
+                <div style={s('flex:1;min-width:0;display:flex;justify-content:center')}>
+                  {inactive
+                    ? <span style={s("display:flex;align-items:center;gap:8px;font:600 15px/1 'Space Grotesk';color:#F2F3F5")}><Badge club="home" size={24} bare />Pogoń Szczecin</span>
+                    : <span style={s('display:flex;align-items:center;gap:7px;padding:5px 12px 5px 7px;border-radius:999px;background:rgba(255,255,255,.1)')}>
+                        <Badge club="home" size={22} bare />
+                        <span style={s("font:600 17px/1 'Space Grotesk';color:#F2F3F5;font-variant-numeric:tabular-nums")}>{st.hs}<span style={s('opacity:.45;padding:0 5px')}>–</span>{st.as}</span>
+                        <Badge club="away" size={22} bare />
+                        <span style={{ ...s("display:flex;align-items:center;gap:5px;margin-left:3px;padding:5px 8px;border-radius:999px;font:600 11px/1 'Inter';color:#fff;font-variant-numeric:tabular-nums"), background: live ? '#E32A2D' : 'rgba(255,255,255,.14)' }}>{live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:bgBlink 1.6s steps(1,end) infinite')} />}{statusLabel}</span>
+                      </span>}
                 </div>
-              )}
+                <button onClick={() => set((x) => ({ theme: x.theme === 'auto' ? 'light' : x.theme === 'light' ? 'dark' : 'auto' }))} aria-label="Theme" style={s('width:40px;height:40px;flex:none;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center')}><Ms size={19} color="#F2F3F5">{st.theme === 'light' ? 'light_mode' : st.theme === 'dark' ? 'dark_mode' : 'contrast'}</Ms></button>
+                <button onClick={go('profile')} aria-label="Your profile" style={s("width:40px;height:40px;flex:none;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font:600 12px/1 'Inter';color:#fff")}>AJ</button>
+              </div>
               {isSub && (
-                <div style={s('display:flex;align-items:center;gap:9px;height:40px;padding:0 15px;background:var(--chrome);box-shadow:inset 0 -1px 0 rgba(242,242,240,.08)')}>
-                  <span style={s('width:5px;height:16px;flex:none;background:#C8102E;transform:skewX(-8deg)')} />
-                  <span style={s("font:800 19px/1 'Archivo Black';letter-spacing:.05em;color:var(--on-panel)")}>{titles[st.route]}</span>
-                  <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:#9CB0C8;margin-left:auto;background:rgba(242,242,240,.08);padding:5px 8px")}>{metas[st.route]}</span>
+                <div style={s('display:flex;align-items:center;gap:10px;padding:2px 16px 14px')}>
+                  <span style={s("font:600 24px/1.05 'Space Grotesk';color:#F2F3F5")}>{titles[st.route].charAt(0) + titles[st.route].slice(1).toLowerCase()}</span>
+                  <span style={s("font:500 11px/1 'Inter';color:#C5CAD3;margin-left:auto;background:rgba(255,255,255,.08);padding:7px 10px;border-radius:999px;white-space:nowrap")}>{metas[st.route]}</span>
                 </div>
               )}
             </div>
@@ -700,23 +681,22 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
           {/* FLASH SALE, pops on a goal, dismissible */}
           {st.flash && (
             <div style={{ ...s('position:absolute;top:76px;left:10px;right:10px;z-index:48'), animation: st.flashOut ? 'bgFlashOut .18s cubic-bezier(.23,1,.32,1) both' : 'bgRise .32s cubic-bezier(.18,.9,.2,1) both' }}>
-              <div style={s('display:flex;align-items:center;gap:11px;padding:11px 11px 11px 13px;background:var(--panel);border-radius:2px;box-shadow:0 14px 34px -8px rgba(11,26,45,.55)')}>
-                <span style={s('width:36px;height:36px;flex:none;border-radius:2px;background:#C8102E;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">local_offer</Ms></span>
+              <div style={s('display:flex;align-items:center;gap:11px;padding:11px 11px 11px 13px;background:var(--panel);border-radius:14px;box-shadow:0 14px 34px -8px rgba(11,12,14,.55)')}>
+                <span style={s('width:36px;height:36px;flex:none;border-radius:14px;background:#C8102E;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">local_offer</Ms></span>
                 <button onClick={() => { set({ route: 'shop' }); closeFlash(); }} style={s('flex:1;min-width:0;text-align:left')}>
-                  <div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.14em;color:#C8102E")}>FLASH DROP · LIMITED</div>
-                  <div style={s("font:700 13px/1.25 'Archivo';color:var(--on-panel);margin-top:5px")}>{st.flash.title}</div>
-                  <div style={s("font:500 10.5px/1.3 'Archivo';color:#899EB7;margin-top:3px")}>{st.flash.sub}</div>
+                  <div style={s("font:800 8.5px/1 'Inter';letter-spacing:.14em;color:#C8102E")}>FLASH DROP · LIMITED</div>
+                  <div style={s("font:700 13px/1.25 'Inter';color:var(--on-panel);margin-top:5px")}>{st.flash.title}</div>
+                  <div style={s("font:500 10.5px/1.3 'Inter';color:#A3A8B3;margin-top:3px")}>{st.flash.sub}</div>
                 </button>
-                <button onClick={() => closeFlash()} style={s('width:28px;height:28px;flex:none;border-radius:50%;background:rgba(242,242,240,.12);display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#899EB7">close</Ms></button>
+                <button onClick={() => closeFlash()} style={s('width:28px;height:28px;flex:none;border-radius:50%;background:rgba(242,243,245,.12);display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#A3A8B3">close</Ms></button>
               </div>
             </div>
           )}
 
           {/* IRIS */}
           {!st.iris && (
-            <button data-cur="iris" onClick={() => set({ iris: true })} className="fh2" style={s('position:absolute;right:0;bottom:calc(40px + env(safe-area-inset-bottom));z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px')}>
-              <span style={s('width:7px;height:7px;background:#C8102E;animation:bgDot 1.6s ease-in-out infinite')} />
-              <span style={s("font:800 10.5px/1 'Archivo';letter-spacing:.16em;color:var(--on-panel)")}>ASK IRIS</span>
+            <button data-cur="iris" onClick={() => set({ iris: true })} style={s("position:absolute;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:46;display:flex;align-items:center;gap:8px;padding:14px 20px 14px 16px;border-radius:999px;background:var(--iris);color:var(--iris-ink);font:600 15px/1 'Inter';box-shadow:0 0 0 1.5px rgba(92,184,230,.9),0 10px 28px -6px rgba(0,0,0,.45)")}>
+              <Ms size={20} color="var(--iris-ink)">auto_awesome</Ms>Ask IRIS
             </button>
           )}
           {st.iris && <Iris {...{ st, pre, live, ht, set, ask, irisRef, go, closeIris }} />}
@@ -727,8 +707,8 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
           {st.toast && (
             <div style={s('position:absolute;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom));z-index:55;display:flex;justify-content:center;pointer-events:none')}>
               <div style={s('display:flex;align-items:center;gap:9px;padding:11px 15px;background:var(--panel);animation:bgToast 2.4s ease both')}>
-                <span style={s("font:800 17px/1 'Archivo Black';color:#C8102E")}>{st.toastXp}</span>
-                <span style={s("font:700 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel)")}>{st.toast}</span>
+                <span style={s("font:800 17px/1 'Space Grotesk';color:#C8102E")}>{st.toastXp}</span>
+                <span style={s("font:700 11.5px/1 'Inter';letter-spacing:.06em;color:var(--on-panel)")}>{st.toast}</span>
               </div>
             </div>
           )}
@@ -743,9 +723,9 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
 type HP = { st: FSt; pre: boolean; live: boolean; ht: boolean; ft: boolean; inactive: boolean; isCommunityLead: boolean; showCommunityBlock: boolean; showSpotkickTile: boolean; timeline: ReturnType<typeof Object>[] | any[]; previewMsgs: any[]; filled: number; cd: number; go: (r: string) => () => void; award: (x: number, l: string, q?: string) => void; set: (p: any) => void };
 function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityBlock, showSpotkickTile, timeline, previewMsgs, filled, cd, go }: HP) {
   const liveish = live || ht;
-  const label = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const label = (t: string) => <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   // Section header with the Pogoń-violet skewed accent tick, to tie the light body to the heroes.
-  const sect = (t: string) => <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:5px;height:15px;flex:none;background:#C8102E;transform:skewX(-8deg)')} />{label(t)}</div>;
+  const sect = (t: string) => <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:5px;height:15px;flex:none;background:#C8102E;border-radius:3px')} />{label(t)}</div>;
   const sections = [
     { t: 'Fan reactions', tag: 'LIVE', d: 'Reels & posts pulled from Instagram, TikTok, YouTube, X and Threads by #POGŚLĄ.', icon: 'sensors', go: go('reactions') },
     // Predictions close once the match ends, no tab at full-time.
@@ -779,13 +759,11 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
     : live ? 'Reactions are piling up in Granatowo-Bordowi, the terrace is buzzing.'
     : ht ? 'Half-time chat is already livelier than the game.'
     : 'Full-time, but the Crew is still going.';
-  const communityAvatars = [{ i: 'MB', bg: '#C8102E' }, { i: 'PR', bg: '#1B324F' }, { i: 'DE', bg: '#C8102E' }, { i: 'HA', bg: '#1B324F' }];
-  const formH = ['W', 'W', 'D', 'W', 'L'].map((r) => ({ r, bg: r === 'W' ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.26)', fg: r === 'W' ? '#1B324F' : '#fff' }));
-  const formA = ['W', 'W', 'W', 'D', 'W'].map((r) => ({ r, bg: r === 'W' ? '#3CC46E' : 'rgba(255,255,255,.22)', fg: r === 'W' ? '#143257' : '#fff' }));
+  const communityAvatars = [{ i: 'MB', bg: '#C8102E' }, { i: 'PR', bg: '#2A2E36' }, { i: 'DE', bg: '#C8102E' }, { i: 'HA', bg: '#2A2E36' }];
   const ladder = [
-    { name: '20 zł food credit', cost: '500 XP', tag: 'CLAIMED', bg: 'rgba(242,242,240,.08)', fg: '#F2F2F0', subFg: '#899EB7', tagFg: '#C8102E', op: 1 },
-    { name: 'Seat upgrade', cost: '2,000 XP', tag: 'NEXT UP', bg: '#F2F2F0', fg: '#0B1A2D', subFg: '#5D7189', tagFg: '#0B1A2D', op: 1 },
-    { name: 'Home shirt', cost: '5,000 XP', tag: 'LOCKED', bg: 'rgba(242,242,240,.08)', fg: '#F2F2F0', subFg: '#899EB7', tagFg: '#899EB7', op: 0.6 },
+    { name: '20 zł food credit', cost: '500 XP', tag: 'CLAIMED', bg: 'rgba(242,243,245,.08)', fg: '#F2F3F5', subFg: '#A3A8B3', tagFg: '#C8102E', op: 1 },
+    { name: 'Seat upgrade', cost: '2,000 XP', tag: 'NEXT UP', bg: '#F2F3F5', fg: '#0B0C0E', subFg: '#6B717C', tagFg: '#0B0C0E', op: 1 },
+    { name: 'Home shirt', cost: '5,000 XP', tag: 'LOCKED', bg: 'rgba(242,243,245,.08)', fg: '#F2F3F5', subFg: '#A3A8B3', tagFg: '#A3A8B3', op: 0.6 },
   ];
   const questDefs = [
     { k: 'predict', title: 'Lock in a prediction', how: 'Correct score + first scorer', xp: '120 XP', go: go('pred') },
@@ -799,18 +777,18 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
       {isCommunityLead && (
         <section style={s('animation:bgFade .3s ease both')}>
           <div style={s('background:var(--panel);padding:18px 16px 20px')}>
-            <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:#C8102E;transform:skewX(-8deg)')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#899EB7")}>CREWS</span></div>
-            <div style={s("font:800 34px/.88 'Archivo Black';color:var(--on-panel);margin-top:10px")}>{communityHeadline}</div>
-            <div style={s("font:500 13px/1.5 'Archivo';color:#899EB7;margin-top:8px;max-width:300px")}>{communitySub}</div>
-            <button onClick={go('community')} className="fp" style={s("display:inline-flex;align-items:center;gap:7px;margin-top:14px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#C8102E;padding:11px 14px")}>OPEN CREWS<Ms size={15} color="#fff">arrow_forward</Ms></button>
+            <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:6px;height:18px;background:#C8102E;border-radius:3px')} /><span style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:#A3A8B3")}>CREWS</span></div>
+            <div style={s("font:800 34px/.88 'Space Grotesk';color:var(--on-panel);margin-top:10px")}>{communityHeadline}</div>
+            <div style={s("font:500 13px/1.5 'Inter';color:#A3A8B3;margin-top:8px;max-width:300px")}>{communitySub}</div>
+            <button onClick={go('community')} className="fp" style={s("display:inline-flex;align-items:center;gap:7px;margin-top:14px;font:800 11.5px/1 'Inter';letter-spacing:.06em;color:#fff;background:#C8102E;padding:11px 14px")}>OPEN CREWS<Ms size={15} color="#fff">arrow_forward</Ms></button>
           </div>
           <div style={s('padding:26px 16px 0')}>
-            <div style={s('display:flex;align-items:baseline;justify-content:space-between')}>{label('YOUR CREWS')}<button onClick={go('community')} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.08em;color:#C8102E")}>SEE ALL</button></div>
+            <div style={s('display:flex;align-items:baseline;justify-content:space-between')}>{label('YOUR CREWS')}<button onClick={go('community')} style={s("font:700 10.5px/1 'Inter';letter-spacing:.08em;color:#C8102E")}>SEE ALL</button></div>
             <div style={s('display:flex;gap:9px;margin-top:11px;overflow-x:auto')}>
               {myCrews.map((c) => (
                 <button key={c.id} onClick={go('community')} className="fs" style={s('flex:none;width:168px;text-align:left;background:var(--sand);padding:16px')}>
-                  <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 18px/1 'Archivo Black';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}</div>
-                  <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--label);margin-top:6px")}>{c.members} members · {c.latest}</div>
+                  <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 18px/1 'Space Grotesk';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}</div>
+                  <div style={s("font:500 11.5px/1.4 'Inter';color:var(--label);margin-top:6px")}>{c.members} members · {c.latest}</div>
                 </button>
               ))}
             </div>
@@ -818,97 +796,65 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
           {inactive && (
             <div style={s('padding:26px 16px 0')}>
               {label('NEXT MATCH')}
-              <div style={s('display:flex;align-items:center;gap:12px;margin-top:9px;background:var(--sand);padding:18px')}><div style={s('flex:1')}><div style={s("font:700 15px/1.3 'Archivo';color:var(--ink)")}>Górnik Zabrze</div><div style={s("font:500 11.5px/1.4 'Archivo';color:var(--label);margin-top:4px")}>SUN 06 DEC · 14:45 · THE KRYGIER</div></div><Ms size={22} color="var(--label)">chevron_right</Ms></div>
+              <div style={s('display:flex;align-items:center;gap:12px;margin-top:9px;background:var(--sand);padding:18px')}><div style={s('flex:1')}><div style={s("font:700 15px/1.3 'Inter';color:var(--ink)")}>Górnik Zabrze</div><div style={s("font:500 11.5px/1.4 'Inter';color:var(--label);margin-top:4px")}>SUN 06 DEC · 14:45 · THE KRYGIER</div></div><Ms size={22} color="var(--label)">chevron_right</Ms></div>
             </div>
           )}
           <div style={s('padding:26px 16px 0')}>
             <button onClick={go('spotkick')} className="fp" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--panel);padding:18px')}>
               <span style={s('width:44px;height:44px;flex:none;background:#C8102E;display:flex;align-items:center;justify-content:center')}><Ms size={24} color="#fff">sports_soccer</Ms></span>
-              <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 19px/1 'Archivo Black';color:var(--on-panel)")}>Spot Kick</span><span style={s("display:block;font:500 12px/1.4 'Archivo';color:#899EB7;margin-top:3px")}>Five penalties. Beat your Crew.</span></span>
-              <Ms size={18} color="#899EB7">chevron_right</Ms>
+              <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 19px/1 'Space Grotesk';color:var(--on-panel)")}>Spot Kick</span><span style={s("display:block;font:500 12px/1.4 'Inter';color:#A3A8B3;margin-top:3px")}>Five penalties. Beat your Crew.</span></span>
+              <Ms size={18} color="#A3A8B3">chevron_right</Ms>
             </button>
           </div>
         </section>
       )}
       {pre && (
         <section style={s('position:relative;animation:bgFade .35s ease both')}>
-          {/* ── Cinematic night-match hero: Pogoń crowd, floodlight grade, live countdown ── */}
-          <div style={s('position:relative;overflow:hidden;background:#091625')}>
-            <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 8%')} />
-            <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,22,37,.46) 0%,rgba(9,22,37,.62) 24%,rgba(7,18,31,.9) 52%,#091625 88%)')} />
-            <div style={s('position:absolute;inset:0;background:radial-gradient(140% 88% at 50% 26%,transparent 42%,rgba(6,14,24,.5))')} />
-            <div style={s('position:absolute;inset:0;background:radial-gradient(120% 72% at 50% -14%,rgba(237,32,60,.46),transparent 56%);animation:bgFloods 5s ease-in-out infinite')} />
-            <div style={s('position:absolute;top:0;bottom:0;left:-45%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);transform:skewX(-12deg);animation:bgSweep 1.6s cubic-bezier(.3,.7,.3,1) .3s both;pointer-events:none')} />
-
-            <div style={s('position:relative;padding:16px 16px 0')}>
-              {/* competition */}
-              <div style={s('display:flex;align-items:center;justify-content:center;gap:11px')}>
-                <span style={s('height:1px;flex:1;max-width:38px;background:linear-gradient(90deg,transparent,rgba(242,242,240,.55))')} />
-                <div style={s('text-align:center')}>
-                  <div style={s("font:800 9px/1 'Archivo';letter-spacing:.24em;color:#F2F2F0;text-shadow:0 1px 10px rgba(5,13,23,.85)")}>PKO BP EKSTRAKLASA</div>
-                  <div style={s("font:700 8px/1 'Archivo';letter-spacing:.2em;color:#FFDA6C;margin-top:6px")}>ROUND 15 · MATCH SPONSOR RECA SOLAR</div>
-                </div>
-                <span style={s('height:1px;flex:1;max-width:38px;background:linear-gradient(90deg,rgba(242,242,240,.55),transparent)')} />
+          {/* ── Sepang-style hub hero: photo, title, kick-off countdown boxes ── */}
+          <div style={s('position:relative;overflow:hidden;background:#0B0C0E')}>
+            <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 10%')} />
+            <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,12,14,.5) 0%,rgba(11,12,14,.12) 28%,rgba(11,12,14,.72) 62%,#0B0C0E 100%)')} />
+            <div style={s('position:relative;padding:84px 16px 24px;text-align:center')}>
+              <div style={s('display:flex;align-items:center;justify-content:center;gap:18px')}><Badge club="home" size={60} /><span style={s("font:500 15px/1 'Space Grotesk';color:#C5CAD3")}>v</span><Badge club="away" size={60} /></div>
+              <div style={s("font:600 30px/1.05 'Space Grotesk';color:#fff;margin-top:16px;letter-spacing:-.01em")}>Pogoń v Śląsk Wrocław</div>
+              <div style={s("font:400 13px/1.4 'Inter';color:#C5CAD3;margin-top:7px")}>Round 15 · PKO BP Ekstraklasa · Stadion Miejski im. F. Krygiera</div>
+              <div style={s("font:600 11px/1 'Inter';letter-spacing:.14em;color:#FF6B6E;margin-top:16px")}>KICK-OFF FRI 20 NOV, 20:30</div>
+              <div style={s('display:flex;justify-content:center;gap:8px;margin-top:12px;animation:bgReveal .6s cubic-bezier(.2,.85,.2,1) .2s both')}>
+                {[[pad(Math.floor(cd / 3600)), 'HOURS'], [pad(Math.floor(cd / 60) % 60), 'MIN'], [pad(cd % 60), 'SEC']].map(([n, l]) => (
+                  <div key={l} style={s('width:66px;padding:10px 0 9px;border-radius:12px;background:rgba(11,12,14,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);text-align:center')}>
+                    <div style={s("font:500 28px/1 'Space Grotesk';color:#fff;font-variant-numeric:tabular-nums")}>{n}</div>
+                    <div style={s("font:500 9.5px/1 'Inter';letter-spacing:.08em;color:#C5CAD3;margin-top:6px")}>{l}</div>
+                  </div>
+                ))}
               </div>
-
-              {/* matchup */}
-              <div style={s('display:flex;align-items:flex-start;justify-content:center;margin-top:18px')}>
-                <div style={s('flex:1;display:flex;flex-direction:column;align-items:center;gap:9px')}>
-                  <Badge club="home" size={58} />
-                  <div style={s("font:800 19px/.88 'Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(5,13,23,.75)")}>POGOŃ<br />SZCZECIN</div>
-                  <div style={s('display:flex;gap:3px')}>{formH.map((f, i) => <span key={i} style={{ ...s("font:800 8px/1 'Archivo';padding:3px 4px"), color: f.fg, background: f.bg }}>{f.r}</span>)}</div>
-                </div>
-                <div style={s("flex:none;padding-top:20px;font:800 13px/1 'Archivo Black';letter-spacing:.06em;color:#FFDA6C")}>V</div>
-                <div style={s('flex:1;display:flex;flex-direction:column;align-items:center;gap:9px')}>
-                  <Badge club="away" size={58} />
-                  <div style={s("font:800 19px/.88 'Archivo Black';letter-spacing:.02em;color:#fff;text-align:center;text-shadow:0 2px 12px rgba(5,13,23,.75)")}>ŚLĄSK<br />WROCŁAW</div>
-                  <div style={s('display:flex;gap:3px')}>{formA.map((f, i) => <span key={i} style={{ ...s("font:800 8px/1 'Archivo';padding:3px 4px"), color: f.fg, background: f.bg }}>{f.r}</span>)}</div>
-                </div>
-              </div>
-
-              {/* live countdown, the focal moment */}
-              <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.3em;color:#FFDA6C;text-align:center;margin-top:26px;text-shadow:0 1px 8px rgba(5,13,23,.8)")}>KICK-OFF IN</div>
-              <div style={s('display:flex;align-items:flex-start;justify-content:center;gap:9px;margin-top:13px;animation:bgReveal .6s cubic-bezier(.2,.85,.2,1) .25s both')}>
-                <div style={s('display:flex;flex-direction:column;align-items:center')}>
-                  <span style={s("font:800 62px/.78 'Archivo Black';font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 3px 24px rgba(5,13,23,.65)")}>{pad(Math.floor(cd / 3600))}</span>
-                  <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.18em;color:#899EB7;margin-top:10px")}>HRS</span>
-                </div>
-                <span style={s("padding-top:5px;font:800 44px/.78 'Archivo Black';color:rgba(242,242,240,.26)")}>:</span>
-                <div style={s('display:flex;flex-direction:column;align-items:center')}>
-                  <span style={s("font:800 62px/.78 'Archivo Black';font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 3px 24px rgba(5,13,23,.65)")}>{pad(Math.floor(cd / 60) % 60)}</span>
-                  <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.18em;color:#899EB7;margin-top:10px")}>MIN</span>
-                </div>
-                <span style={s("padding-top:5px;font:800 44px/.78 'Archivo Black';color:rgba(242,242,240,.26)")}>:</span>
-                <div style={s('display:flex;flex-direction:column;align-items:center')}>
-                  <span style={s("font:800 62px/.78 'Archivo Black';font-variant-numeric:tabular-nums;color:#C8102E;text-shadow:0 3px 24px rgba(237,32,60,.4)")}>{pad(cd % 60)}</span>
-                  <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.18em;color:#C8102E;margin-top:10px")}>SEC</span>
-                </div>
-              </div>
-              <div style={s("font:700 10px/1 'Archivo';letter-spacing:.14em;color:#9CAFC7;text-align:center;margin-top:17px")}>FRI 20 NOV · 20:30 · STADION MIEJSKI IM. F. KRYGIERA</div>
+              <div style={s("font:500 11px/1 'Inter';color:#A3A8B3;margin-top:14px")}>Match sponsor RECA SOLAR</div>
             </div>
-
-            {/* the 80th league meeting */}
-            <button onClick={go('reads')} className="agg" style={s('position:relative;display:flex;align-items:center;gap:13px;width:100%;text-align:left;margin-top:22px;padding:14px 16px;background:rgba(237,32,60,.14);box-shadow:inset 0 1px 0 rgba(242,242,240,.12)')}>
-              <span style={s('width:38px;height:38px;flex:none;background:#C8102E;display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#0B1A2D">trending_up</Ms></span>
-              <span style={s('flex:1;min-width:0')}>
-                <span style={s("display:block;font:800 15px/1 'Archivo Black';letter-spacing:.03em;color:#fff")}>THE 80TH LEAGUE MEETING</span>
-                <span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:#9CAFC7;margin-top:4px")}>Pogoń v Śląsk, the record almost level. Tonight tips it.</span>
+          </div>
+          <QuickRow items={[{ icon: 'forum', label: 'Chat', go: go('chat') }, { icon: 'scoreboard', label: 'Predict', go: go('pred') }, { icon: 'bar_chart', label: 'Polls', go: go('polls') }, { icon: 'event_seat', label: 'Seat', go: go('seat') }, { icon: 'shopping_bag', label: 'Store', go: go('shop') }]} />
+          <div style={s('padding:18px 16px 0')}>
+            <button onClick={go('reads')} style={s('display:block;width:100%;text-align:left;padding:16px;border-radius:16px;background:var(--sand);box-shadow:inset 0 0 0 1.5px #C8102E')}>
+              <span style={s('display:flex;align-items:flex-start;gap:10px')}>
+                <span style={s('flex:1;min-width:0')}>
+                  <span style={s("display:block;font:600 19px/1.15 'Space Grotesk';color:var(--ink)")}>The 80th league meeting</span>
+                  <span style={s("display:block;font:400 13px/1.4 'Inter';color:var(--body);margin-top:5px")}>Pogoń v Śląsk, the record almost level. Tonight tips it.</span>
+                </span>
+                <Ms size={22} color="#C8102E">emoji_events</Ms>
               </span>
-              <Ms size={18} color="#FFDA6C">chevron_right</Ms>
+              <span style={s("display:inline-flex;align-items:center;gap:6px;margin-top:13px;padding:11px 16px;border-radius:999px;background:#C8102E;font:600 13px/1 'Inter';color:#fff")}>Read the story</span>
             </button>
           </div>
           <div style={s('padding:22px 16px 0')}>
             {label('LAST TIME AT THE KRYGIER')}
-            <button onClick={go('reads')} className="fs" style={s('display:flex;align-items:stretch;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(11,26,45,.07)')}>
+            <button onClick={go('reads')} className="fs" style={s('display:flex;align-items:stretch;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(11,12,14,.07)')}>
               <span style={s('flex:1;min-width:0;padding:14px 14px 15px')}>
-                <span style={s('display:flex;align-items:flex-end;gap:10px')}><span style={s("font:800 34px/.8 'Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>4 – 3</span><span style={s("font:600 10.5px/1.35 'Archivo';color:var(--label);padding-bottom:2px")}>24 OCT · v RADOMIAK<br />Seven goals, three points</span></span>
-                <span style={s("display:block;font:500 12px/1.45 'Archivo';color:var(--body);margin-top:10px")}>A seven-goal thriller at home. Six minutes of highlights and the tactical read.</span>
-                <span style={s("display:inline-flex;align-items:center;gap:6px;margin-top:11px;font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:9px 10px")}><Ms size={13} color="var(--on-panel)">play_circle</Ms>WATCH HIGHLIGHTS</span>
+                <span style={s('display:flex;align-items:flex-end;gap:10px')}><span style={s("font:800 34px/.8 'Space Grotesk';color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap")}>4 – 3</span><span style={s("font:600 10.5px/1.35 'Inter';color:var(--label);padding-bottom:2px")}>24 OCT · v RADOMIAK<br />Seven goals, three points</span></span>
+                <span style={s("display:block;font:500 12px/1.45 'Inter';color:var(--body);margin-top:10px")}>A seven-goal thriller at home. Six minutes of highlights and the tactical read.</span>
+                <span style={s("display:inline-flex;align-items:center;gap:6px;margin-top:11px;font:800 9.5px/1 'Inter';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:9px 10px;border-radius:999px")}><Ms size={13} color="var(--on-panel)">play_circle</Ms>WATCH HIGHLIGHTS</span>
               </span>
               <span style={s('width:116px;flex:none;position:relative;background:var(--sand2)')}><Slot id="last-meeting" label="Last home game" /></span>
             </button>
           </div>
-          <div style={s("padding:20px 16px 0;font:500 13.5px/1.5 'Archivo';color:var(--body)")}>Tonight’s companion: follow the game, talk to other Pogoń fans, and earn towards a seat upgrade while you watch. Nothing to install.</div>
+          <div style={s("padding:20px 16px 0;font:500 13.5px/1.5 'Inter';color:var(--body)")}>Tonight’s companion: follow the game, talk to other Pogoń fans, and earn towards a seat upgrade while you watch. Nothing to install.</div>
           <div style={s('padding:22px 16px 0')}>
             {label('NEXT UP')}
             <div style={s('margin-top:6px')}>
@@ -918,9 +864,9 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
                 { day: '12', mon: 'DEC', opp: 'Legia Warszawa', comp: 'PKO BP Ekstraklasa', ko: 'TBC', tag: 'AWAY', bg: 'var(--sand)', fg: 'var(--ink)' },
               ].map((x, i) => (
                 <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}>
-                  <span style={s('width:38px;flex:none;text-align:center')}><span style={s("display:block;font:800 17px/1 'Archivo Black';color:var(--ink)")}>{x.day}</span><span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:var(--label);margin-top:4px")}>{x.mon}</span></span>
-                  <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{x.opp}</span><span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{x.comp} · {x.ko}</span></span>
-                  <span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:6px 7px"), color: x.fg, background: x.bg }}>{x.tag}</span>
+                  <span style={s('width:38px;flex:none;text-align:center')}><span style={s("display:block;font:800 17px/1 'Space Grotesk';color:var(--ink)")}>{x.day}</span><span style={s("display:block;font:800 8.5px/1 'Inter';letter-spacing:.1em;color:var(--label);margin-top:4px")}>{x.mon}</span></span>
+                  <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13.5px/1.2 'Inter';color:var(--ink)")}>{x.opp}</span><span style={s("display:block;font:500 11.5px/1.3 'Inter';color:var(--label);margin-top:3px")}>{x.comp} · {x.ko}</span></span>
+                  <span style={{ ...s("font:800 9px/1 'Inter';letter-spacing:.1em;padding:6px 7px;border-radius:999px"), color: x.fg, background: x.bg }}>{x.tag}</span>
                 </div>
               ))}
             </div>
@@ -930,62 +876,59 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
 
       {liveish && (
         <section style={s('position:relative;animation:bgFade .3s ease both')}>
-          {/* ── Cinematic in-play hero: giant live score over the floodlit crowd ── */}
-          <div style={s('position:relative;overflow:hidden;background:#091625')}>
-            <HeroBg pos="50% 8%" glow={ht ? 'rgba(60,196,110,.3)' : 'rgba(214,32,42,.32)'} sweep={false} />
-            <div style={s('position:relative;padding:15px 16px 18px')}>
-              <div style={s('display:flex;align-items:center;justify-content:center')}>
+          {/* ── Sepang-style in-play hero: live pill, big score, match clock ── */}
+          <div style={s('position:relative;overflow:hidden;background:#0B0C0E')}>
+            <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 10%')} />
+            <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,12,14,.5) 0%,rgba(11,12,14,.12) 28%,rgba(11,12,14,.72) 62%,#0B0C0E 100%)')} />
+            <div style={s('position:relative;padding:150px 16px 20px')}>
+              <div style={s('display:flex;align-items:center;gap:10px')}>
                 {ht
-                  ? <span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#3CC46E;background:rgba(60,196,110,.16);padding:7px 10px")}>HALF-TIME</span>
-                  : <span style={s('display:flex;align-items:center;gap:7px;background:rgba(214,32,42,.92);padding:7px 11px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} /><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#fff")}>LIVE · {live ? "38'" : "45'+2"}</span></span>}
+                  ? <span style={s("font:600 12px/1 'Inter';color:#0B0C0E;background:#3CC46E;padding:7px 11px;border-radius:999px")}>Half-time</span>
+                  : <span style={s("display:flex;align-items:center;gap:6px;font:600 12px/1 'Inter';color:#fff;background:#E32A2D;padding:7px 11px;border-radius:999px")}><span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} />LIVE · {live ? "38'" : "45'+2"}</span>}
+                <span style={s("font:400 13px/1 'Inter';color:#C5CAD3")}>{(12418 + (st.n % 60) * 7).toLocaleString()} fans connected</span>
               </div>
-              <div style={s('display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-top:16px')}>
-                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
-                  <Badge club="home" size={46} />
-                  <span style={s("font:800 " + (NARROW ? 11 : 15) + "px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(5,13,23,.75)")}>POGOŃ</span>
-                </div>
-                <div key={'s' + st.hs + st.as} style={s('display:flex;align-items:center;justify-content:center;gap:' + (NARROW ? 9 : 13) + 'px;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both')}>
-                  <span style={s("font:800 " + (NARROW ? 56 : 76) + "px/.76 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(5,13,23,.6)")}>{st.hs}</span>
-                  <span style={s('width:15px;height:3px;background:#C8102E')} />
-                  <span style={s("font:800 " + (NARROW ? 56 : 76) + "px/.76 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 28px rgba(5,13,23,.6)")}>{st.as}</span>
-                </div>
-                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
-                  <Badge club="away" size={46} />
-                  <span style={s("font:800 " + (NARROW ? 11 : 15) + "px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 2px 10px rgba(5,13,23,.75)")}>ŚLĄSK</span>
-                </div>
-              </div>
-              <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:13px;font:500 11px/1.45 'Archivo';color:#9CAFC7")}>
-                <span>{st.hs > 1 ? 'Grosicki 23’ · Pozo 71’' : st.hs ? 'Grosicki 23’' : '—'}</span>
-                <span style={s('text-align:right')}>{st.as ? (ht ? 'Camões 45’' : 'Camões 58’') : '—'}</span>
-              </div>
-              <div style={s('display:flex;align-items:center;gap:10px;margin-top:16px')}>
-                <span style={s("font:800 10px/1 'Archivo';letter-spacing:.12em;color:#FFDA6C;font-variant-numeric:tabular-nums")}>{live ? "38'" : "45'+2"}</span>
-                <div style={s('flex:1;height:4px;background:rgba(242,242,240,.18);position:relative')}><span style={{ ...s('position:absolute;left:0;top:0;bottom:0;background:#D6202A;transition:width 1s linear'), width: Math.min((live ? 38 : 45) / 90 * 100, 100) + '%' }} /><span style={s('position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:rgba(242,242,240,.45)')} /></div>
-                <span style={s("font:800 10px/1 'Archivo';letter-spacing:.12em;color:#FFDA6C")}>90′</span>
+              <div key={'s' + st.hs + st.as} style={s("font:600 40px/1.02 'Space Grotesk';color:#fff;margin-top:12px;letter-spacing:-.01em;animation:bgScore .6s cubic-bezier(.18,.9,.2,1) both")}>Pogoń {st.hs}–{st.as} Śląsk</div>
+              <div style={s("font:400 13.5px/1.45 'Inter';color:#C5CAD3;margin-top:6px")}>{st.hs > 1 ? 'Grosicki 23’ · Pozo 71’' : st.hs ? 'Grosicki 23’' : 'No goals yet'}{st.as ? (ht ? ' · Camões 45’' : ' · Camões 58’') : ''}</div>
+              <div style={s('display:flex;align-items:center;gap:10px;margin-top:14px')}>
+                <div style={s('flex:1;height:4px;border-radius:999px;background:rgba(255,255,255,.16);position:relative;overflow:hidden')}><span style={{ ...s('position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:#E32A2D;transition:width 1s linear'), width: Math.min((live ? 38 : 45) / 90 * 100, 100) + '%' }} /></div>
+                <span style={s("font:500 12px/1 'Inter';color:#C5CAD3;font-variant-numeric:tabular-nums")}>{live ? "38'" : "45'"} / 90′</span>
               </div>
             </div>
           </div>
+          {(timeline as any[])[0] && (() => { const e = (timeline as any[])[0]; return (
+            <div style={s('padding:14px 16px 0')}>
+              <button onClick={go('intel')} style={{ ...s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;border-radius:14px'), background: e.kind === 'GOAL' ? '#C8102E' : '#F2B33D', color: e.kind === 'GOAL' ? '#fff' : '#1A1200' }}>
+                <Ms size={22} color="inherit">{e.kind === 'GOAL' ? 'sports_soccer' : 'warning'}</Ms>
+                <span style={s('flex:1;min-width:0')}>
+                  <span style={s("display:block;font:600 15px/1.2 'Inter'")}>{e.kind.charAt(0) + e.kind.slice(1).toLowerCase()} · {e.who}</span>
+                  <span style={s("display:block;font:400 12.5px/1.3 'Inter';opacity:.8;margin-top:2px")}>{e.min}′{e.detail ? ' · ' + e.detail : ''}</span>
+                </span>
+                <Ms size={20} color="inherit">chevron_right</Ms>
+              </button>
+            </div>
+          ); })()}
+          <QuickRow items={[{ icon: 'forum', label: 'Chat', go: go('chat'), primary: true }, { icon: 'insights', label: 'Intel', go: go('intel') }, { icon: 'bar_chart', label: 'Polls', go: go('polls') }, { icon: 'restaurant', label: 'Food', go: go('food') }, { icon: 'photo_library', label: 'Photos', go: go('photos') }]} />
           <div style={s('padding:0 16px')}>
             {(timeline as any[]).map((e, i) => (
               <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}>
-                <span style={s("font:800 12px/1 'Archivo';color:var(--ink);width:26px;font-variant-numeric:tabular-nums")}>{e.min}′</span>
-                {e.isCard && <span style={{ ...s('width:11px;height:15px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(11,26,45,.3)'), background: e.cardColor }} />}
+                <span style={s("font:800 12px/1 'Inter';color:var(--ink);width:26px;font-variant-numeric:tabular-nums")}>{e.min}′</span>
+                {e.isCard && <span style={{ ...s('width:11px;height:15px;border-radius:14px;box-shadow:inset 0 0 0 1px rgba(11,12,14,.3)'), background: e.cardColor }} />}
                 {e.hasIcon && <Ms size={16} color={e.iconColor}>{e.icon}</Ms>}
-                <span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;padding:5px 6px;text-align:center"), color: e.fg, background: e.bg }}>{e.kind}</span>
-                <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 13.5px/1.2 'Archivo';color:var(--ink)")}>{e.who}</span>{e.detail && <span style={s("display:block;font:500 11px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{e.detail}</span>}</span>
-                <span style={{ ...s('width:5px;height:14px;transform:skewX(-8deg);margin-left:auto'), background: e.tc }} />
+                <span style={{ ...s("font:800 9px/1 'Inter';letter-spacing:.1em;padding:5px 6px;text-align:center;border-radius:999px"), color: e.fg, background: e.bg }}>{e.kind}</span>
+                <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 13.5px/1.2 'Inter';color:var(--ink)")}>{e.who}</span>{e.detail && <span style={s("display:block;font:500 11px/1.3 'Inter';color:var(--label);margin-top:3px")}>{e.detail}</span>}</span>
+                <span style={{ ...s('width:5px;height:14px;border-radius:3px;margin-left:auto'), background: e.tc }} />
               </div>
             ))}
           </div>
           {ht && (
             <div style={s('margin:16px 16px 0;background:var(--sand);padding:16px')}>
-              <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>HALF-TIME · 15 MINUTES</div>
-              <div style={s("font:800 28px/.9 'Archivo Black';color:var(--ink);margin-top:10px")}>Beat the queue</div>
-              <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>Order to seat 112–J and it lands before the restart.</div>
+              <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>HALF-TIME · 15 MINUTES</div>
+              <div style={s("font:800 28px/.9 'Space Grotesk';color:var(--ink);margin-top:10px")}>Beat the queue</div>
+              <div style={s("font:500 13px/1.5 'Inter';color:var(--body);margin-top:8px")}>Order to seat 112–J and it lands before the restart.</div>
               <div style={s('display:flex;gap:7px;margin-top:13px;flex-wrap:wrap')}>
-                <button onClick={go('food')} className="fp" style={s("display:flex;align-items:center;gap:7px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:12px 15px")}><Ms size={15} color="var(--on-panel)">restaurant</Ms>ORDER FOOD</button>
-                <button onClick={go('spotkick')} style={s("display:flex;align-items:center;gap:7px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#C8102E;padding:12px 15px")}><Ms size={15} color="#fff">sports_soccer</Ms>PLAY SPOT KICK</button>
-                <button onClick={go('intel')} className="fs" style={s("font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--ink);padding:12px 15px;box-shadow:inset 0 0 0 1.5px var(--ink)")}>HALF-TIME INTEL</button>
+                <button onClick={go('food')} className="fp" style={s("display:flex;align-items:center;gap:7px;font:800 11.5px/1 'Inter';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:12px 15px")}><Ms size={15} color="var(--on-panel)">restaurant</Ms>ORDER FOOD</button>
+                <button onClick={go('spotkick')} style={s("display:flex;align-items:center;gap:7px;font:800 11.5px/1 'Inter';letter-spacing:.06em;color:#fff;background:#C8102E;padding:12px 15px")}><Ms size={15} color="#fff">sports_soccer</Ms>PLAY SPOT KICK</button>
+                <button onClick={go('intel')} className="fs" style={s("font:800 11.5px/1 'Inter';letter-spacing:.06em;color:var(--ink);padding:12px 15px;box-shadow:inset 0 0 0 1.5px var(--ink)")}>HALF-TIME INTEL</button>
               </div>
             </div>
           )}
@@ -994,45 +937,33 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
 
       {ft && (
         <section style={s('position:relative;animation:bgFade .3s ease both')}>
-          {/* ── Cinematic full-time hero: the result and the three points ── */}
-          <div style={s('position:relative;overflow:hidden;background:#091625')}>
-            <HeroBg pos="50% 30%" glow="rgba(237,32,60,.5)" sweep={true} />
-            <div style={s('position:relative;padding:16px 16px 18px')}>
-              <div style={s('display:flex;align-items:center;justify-content:center')}>
-                <span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.2em;color:#fff;background:#D6202A;padding:7px 11px")}>FULL-TIME</span>
-              </div>
-              <div style={s('display:flex;align-items:center;justify-content:center;gap:' + (NARROW ? 8 : 15) + 'px;margin-top:16px')}>
-                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
-                  <Badge club="home" size={50} />
-                  <span style={s("font:800 " + (NARROW ? 11 : 15) + "px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(5,13,23,.75)")}>POGOŃ</span>
-                </div>
-                <div style={s('display:flex;align-items:center;gap:' + (NARROW ? 9 : 13) + 'px')}>
-                  <span style={s("font:800 " + (NARROW ? 58 : 82) + "px/.74 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(5,13,23,.6)")}>2</span>
-                  <span style={s('width:16px;height:3px;background:#C8102E')} />
-                  <span style={s("font:800 " + (NARROW ? 58 : 82) + "px/.74 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(5,13,23,.6)")}>1</span>
-                </div>
-                <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px')}>
-                  <Badge club="away" size={50} />
-                  <span style={s("font:800 " + (NARROW ? 11 : 15) + "px/.9 'Archivo Black';letter-spacing:.03em;color:#fff;text-shadow:0 2px 10px rgba(5,13,23,.75)")}>ŚLĄSK</span>
-                </div>
-              </div>
-              <div style={s("display:flex;justify-content:space-between;gap:10px;margin-top:14px;font:500 11px/1.5 'Archivo';color:#9CAFC7")}><span>Grosicki 23’ · Pozo 71’</span><span style={s('text-align:right')}>Camões 58’</span></div>
+          {/* ── Sepang-style full-time hero: the result ── */}
+          <div style={s('position:relative;overflow:hidden;background:#0B0C0E')}>
+            <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%')} />
+            <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,12,14,.5) 0%,rgba(11,12,14,.12) 28%,rgba(11,12,14,.72) 62%,#0B0C0E 100%)')} />
+            <div style={s('position:relative;padding:150px 16px 20px')}>
+              <span style={s("display:inline-flex;align-items:center;gap:6px;font:600 12px/1 'Inter';color:#0B0C0E;background:#fff;padding:7px 11px;border-radius:999px")}><Ms size={14} color="#0B0C0E">flag</Ms>Full-time</span>
+              <div style={s("font:600 40px/1.02 'Space Grotesk';color:#fff;margin-top:12px;letter-spacing:-.01em")}>Pogoń 2–1 Śląsk</div>
+              <div style={s("font:400 13.5px/1.45 'Inter';color:#C5CAD3;margin-top:6px")}>Grosicki 23’ · Pozo 71’ · Camões 58’</div>
             </div>
-            <button onClick={go('reads')} className="agg" style={s('position:relative;display:flex;align-items:center;gap:13px;width:100%;text-align:left;padding:14px 16px;background:rgba(237,32,60,.16);box-shadow:inset 0 1px 0 rgba(242,242,240,.12)')}>
-              <span style={s('width:38px;height:38px;flex:none;background:#C8102E;display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#0B1A2D">emoji_events</Ms></span>
+          </div>
+          <div style={s('padding:14px 16px 0')}>
+            <button onClick={go('reads')} style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;border-radius:16px;background:var(--sand);box-shadow:inset 0 0 0 1.5px #C8102E')}>
+              <Ms size={24} color="#C8102E">emoji_events</Ms>
               <span style={s('flex:1;min-width:0')}>
-                <span style={s("display:block;font:800 15px/1 'Archivo Black';letter-spacing:.03em;color:#fff")}>THREE POINTS IN MEETING NO. 80</span>
-                <span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:#9CAFC7;margin-top:4px")}>Next: Lech Poznań away, Sun 29 Nov.</span>
+                <span style={s("display:block;font:600 16px/1.2 'Space Grotesk';color:var(--ink)")}>Three points in meeting no. 80</span>
+                <span style={s("display:block;font:400 12.5px/1.35 'Inter';color:var(--body);margin-top:3px")}>Next: Lech Poznań away, Sun 29 Nov.</span>
               </span>
-              <Ms size={18} color="#FFDA6C">chevron_right</Ms>
+              <span style={s("font:600 13px/1 'Inter';color:#C8102E;text-decoration:underline")}>See</span>
             </button>
           </div>
+          <QuickRow items={[{ icon: 'photo_library', label: 'Photos', go: go('photos') }, { icon: 'how_to_vote', label: 'MOTM', go: go('polls') }, { icon: 'article', label: 'Reads', go: go('reads') }, { icon: 'forum', label: 'Chat', go: go('chat') }, { icon: 'shopping_bag', label: 'Store', go: go('shop') }]} />
           <div style={s('padding:20px 16px 0')}>
             {label('MATCH STATS')}
             <div style={s('margin-top:10px')}>
               {[{ label: 'POSSESSION', h: '58%', a: '42%', hf: 58, af: 42 }, { label: 'SHOTS', h: '17', a: '11', hf: 17, af: 11 }, { label: 'ON TARGET', h: '8', a: '4', hf: 8, af: 4 }, { label: 'EXPECTED GOALS', h: '2.34', a: '1.02', hf: 234, af: 102 }, { label: 'PASSES', h: '641', a: '498', hf: 641, af: 498 }, { label: 'CORNERS', h: '9', a: '3', hf: 9, af: 3 }].map((x) => (
                 <div key={x.label} style={s('padding:10px 0;border-bottom:1.5px solid var(--hair)')}>
-                  <div style={s('display:flex;align-items:baseline;justify-content:space-between;gap:10px')}><span style={s("font:800 17px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums;width:52px")}>{x.h}</span><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{x.label}</span><span style={s("font:800 17px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums;width:52px;text-align:right")}>{x.a}</span></div>
+                  <div style={s('display:flex;align-items:baseline;justify-content:space-between;gap:10px')}><span style={s("font:800 17px/1 'Inter';color:var(--ink);font-variant-numeric:tabular-nums;width:52px")}>{x.h}</span><span style={s("font:800 9.5px/1 'Inter';letter-spacing:.14em;color:var(--label)")}>{x.label}</span><span style={s("font:800 17px/1 'Inter';color:var(--ink);font-variant-numeric:tabular-nums;width:52px;text-align:right")}>{x.a}</span></div>
                   <div style={s('display:flex;gap:2px;margin-top:7px;height:7px')}><span style={{ flex: x.hf, background: '#C8102E' }} /><span style={{ flex: x.af, background: '#0E4D2A', opacity: 0.55 }} /></div>
                 </div>
               ))}
@@ -1043,10 +974,10 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
             <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px')}>
               <button onClick={go('photos')} className="fs" style={s('grid-column:span 2;text-align:left;background:var(--sand)')}>
                 <div style={s('height:120px;position:relative')}><Slot id="ft-hero-photo" label="Winning moment" /></div>
-                <div style={s('padding:12px 13px 13px')}><div style={s("font:800 22px/.94 'Archivo Black';color:var(--ink)")}>The night in photos</div><div style={s("font:500 12.5px/1.45 'Archivo';color:var(--body);margin-top:4px")}>1,204 fan photos from all four stands.</div></div>
+                <div style={s('padding:12px 13px 13px')}><div style={s("font:800 22px/.94 'Space Grotesk';color:var(--ink)")}>The night in photos</div><div style={s("font:500 12.5px/1.45 'Inter';color:var(--body);margin-top:4px")}>1,204 fan photos from all four stands.</div></div>
               </button>
-              <button onClick={go('reactions')} className="fs" style={s('text-align:left;background:var(--sand)')}><div style={s('height:96px;position:relative')}><Slot id="ft-reel" label="Reel still" /></div><div style={s('padding:11px 12px 12px')}><div style={s("font:800 19px/1 'Archivo Black';color:var(--ink)")}>Reactions</div><div style={s("font:500 12px/1.4 'Archivo';color:var(--body);margin-top:3px")}>30-second fan reels.</div></div></button>
-              <button onClick={go('reads')} className="fs" style={s('text-align:left;background:var(--sand)')}><div style={s('height:96px;display:flex;align-items:center;justify-content:center')}><Ms size={34} color="var(--ink)">article</Ms></div><div style={s('padding:11px 12px 12px')}><div style={s("font:800 19px/1 'Archivo Black';color:var(--ink)")}>Reads</div><div style={s("font:500 12px/1.4 'Archivo';color:var(--body);margin-top:3px")}>Ratings and the tactical read.</div></div></button>
+              <button onClick={go('reactions')} className="fs" style={s('text-align:left;background:var(--sand)')}><div style={s('height:96px;position:relative')}><Slot id="ft-reel" label="Reel still" /></div><div style={s('padding:11px 12px 12px')}><div style={s("font:800 19px/1 'Space Grotesk';color:var(--ink)")}>Reactions</div><div style={s("font:500 12px/1.4 'Inter';color:var(--body);margin-top:3px")}>30-second fan reels.</div></div></button>
+              <button onClick={go('reads')} className="fs" style={s('text-align:left;background:var(--sand)')}><div style={s('height:96px;display:flex;align-items:center;justify-content:center')}><Ms size={34} color="var(--ink)">article</Ms></div><div style={s('padding:11px 12px 12px')}><div style={s("font:800 19px/1 'Space Grotesk';color:var(--ink)")}>Reads</div><div style={s("font:500 12px/1.4 'Inter';color:var(--body);margin-top:3px")}>Ratings and the tactical read.</div></div></button>
             </div>
           </div>
         </section>
@@ -1054,39 +985,39 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
 
       {/* FAN CHAT PREVIEW */}
       <section style={s('margin:20px 16px 0;animation:bgRise .4s .08s ease both')}>
-        <div style={s('display:flex;align-items:center;gap:8px')}>{sect('FAN CHAT')}<span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{298 + (st.n % 40)} TALKING NOW</span></div>
-        <button onClick={go('chat')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(11,26,45,.07)')}>
+        <div style={s('display:flex;align-items:center;gap:8px')}>{sect('FAN CHAT')}<span style={s("font:800 9px/1 'Inter';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px;border-radius:999px")}>{298 + (st.n % 40)} TALKING NOW</span></div>
+        <button onClick={go('chat')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(11,12,14,.07)')}>
           <div style={s('height:150px;overflow:hidden;position:relative;padding:0 12px')}>
             <div style={{ ...s('position:absolute;left:12px;right:12px;bottom:11px;display:flex;flex-direction:column;gap:8px;transition:transform .5s cubic-bezier(.2,.85,.2,1)'), transform: `translateY(${st.rollY}px)` }}>
               {previewMsgs.map((m, i) => (
                 <div key={i} style={s('display:flex;gap:8px;align-items:flex-start')}>
-                  <span style={{ ...s("width:22px;height:22px;flex:none;border-radius:50%;font:800 8.5px/22px 'Archivo';text-align:center"), background: m.avBg, color: m.avFg }}>{m.initials}</span>
-                  <span style={s('flex:1;min-width:0;background:var(--ground);padding:8px 10px;border-radius:2px 12px 12px 12px')}><span style={s("display:block;font:800 9px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>{m.user}</span><span style={s("display:block;font:500 12.5px/1.35 'Archivo';color:var(--ink);margin-top:4px")}>{m.text}</span></span>
+                  <span style={{ ...s("width:22px;height:22px;flex:none;border-radius:50%;font:800 8.5px/22px 'Inter';text-align:center"), background: m.avBg, color: m.avFg }}>{m.initials}</span>
+                  <span style={s('flex:1;min-width:0;background:var(--ground);padding:8px 10px;border-radius:14px 12px 12px 12px')}><span style={s("display:block;font:800 9px/1 'Inter';letter-spacing:.08em;color:var(--label)")}>{m.user}</span><span style={s("display:block;font:500 12.5px/1.35 'Inter';color:var(--ink);margin-top:4px")}>{m.text}</span></span>
                 </div>
               ))}
             </div>
             <div style={s('position:absolute;inset:0 0 auto;height:46px;background:linear-gradient(var(--sand),transparent);pointer-events:none')} />
           </div>
-          <div style={s('display:flex;align-items:center;gap:10px;padding:12px 13px;background:var(--panel)')}><span style={s("font:800 12.5px/1 'Archivo';letter-spacing:.04em;color:var(--on-panel)")}>JOIN THE CONVERSATION</span><Ms size={17} color="#899EB7" style={s('margin-left:auto')}>arrow_forward</Ms></div>
+          <div style={s('display:flex;align-items:center;gap:10px;padding:12px 13px;background:var(--panel)')}><span style={s("font:800 12.5px/1 'Inter';letter-spacing:.04em;color:var(--on-panel)")}>JOIN THE CONVERSATION</span><Ms size={17} color="#A3A8B3" style={s('margin-left:auto')}>arrow_forward</Ms></div>
         </button>
       </section>
 
       {/* REWARDS */}
       {!pre && !inactive && (
-        <section style={s('margin:20px 16px 0;background:var(--panel);padding:16px;border-radius:2px;box-shadow:0 8px 24px rgba(11,26,45,.16);animation:bgRise .4s .04s ease both')}>
-          <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#899EB7")}>MATCHDAY REWARDS</span><span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:5px 7px")}>TIER 2</span></div>
-          <div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:12px')}><span style={s("font:800 44px/.8 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.xp.toLocaleString()}</span><span style={s("font:600 11.5px/1 'Archivo';color:#899EB7;padding-bottom:5px")}>/ 2,000 XP</span></div>
-          <div style={s("font:600 14px/1.35 'Archivo';color:var(--on-panel);margin-top:7px")}>{Math.max(2000 - st.xp, 0).toLocaleString()} XP from a seat upgrade for the Górnik game.</div>
-          <div style={s('display:flex;gap:2px;height:10px;margin-top:13px')}>{Array.from({ length: 20 }, (_, i) => <span key={i} style={{ flex: 1, background: i < filled ? '#F2F2F0' : 'rgba(242,242,240,.16)', transition: 'background .4s ease' }} />)}</div>
-          <div style={s('display:flex;gap:5px;margin-top:12px')}>{ladder.map((l, i) => <div key={i} style={{ ...s('flex:1;padding:10px'), background: l.bg, opacity: l.op }}><div style={{ ...s("font:800 8.5px/1 'Archivo';letter-spacing:.12em"), color: l.tagFg }}>{l.tag}</div><div style={{ ...s("font:700 12.5px/1.25 'Archivo';margin-top:6px"), color: l.fg }}>{l.name}</div><div style={{ ...s("font:500 10.5px/1 'Archivo';margin-top:4px"), color: l.subFg }}>{l.cost}</div></div>)}</div>
-          <div style={s('margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(242,242,240,.16)')}>
-            <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#899EB7")}>HOW TO EARN IT, TONIGHT’S QUESTS</span><span style={s("font:700 9px/1 'Archivo';letter-spacing:.1em;color:#C8102E")}>{questsDone}/4 DONE</span></div>
+        <section style={s('margin:20px 16px 0;background:var(--panel);padding:16px;border-radius:14px;box-shadow:0 8px 24px rgba(11,12,14,.16);animation:bgRise .4s .04s ease both')}>
+          <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:#A3A8B3")}>MATCHDAY REWARDS</span><span style={s("font:800 9px/1 'Inter';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:5px 7px;border-radius:999px")}>TIER 2</span></div>
+          <div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:12px')}><span style={s("font:800 44px/.8 'Space Grotesk';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.xp.toLocaleString()}</span><span style={s("font:600 11.5px/1 'Inter';color:#A3A8B3;padding-bottom:5px")}>/ 2,000 XP</span></div>
+          <div style={s("font:600 14px/1.35 'Inter';color:var(--on-panel);margin-top:7px")}>{Math.max(2000 - st.xp, 0).toLocaleString()} XP from a seat upgrade for the Górnik game.</div>
+          <div style={s('display:flex;gap:2px;height:10px;margin-top:13px')}>{Array.from({ length: 20 }, (_, i) => <span key={i} style={{ flex: 1, background: i < filled ? '#F2F3F5' : 'rgba(242,243,245,.16)', transition: 'background .4s ease' }} />)}</div>
+          <div style={s('display:flex;gap:5px;margin-top:12px')}>{ladder.map((l, i) => <div key={i} style={{ ...s('flex:1;padding:10px'), background: l.bg, opacity: l.op }}><div style={{ ...s("font:800 8.5px/1 'Inter';letter-spacing:.12em"), color: l.tagFg }}>{l.tag}</div><div style={{ ...s("font:700 12.5px/1.25 'Inter';margin-top:6px"), color: l.fg }}>{l.name}</div><div style={{ ...s("font:500 10.5px/1 'Inter';margin-top:4px"), color: l.subFg }}>{l.cost}</div></div>)}</div>
+          <div style={s('margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(242,243,245,.16)')}>
+            <div style={s('display:flex;align-items:center;justify-content:space-between')}><span style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:#A3A8B3")}>HOW TO EARN IT, TONIGHT’S QUESTS</span><span style={s("font:700 9px/1 'Inter';letter-spacing:.1em;color:#C8102E")}>{questsDone}/4 DONE</span></div>
             <div style={s('margin-top:10px;display:flex;flex-direction:column;gap:6px')}>
               {questDefs.map((q) => { const done = !!st.quests[q.k]; return (
-                <button key={q.k} onClick={q.go} className="fq" style={s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 12px;background:rgba(242,242,240,.07)')}>
-                  <span style={{ ...s('width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center'), background: done ? '#C8102E' : 'rgba(242,242,240,.16)' }}><Ms size={14} color="#fff">{done ? 'check' : ''}</Ms></span>
-                  <span style={s('flex:1;min-width:0')}><span style={{ ...s("display:block;font:700 12.5px/1.2 'Archivo';color:var(--on-panel)"), textDecoration: done ? 'line-through' : 'none' }}>{q.title}</span><span style={s("display:block;font:500 11px/1.3 'Archivo';color:#899EB7;margin-top:3px")}>{done ? 'Done, XP added' : q.how}</span></span>
-                  <span style={{ ...s("font:800 11px/1 'Archivo';letter-spacing:.06em"), color: done ? '#C8102E' : '#F2F2F0' }}>{done ? 'PAID' : q.xp}</span>
+                <button key={q.k} onClick={q.go} className="fq" style={s('display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 12px;background:rgba(242,243,245,.07)')}>
+                  <span style={{ ...s('width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center'), background: done ? '#C8102E' : 'rgba(242,243,245,.16)' }}><Ms size={14} color="#fff">{done ? 'check' : ''}</Ms></span>
+                  <span style={s('flex:1;min-width:0')}><span style={{ ...s("display:block;font:700 12.5px/1.2 'Inter';color:var(--on-panel)"), textDecoration: done ? 'line-through' : 'none' }}>{q.title}</span><span style={s("display:block;font:500 11px/1.3 'Inter';color:#A3A8B3;margin-top:3px")}>{done ? 'Done, XP added' : q.how}</span></span>
+                  <span style={{ ...s("font:800 11px/1 'Inter';letter-spacing:.06em"), color: done ? '#C8102E' : '#F2F3F5' }}>{done ? 'PAID' : q.xp}</span>
                 </button>
               ); })}
             </div>
@@ -1097,35 +1028,35 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
       {/* MATCH INTEL PREVIEW */}
       <section style={s('margin:20px 16px 0;animation:bgRise .4s .12s ease both')}>
         {sect('MATCH INTEL')}
-        <button onClick={go('intel')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:2px;box-shadow:0 4px 16px rgba(11,26,45,.07)')}>
-          <div style={s("font:800 26px/.92 'Archivo Black';color:var(--ink)")}>The briefing,<br />already written</div>
-          <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:8px")}>Win probability, the shot map, head-to-head and form, prepared before kick-off.</div>
+        <button onClick={go('intel')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);padding:16px;border-radius:14px;box-shadow:0 4px 16px rgba(11,12,14,.07)')}>
+          <div style={s("font:800 26px/.92 'Space Grotesk';color:var(--ink)")}>The briefing,<br />already written</div>
+          <div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:8px")}>Win probability, the shot map, head-to-head and form, prepared before kick-off.</div>
           <div style={s('display:flex;gap:2px;margin-top:15px')}>
-            <div style={s('flex:46;background:#C8102E;padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:rgba(255,255,255,.9)")}>MOST LIKELY</div><div style={s("font:800 27px/1 'Archivo Black';color:#fff;margin-top:8px;font-variant-numeric:tabular-nums")}>46%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:rgba(255,255,255,.92);margin-top:6px")}>POGOŃ WIN</div></div>
-            <div style={s('flex:27;background:var(--sand2);padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/1 'Archivo Black';color:var(--ink);margin-top:8px;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--body);margin-top:6px")}>DRAW</div></div>
-            <div style={s('flex:27;background:#0E4D2A;padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/1 'Archivo Black';color:#fff;margin-top:8px;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:#3CC46E;margin-top:6px")}>ŚLĄSK</div></div>
+            <div style={s('flex:46;background:#C8102E;padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Inter';letter-spacing:.14em;color:rgba(255,255,255,.9)")}>MOST LIKELY</div><div style={s("font:800 27px/1 'Space Grotesk';color:#fff;margin-top:8px;font-variant-numeric:tabular-nums")}>46%</div><div style={s("font:800 8.5px/1 'Inter';letter-spacing:.12em;color:rgba(255,255,255,.92);margin-top:6px")}>POGOŃ WIN</div></div>
+            <div style={s('flex:27;background:var(--sand2);padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Inter';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/1 'Space Grotesk';color:var(--ink);margin-top:8px;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Inter';letter-spacing:.12em;color:var(--body);margin-top:6px")}>DRAW</div></div>
+            <div style={s('flex:27;background:#0E4D2A;padding:11px 10px 12px')}><div style={s("font:800 7px/1 'Inter';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/1 'Space Grotesk';color:#fff;margin-top:8px;font-variant-numeric:tabular-nums")}>27%</div><div style={s("font:800 8.5px/1 'Inter';letter-spacing:.12em;color:#3CC46E;margin-top:6px")}>ŚLĄSK</div></div>
           </div>
-          <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>READ THE BRIEFING<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
+          <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Inter';letter-spacing:.06em;color:var(--ink)")}>READ THE BRIEFING<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
         </button>
       </section>
 
       {/* COMMUNITY PREVIEW, the Match Intel treatment, applied to Community */}
       {showCommunityBlock && (
         <section style={s('margin:20px 16px 0;animation:bgRise .4s .14s ease both')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}>{sect('CREWS')}<span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>{communityBadge}</span></div>
-          <button onClick={go('community')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:2px;overflow:hidden;box-shadow:0 4px 16px rgba(11,26,45,.07)')}>
+          <div style={s('display:flex;align-items:center;gap:8px')}>{sect('CREWS')}<span style={s("font:800 9px/1 'Inter';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px;border-radius:999px")}>{communityBadge}</span></div>
+          <button onClick={go('community')} className="fs" style={s('display:block;width:100%;text-align:left;margin-top:9px;background:var(--sand);border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(11,12,14,.07)')}>
             <div style={s('position:relative;height:104px;overflow:hidden')}>
               <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 32%')} />
               <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,22,37,.12),rgba(9,22,37,.84))')} />
               <div style={s('position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:9px')}>
-                <div style={s('display:flex')}>{communityAvatars.map((a, i) => <span key={i} style={{ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Archivo';color:#fff;box-shadow:0 0 0 2px #091625"), background: a.bg, marginLeft: i ? -8 : 0 }}>{a.i}</span>)}</div>
-                <span style={s("font:700 10.5px/1 'Archivo';letter-spacing:.05em;color:#F2F2F0;text-shadow:0 1px 6px rgba(5,13,23,.8)")}>2,182 in your Crews right now</span>
+                <div style={s('display:flex')}>{communityAvatars.map((a, i) => <span key={i} style={{ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Inter';color:#fff;box-shadow:0 0 0 2px #0B0C0E"), background: a.bg, marginLeft: i ? -8 : 0 }}>{a.i}</span>)}</div>
+                <span style={s("font:700 10.5px/1 'Inter';letter-spacing:.05em;color:#F2F3F5;text-shadow:0 1px 6px rgba(5,13,23,.8)")}>2,182 in your Crews right now</span>
               </div>
             </div>
             <div style={s('padding:14px 16px 16px')}>
-              <div style={s("font:800 24px/.92 'Archivo Black';color:var(--ink)")}>Your Crew,<br />between the whistles</div>
-              <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:8px")}>{communityBlockLine}</div>
-              <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>OPEN CREWS<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
+              <div style={s("font:800 24px/.92 'Space Grotesk';color:var(--ink)")}>Your Crew,<br />between the whistles</div>
+              <div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:8px")}>{communityBlockLine}</div>
+              <div style={s("display:flex;align-items:center;gap:6px;margin-top:13px;font:800 11.5px/1 'Inter';letter-spacing:.06em;color:var(--ink)")}>OPEN CREWS<Ms size={15} color="var(--ink)">arrow_forward</Ms></div>
             </div>
           </button>
         </section>
@@ -1136,17 +1067,17 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
         {sect('ALSO TONIGHT')}
         <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:11px')}>
           {sections.map((x) => (
-            <button key={x.t} onClick={x.go} className="frow" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 13px;background:var(--sand);border-radius:2px;box-shadow:0 2px 10px rgba(11,26,45,.05)')}>
-              <span style={s('width:44px;height:44px;flex:none;border-radius:2px;background:transparent;box-shadow:inset 0 0 0 1.5px var(--hair);display:flex;align-items:center;justify-content:center')}><Ms size={25} color="var(--ink)">{x.icon}</Ms></span>
+            <button key={x.t} onClick={x.go} className="frow" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 13px;background:var(--sand);border-radius:14px;box-shadow:0 2px 10px rgba(11,12,14,.05)')}>
+              <span style={s('width:44px;height:44px;flex:none;border-radius:14px;background:transparent;box-shadow:inset 0 0 0 1.5px var(--hair);display:flex;align-items:center;justify-content:center')}><Ms size={25} color="var(--ink)">{x.icon}</Ms></span>
               <span style={s('flex:1;min-width:0')}>
-                <span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 19px/1 'Archivo Black';letter-spacing:.03em;color:var(--ink)")}>{x.t}</span><span style={s("font:800 8px/1 'Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:4px 5px")}>{x.tag}</span></span>
-                <span style={s("display:block;font:500 12.5px/1.4 'Archivo';color:var(--body);margin-top:3px")}>{x.d}</span>
+                <span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:800 19px/1 'Space Grotesk';letter-spacing:.03em;color:var(--ink)")}>{x.t}</span><span style={s("font:800 8px/1 'Inter';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:4px 5px;border-radius:999px")}>{x.tag}</span></span>
+                <span style={s("display:block;font:500 12.5px/1.4 'Inter';color:var(--body);margin-top:3px")}>{x.d}</span>
               </span>
               <Ms size={18} color="var(--label)">chevron_right</Ms>
             </button>
           ))}
         </div>
-        <div style={s("font:700 10.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin:16px 0 0;text-align:center")}>MATCHDAY.POGOŃ.FC · NO APP, NO DOWNLOAD</div>
+        <div style={s("font:700 10.5px/1 'Inter';letter-spacing:.12em;color:var(--label);margin:16px 0 0;text-align:center")}>MATCHDAY.POGOŃ.FC · NO APP, NO DOWNLOAD</div>
       </section>
     </div>
   );
@@ -1164,46 +1095,46 @@ const ONBOARDING_OPTS = [
 function CrewsOnboarding({ pickOnboarding, skipOnboarding }: any) {
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
-      <div style={s("font:800 30px/.92 'Archivo Black';color:var(--ink)")}>Pick your matchday crew</div>
-      <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px;max-width:300px")}>Tell us how you watch and we’ll drop you into the Crew that fits. You can join more, or leave, any time.</div>
+      <div style={s("font:800 30px/.92 'Space Grotesk';color:var(--ink)")}>Pick your matchday crew</div>
+      <div style={s("font:500 13px/1.5 'Inter';color:var(--body);margin-top:8px;max-width:300px")}>Tell us how you watch and we’ll drop you into the Crew that fits. You can join more, or leave, any time.</div>
       <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:20px')}>
         {ONBOARDING_OPTS.map((o) => (
           <button key={o.crewId} onClick={() => pickOnboarding(o.crewId)} className="fs" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--sand);padding:14px')}>
             <Ms size={22} color="var(--ink)">{o.icon}</Ms>
-            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Archivo';color:var(--ink)")}>{o.label}</span><span style={s("display:block;font:500 11.5px/1.4 'Archivo';color:var(--label);margin-top:2px")}>Joins {o.crewName}</span></span>
+            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Inter';color:var(--ink)")}>{o.label}</span><span style={s("display:block;font:500 11.5px/1.4 'Inter';color:var(--label);margin-top:2px")}>Joins {o.crewName}</span></span>
             <Ms size={18} color="var(--label)">chevron_right</Ms>
           </button>
         ))}
       </div>
-      <button onClick={skipOnboarding} style={s("display:block;margin-top:16px;font:700 11px/1 'Archivo';letter-spacing:.06em;color:var(--label)")}>SKIP FOR NOW</button>
+      <button onClick={skipOnboarding} style={s("display:block;margin-top:16px;font:700 11px/1 'Inter';letter-spacing:.06em;color:var(--label)")}>SKIP FOR NOW</button>
     </div>
   );
 }
 
 // ── Crews Home ──
 function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: any) {
-  const L = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const allCrews: CrewRec[] = [...CREWS, ...st.customCrews];
   const needsOnboarding = !allCrews.some((c) => !c.gated && st.crewsJoined[c.id]) && !st.onboardingSkipped;
   if (needsOnboarding) return <CrewsOnboarding {...{ pickOnboarding, skipOnboarding }} />;
   const dropInCrewId = st.dropIn.active ? st.dropIn.crewId : null;
   const myCrews = allCrews.filter((c) => st.crewsJoined[c.id] || c.gated).map((c) => {
     const gatedLocked = c.gated && !st.boxUnlocked;
-    return { id: c.id, name: c.name, initials: c.initials, members: gatedLocked ? '–' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated, locked: gatedLocked, avatarBg: c.status === 'pending' ? '#B98900' : gatedLocked ? '#5D7189' : '#C8102E', dropInNow: dropInCrewId === c.id, pending: c.status === 'pending' };
+    return { id: c.id, name: c.name, initials: c.initials, members: gatedLocked ? '–' : c.members.toLocaleString(), latest: gatedLocked ? c.unlockHint : c.latest, unread: c.id === 'msb' && !c.gated, locked: gatedLocked, avatarBg: c.status === 'pending' ? '#B98900' : gatedLocked ? '#6B717C' : '#C8102E', dropInNow: dropInCrewId === c.id, pending: c.status === 'pending' };
   });
   return (
     <div style={s('animation:bgFade .25s ease both;padding-bottom:26px')}>
       <div style={s('padding:16px 16px 0')}>
-        <div style={s("font:800 32px/.9 'Archivo Black';color:var(--ink)")}>Crews</div>
-        <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px;max-width:300px")}>Permanent fan groups that don’t reset at full-time. Join one, or start your own.</div>
+        <div style={s("font:800 32px/.9 'Space Grotesk';color:var(--ink)")}>Crews</div>
+        <div style={s("font:500 13px/1.5 'Inter';color:var(--body);margin-top:8px;max-width:300px")}>Permanent fan groups that don’t reset at full-time. Join one, or start your own.</div>
       </div>
       <div style={s('padding:26px 16px 0')}>
         {L('YOUR CREWS')}
         <div style={s('margin-top:9px')}>
           {myCrews.map((c) => (
             <button key={c.id} onClick={() => openCrew(c.id)} className="frow" style={s('display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 0;border-bottom:1.5px solid var(--hair)')}>
-              <span style={{ ...s("width:46px;height:46px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 11px/1 'Archivo';color:#fff"), background: c.avatarBg }}>{c.locked ? <Ms size={19} color="#fff">lock</Ms> : c.initials}</span>
-              <span style={s('flex:1;min-width:0')}><span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 14.5px/1.2 'Archivo';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}{c.pending && <span style={s("font:800 8px/1 'Archivo';letter-spacing:.08em;color:#B98900;background:rgba(60,196,110,.18);padding:3px 5px")}>PENDING</span>}{c.dropInNow && <span style={s("font:800 8px/1 'Archivo';letter-spacing:.08em;color:#fff;background:#C8102E;padding:3px 5px")}>PLAYER HERE</span>}</span><span style={s("display:block;font:500 12px/1.4 'Archivo';color:var(--label);margin-top:3px")}>{c.pending ? 'Pending Pogoń review' : c.members + ' members · ' + c.latest}</span></span>
+              <span style={{ ...s("width:46px;height:46px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 11px/1 'Inter';color:#fff"), background: c.avatarBg }}>{c.locked ? <Ms size={19} color="#fff">lock</Ms> : c.initials}</span>
+              <span style={s('flex:1;min-width:0')}><span style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 14.5px/1.2 'Inter';color:var(--ink)")}>{c.name}</span>{c.unread && <span style={s('width:7px;height:7px;border-radius:50%;background:#D6202A')} />}{c.pending && <span style={s("font:800 8px/1 'Inter';letter-spacing:.08em;color:#B98900;background:rgba(60,196,110,.18);padding:3px 5px;border-radius:999px")}>PENDING</span>}{c.dropInNow && <span style={s("font:800 8px/1 'Inter';letter-spacing:.08em;color:#fff;background:#C8102E;padding:3px 5px;border-radius:999px")}>PLAYER HERE</span>}</span><span style={s("display:block;font:500 12px/1.4 'Inter';color:var(--label);margin-top:3px")}>{c.pending ? 'Pending Pogoń review' : c.members + ' members · ' + c.latest}</span></span>
               <Ms size={18} color="var(--label)">chevron_right</Ms>
             </button>
           ))}
@@ -1214,16 +1145,16 @@ function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: an
         <div style={s('display:flex;gap:9px;margin-top:11px;overflow-x:auto')}>
           {DISCOVER_CREWS.map((c) => { const joined = !!st.crewsJoined[c.id]; return (
             <div key={c.id} style={s('flex:none;width:158px;background:var(--sand);padding:16px')}>
-              <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{c.name}</span>{c.official && <Ms size={14} color="#C8102E">verified</Ms>}</div>
-              <div style={s("font:500 11.5px/1.4 'Archivo';color:var(--label);margin-top:6px")}>{c.members.toLocaleString()} members</div>
-              <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [c.id]: !joined } }))} style={{ ...s("display:block;width:100%;margin-top:10px;font:800 10px/1 'Archivo';letter-spacing:.08em;padding:9px 0;text-align:center"), background: joined ? 'var(--ground)' : 'var(--panel)', color: joined ? 'var(--ink)' : 'var(--on-panel)' }}>{joined ? 'JOINED' : 'JOIN'}</button>
+              <div style={s('display:flex;align-items:center;gap:7px')}><span style={s("font:700 13.5px/1.2 'Inter';color:var(--ink)")}>{c.name}</span>{c.official && <Ms size={14} color="#C8102E">verified</Ms>}</div>
+              <div style={s("font:500 11.5px/1.4 'Inter';color:var(--label);margin-top:6px")}>{c.members.toLocaleString()} members</div>
+              <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [c.id]: !joined } }))} style={{ ...s("display:block;width:100%;margin-top:10px;font:800 10px/1 'Inter';letter-spacing:.08em;padding:9px 0;text-align:center"), background: joined ? 'var(--ground)' : 'var(--panel)', color: joined ? 'var(--ink)' : 'var(--on-panel)' }}>{joined ? 'JOINED' : 'JOIN'}</button>
             </div>
           ); })}
           {/* Start a Crew tile */}
           <button onClick={go('createCrew')} className="fs" style={s('flex:none;width:158px;text-align:left;background:var(--sand);padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:9px')}>
             <Ms size={22} color="#C8102E">add_circle</Ms>
-            <span style={s("font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>Start a Crew</span>
-            <span style={s("font:500 11.5px/1.4 'Archivo';color:var(--label)")}>Fan-run, yours to shape</span>
+            <span style={s("font:700 13.5px/1.2 'Inter';color:var(--ink)")}>Start a Crew</span>
+            <span style={s("font:500 11.5px/1.4 'Inter';color:var(--label)")}>Fan-run, yours to shape</span>
           </button>
         </div>
       </div>
@@ -1233,7 +1164,7 @@ function Community({ st, set, go, openCrew, pickOnboarding, skipOnboarding }: an
 
 // ── Crew View: thread, plans, gated states, player drop-in, verified player posts ──
 function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply, cancelReply, openRoom, approveCrew }: any) {
-  const L = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const joined = !!st.crewsJoined[crew.id];
   const pendingReview = crew.status === 'pending';
   const gatedLocked = crew.gated && !st.boxUnlocked;
@@ -1242,7 +1173,7 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
   const mm = Math.floor(secsLeft / 60), ss = String(secsLeft % 60).padStart(2, '0');
   const presence = st.presenceStamps[crew.id] || 0;
   const msgs: CrewMsg[] = [...CREW_MSGS, ...(PLAYER_MSGS[crew.id] || []), ...(st.crewMsgsExtra[crew.id] || [])];
-  const memberAvatars = Array.from({ length: 8 }, (_, i) => ({ src: ROSTER_PHOTOS[i % ROSTER_PHOTOS.length], initials: 'M' + (i + 1), bg: i % 2 ? '#C8102E' : '#1B324F' }));
+  const memberAvatars = Array.from({ length: 8 }, (_, i) => ({ src: ROSTER_PHOTOS[i % ROSTER_PHOTOS.length], initials: 'M' + (i + 1), bg: i % 2 ? '#C8102E' : '#2A2E36' }));
   const playVoice = (key: string) => set((sp: FSt) => ({ playingVoice: sp.playingVoice === key ? null : key }));
   // Reply threading: look up the quoted message + who/what the composer is replying to.
   const bySrcId: Record<string, CrewMsg> = {}; msgs.forEach((m) => { if (m.id) bySrcId[m.id] = m; });
@@ -1258,32 +1189,32 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
       <div style={s('position:relative;height:118px;background:var(--panel)')}><Slot id={'crew-banner-' + crew.id} label="Crew banner" /></div>
       <div style={s('padding:16px 16px 0')}>
         <div style={s('display:flex;align-items:center;gap:8px')}>
-          <span style={s("flex:1;min-width:0;font:800 30px/.94 'Archivo Black';color:var(--ink)")}>{crew.name}</span>
-          {pendingReview && <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#B98900;background:rgba(60,196,110,.18);padding:5px 7px")}>PENDING</span>}
+          <span style={s("flex:1;min-width:0;font:800 30px/.94 'Space Grotesk';color:var(--ink)")}>{crew.name}</span>
+          {pendingReview && <span style={s("font:800 8.5px/1 'Inter';letter-spacing:.1em;color:#B98900;background:rgba(60,196,110,.18);padding:5px 7px;border-radius:999px")}>PENDING</span>}
           {crew.official && <Ms size={18} color="#C8102E">verified</Ms>}
           {crew.gated && <Ms size={18} color="var(--label)">lock</Ms>}
           <button onClick={go('crewSettings')} className="fs" style={s('flex:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--sand)')}><Ms size={17} color="var(--ink)">settings</Ms></button>
         </div>
         {pendingReview && (
           <div style={s('margin-top:14px;background:var(--panel);padding:16px')}>
-            <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color="#C8102E">verified_user</Ms><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.16em;color:#C8102E")}>PENDING POGOŃ REVIEW</span></div>
-            <div style={s("font:800 21px/1.04 'Archivo Black';color:var(--on-panel);margin-top:11px")}>We’re checking your Crew over</div>
-            <div style={s("font:500 12.5px/1.55 'Archivo';color:#899EB7;margin-top:8px")}>Every fan-run Crew gets a quick safety check from Pogoń, usually cleared within a few hours. It’s already yours, so invite people and set the tone now. It goes public the moment it’s approved.</div>
+            <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color="#C8102E">verified_user</Ms><span style={s("font:800 9.5px/1 'Inter';letter-spacing:.16em;color:#C8102E")}>PENDING POGOŃ REVIEW</span></div>
+            <div style={s("font:800 21px/1.04 'Space Grotesk';color:var(--on-panel);margin-top:11px")}>We’re checking your Crew over</div>
+            <div style={s("font:500 12.5px/1.55 'Inter';color:#A3A8B3;margin-top:8px")}>Every fan-run Crew gets a quick safety check from Pogoń, usually cleared within a few hours. It’s already yours, so invite people and set the tone now. It goes public the moment it’s approved.</div>
             <div style={s('display:flex;gap:8px;margin-top:14px')}>
-              <button onClick={go('invite')} style={s("display:flex;align-items:center;gap:7px;font:800 11px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#C8102E;padding:11px 13px")}><Ms size={15} color="#fff">person_add</Ms>INVITE PEOPLE</button>
-              <button onClick={() => approveCrew(crew.id)} className="fq" style={s("font:800 10.5px/1 'Archivo';letter-spacing:.1em;color:#899EB7;background:rgba(242,242,240,.08);padding:11px 13px")}>DEMO · APPROVE</button>
+              <button onClick={go('invite')} style={s("display:flex;align-items:center;gap:7px;font:800 11px/1 'Inter';letter-spacing:.06em;color:#fff;background:#C8102E;padding:11px 13px")}><Ms size={15} color="#fff">person_add</Ms>INVITE PEOPLE</button>
+              <button onClick={() => approveCrew(crew.id)} className="fq" style={s("font:800 10.5px/1 'Inter';letter-spacing:.1em;color:#A3A8B3;background:rgba(242,243,245,.08);padding:11px 13px;border-radius:999px")}>DEMO · APPROVE</button>
             </div>
           </div>
         )}
         {presence > 0 && (
-          <div style={s('display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:#C8102E;padding:5px 8px')}><Ms size={13} color="#fff">verified</Ms><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.08em;color:#fff")}>WAS THERE FOR THE DROP-IN</span></div>
+          <div style={s('display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:#C8102E;padding:5px 8px')}><Ms size={13} color="#fff">verified</Ms><span style={s("font:800 9.5px/1 'Inter';letter-spacing:.08em;color:#fff")}>WAS THERE FOR THE DROP-IN</span></div>
         )}
         {gatedLocked && (
           <div style={s('margin-top:14px;background:var(--panel);padding:22px;text-align:center')}>
-            <Ms size={30} color="#899EB7">lock</Ms>
-            <div style={s("font:800 22px/1 'Archivo Black';color:var(--on-panel);margin-top:10px")}>Locked</div>
-            <div style={s("font:500 12.5px/1.5 'Archivo';color:#899EB7;margin-top:8px;max-width:260px;margin-left:auto;margin-right:auto")}>{crew.unlockHint}</div>
-            <button onClick={() => set({ boxUnlocked: true })} style={s("margin-top:14px;font:800 10.5px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#C8102E;padding:11px 14px")}>DEMO · UNLOCK</button>
+            <Ms size={30} color="#A3A8B3">lock</Ms>
+            <div style={s("font:800 22px/1 'Space Grotesk';color:var(--on-panel);margin-top:10px")}>Locked</div>
+            <div style={s("font:500 12.5px/1.5 'Inter';color:#A3A8B3;margin-top:8px;max-width:260px;margin-left:auto;margin-right:auto")}>{crew.unlockHint}</div>
+            <button onClick={() => set({ boxUnlocked: true })} style={s("margin-top:14px;font:800 10.5px/1 'Inter';letter-spacing:.1em;color:#fff;background:#C8102E;padding:11px 14px;border-radius:999px")}>DEMO · UNLOCK</button>
           </div>
         )}
       </div>
@@ -1291,27 +1222,27 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
       {!gatedLocked && (<>
         {crew.gated && (
           <div style={s('padding:0 16px 8px')}>
-            <div style={s("font:500 12px/1.5 'Archivo';color:var(--body)")}>Early access, first look at the next shirt, private thread, season-ticket holders only.</div>
-            <button onClick={() => set({ boxUnlocked: false })} style={s("margin-top:8px;font:800 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>DEMO · LOCK AGAIN</button>
+            <div style={s("font:500 12px/1.5 'Inter';color:var(--body)")}>Early access, first look at the next shirt, private thread, season-ticket holders only.</div>
+            <button onClick={() => set({ boxUnlocked: false })} style={s("margin-top:8px;font:800 9.5px/1 'Inter';letter-spacing:.1em;color:var(--label)")}>DEMO · LOCK AGAIN</button>
           </div>
         )}
         <div style={s('padding:0 16px 0')}>
-          <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body)")}>{crew.members.toLocaleString()} members · permanent thread</div>
-          <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} style={{ ...s("display:block;margin-top:11px;font:800 10.5px/1 'Archivo';letter-spacing:.1em;padding:11px 14px;text-align:center"), background: joined ? 'var(--sand)' : '#C8102E', color: joined ? 'var(--ink)' : '#fff' }}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
+          <div style={s("font:500 12.5px/1.5 'Inter';color:var(--body)")}>{crew.members.toLocaleString()} members · permanent thread</div>
+          <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} style={{ ...s("display:block;margin-top:11px;font:800 10.5px/1 'Inter';letter-spacing:.1em;padding:11px 14px;text-align:center;border-radius:999px"), background: joined ? 'var(--sand)' : '#C8102E', color: joined ? 'var(--ink)' : '#fff' }}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
         </div>
 
         {!crew.gated && !crew.isCustom && (
           <div style={s('margin:18px 16px 0;background:var(--panel);padding:15px 16px')}>
-            <div style={s('display:flex;align-items:center;gap:7px')}><Ms size={15} color="#C8102E">push_pin</Ms><span style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:#C8102E")}>PINNED · COACH TRAVEL</span><span style={s("font:700 9px/1 'Archivo';letter-spacing:.06em;color:#7D93AF;margin-left:auto")}>BY MAREK_92</span></div>
-            <div style={s("font:800 21px/1.04 'Archivo Black';color:var(--on-panel);margin-top:11px")}>Coach to Lech Poznań (A)</div>
-            <div style={s("font:500 12.5px/1.55 'Archivo';color:#9CAFC7;margin-top:7px")}>Sun 29 Nov · coach to Poznań leaves the Krygier 09:30 · 60 zł return, kids half price. RSVP by Thursday so we can book the seats.</div>
+            <div style={s('display:flex;align-items:center;gap:7px')}><Ms size={15} color="#C8102E">push_pin</Ms><span style={s("font:800 9px/1 'Inter';letter-spacing:.14em;color:#C8102E")}>PINNED · COACH TRAVEL</span><span style={s("font:700 9px/1 'Inter';letter-spacing:.06em;color:#A3A8B3;margin-left:auto")}>BY MAREK_92</span></div>
+            <div style={s("font:800 21px/1.04 'Space Grotesk';color:var(--on-panel);margin-top:11px")}>Coach to Lech Poznań (A)</div>
+            <div style={s("font:500 12.5px/1.55 'Inter';color:#A3A8B3;margin-top:7px")}>Sun 29 Nov · coach to Poznań leaves the Krygier 09:30 · 60 zł return, kids half price. RSVP by Thursday so we can book the seats.</div>
             <div style={s('display:flex;align-items:center;gap:10px;margin-top:13px')}>
               <div style={s('display:flex')}>{rsvpAvatars.map((src: string, i: number) => <span key={i} style={{ ...s('width:26px;height:26px;flex:none;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px var(--panel)'), marginLeft: i ? -8 : 0 }}><img src={src} alt="" style={s('width:100%;height:100%;object-fit:cover')} /></span>)}</div>
-              <span style={s("font:700 11px/1 'Archivo';color:#9CAFC7")}>{goingCount} going</span>
+              <span style={s("font:700 11px/1 'Inter';color:#A3A8B3")}>{goingCount} going</span>
             </div>
             <div style={s('display:flex;gap:8px;margin-top:14px')}>
-              <button onClick={() => setRsvp(rsvp === 'in' ? null : 'in')} style={{ ...s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font:800 11px/1 'Archivo';letter-spacing:.06em;padding:12px 0"), background: rsvp === 'in' ? '#C8102E' : 'rgba(242,242,240,.1)', color: rsvp === 'in' ? '#fff' : 'var(--on-panel)' }}><Ms size={15} color={rsvp === 'in' ? '#fff' : '#C8102E'}>{rsvp === 'in' ? 'check_circle' : 'directions_bus'}</Ms>{rsvp === 'in' ? 'YOU’RE GOING' : 'I’M GOING'}</button>
-              <button onClick={() => setRsvp(rsvp === 'out' ? null : 'out')} style={{ ...s("flex:none;font:800 11px/1 'Archivo';letter-spacing:.06em;padding:12px 16px"), background: rsvp === 'out' ? 'rgba(242,242,240,.22)' : 'rgba(242,242,240,.06)', color: rsvp === 'out' ? 'var(--on-panel)' : '#7D93AF' }}>CAN’T</button>
+              <button onClick={() => setRsvp(rsvp === 'in' ? null : 'in')} style={{ ...s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font:800 11px/1 'Inter';letter-spacing:.06em;padding:12px 0"), background: rsvp === 'in' ? '#C8102E' : 'rgba(242,243,245,.1)', color: rsvp === 'in' ? '#fff' : 'var(--on-panel)' }}><Ms size={15} color={rsvp === 'in' ? '#fff' : '#C8102E'}>{rsvp === 'in' ? 'check_circle' : 'directions_bus'}</Ms>{rsvp === 'in' ? 'YOU’RE GOING' : 'I’M GOING'}</button>
+              <button onClick={() => setRsvp(rsvp === 'out' ? null : 'out')} style={{ ...s("flex:none;font:800 11px/1 'Inter';letter-spacing:.06em;padding:12px 16px"), background: rsvp === 'out' ? 'rgba(242,243,245,.22)' : 'rgba(242,243,245,.06)', color: rsvp === 'out' ? 'var(--on-panel)' : '#A3A8B3' }}>CAN’T</button>
             </div>
           </div>
         )}
@@ -1319,8 +1250,8 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
         {dropInActive && (
           <div style={s('margin:18px 16px 0;background:#C8102E;padding:14px 16px;display:flex;align-items:center;gap:10px')}>
             <Ms size={18} color="#fff">verified</Ms>
-            <span style={s("flex:1;font:800 12px/1.3 'Archivo';color:#fff")}>{st.dropIn.player} is here, replying to approved questions</span>
-            <span style={s("font:800 13px/1 'Archivo';color:#fff;font-variant-numeric:tabular-nums")}>{mm}:{ss}</span>
+            <span style={s("flex:1;font:800 12px/1.3 'Inter';color:#fff")}>{st.dropIn.player} is here, replying to approved questions</span>
+            <span style={s("font:800 13px/1 'Inter';color:#fff;font-variant-numeric:tabular-nums")}>{mm}:{ss}</span>
           </div>
         )}
 
@@ -1328,12 +1259,12 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
           {L('MEMBERS')}
           <div style={s('display:flex;gap:6px;margin-top:9px')}>{memberAvatars.map((m, i) => <Avatar key={i} src={m.src} initials={m.initials} bg={m.bg} size={32} />)}</div>
         </div>
-        <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label);padding:26px 16px 0")}>THE THREAD</div>
+        <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label);padding:26px 16px 0")}>THE THREAD</div>
         <div style={s('flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px')}>
           {dropInActive && st.dropIn.approved.map((q: any) => (
             <div key={q.id} style={s('background:var(--panel);padding:10px 12px')}>
-              <div style={s("font:600 12px/1.4 'Archivo';color:#899EB7")}>{q.user}: {q.text}</div>
-              <div style={s('display:flex;align-items:center;gap:6px;margin-top:6px')}><Ms size={13} color="#C8102E">verified</Ms><span style={s("font:700 12.5px/1.4 'Archivo';color:var(--on-panel)")}>{q.reply}</span></div>
+              <div style={s("font:600 12px/1.4 'Inter';color:#A3A8B3")}>{q.user}: {q.text}</div>
+              <div style={s('display:flex;align-items:center;gap:6px;margin-top:6px')}><Ms size={13} color="#C8102E">verified</Ms><span style={s("font:700 12.5px/1.4 'Inter';color:var(--on-panel)")}>{q.reply}</span></div>
             </div>
           ))}
           {msgs.map((m, i) => {
@@ -1345,50 +1276,50 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
               <div key={i} style={s('display:flex;gap:8px')}>
                 <Avatar src={m.photo} initials={m.initials} bg={m.avBg} size={26} />
                 <div style={s('flex:1;min-width:0')}>
-                  <div style={s('display:flex;align-items:center;gap:5px')}><span style={s("font:800 9px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>{m.user}</span>{m.verified && <Ms size={12} color="#C8102E">verified</Ms>}</div>
+                  <div style={s('display:flex;align-items:center;gap:5px')}><span style={s("font:800 9px/1 'Inter';letter-spacing:.08em;color:var(--label)")}>{m.user}</span>{m.verified && <Ms size={12} color="#C8102E">verified</Ms>}</div>
                   {quoted && (
                     <div style={s('display:flex;align-items:center;gap:5px;margin-top:4px;padding-left:8px;border-left:2px solid #C8102E')}>
-                      <span style={s("font:700 10.5px/1.3 'Archivo';color:#C8102E")}>{quoted.user}</span>
-                      <span style={s("font:500 10.5px/1.3 'Archivo';color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px")}>{quoteText(quoted)}</span>
+                      <span style={s("font:700 10.5px/1.3 'Inter';color:#C8102E")}>{quoted.user}</span>
+                      <span style={s("font:500 10.5px/1.3 'Inter';color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px")}>{quoteText(quoted)}</span>
                     </div>
                   )}
-                  {m.isText && <div style={s("font:500 13px/1.4 'Archivo';color:var(--ink);margin-top:4px;background:var(--sand);padding:8px 10px;border-radius:3px 12px 12px 12px")}>{m.text}</div>}
+                  {m.isText && <div style={s("font:500 13px/1.4 'Inter';color:var(--ink);margin-top:4px;background:var(--sand);padding:8px 10px;border-radius:3px 12px 12px 12px")}>{m.text}</div>}
                   {m.isImage && (
                     <div style={s('margin-top:4px;background:var(--sand);border-radius:3px 12px 12px 12px;overflow:hidden;max-width:220px')}>
                       <div style={s('position:relative;width:220px;height:150px')}><Slot id={m.id!} label={m.caption || 'Player photo'} /></div>
-                      <div style={s("font:600 11.5px/1.4 'Archivo';color:var(--ink);padding:8px 10px")}>{m.caption}</div>
+                      <div style={s("font:600 11.5px/1.4 'Inter';color:var(--ink);padding:8px 10px")}>{m.caption}</div>
                     </div>
                   )}
                   {m.isVoice && (
                     <button onClick={() => playVoice(vkey)} className="fs" style={s('display:flex;align-items:center;gap:9px;margin-top:4px;background:var(--sand);border-radius:3px 12px 12px 12px;padding:9px 12px 9px 9px')}>
                       <span style={s('width:30px;height:30px;flex:none;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center')}><Ms size={16} color="#fff">{st.playingVoice === vkey ? 'pause' : 'play_arrow'}</Ms></span>
-                      <span style={s('display:flex;align-items:center;gap:2px')}>{(m.wave || []).map((w, wi) => <span key={wi} style={{ width: 2.5, height: w, background: '#899EB7', borderRadius: 2 }} />)}</span>
-                      <span style={s("font:700 11px/1 'Archivo';letter-spacing:.04em;color:var(--label)")}>{m.dur}</span>
+                      <span style={s('display:flex;align-items:center;gap:2px')}>{(m.wave || []).map((w, wi) => <span key={wi} style={{ width: 2.5, height: w, background: '#A3A8B3', borderRadius: 2 }} />)}</span>
+                      <span style={s("font:700 11px/1 'Inter';letter-spacing:.04em;color:var(--label)")}>{m.dur}</span>
                     </button>
                   )}
                   {m.isSocial && (
                     <div style={s('margin-top:4px;display:flex;align-items:center;gap:9px;background:var(--sand);border-radius:3px 12px 12px 12px;padding:10px 12px;max-width:240px')}>
                       <Ms size={19} color="var(--ink)">{m.socialIcon!}</Ms>
-                      <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 12px/1.3 'Archivo';color:var(--ink)")}>{m.socialTitle}</span><span style={s("display:block;font:500 11px/1.3 'Archivo';color:var(--label);margin-top:2px")}>{m.socialSub}</span></span>
+                      <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 12px/1.3 'Inter';color:var(--ink)")}>{m.socialTitle}</span><span style={s("display:block;font:500 11px/1.3 'Inter';color:var(--label);margin-top:2px")}>{m.socialSub}</span></span>
                     </div>
                   )}
                   {m.isCall && (
                     <button onClick={() => openRoom(m.callPlayer || m.user)} className="fs" style={s('margin-top:4px;display:flex;align-items:center;gap:11px;width:100%;max-width:300px;background:var(--panel);border-radius:3px 12px 12px 12px;padding:11px 12px;text-align:left')}>
                       <span style={s('width:38px;height:38px;flex:none;border-radius:10px;background:#C8102E;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#100E0A">videocam</Ms></span>
                       <span style={s('flex:1;min-width:0')}>
-                        <span style={s('display:flex;align-items:center;gap:5px')}><span style={s('width:5px;height:5px;flex:none;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} /><span style={s("font:800 12px/1.3 'Archivo';color:var(--on-panel)")}>{m.callTitle}</span></span>
-                        <span style={s("display:block;font:500 11px/1.3 'Archivo';color:#8B93A0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{m.callSub}</span>
+                        <span style={s('display:flex;align-items:center;gap:5px')}><span style={s('width:5px;height:5px;flex:none;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} /><span style={s("font:800 12px/1.3 'Inter';color:var(--on-panel)")}>{m.callTitle}</span></span>
+                        <span style={s("display:block;font:500 11px/1.3 'Inter';color:#8B93A0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{m.callSub}</span>
                       </span>
-                      <span style={s("flex:none;font:800 10px/1 'Archivo';letter-spacing:.06em;color:#100E0A;background:#C8102E;padding:8px 13px;border-radius:100px")}>JOIN</span>
+                      <span style={s("flex:none;font:800 10px/1 'Inter';letter-spacing:.06em;color:#100E0A;background:#C8102E;padding:8px 13px;border-radius:100px")}>JOIN</span>
                     </button>
                   )}
                   {m.id && (
                     <div style={s('display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap')}>
                       {rx.map((r) => (
-                        <button key={r.e} onClick={() => toggleReaction(mid, r.e)} style={{ ...s("display:flex;align-items:center;gap:4px;font:700 10.5px/1 'Archivo';padding:4px 7px;border-radius:100px"), background: r.on ? '#C8102E' : 'var(--sand)', color: r.on ? '#fff' : 'var(--label)' }}><span>{r.e}</span><span>{r.count}</span></button>
+                        <button key={r.e} onClick={() => toggleReaction(mid, r.e)} style={{ ...s("display:flex;align-items:center;gap:4px;font:700 10.5px/1 'Inter';padding:4px 7px;border-radius:100px"), background: r.on ? '#C8102E' : 'var(--sand)', color: r.on ? '#fff' : 'var(--label)' }}><span>{r.e}</span><span>{r.count}</span></button>
                       ))}
-                      <button onClick={() => toggleReaction(mid, '❤️')} style={s("font:700 12px/1 'Archivo';color:var(--label);padding:4px 6px")}>+😀</button>
-                      <button onClick={() => setReply(mid)} style={s("font:700 10.5px/1 'Archivo';letter-spacing:.04em;color:var(--label);padding:4px 6px")}>REPLY</button>
+                      <button onClick={() => toggleReaction(mid, '❤️')} style={s("font:700 12px/1 'Inter';color:var(--label);padding:4px 6px")}>+😀</button>
+                      <button onClick={() => setReply(mid)} style={s("font:700 10.5px/1 'Inter';letter-spacing:.04em;color:var(--label);padding:4px 6px;border-radius:999px")}>REPLY</button>
                     </div>
                   )}
                 </div>
@@ -1397,20 +1328,20 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
           })}
         </div>
         {dropInActive ? (<>
-          <div style={s('padding:6px 16px 4px')}><div style={s("font:600 10.5px/1.4 'Archivo';color:var(--label)")}>Questions go to a moderator, not straight to {st.dropIn.player}.</div></div>
+          <div style={s('padding:6px 16px 4px')}><div style={s("font:600 10.5px/1.4 'Inter';color:var(--label)")}>Questions go to a moderator, not straight to {st.dropIn.player}.</div></div>
           <div style={s('padding:0 16px 20px;display:flex;gap:8px;align-items:center')}>
-            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.dropIn.qDraft} onChange={(e: any) => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, qDraft: e.target.value } }))} onKeyDown={(e: any) => { if (e.key === 'Enter') askDropIn(st.dropIn.qDraft); }} placeholder="Ask a question…" style={s("width:100%;font:500 13.5px/1.2 'Archivo';color:var(--ink)")} /></div>
+            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.dropIn.qDraft} onChange={(e: any) => set((sp: FSt) => ({ dropIn: { ...sp.dropIn, qDraft: e.target.value } }))} onKeyDown={(e: any) => { if (e.key === 'Enter') askDropIn(st.dropIn.qDraft); }} placeholder="Ask a question…" style={s("width:100%;font:500 13.5px/1.2 'Inter';color:var(--ink)")} /></div>
             <button onClick={() => askDropIn(st.dropIn.qDraft)} style={s('width:44px;height:44px;flex:none;background:#C8102E;border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="#fff">arrow_upward</Ms></button>
           </div>
         </>) : (<>
           {replyDraftSrc && (
             <div style={s('display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--sand)')}>
-              <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 11.5px/1.3 'Archivo';color:var(--label)")}>Replying to <strong style={{ color: 'var(--ink)' }}>{replyDraftSrc.user}</strong>: {quoteText(replyDraftSrc)}</span>
-              <button onClick={cancelReply} style={s("flex:none;font:800 12px/1 'Archivo';color:var(--label)")}>✕</button>
+              <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 11.5px/1.3 'Inter';color:var(--label)")}>Replying to <strong style={{ color: 'var(--ink)' }}>{replyDraftSrc.user}</strong>: {quoteText(replyDraftSrc)}</span>
+              <button onClick={cancelReply} style={s("flex:none;font:800 12px/1 'Inter';color:var(--label)")}>✕</button>
             </div>
           )}
           <div style={s('padding:10px 16px 20px;display:flex;gap:8px;align-items:center')}>
-            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.crewDraft} onChange={(e: any) => set({ crewDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') postCrew(st.crewDraft); }} placeholder={replyDraftSrc ? 'Reply to ' + replyDraftSrc.user + '…' : 'Message your Crew…'} style={s("width:100%;font:500 13.5px/1.2 'Archivo';color:var(--ink)")} /></div>
+            <div style={s('flex:1;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.crewDraft} onChange={(e: any) => set({ crewDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') postCrew(st.crewDraft); }} placeholder={replyDraftSrc ? 'Reply to ' + replyDraftSrc.user + '…' : 'Message your Crew…'} style={s("width:100%;font:500 13.5px/1.2 'Inter';color:var(--ink)")} /></div>
             <button onClick={() => postCrew(st.crewDraft)} style={s('width:44px;height:44px;flex:none;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center')}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
           </div>
         </>)}
@@ -1421,21 +1352,21 @@ function Crew({ st, crew, set, postCrew, askDropIn, go, toggleReaction, setReply
 
 // ── Create Crew: name, blurb, privacy, banner + icon ──
 function CreateCrew({ st, set, createCrew }: any) {
-  const L = (t: string) => <div style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
+  const L = (t: string) => <div style={s("font:800 9px/1 'Inter';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
   const privacyOpts = [{ k: 'public', label: 'PUBLIC' }, { k: 'invite', label: 'INVITE ONLY' }];
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
-      <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Start a Crew</div>
-      <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>Permanent, fan-run, yours to shape. You’re the first admin.</div>
+      <div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink)")}>Start a Crew</div>
+      <div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:6px")}>Permanent, fan-run, yours to shape. You’re the first admin.</div>
 
       <div style={s('margin-top:20px')}>{L('CREW NAME')}
-        <input value={st.newCrewName} onChange={(e: any) => set({ newCrewName: e.target.value })} placeholder="e.g. North Tier Corner" style={s("display:block;width:100%;margin-top:7px;padding:12px 14px;background:var(--sand);font:700 14px/1 'Archivo';color:var(--ink)")} />
+        <input value={st.newCrewName} onChange={(e: any) => set({ newCrewName: e.target.value })} placeholder="e.g. North Tier Corner" style={s("display:block;width:100%;margin-top:7px;padding:12px 14px;background:var(--sand);font:700 14px/1 'Inter';color:var(--ink)")} />
       </div>
       <div style={s('margin-top:16px')}>{L('WHAT’S IT ABOUT')}
-        <textarea value={st.newCrewDesc} onChange={(e: any) => set({ newCrewDesc: e.target.value })} placeholder="Who this Crew is for and what happens in it" style={s("display:block;width:100%;height:74px;margin-top:7px;padding:12px 14px;background:var(--sand);font:500 13px/1.4 'Archivo';color:var(--ink);resize:none")} />
+        <textarea value={st.newCrewDesc} onChange={(e: any) => set({ newCrewDesc: e.target.value })} placeholder="Who this Crew is for and what happens in it" style={s("display:block;width:100%;height:74px;margin-top:7px;padding:12px 14px;background:var(--sand);font:500 13px/1.4 'Inter';color:var(--ink);resize:none")} />
       </div>
       <div style={s('margin-top:16px')}>{L('PRIVACY')}
-        <div style={s('display:flex;gap:6px;margin-top:7px')}>{privacyOpts.map((o) => { const on = st.newCrewPrivacy === o.k; return <button key={o.k} onClick={() => set({ newCrewPrivacy: o.k })} style={{ ...s("flex:1;font:800 11px/1 'Archivo';letter-spacing:.04em;padding:11px 0;text-align:center"), background: on ? '#C8102E' : 'var(--sand)', color: on ? '#fff' : 'var(--ink)' }}>{o.label}</button>; })}</div>
+        <div style={s('display:flex;gap:6px;margin-top:7px')}>{privacyOpts.map((o) => { const on = st.newCrewPrivacy === o.k; return <button key={o.k} onClick={() => set({ newCrewPrivacy: o.k })} style={{ ...s("flex:1;font:800 11px/1 'Inter';letter-spacing:.04em;padding:11px 0;text-align:center"), background: on ? '#C8102E' : 'var(--sand)', color: on ? '#fff' : 'var(--ink)' }}>{o.label}</button>; })}</div>
       </div>
       <div style={s('margin-top:16px')}>{L('BANNER & ICON')}
         <div style={s('position:relative;height:80px;margin-top:7px;background:var(--sand)')}>
@@ -1446,52 +1377,52 @@ function CreateCrew({ st, set, createCrew }: any) {
       <div style={s('display:flex;align-items:flex-start;gap:11px;margin-top:26px;background:var(--sand);padding:13px 14px')}>
         <Ms size={18} color="#C8102E">verified_user</Ms>
         <span style={s('flex:1;min-width:0')}>
-          <span style={s("display:block;font:800 9px/1 'Archivo';letter-spacing:.12em;color:var(--ink)")}>QUICK SAFETY CHECK</span>
-          <span style={s("display:block;font:500 12px/1.5 'Archivo';color:var(--body);margin-top:5px")}>New Crews get a light review from Pogoń, usually cleared within a few hours. Invite people and set it up straight away, it just goes public once it’s approved.</span>
+          <span style={s("display:block;font:800 9px/1 'Inter';letter-spacing:.12em;color:var(--ink)")}>QUICK SAFETY CHECK</span>
+          <span style={s("display:block;font:500 12px/1.5 'Inter';color:var(--body);margin-top:5px")}>New Crews get a light review from Pogoń, usually cleared within a few hours. Invite people and set it up straight away, it just goes public once it’s approved.</span>
         </span>
       </div>
-      <button onClick={createCrew} className="fp" style={s("display:block;width:100%;margin-top:12px;font:800 12px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#C8102E;padding:15px 0;text-align:center")}>SUBMIT FOR REVIEW</button>
+      <button onClick={createCrew} className="fp" style={s("display:block;width:100%;margin-top:12px;font:800 12px/1 'Inter';letter-spacing:.06em;color:#fff;background:#C8102E;padding:15px 0;text-align:center")}>SUBMIT FOR REVIEW</button>
     </div>
   );
 }
 
 // ── Crew Settings: banner/avatar, rules, invite link, members, leave ──
 function CrewSettings({ st, crew, set, go, notify }: any) {
-  const L = (t: string) => <div style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
+  const L = (t: string) => <div style={s("font:800 9px/1 'Inter';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
   const joined = !!st.crewsJoined[crew.id];
   const rules = crew.rules || CREW_RULES[crew.id] || 'Be respectful. Keep it about Portowcy.';
   const inviteLink = 'connect.pogonszczecin.pl/join/' + crew.id;
   // Join requests waiting on the admin (the pending-members queue for invite-only Crews).
   const [requests, setRequests] = useState([
     { id: 'rq1', name: 'Aisha_R', initials: 'AI', bg: '#C8102E', note: 'Season ticket · Block 108' },
-    { id: 'rq2', name: 'Tomasz_K', initials: 'TO', bg: '#1B324F', note: 'Invited by Marek_92' },
-    { id: 'rq3', name: 'Bea_M', initials: 'BE', bg: '#5D7189', note: 'New to the app' },
+    { id: 'rq2', name: 'Tomasz_K', initials: 'TO', bg: '#2A2E36', note: 'Invited by Marek_92' },
+    { id: 'rq3', name: 'Bea_M', initials: 'BE', bg: '#6B717C', note: 'New to the app' },
   ]);
   const resolveReq = (id: string, ok: boolean) => { setRequests((rs) => rs.filter((r) => r.id !== id)); notify(ok ? 'MEMBER APPROVED' : 'REQUEST DECLINED'); };
   const memberRows = [
-    { name: 'You', initials: 'YO', bg: '#0B1A2D', photo: undefined as string | undefined, isAdmin: !!crew.isCustom },
+    { name: 'You', initials: 'YO', bg: '#0B0C0E', photo: undefined as string | undefined, isAdmin: !!crew.isCustom },
     { name: 'Marek_92', initials: 'MA', bg: '#C8102E', photo: MEMBER_PHOTO.MAREK_92, isAdmin: !crew.isCustom },
-    { name: 'Paula_S', initials: 'PA', bg: '#1B324F', photo: MEMBER_PHOTO.PAULA_S, isAdmin: false },
+    { name: 'Paula_S', initials: 'PA', bg: '#2A2E36', photo: MEMBER_PHOTO.PAULA_S, isAdmin: false },
     { name: 'Darek_K', initials: 'DA', bg: '#C8102E', photo: MEMBER_PHOTO.DAREK_K, isAdmin: false },
   ];
   return (
     <div style={s('animation:bgFade .25s ease both;padding-bottom:30px')}>
       <div style={s('position:relative;height:100px;background:var(--panel)')}>
         <Slot id={'crew-banner-' + crew.id} label="Tap to change banner" />
-        <span style={{ ...s('position:absolute;left:16px;bottom:-24px;width:56px;height:56px;border-radius:50%;box-shadow:0 0 0 4px var(--ground);display:flex;align-items:center;justify-content:center;font:800 15px/1 \'Archivo\';color:#fff'), background: crew.gated ? '#5D7189' : '#C8102E' }}>{crew.initials}</span>
+        <span style={{ ...s('position:absolute;left:16px;bottom:-24px;width:56px;height:56px;border-radius:50%;box-shadow:0 0 0 4px var(--ground);display:flex;align-items:center;justify-content:center;font:800 15px/1 \'Archivo\';color:#fff'), background: crew.gated ? '#6B717C' : '#C8102E' }}>{crew.initials}</span>
       </div>
       <div style={s('padding:34px 16px 0')}>
-        <div style={s("font:800 26px/.94 'Archivo Black';color:var(--ink)")}>{crew.name}</div>
-        <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:8px")}>{rules}</div>
+        <div style={s("font:800 26px/.94 'Space Grotesk';color:var(--ink)")}>{crew.name}</div>
+        <div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:8px")}>{rules}</div>
       </div>
       <div style={s('padding:22px 16px 0')}>{L('INVITE LINK')}
         <div style={s('display:flex;align-items:center;gap:10px;margin-top:9px;background:var(--sand);padding:12px 14px')}>
-          <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12.5px/1 'Archivo';color:var(--body)")}>{inviteLink}</span>
-          <button onClick={() => notify('LINK COPIED')} className="fs" style={s("flex:none;font:800 10px/1 'Archivo';letter-spacing:.06em;color:var(--ink);background:var(--sand3);padding:8px 10px")}>COPY</button>
+          <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12.5px/1 'Inter';color:var(--body)")}>{inviteLink}</span>
+          <button onClick={() => notify('LINK COPIED')} className="fs" style={s("flex:none;font:800 10px/1 'Inter';letter-spacing:.06em;color:var(--ink);background:var(--sand3);padding:8px 10px;border-radius:999px")}>COPY</button>
         </div>
         <button onClick={go('invite')} className="frow" style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;margin-top:4px;border-bottom:1.5px solid var(--hair)')}>
           <Ms size={20} color="var(--ink)">person_add</Ms>
-          <span style={s("flex:1;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>Invite people</span>
+          <span style={s("flex:1;font:700 13.5px/1.2 'Inter';color:var(--ink)")}>Invite people</span>
           <Ms size={18} color="var(--label)">chevron_right</Ms>
         </button>
       </div>
@@ -1499,18 +1430,18 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
         <div style={s('margin-top:9px')}>{memberRows.map((m, i) => (
           <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}>
             <Avatar src={m.photo} initials={m.initials} bg={m.bg} size={30} />
-            <span style={s("flex:1;font:700 12.5px/1.2 'Archivo';color:var(--ink)")}>{m.name}</span>
-            {m.isAdmin && <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.08em;color:var(--label);background:var(--sand);padding:4px 6px")}>ADMIN</span>}
+            <span style={s("flex:1;font:700 12.5px/1.2 'Inter';color:var(--ink)")}>{m.name}</span>
+            {m.isAdmin && <span style={s("font:800 8.5px/1 'Inter';letter-spacing:.08em;color:var(--label);background:var(--sand);padding:4px 6px;border-radius:999px")}>ADMIN</span>}
           </div>
         ))}</div>
       </div>
       {requests.length > 0 && (
         <div style={s('padding:22px 16px 0')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}>{L('JOIN REQUESTS')}<span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.08em;color:#B98900;background:rgba(60,196,110,.18);padding:4px 6px")}>{requests.length} WAITING</span></div>
+          <div style={s('display:flex;align-items:center;gap:8px')}>{L('JOIN REQUESTS')}<span style={s("font:800 8.5px/1 'Inter';letter-spacing:.08em;color:#B98900;background:rgba(60,196,110,.18);padding:4px 6px;border-radius:999px")}>{requests.length} WAITING</span></div>
           <div style={s('margin-top:9px')}>{requests.map((r) => (
             <div key={r.id} style={s('display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}>
               <Avatar initials={r.initials} bg={r.bg} size={34} />
-              <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Archivo';color:var(--ink)")}>{r.name}</span><span style={s("display:block;font:500 11px/1.3 'Archivo';color:var(--label);margin-top:2px")}>{r.note}</span></span>
+              <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Inter';color:var(--ink)")}>{r.name}</span><span style={s("display:block;font:500 11px/1.3 'Inter';color:var(--label);margin-top:2px")}>{r.note}</span></span>
               <button onClick={() => resolveReq(r.id, false)} className="fs" style={s('flex:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--sand)')}><Ms size={18} color="var(--label)">close</Ms></button>
               <button onClick={() => resolveReq(r.id, true)} style={s('flex:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#C8102E')}><Ms size={18} color="#fff">check</Ms></button>
             </div>
@@ -1518,7 +1449,7 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
         </div>
       )}
       <div style={s('padding:26px 16px 0')}>
-        <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} className="fs" style={s("display:block;width:100%;font:800 11px/1 'Archivo';letter-spacing:.06em;color:var(--label);padding:13px 0;text-align:center;box-shadow:inset 0 0 0 1.5px var(--hair)")}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
+        <button onClick={() => set((sp: FSt) => ({ crewsJoined: { ...sp.crewsJoined, [crew.id]: !joined } }))} className="fs" style={s("display:block;width:100%;font:800 11px/1 'Inter';letter-spacing:.06em;color:var(--label);padding:13px 0;text-align:center;box-shadow:inset 0 0 0 1.5px var(--hair)")}>{joined ? 'LEAVE CREW' : 'JOIN CREW'}</button>
       </div>
     </div>
   );
@@ -1528,23 +1459,23 @@ function CrewSettings({ st, crew, set, go, notify }: any) {
 const INVITE_NAMES = ['Tomasz Nowicki', 'Kuba Adamski', 'Łukasz Maj', 'Ola Nowak'];
 const INVITE_PHOTO = [media.avR1, media.avR2, media.avDarek, media.avR3];
 function Invite({ st, crew, inviteContact, notify }: any) {
-  const L = (t: string) => <div style={s("font:800 9px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
+  const L = (t: string) => <div style={s("font:800 9px/1 'Inter';letter-spacing:.14em;color:var(--label)")}>{t}</div>;
   const inviteLink = 'connect.pogonszczecin.pl/join/' + crew.id;
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 30px')}>
-      <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Invite to {crew.name}</div>
-      <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>Share the link, or invite someone directly.</div>
+      <div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink)")}>Invite to {crew.name}</div>
+      <div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:6px")}>Share the link, or invite someone directly.</div>
       <div style={s('display:flex;align-items:center;gap:10px;margin-top:18px;background:var(--sand);padding:13px 14px')}>
-        <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12.5px/1 'Archivo';color:var(--body)")}>{inviteLink}</span>
-        <button onClick={() => notify('LINK COPIED')} className="fs" style={s("flex:none;font:800 10px/1 'Archivo';letter-spacing:.06em;color:var(--ink);background:var(--sand3);padding:8px 10px")}>COPY</button>
+        <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12.5px/1 'Inter';color:var(--body)")}>{inviteLink}</span>
+        <button onClick={() => notify('LINK COPIED')} className="fs" style={s("flex:none;font:800 10px/1 'Inter';letter-spacing:.06em;color:var(--ink);background:var(--sand3);padding:8px 10px;border-radius:999px")}>COPY</button>
       </div>
-      <button onClick={() => notify('SHARE SHEET OPENED')} className="fp" style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:9px;font:800 12px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#C8102E;padding:14px 0")}><Ms size={16} color="#fff">ios_share</Ms>SHARE LINK</button>
+      <button onClick={() => notify('SHARE SHEET OPENED')} className="fp" style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:9px;font:800 12px/1 'Inter';letter-spacing:.06em;color:#fff;background:#C8102E;padding:14px 0")}><Ms size={16} color="#fff">ios_share</Ms>SHARE LINK</button>
       <div style={s('margin-top:22px')}>{L('SUGGESTED')}
         <div style={s('margin-top:9px')}>{INVITE_NAMES.map((n, ni) => { const sent = !!st.inviteSent[n]; return (
           <div key={n} style={s('display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)')}>
-            <Avatar src={INVITE_PHOTO[ni]} initials={n.split(' ').map((w) => w[0]).join('')} bg="#1B324F" size={32} />
-            <span style={s("flex:1;font:700 13px/1.2 'Archivo';color:var(--ink)")}>{n}</span>
-            <button onClick={() => inviteContact(n)} disabled={sent} style={{ ...s("flex:none;font:800 10px/1 'Archivo';letter-spacing:.06em;padding:8px 11px"), background: sent ? 'var(--sand)' : '#C8102E', color: sent ? 'var(--label)' : '#fff' }}>{sent ? 'SENT' : 'INVITE'}</button>
+            <Avatar src={INVITE_PHOTO[ni]} initials={n.split(' ').map((w) => w[0]).join('')} bg="#2A2E36" size={32} />
+            <span style={s("flex:1;font:700 13px/1.2 'Inter';color:var(--ink)")}>{n}</span>
+            <button onClick={() => inviteContact(n)} disabled={sent} style={{ ...s("flex:none;font:800 10px/1 'Inter';letter-spacing:.06em;padding:8px 11px;border-radius:999px"), background: sent ? 'var(--sand)' : '#C8102E', color: sent ? 'var(--label)' : '#fff' }}>{sent ? 'SENT' : 'INVITE'}</button>
           </div>
         ); })}</div>
       </div>
@@ -1574,38 +1505,38 @@ function Room({ st, joinRoom, leaveRoom, frameless }: any) {
     <button onClick={onClick} style={{ ...s('width:52px;height:52px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center'), background: bg }}><Ms size={23} color={fg}>{icon}</Ms></button>
   );
   return (
-    <div style={s('animation:bgFade .25s ease both;position:relative;height:' + (frameless ? 'calc(100dvh - 232px)' : '710px') + ';min-height:440px;overflow:hidden;background:#0E141C')}>
+    <div style={s('animation:bgFade .25s ease both;position:relative;height:' + (frameless ? 'calc(100dvh - 232px)' : '710px') + ';min-height:440px;overflow:hidden;background:#111317')}>
       <img src={mainSrc} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} />
       <div style={s('position:absolute;left:0;right:0;top:0;height:104px;background:linear-gradient(rgba(9,13,19,.72),transparent)')} />
       <div style={s('position:absolute;left:0;right:0;bottom:0;height:340px;background:linear-gradient(transparent,rgba(9,13,19,.94))')} />
       <div style={s('position:absolute;left:14px;right:14px;top:13px;display:flex;align-items:center;gap:8px')}>
         <span style={s('width:6px;height:6px;flex:none;border-radius:50%;background:#D6202A;animation:bgBlink 1.6s steps(1,end) infinite')} />
-        <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 12px/1.2 'Archivo';color:#fff;text-shadow:0 1px 6px rgba(5,13,23,.75)")}>Granatowo-Bordowi Room</span>
-        <span style={s("display:flex;align-items:center;gap:5px;flex:none;background:rgba(14,20,28,.5);backdrop-filter:blur(6px);padding:5px 9px;border-radius:100px;font:700 9px/1 'Archivo';color:#F2F2F0")}><Ms size={12} color="#F2F2F0">visibility</Ms>1,204</span>
-        <span style={s("display:flex;align-items:center;gap:5px;flex:none;background:#D6202A;padding:5px 9px;border-radius:100px;font:800 8.5px/1 'Archivo';letter-spacing:.08em;color:#fff")}><span style={s('width:5px;height:5px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} />LIVE</span>
+        <span style={s("flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 12px/1.2 'Inter';color:#fff;text-shadow:0 1px 6px rgba(5,13,23,.75)")}>Granatowo-Bordowi Room</span>
+        <span style={s("display:flex;align-items:center;gap:5px;flex:none;background:rgba(14,20,28,.5);backdrop-filter:blur(6px);padding:5px 9px;border-radius:100px;font:700 9px/1 'Inter';color:#F2F3F5")}><Ms size={12} color="#F2F3F5">visibility</Ms>1,204</span>
+        <span style={s("display:flex;align-items:center;gap:5px;flex:none;background:#D6202A;padding:5px 9px;border-radius:100px;font:800 8.5px/1 'Inter';letter-spacing:.08em;color:#fff")}><span style={s('width:5px;height:5px;border-radius:50%;background:#fff;animation:bgBlink 1.2s ease-in-out infinite')} />LIVE</span>
       </div>
       <div style={s('position:absolute;right:14px;bottom:246px;display:flex;flex-direction:column;gap:11px')}>
         {REACTIONS.map((e) => <button key={e} onClick={() => react(e)} className="fw" style={s('width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(14,20,28,.5);backdrop-filter:blur(8px);font-size:21px;line-height:1')}>{e}</button>)}
       </div>
       {floats.map((f) => <span key={f.id} style={{ ...s('position:absolute;right:24px;bottom:296px;pointer-events:none;font-size:27px;line-height:1;animation:bgFloatUp 1.4s ease-out both'), marginRight: f.x + 'px' }}>{f.e}</span>)}
       <div style={s('position:absolute;left:0;right:0;bottom:0;padding:0 15px 64px')}>
-        <div style={s('display:flex;align-items:center;gap:6px')}><Ms size={18} color="#C8102E">verified</Ms><span style={s("font:800 21px/1 'Archivo Black';letter-spacing:.02em;color:#fff")}>{player}</span></div>
-        <div style={s("font:500 11px/1.3 'Archivo';color:#D5D5D2;margin-top:5px")}>Taking questions from Granatowo-Bordowi · {inRoom} on camera</div>
+        <div style={s('display:flex;align-items:center;gap:6px')}><Ms size={18} color="#C8102E">verified</Ms><span style={s("font:800 21px/1 'Space Grotesk';letter-spacing:.02em;color:#fff")}>{player}</span></div>
+        <div style={s("font:500 11px/1.3 'Inter';color:#D5D5D2;margin-top:5px")}>Taking questions from Granatowo-Bordowi · {inRoom} on camera</div>
         <div style={s('display:flex;gap:8px;margin-top:14px')}>
           {ROOM_GUESTS.map((t, i) => { const you = !t.src; return (
-            <div key={i} style={{ ...s('position:relative;width:42px;height:42px;flex:none;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#182432'), boxShadow: you ? 'inset 0 0 0 2px #C8102E' : 'inset 0 0 0 1px rgba(242,242,240,.18)' }}>
+            <div key={i} style={{ ...s('position:relative;width:42px;height:42px;flex:none;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#182432'), boxShadow: you ? 'inset 0 0 0 2px #C8102E' : 'inset 0 0 0 1px rgba(242,243,245,.18)' }}>
               {t.src ? <img src={t.src} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover')} /> : <Ms size={19} color="#C8102E">person</Ms>}
             </div>
           ); })}
         </div>
         <div style={s('display:flex;align-items:center;gap:10px;margin-top:15px')}>
           {st.call.joined ? (<>
-            {orb('mic', 'rgba(242,242,240,.18)')}
-            {orb('videocam', 'rgba(242,242,240,.18)')}
-            <button onClick={() => react('✋')} style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font:800 11px/1 'Archivo';letter-spacing:.06em;color:#0B1A2D;background:#C8102E;padding:16px 0;border-radius:100px")}><Ms size={16} color="#0B1A2D">pan_tool</Ms>ASK A QUESTION</button>
+            {orb('mic', 'rgba(242,243,245,.18)')}
+            {orb('videocam', 'rgba(242,243,245,.18)')}
+            <button onClick={() => react('✋')} style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:7px;font:800 11px/1 'Inter';letter-spacing:.06em;color:#0B0C0E;background:#C8102E;padding:16px 0;border-radius:100px")}><Ms size={16} color="#0B0C0E">pan_tool</Ms>ASK A QUESTION</button>
             {orb('call_end', '#D6202A', leaveRoom)}
           </>) : (
-            <button onClick={joinRoom} style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font:800 12.5px/1 'Archivo';letter-spacing:.04em;color:#0B1A2D;background:#C8102E;padding:17px 0;border-radius:100px")}><Ms size={17} color="#0B1A2D">videocam</Ms>JOIN WITH CAMERA</button>
+            <button onClick={joinRoom} style={s("flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font:800 12.5px/1 'Inter';letter-spacing:.04em;color:#0B0C0E;background:#C8102E;padding:17px 0;border-radius:100px")}><Ms size={17} color="#0B0C0E">videocam</Ms>JOIN WITH CAMERA</button>
           )}
         </div>
       </div>
@@ -1624,27 +1555,27 @@ function CrewsIntro({ dismiss }: { dismiss: () => void }) {
     <div style={s('position:absolute;inset:0;z-index:60;background:var(--panel);display:flex;flex-direction:column;animation:bgFade .3s ease both')}>
       <div style={s('position:relative;height:320px;flex:none;overflow:hidden')}>
         <Slot id="crews-intro-bg" label="Pogoń crowd" />
-        <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,26,45,.05) 0%,rgba(11,26,45,.1) 45%,var(--panel) 96%)')} />
-        <div style={s('position:absolute;inset:0;background:linear-gradient(100deg,rgba(11,26,45,.6) 0%,transparent 55%)')} />
-        <button onClick={dismiss} style={s('position:absolute;top:16px;right:16px;z-index:2;width:34px;height:34px;border-radius:50%;background:rgba(11,26,45,.4);display:flex;align-items:center;justify-content:center')}><Ms size={19} color="#fff">close</Ms></button>
+        <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,12,14,.05) 0%,rgba(11,12,14,.1) 45%,var(--panel) 96%)')} />
+        <div style={s('position:absolute;inset:0;background:linear-gradient(100deg,rgba(11,12,14,.6) 0%,transparent 55%)')} />
+        <button onClick={dismiss} style={s('position:absolute;top:16px;right:16px;z-index:2;width:34px;height:34px;border-radius:50%;background:rgba(11,12,14,.4);display:flex;align-items:center;justify-content:center')}><Ms size={19} color="#fff">close</Ms></button>
         <div style={s('position:absolute;left:24px;bottom:20px;z-index:2;display:flex;align-items:center;gap:9px')}>
-          <span style={s('width:7px;height:18px;background:#C8102E;transform:skewX(-8deg)')} />
-          <span style={s("font:800 10px/1 'Archivo';letter-spacing:.2em;color:#fff;background:#D6202A;padding:6px 8px")}>NEW FEATURE</span>
+          <span style={s('width:7px;height:18px;background:#C8102E;border-radius:3px')} />
+          <span style={s("font:800 10px/1 'Inter';letter-spacing:.2em;color:#fff;background:#D6202A;padding:6px 8px;border-radius:999px")}>NEW FEATURE</span>
         </div>
       </div>
       <div style={s('flex:1;overflow-y:auto;padding:26px 24px 0')}>
-        <div style={s("font:800 52px/.84 'Archivo Black';color:var(--on-panel)")}>Introducing<br />Crews</div>
-        <div style={s("font:500 14px/1.6 'Archivo';color:#899EB7;margin-top:14px;max-width:320px")}>A permanent place for your people. Crews don’t reset at full-time, they’re the thread, the plans, and the banter that carry through every matchday.</div>
+        <div style={s("font:800 52px/.84 'Space Grotesk';color:var(--on-panel)")}>Introducing<br />Crews</div>
+        <div style={s("font:500 14px/1.6 'Inter';color:#A3A8B3;margin-top:14px;max-width:320px")}>A permanent place for your people. Crews don’t reset at full-time, they’re the thread, the plans, and the banter that carry through every matchday.</div>
         <div style={s('margin-top:8px')}>{feats.map((f, i) => (
-          <div key={i} style={{ ...s('display:flex;align-items:flex-start;gap:12px;padding:16px 0;border-top:1.5px solid rgba(242,242,240,.1)'), borderBottom: i === feats.length - 1 ? '1.5px solid rgba(242,242,240,.1)' : undefined }}>
+          <div key={i} style={{ ...s('display:flex;align-items:flex-start;gap:12px;padding:16px 0;border-top:1.5px solid rgba(242,243,245,.1)'), borderBottom: i === feats.length - 1 ? '1.5px solid rgba(242,243,245,.1)' : undefined }}>
             <span style={s('width:40px;height:40px;flex:none;background:#C8102E;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">{f.icon}</Ms></span>
-            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14.5px/1.2 'Archivo';color:var(--on-panel)")}>{f.t}</span><span style={s("display:block;font:500 12px/1.4 'Archivo';color:#899EB7;margin-top:3px")}>{f.d}</span></span>
+            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14.5px/1.2 'Inter';color:var(--on-panel)")}>{f.t}</span><span style={s("display:block;font:500 12px/1.4 'Inter';color:#A3A8B3;margin-top:3px")}>{f.d}</span></span>
           </div>
         ))}</div>
       </div>
       <div style={s('flex:none;padding:18px 24px 24px;background:var(--panel)')}>
-        <button onClick={dismiss} style={s("display:block;width:100%;font:800 13px/1 'Archivo';letter-spacing:.06em;color:#0B1A2D;background:#C8102E;padding:16px 0;text-align:center")}>TRY IT OUT</button>
-        <button onClick={dismiss} className="fh" style={s("display:block;width:100%;margin-top:12px;font:700 11px/1 'Archivo';letter-spacing:.08em;color:#899EB7;padding:4px 0;text-align:center")}>MAYBE LATER</button>
+        <button onClick={dismiss} style={s("display:block;width:100%;font:800 13px/1 'Inter';letter-spacing:.06em;color:#0B0C0E;background:#C8102E;padding:16px 0;text-align:center")}>TRY IT OUT</button>
+        <button onClick={dismiss} className="fh" style={s("display:block;width:100%;margin-top:12px;font:700 11px/1 'Inter';letter-spacing:.08em;color:#A3A8B3;padding:4px 0;text-align:center")}>MAYBE LATER</button>
       </div>
     </div>
   );
@@ -1657,24 +1588,24 @@ function Spotkick({ st, shootZone }: any) {
   const pips = Array.from({ length: 5 }, (_, i) => i < st.sk.goals ? '#C8102E' : i < st.sk.kick ? 'var(--sand2)' : 'var(--sand)');
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 20px')}>
-      <div style={s('display:flex;align-items:center;justify-content:space-between')}><div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Spot Kick</div><span style={s("font:800 11px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>KICK {Math.min(st.sk.kick + 1, 5)} / 5</span></div>
+      <div style={s('display:flex;align-items:center;justify-content:space-between')}><div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink)")}>Spot Kick</div><span style={s("font:800 11px/1 'Inter';letter-spacing:.08em;color:var(--label)")}>KICK {Math.min(st.sk.kick + 1, 5)} / 5</span></div>
       <div style={s('display:flex;gap:5px;margin-top:10px')}>{pips.map((c, i) => <span key={i} style={{ flex: 1, height: 5, background: c }} />)}</div>
       <div style={s('position:relative;margin-top:16px;height:340px;background:#173018;overflow:hidden')}>
-        <div style={s('position:absolute;left:8%;right:8%;top:14%;bottom:38%;border:5px solid #F2F2F0;border-bottom:0')} />
-        <div style={s('position:absolute;left:8%;right:8%;bottom:38%;height:3px;background:repeating-linear-gradient(90deg,#F2F2F0 0 10px,transparent 10px 20px)')} />
+        <div style={s('position:absolute;left:8%;right:8%;top:14%;bottom:38%;border:5px solid #F2F3F5;border-bottom:0')} />
+        <div style={s('position:absolute;left:8%;right:8%;bottom:38%;height:3px;background:repeating-linear-gradient(90deg,#F2F3F5 0 10px,transparent 10px 20px)')} />
         <div style={{ ...s('position:absolute;left:50%;bottom:16%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.3,.8,.3,1)'), transform: `translateX(calc(-50% + ${keeperX}))` }}>
-          <span style={s('width:40px;height:56px;background:#0B1A2D;border-radius:8px 8px 3px 3px')} />
+          <span style={s('width:40px;height:56px;background:#0B0C0E;border-radius:8px 8px 3px 3px')} />
         </div>
-        {SK_ZONES.map((z, i) => <button key={i} onClick={() => shootZone(i)} className="skz" style={{ position: 'absolute', left: z.x, top: z.y, width: z.w, height: z.h, background: 'rgba(242,242,240,.02)' }} />)}
+        {SK_ZONES.map((z, i) => <button key={i} onClick={() => shootZone(i)} className="skz" style={{ position: 'absolute', left: z.x, top: z.y, width: z.w, height: z.h, background: 'rgba(242,243,245,.02)' }} />)}
         {st.sk.flash && (
-          <div style={s('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(11,26,45,.55);animation:bgFade .2s ease both')}>
-            <span style={{ ...s("font:800 44px/.9 'Archivo Black'"), color: st.sk.flash === 'GOAL' ? '#C8102E' : '#D6202A' }}>{st.sk.flash}</span>
+          <div style={s('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(11,12,14,.55);animation:bgFade .2s ease both')}>
+            <span style={{ ...s("font:800 44px/.9 'Space Grotesk'"), color: st.sk.flash === 'GOAL' ? '#C8102E' : '#D6202A' }}>{st.sk.flash}</span>
           </div>
         )}
       </div>
       <div style={s('display:flex;align-items:center;justify-content:space-between;margin-top:14px')}>
-        <div><div style={s("font:800 9px/1 'Archivo';letter-spacing:.12em;color:var(--label)")}>GOALS</div><div style={s("font:800 30px/.9 'Archivo Black';color:var(--ink);margin-top:6px")}>{st.sk.goals}</div></div>
-        <div style={s("font:500 12px/1.5 'Archivo';color:var(--body);max-width:180px;text-align:right")}>Tap a corner of the goal to place your shot.</div>
+        <div><div style={s("font:800 9px/1 'Inter';letter-spacing:.12em;color:var(--label)")}>GOALS</div><div style={s("font:800 30px/.9 'Space Grotesk';color:var(--ink);margin-top:6px")}>{st.sk.goals}</div></div>
+        <div style={s("font:500 12px/1.5 'Inter';color:var(--body);max-width:180px;text-align:right")}>Tap a corner of the goal to place your shot.</div>
       </div>
     </div>
   );
@@ -1686,16 +1617,16 @@ function SpotkickResult({ st, go, startSpotkick, notify }: any) {
   return (
     <div style={s('animation:bgFade .25s ease both;padding:20px 16px 32px')}>
       <div style={s('background:var(--panel);padding:22px;text-align:center')}>
-        <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#899EB7")}>SPOT KICK · FULL TIME</div>
-        <div style={s("font:800 62px/.82 'Archivo Black';color:var(--on-panel);margin-top:14px")}>{st.sk.goals}/5</div>
-        <div style={s("font:600 13px/1.5 'Archivo';color:#899EB7;margin-top:10px")}>{line}</div>
-        <div style={s('display:flex;align-items:baseline;gap:8px;justify-content:center;margin-top:14px')}><span style={s("font:800 26px/1 'Archivo Black';color:#C8102E")}>+{st.sk.goals * 20}</span><span style={s("font:700 10.5px/1 'Archivo';letter-spacing:.1em;color:#899EB7")}>XP EARNED</span></div>
+        <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:#A3A8B3")}>SPOT KICK · FULL TIME</div>
+        <div style={s("font:800 62px/.82 'Space Grotesk';color:var(--on-panel);margin-top:14px")}>{st.sk.goals}/5</div>
+        <div style={s("font:600 13px/1.5 'Inter';color:#A3A8B3;margin-top:10px")}>{line}</div>
+        <div style={s('display:flex;align-items:baseline;gap:8px;justify-content:center;margin-top:14px')}><span style={s("font:800 26px/1 'Space Grotesk';color:#C8102E")}>+{st.sk.goals * 20}</span><span style={s("font:700 10.5px/1 'Inter';letter-spacing:.1em;color:#A3A8B3")}>XP EARNED</span></div>
       </div>
       <div style={s('display:flex;gap:8px;margin-top:16px')}>
-        <button onClick={() => notify('RESULT CARD READY TO SHARE')} className="fs" style={s("flex:1;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--ink);background:var(--sand);padding:14px 0")}>SHARE RESULT</button>
-        <button onClick={go('leaderboard')} className="fp" style={s("flex:1;font:800 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:14px 0")}>LEADERBOARD</button>
+        <button onClick={() => notify('RESULT CARD READY TO SHARE')} className="fs" style={s("flex:1;font:800 11.5px/1 'Inter';letter-spacing:.06em;color:var(--ink);background:var(--sand);padding:14px 0")}>SHARE RESULT</button>
+        <button onClick={go('leaderboard')} className="fp" style={s("flex:1;font:800 11.5px/1 'Inter';letter-spacing:.06em;color:var(--on-panel);background:var(--panel);padding:14px 0")}>LEADERBOARD</button>
       </div>
-      <button onClick={startSpotkick} style={s("display:block;width:100%;margin-top:10px;font:800 11px/1 'Archivo';letter-spacing:.08em;color:var(--label);padding:12px 0")}>PLAY AGAIN</button>
+      <button onClick={startSpotkick} style={s("display:block;width:100%;margin-top:10px;font:800 11px/1 'Inter';letter-spacing:.08em;color:var(--label);padding:12px 0")}>PLAY AGAIN</button>
     </div>
   );
 }
@@ -1705,14 +1636,14 @@ function Leaderboard({ st, set }: any) {
   const rows = (st.lbScope === 'crew' ? LB_CREW : LB_GLOBAL).map((r: any, i: number) => ({ rank: i + 1, name: r.name, score: r.me ? st.sk.goals : r.score, initials: r.initials, avBg: r.bg, hl: !!r.me }));
   return (
     <div style={s('animation:bgFade .25s ease both;padding:20px 16px 32px')}>
-      <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Leaderboard</div>
-      <div style={s('display:flex;gap:6px;margin-top:12px')}>{[['crew', 'YOUR CREW'], ['global', 'GLOBAL']].map(([k, lab]) => { const on = st.lbScope === k; return <button key={k} onClick={() => set({ lbScope: k })} style={{ ...s("flex:1;font:800 10.5px/1 'Archivo';letter-spacing:.08em;padding:11px 0"), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{lab}</button>; })}</div>
+      <div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink)")}>Leaderboard</div>
+      <div style={s('display:flex;gap:6px;margin-top:12px')}>{[['crew', 'YOUR CREW'], ['global', 'GLOBAL']].map(([k, lab]) => { const on = st.lbScope === k; return <button key={k} onClick={() => set({ lbScope: k })} style={{ ...s("flex:1;font:800 10.5px/1 'Inter';letter-spacing:.08em;padding:11px 0"), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{lab}</button>; })}</div>
       <div style={s('margin-top:14px')}>{rows.map((r: any, i: number) => (
         <div key={i} style={{ ...s('display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)'), background: r.hl ? 'rgba(237,32,60,.14)' : 'transparent' }}>
-          <span style={s("width:22px;font:800 13px/1 'Archivo';color:var(--label)")}>{r.rank}</span>
-          <span style={{ ...s("width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Archivo';color:#fff"), background: r.avBg }}>{r.initials}</span>
-          <span style={s("flex:1;min-width:0;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{r.name}</span>
-          <span style={s("font:800 14px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{r.score}/5</span>
+          <span style={s("width:22px;font:800 13px/1 'Inter';color:var(--label)")}>{r.rank}</span>
+          <span style={{ ...s("width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px/1 'Inter';color:#fff"), background: r.avBg }}>{r.initials}</span>
+          <span style={s("flex:1;min-width:0;font:700 13.5px/1.2 'Inter';color:var(--ink)")}>{r.name}</span>
+          <span style={s("font:800 14px/1 'Inter';color:var(--ink);font-variant-numeric:tabular-nums")}>{r.score}/5</span>
         </div>
       ))}</div>
     </div>
@@ -1727,21 +1658,21 @@ function Chat({ st, shown, set, post, chatRef }: any) {
           if (m.ev) return (
             <div key={m.id} style={{ ...s('display:flex;align-items:center;gap:10px;align-self:center;max-width:92%;padding:9px 13px;border-radius:100px;background:var(--sand)'), boxShadow: `inset 0 0 0 1.5px ${m.ev.color}44` }}>
               {m.ev.kind === 'YELLOW' || m.ev.kind === 'RED CARD'
-                ? <span style={{ ...s('width:10px;height:14px;border-radius:2px;flex:none'), background: m.ev.kind === 'RED CARD' ? '#D6202A' : '#F4C400' }} />
+                ? <span style={{ ...s('width:10px;height:14px;border-radius:14px;flex:none'), background: m.ev.kind === 'RED CARD' ? '#D6202A' : '#F4C400' }} />
                 : <Ms size={15} color={m.ev.color}>{EV[m.ev.kind]?.icon || 'bolt'}</Ms>}
-              <span style={{ ...s("font:800 10px/1 'Archivo';letter-spacing:.08em"), color: m.ev.color }}>{m.ev.kind}</span>
-              <span style={s("font:600 12px/1.2 'Archivo';color:var(--ink)")}>{m.text}{m.ev.minute ? ` · ${m.ev.minute}′` : ''}</span>
+              <span style={{ ...s("font:800 10px/1 'Inter';letter-spacing:.08em"), color: m.ev.color }}>{m.ev.kind}</span>
+              <span style={s("font:600 12px/1.2 'Inter';color:var(--ink)")}>{m.text}{m.ev.minute ? ` · ${m.ev.minute}′` : ''}</span>
             </div>
           );
           const me = !!m.me; const liked = !!st.likes[m.id];
           return (
             <div key={m.id} style={{ ...s('display:flex;gap:8px;animation:bgBubble .3s ease both'), justifyContent: me ? 'flex-end' : 'flex-start' }}>
-              {!me && <span style={{ ...s("width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;font:800 10px/32px 'Archivo';text-align:center;margin-top:12px"), background: TEAM[m.t].bg, color: TEAM[m.t].fg }}>{CHAT_AV[m.user] ? <img src={CHAT_AV[m.user]} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : m.user.slice(0, 2)}</span>}
+              {!me && <span style={{ ...s("width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;font:800 10px/32px 'Inter';text-align:center;margin-top:12px"), background: TEAM[m.t].bg, color: TEAM[m.t].fg }}>{CHAT_AV[m.user] ? <img src={CHAT_AV[m.user]} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : m.user.slice(0, 2)}</span>}
               <div style={s('max-width:74%')}>
-                <div style={{ ...s('display:flex;align-items:baseline;gap:7px;padding:0 3px 4px'), justifyContent: me ? 'flex-end' : 'flex-start' }}><span style={s("font:800 9px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}>{me ? 'YOU' : m.user}</span></div>
+                <div style={{ ...s('display:flex;align-items:baseline;gap:7px;padding:0 3px 4px'), justifyContent: me ? 'flex-end' : 'flex-start' }}><span style={s("font:800 9px/1 'Inter';letter-spacing:.08em;color:var(--label)")}>{me ? 'YOU' : m.user}</span></div>
                 <div style={{ ...s('padding:10px 12px'), background: me ? 'var(--panel)' : 'var(--sand)', borderRadius: me ? '14px 14px 3px 14px' : '3px 14px 14px 14px' }}>
-                  <div style={{ ...s("font:500 14px/1.4 'Archivo'"), color: me ? 'var(--on-panel)' : 'var(--ink)' }}>{m.text}</div>
-                  <div style={s('display:flex;align-items:center;gap:9px;margin-top:7px')}><span style={{ ...s("font:600 9.5px/1 'Archivo';font-variant-numeric:tabular-nums"), color: me ? '#899EB7' : 'var(--label)' }}>{m.time}</span><button onClick={() => set((sp: FSt) => ({ likes: { ...sp.likes, [m.id]: !sp.likes[m.id] } }))} style={{ ...s("display:flex;align-items:center;gap:4px;font:700 9.5px/1 'Archivo'"), color: liked ? '#C8102E' : (me ? '#899EB7' : 'var(--label)') }}><Ms size={13} color={liked ? '#C8102E' : '#899EB7'}>favorite</Ms>{(m.likes || 0) + (liked ? 1 : 0)}</button></div>
+                  <div style={{ ...s("font:500 14px/1.4 'Inter'"), color: me ? 'var(--on-panel)' : 'var(--ink)' }}>{m.text}</div>
+                  <div style={s('display:flex;align-items:center;gap:9px;margin-top:7px')}><span style={{ ...s("font:600 9.5px/1 'Inter';font-variant-numeric:tabular-nums"), color: me ? '#A3A8B3' : 'var(--label)' }}>{m.time}</span><button onClick={() => set((sp: FSt) => ({ likes: { ...sp.likes, [m.id]: !sp.likes[m.id] } }))} style={{ ...s("display:flex;align-items:center;gap:4px;font:700 9.5px/1 'Inter'"), color: liked ? '#C8102E' : (me ? '#A3A8B3' : 'var(--label)') }}><Ms size={13} color={liked ? '#C8102E' : '#A3A8B3'}>favorite</Ms>{(m.likes || 0) + (liked ? 1 : 0)}</button></div>
                 </div>
               </div>
             </div>
@@ -1749,10 +1680,10 @@ function Chat({ st, shown, set, post, chatRef }: any) {
         })}
       </div>
       <div style={s('position:sticky;bottom:0;flex:none;background:var(--ground);border-top:1.5px solid var(--hair)')}>
-        <div style={s('display:flex;gap:6px;padding:9px 12px 0;overflow-x:auto')}>{['Come on Portowcy!', 'That’s never a foul', 'Anyone in 112?', 'Get it forward'].map((q) => <button key={q} onClick={() => post(q)} className="fs" style={s("flex:none;font:700 11px/1 'Archivo';color:var(--ink);background:var(--sand);padding:9px 11px;border-radius:100px;white-space:nowrap")}>{q}</button>)}</div>
+        <div style={s('display:flex;gap:6px;padding:9px 12px 0;overflow-x:auto')}>{['Come on Portowcy!', 'That’s never a foul', 'Anyone in 112?', 'Get it forward'].map((q) => <button key={q} onClick={() => post(q)} className="fs" style={s("flex:none;font:700 11px/1 'Inter';color:var(--ink);background:var(--sand);padding:9px 11px;border-radius:100px;white-space:nowrap")}>{q}</button>)}</div>
         <div style={s('display:flex;gap:8px;align-items:center;padding:9px 12px 14px')}>
-          <div style={s('flex:1;display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.draft} onChange={(e: any) => set({ draft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') post(st.draft); }} placeholder="Say something to the terrace…" style={s("flex:1;min-width:0;font:500 13.5px/1.2 'Archivo';color:var(--ink)")} /><span style={s("font:700 8.5px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>+2 XP</span></div>
-          <button data-cur="send" onClick={() => post(st.draft)} style={{ ...s('width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%'), background: st.draft.trim() ? '#C8102E' : '#0B1A2D' }}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
+          <div style={s('flex:1;display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--sand);border-radius:100px')}><input value={st.draft} onChange={(e: any) => set({ draft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter') post(st.draft); }} placeholder="Say something to the terrace…" style={s("flex:1;min-width:0;font:500 13.5px/1.2 'Inter';color:var(--ink)")} /><span style={s("font:700 8.5px/1 'Inter';letter-spacing:.1em;color:var(--label)")}>+2 XP</span></div>
+          <button data-cur="send" onClick={() => post(st.draft)} style={{ ...s('width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:50%'), background: st.draft.trim() ? '#C8102E' : '#0B0C0E' }}><Ms size={19} color="var(--on-panel)">arrow_upward</Ms></button>
         </div>
       </div>
     </div>
@@ -1760,7 +1691,7 @@ function Chat({ st, shown, set, post, chatRef }: any) {
 }
 
 function Intel({ pre, live, ht, openIris }: any) {
-  const L = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   const shots = [{ x: '46%', y: '26%', d: '22px', bg: '#C8102E' }, { x: '58%', y: '18%', d: '13px', bg: '#C8102E' }, { x: '38%', y: '32%', d: '10px', bg: '#C8102E' }, { x: '52%', y: '36%', d: '16px', bg: '#C8102E' }, { x: '62%', y: '30%', d: '9px', bg: '#C8102E' }, { x: '44%', y: '14%', d: '12px', bg: '#C8102E' }, { x: '50%', y: '76%', d: '18px', bg: '#0E4D2A' }, { x: '40%', y: '68%', d: '11px', bg: '#0E4D2A' }, { x: '60%', y: '72%', d: '9px', bg: '#0E4D2A' }, { x: '55%', y: '86%', d: '14px', bg: '#0E4D2A' }];
   const h2h = [{ r: 'W', bg: '#C8102E', fg: '#fff', score: '2 – 1', comp: 'Ekstraklasa, away', date: 'APR 26' }, { r: 'D', bg: 'var(--sand2)', fg: 'var(--ink)', score: '1 – 1', comp: 'Ekstraklasa, home', date: 'OCT 25' }, { r: 'L', bg: '#0E4D2A', fg: '#3CC46E', score: '0 – 2', comp: 'Ekstraklasa, away', date: 'MAR 24' }, { r: 'W', bg: '#C8102E', fg: '#fff', score: '4 – 0', comp: 'Ekstraklasa, home', date: 'SEP 30' }, { r: 'W', bg: '#C8102E', fg: '#fff', score: '3 – 2', comp: 'Puchar Polski', date: 'FEB 27' }];
   const watch = [{ t: 'Camões against a high line', d: 'Pogoń push their back four to halfway. Śląsk have six counter-attack goals in the league, more than anyone.' }, { t: 'Dziczek’s first ten minutes', d: 'Pogoń win 71% of matches he starts and finishes. One booking from a suspension.' }, { t: 'The 70th minute onwards', d: 'Half of Śląsk’s goals this season have come in the last twenty minutes.' }];
@@ -1768,22 +1699,22 @@ function Intel({ pre, live, ht, openIris }: any) {
   return (
     <div style={s('animation:bgFade .25s ease both')}>
       <div style={s('background:var(--panel);padding:16px 16px 20px')}>
-        <div style={s("font:800 36px/.9 'Archivo Black';color:var(--on-panel)")}>Match intel</div>
-        <div style={s("font:500 13px/1.5 'Archivo';color:#899EB7;margin-top:9px;max-width:300px")}>Written from this season’s data and refreshed at half-time and full-time. Read it, or ask IRIS for any part of it.</div>
-        <div style={s("font:700 10px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:12px")}>UPDATED {stamp}</div>
+        <div style={s("font:800 36px/.9 'Space Grotesk';color:var(--on-panel)")}>Match intel</div>
+        <div style={s("font:500 13px/1.5 'Inter';color:#A3A8B3;margin-top:9px;max-width:300px")}>Written from this season’s data and refreshed at half-time and full-time. Read it, or ask IRIS for any part of it.</div>
+        <div style={s("font:700 10px/1 'Inter';letter-spacing:.12em;color:var(--label);margin-top:12px")}>UPDATED {stamp}</div>
       </div>
-      <div style={s('padding:18px 16px 0')}>{L('WIN PROBABILITY')}<div style={s('display:flex;gap:2px;margin-top:11px')}><div style={s('flex:46;background:#C8102E;padding:12px 11px 14px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:rgba(255,255,255,.9)")}>MOST LIKELY</div><div style={s("font:800 34px/.86 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;margin-top:8px")}>46%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#fff;margin-top:8px")}>POGOŃ WIN</div></div><div style={s('flex:27;background:var(--sand2);padding:12px 9px 14px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/.86 'Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums;margin-top:8px")}>27%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:var(--body);margin-top:8px")}>DRAW</div></div><div style={s('flex:27;background:#0E4D2A;padding:12px 9px 14px')}><div style={s("font:800 7px/1 'Archivo';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/.86 'Archivo Black';color:#fff;font-variant-numeric:tabular-nums;margin-top:8px")}>27%</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#3CC46E;margin-top:8px")}>ŚLĄSK</div></div></div></div>
+      <div style={s('padding:18px 16px 0')}>{L('WIN PROBABILITY')}<div style={s('display:flex;gap:2px;margin-top:11px')}><div style={s('flex:46;background:#C8102E;padding:12px 11px 14px')}><div style={s("font:800 7px/1 'Inter';letter-spacing:.14em;color:rgba(255,255,255,.9)")}>MOST LIKELY</div><div style={s("font:800 34px/.86 'Space Grotesk';color:#fff;font-variant-numeric:tabular-nums;margin-top:8px")}>46%</div><div style={s("font:800 8.5px/1 'Inter';letter-spacing:.1em;color:#fff;margin-top:8px")}>POGOŃ WIN</div></div><div style={s('flex:27;background:var(--sand2);padding:12px 9px 14px')}><div style={s("font:800 7px/1 'Inter';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/.86 'Space Grotesk';color:var(--ink);font-variant-numeric:tabular-nums;margin-top:8px")}>27%</div><div style={s("font:800 8.5px/1 'Inter';letter-spacing:.1em;color:var(--body);margin-top:8px")}>DRAW</div></div><div style={s('flex:27;background:#0E4D2A;padding:12px 9px 14px')}><div style={s("font:800 7px/1 'Inter';letter-spacing:.14em;color:transparent")}>·</div><div style={s("font:800 27px/.86 'Space Grotesk';color:#fff;font-variant-numeric:tabular-nums;margin-top:8px")}>27%</div><div style={s("font:800 8.5px/1 'Inter';letter-spacing:.1em;color:#3CC46E;margin-top:8px")}>ŚLĄSK</div></div></div></div>
       <div style={s('padding:20px 16px 0')}>{L('SHOT MAP · LAST HOME GAME')}
         <div style={s('position:relative;margin-top:11px;height:182px;background:#141A22;overflow:hidden')}>
           <div style={s('position:absolute;inset:10px;border:1.5px solid rgba(226,216,196,.45)')} /><div style={s('position:absolute;left:10px;right:10px;top:50%;height:1.5px;background:rgba(226,216,196,.45)')} /><div style={s('position:absolute;left:50%;top:50%;width:52px;height:52px;border:1.5px solid rgba(226,216,196,.45);border-radius:50%;transform:translate(-50%,-50%)')} /><div style={s('position:absolute;left:50%;top:10px;width:104px;height:34px;border:1.5px solid rgba(226,216,196,.45);border-top:0;transform:translateX(-50%)')} /><div style={s('position:absolute;left:50%;bottom:10px;width:104px;height:34px;border:1.5px solid rgba(226,216,196,.45);border-bottom:0;transform:translateX(-50%)')} />
           {shots.map((p, i) => <span key={i} style={{ position: 'absolute', left: p.x, top: p.y, width: p.d, height: p.d, borderRadius: '50%', background: p.bg, boxShadow: '0 0 0 1.5px rgba(226,216,196,.55)', transform: 'translate(-50%,-50%)' }} />)}
         </div>
-        <div style={s("display:flex;align-items:center;gap:13px;margin-top:9px;font:700 9.5px/1 'Archivo';letter-spacing:.08em;color:var(--label)")}><span style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#C8102E')} />POGOŃ 17</span><span style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#0E4D2A')} />ŚLĄSK 11</span><span style={s('margin-left:auto')}>SIZE = XG</span></div>
+        <div style={s("display:flex;align-items:center;gap:13px;margin-top:9px;font:700 9.5px/1 'Inter';letter-spacing:.08em;color:var(--label)")}><span style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#C8102E')} />POGOŃ 17</span><span style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#0E4D2A')} />ŚLĄSK 11</span><span style={s('margin-left:auto')}>SIZE = XG</span></div>
       </div>
-      <div style={s('padding:22px 16px 0')}>{L('KEY STAT')}<div style={s('display:flex;align-items:flex-start;gap:13px;margin-top:11px')}><div style={s("font:800 58px/.78 'Archivo Black';color:#C8102E;font-variant-numeric:tabular-nums")}>9<span style={s('font-size:24px;color:var(--ink)')}>/10</span></div><div style={s("flex:1;font:600 15px/1.3 'Archivo';color:var(--ink)")}>Pogoń have scored first in nine of their last ten at home, and won all nine.<span style={s("display:block;font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>The first goal decides this tie more than possession does.</span></div></div></div>
-      <div style={s('padding:22px 16px 0')}>{L('HEAD-TO-HEAD · LAST 5')}<div style={s('margin-top:9px')}>{h2h.map((g, i) => <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}><span style={{ ...s("width:22px;height:22px;flex:none;font:800 11px/22px 'Archivo';text-align:center"), background: g.bg, color: g.fg }}>{g.r}</span><span style={s("font:800 14px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{g.score}</span><span style={s("font:500 12px/1.3 'Archivo';color:var(--body)")}>{g.comp}</span><span style={s("font:700 10px/1 'Archivo';letter-spacing:.1em;color:var(--label);margin-left:auto")}>{g.date}</span></div>)}</div></div>
-      <div style={s('padding:22px 16px 0')}>{L('FORM & EXPECTED GOALS')}<div style={s('display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px')}><div style={s('padding:14px;background:var(--sand);border-top:5px solid #C8102E')}><div style={s("font:800 12px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>POGOŃ</div><div style={s("font:800 34px/.88 'Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.87</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:9px")}>Unbeaten in 8 at home. Grosicki 6 in the league.</div></div><div style={s('padding:14px;background:var(--sand);border-top:5px solid #0E4D2A')}><div style={s("font:800 12px/1 'Archivo';letter-spacing:.06em;color:var(--ink)")}>ŚLĄSK WROCŁAW</div><div style={s("font:800 34px/.88 'Archivo Black';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.64</div><div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Archivo';color:var(--body);margin-top:9px")}>Score late: 7 of 14 goals after the 70th minute.</div></div></div></div>
-      <div style={s('padding:22px 16px 26px')}>{L('WATCH FOR')}<div style={s('margin-top:7px')}>{watch.map((w, i) => <div key={i} style={s('padding:12px 0;border-bottom:1.5px solid var(--hair)')}><div style={s("font:700 14px/1.3 'Archivo';color:var(--ink)")}>{w.t}</div><div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:4px")}>{w.d}</div></div>)}</div><button onClick={openIris} className="fp" style={s("display:block;width:100%;margin-top:18px;padding:15px;background:var(--panel);font:800 12.5px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);text-align:center")}>ASK IRIS ABOUT ANY OF THIS</button></div>
+      <div style={s('padding:22px 16px 0')}>{L('KEY STAT')}<div style={s('display:flex;align-items:flex-start;gap:13px;margin-top:11px')}><div style={s("font:800 58px/.78 'Space Grotesk';color:#C8102E;font-variant-numeric:tabular-nums")}>9<span style={s('font-size:24px;color:var(--ink)')}>/10</span></div><div style={s("flex:1;font:600 15px/1.3 'Inter';color:var(--ink)")}>Pogoń have scored first in nine of their last ten at home, and won all nine.<span style={s("display:block;font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:6px")}>The first goal decides this tie more than possession does.</span></div></div></div>
+      <div style={s('padding:22px 16px 0')}>{L('HEAD-TO-HEAD · LAST 5')}<div style={s('margin-top:9px')}>{h2h.map((g, i) => <div key={i} style={s('display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1.5px solid var(--hair)')}><span style={{ ...s("width:22px;height:22px;flex:none;font:800 11px/22px 'Inter';text-align:center"), background: g.bg, color: g.fg }}>{g.r}</span><span style={s("font:800 14px/1 'Inter';color:var(--ink);font-variant-numeric:tabular-nums")}>{g.score}</span><span style={s("font:500 12px/1.3 'Inter';color:var(--body)")}>{g.comp}</span><span style={s("font:700 10px/1 'Inter';letter-spacing:.1em;color:var(--label);margin-left:auto")}>{g.date}</span></div>)}</div></div>
+      <div style={s('padding:22px 16px 0')}>{L('FORM & EXPECTED GOALS')}<div style={s('display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px')}><div style={s('padding:14px;background:var(--sand);border-top:5px solid #C8102E')}><div style={s("font:800 12px/1 'Inter';letter-spacing:.06em;color:var(--ink)")}>POGOŃ</div><div style={s("font:800 34px/.88 'Space Grotesk';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.87</div><div style={s("font:800 8.5px/1 'Inter';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Inter';color:var(--body);margin-top:9px")}>Unbeaten in 8 at home. Grosicki 6 in the league.</div></div><div style={s('padding:14px;background:var(--sand);border-top:5px solid #0E4D2A')}><div style={s("font:800 12px/1 'Inter';letter-spacing:.06em;color:var(--ink)")}>ŚLĄSK WROCŁAW</div><div style={s("font:800 34px/.88 'Space Grotesk';color:var(--ink);margin-top:11px;font-variant-numeric:tabular-nums")}>1.64</div><div style={s("font:800 8.5px/1 'Inter';letter-spacing:.12em;color:var(--label);margin-top:6px")}>XG PER GAME</div><div style={s("font:500 12px/1.45 'Inter';color:var(--body);margin-top:9px")}>Score late: 7 of 14 goals after the 70th minute.</div></div></div></div>
+      <div style={s('padding:22px 16px 26px')}>{L('WATCH FOR')}<div style={s('margin-top:7px')}>{watch.map((w, i) => <div key={i} style={s('padding:12px 0;border-bottom:1.5px solid var(--hair)')}><div style={s("font:700 14px/1.3 'Inter';color:var(--ink)")}>{w.t}</div><div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:4px")}>{w.d}</div></div>)}</div><button onClick={openIris} className="fp" style={s("display:block;width:100%;margin-top:18px;padding:15px;background:var(--panel);font:800 12.5px/1 'Inter';letter-spacing:.08em;color:var(--on-panel);text-align:center")}>ASK IRIS ABOUT ANY OF THIS</button></div>
     </div>
   );
 }
@@ -1793,38 +1724,38 @@ function Predictions({ st, set, award }: any) {
   const crowd = [{ s: '2–1 Pogoń', p: '28%' }, { s: '1–0 Pogoń', p: '21%' }, { s: '1–1', p: '17%' }, { s: '2–0 Pogoń', p: '14%' }];
   return (
     <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
-      <div style={s("font:800 30px/.92 'Archivo Black';color:var(--ink)")}>Call it before<br />kick-off</div>
-      <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>Correct score pays 60 XP. First scorer pays another 60. Locks at the first whistle.</div>
+      <div style={s("font:800 30px/.92 'Space Grotesk';color:var(--ink)")}>Call it before<br />kick-off</div>
+      <div style={s("font:500 13px/1.5 'Inter';color:var(--body);margin-top:8px")}>Correct score pays 60 XP. First scorer pays another 60. Locks at the first whistle.</div>
       {!st.pred.done && (
         <div style={s('margin-top:18px;background:var(--sand);padding:16px')}>
-          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>CORRECT SCORE</div>
+          <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>CORRECT SCORE</div>
           <div style={s('display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px')}>
             {[['POG', 'h'], ['ŚLĄ', 'a']].map(([lab, k], idx) => (
               <div key={lab as string} style={{ ...s('text-align:center'), order: idx === 1 ? 3 : 1 }}>
-                <div style={s("font:800 10px/1 'Archivo';letter-spacing:.1em;color:var(--body)")}>{lab}</div>
+                <div style={s("font:800 10px/1 'Inter';letter-spacing:.1em;color:var(--body)")}>{lab}</div>
                 <div style={s('display:flex;align-items:center;gap:8px;margin-top:8px')}>
-                  <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, [k as string]: Math.max((sp.pred as any)[k as string] - 1, 0) } }))} className="fw" style={s("width:30px;height:30px;background:var(--ground);font:800 14px/1 'Archivo';color:var(--ink)")}>−</button>
-                  <span style={s("font:800 42px/.8 'Archivo Black';color:var(--ink);width:34px;font-variant-numeric:tabular-nums")}>{(st.pred as any)[k as string]}</span>
-                  <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, [k as string]: Math.min((sp.pred as any)[k as string] + 1, 9) } }))} className="fw" style={s("width:30px;height:30px;background:var(--ground);font:800 14px/1 'Archivo';color:var(--ink)")}>+</button>
+                  <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, [k as string]: Math.max((sp.pred as any)[k as string] - 1, 0) } }))} className="fw" style={s("width:30px;height:30px;background:var(--ground);font:800 14px/1 'Inter';color:var(--ink)")}>−</button>
+                  <span style={s("font:800 42px/.8 'Space Grotesk';color:var(--ink);width:34px;font-variant-numeric:tabular-nums")}>{(st.pred as any)[k as string]}</span>
+                  <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, [k as string]: Math.min((sp.pred as any)[k as string] + 1, 9) } }))} className="fw" style={s("width:30px;height:30px;background:var(--ground);font:800 14px/1 'Inter';color:var(--ink)")}>+</button>
                 </div>
               </div>
             ))}
-            <span style={{ ...s("font:800 24px/1 'Archivo Black';color:#7D91A9;padding-top:18px"), order: 2 }}>–</span>
+            <span style={{ ...s("font:800 24px/1 'Space Grotesk';color:#A3A8B3;padding-top:18px"), order: 2 }}>–</span>
           </div>
-          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label);margin-top:20px")}>FIRST SCORER</div>
-          <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:10px')}>{scorerNames.map((n) => { const on = st.pred.s === n; return <button key={n} onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, s: n } }))} style={{ ...s("font:700 11.5px/1 'Archivo';padding:10px 12px"), color: on ? 'var(--on-panel)' : 'var(--ink)', background: on ? 'var(--panel)' : 'var(--ground)' }}>{n}</button>; })}</div>
-          <button onClick={() => { set((sp: FSt) => ({ pred: { ...sp.pred, done: true } })); award(120, 'PREDICTION LOCKED', 'predict'); }} className="fp" style={s("display:block;width:100%;margin-top:18px;padding:15px;background:var(--panel);font:800 12.5px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel)")}>LOCK IN PREDICTION · 120 XP</button>
+          <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label);margin-top:20px")}>FIRST SCORER</div>
+          <div style={s('display:flex;flex-wrap:wrap;gap:6px;margin-top:10px')}>{scorerNames.map((n) => { const on = st.pred.s === n; return <button key={n} onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, s: n } }))} style={{ ...s("font:700 11.5px/1 'Inter';padding:10px 12px"), color: on ? 'var(--on-panel)' : 'var(--ink)', background: on ? 'var(--panel)' : 'var(--ground)' }}>{n}</button>; })}</div>
+          <button onClick={() => { set((sp: FSt) => ({ pred: { ...sp.pred, done: true } })); award(120, 'PREDICTION LOCKED', 'predict'); }} className="fp" style={s("display:block;width:100%;margin-top:18px;padding:15px;background:var(--panel);font:800 12.5px/1 'Inter';letter-spacing:.08em;color:var(--on-panel)")}>LOCK IN PREDICTION · 120 XP</button>
         </div>
       )}
       {st.pred.done && (
         <div style={s('margin-top:18px;background:var(--panel);padding:18px')}>
-          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#C8102E")}>LOCKED IN · 120 XP AWARDED</div>
-          <div style={s('display:flex;align-items:flex-end;gap:10px;margin-top:12px')}><span style={s("font:800 52px/.82 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.pred.h} – {st.pred.a}</span><span style={s("font:600 12px/1.3 'Archivo';color:#899EB7;padding-bottom:6px")}>First scorer<br /><strong style={{ fontWeight: 800, color: 'var(--on-panel)' }}>{st.pred.s}</strong></span></div>
-          <div style={s("font:500 12.5px/1.5 'Archivo';color:#899EB7;margin-top:14px")}>You’re in with 12,480 other fans. Results settle at full-time and pay into your XP automatically.</div>
-          <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, done: false } }))} className="fs" style={s("margin-top:14px;font:800 11px/1 'Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:11px 13px")}>CHANGE IT</button>
+          <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:#C8102E")}>LOCKED IN · 120 XP AWARDED</div>
+          <div style={s('display:flex;align-items:flex-end;gap:10px;margin-top:12px')}><span style={s("font:800 52px/.82 'Space Grotesk';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.pred.h} – {st.pred.a}</span><span style={s("font:600 12px/1.3 'Inter';color:#A3A8B3;padding-bottom:6px")}>First scorer<br /><strong style={{ fontWeight: 800, color: 'var(--on-panel)' }}>{st.pred.s}</strong></span></div>
+          <div style={s("font:500 12.5px/1.5 'Inter';color:#A3A8B3;margin-top:14px")}>You’re in with 12,480 other fans. Results settle at full-time and pay into your XP automatically.</div>
+          <button onClick={() => set((sp: FSt) => ({ pred: { ...sp.pred, done: false } }))} className="fs" style={s("margin-top:14px;font:800 11px/1 'Inter';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:11px 13px")}>CHANGE IT</button>
         </div>
       )}
-      <div style={s('margin-top:20px')}><div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>HOW OTHER FANS CALLED IT</div><div style={s('margin-top:10px')}>{crowd.map((c, i) => <div key={i} style={s('padding:9px 0')}><div style={s("display:flex;justify-content:space-between;font:700 12px/1 'Archivo';color:var(--ink)")}><span>{c.s}</span><span>{c.p}</span></div><div style={s('height:6px;background:var(--sand);margin-top:6px')}><span style={{ display: 'block', height: 6, width: c.p, background: '#C8102E' }} /></div></div>)}</div></div>
+      <div style={s('margin-top:20px')}><div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>HOW OTHER FANS CALLED IT</div><div style={s('margin-top:10px')}>{crowd.map((c, i) => <div key={i} style={s('padding:9px 0')}><div style={s("display:flex;justify-content:space-between;font:700 12px/1 'Inter';color:var(--ink)")}><span>{c.s}</span><span>{c.p}</span></div><div style={s('height:6px;background:var(--sand);margin-top:6px')}><span style={{ display: 'block', height: 6, width: c.p, background: '#C8102E' }} /></div></div>)}</div></div>
     </div>
   );
 }
@@ -1832,21 +1763,21 @@ function Predictions({ st, set, award }: any) {
 function Polls({ st, ft, set, award }: any) {
   const pollDefs = [
     { id: 'starter', tag: 'LIVE', tagBg: '#D6202A', q: 'Who starts up front tonight?', base: { Grosicki: 62, Okoro: 23, 'Pozo false 9': 15 }, votes: 4120 },
-    { id: 'motm', tag: 'OPEN', tagBg: '#0B1A2D', q: ft ? 'Who was your man of the match?' : 'Who decides this tie?', base: ft ? { Pozo: 44, Dziczek: 31, Grosicki: 25 } : { Grosicki: 41, Camões: 34, Dziczek: 25 }, votes: 2870 },
+    { id: 'motm', tag: 'OPEN', tagBg: '#0B0C0E', q: ft ? 'Who was your man of the match?' : 'Who decides this tie?', base: ft ? { Pozo: 44, Dziczek: 31, Grosicki: 25 } : { Grosicki: 41, Camões: 34, Dziczek: 25 }, votes: 2870 },
   ];
   return (
     <div style={s('animation:bgFade .25s ease both;padding:18px 16px 28px')}>
-      <div style={s("font:800 30px/.92 'Archivo Black';color:var(--ink)")}>Fan polls</div>
-      <div style={s("font:500 13px/1.5 'Archivo';color:var(--body);margin-top:8px")}>40 XP per vote. Results update live as the terrace votes.</div>
+      <div style={s("font:800 30px/.92 'Space Grotesk';color:var(--ink)")}>Fan polls</div>
+      <div style={s("font:500 13px/1.5 'Inter';color:var(--body);margin-top:8px")}>40 XP per vote. Results update live as the terrace votes.</div>
       {pollDefs.map((p) => { const mine = st.votes[p.id]; const total = Object.values(p.base).reduce((a, b) => a + b, 0) + (mine ? 1 : 0); return (
         <div key={p.id} style={s('margin-top:18px;background:var(--sand);padding:16px')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}><span style={{ ...s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:#fff;padding:5px 6px"), background: p.tagBg }}>{p.tag}</span><span style={s("font:700 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label);margin-left:auto")}>{(p.votes + (mine ? 1 : 0)).toLocaleString()} VOTES</span></div>
-          <div style={s("font:800 22px/1 'Archivo Black';color:var(--ink);margin-top:11px")}>{p.q}</div>
+          <div style={s('display:flex;align-items:center;gap:8px')}><span style={{ ...s("font:800 9px/1 'Inter';letter-spacing:.1em;color:#fff;padding:5px 6px;border-radius:999px"), background: p.tagBg }}>{p.tag}</span><span style={s("font:700 9.5px/1 'Inter';letter-spacing:.1em;color:var(--label);margin-left:auto")}>{(p.votes + (mine ? 1 : 0)).toLocaleString()} VOTES</span></div>
+          <div style={s("font:800 22px/1 'Space Grotesk';color:var(--ink);margin-top:11px")}>{p.q}</div>
           <div style={s('margin-top:12px;display:flex;flex-direction:column;gap:7px')}>
             {Object.keys(p.base).map((k) => { const v = (p.base as any)[k] + (mine === k ? 1 : 0); const pct = Math.round(v / total * 100); const on = mine === k; return (
               <button key={k} onClick={() => { if (!st.votes[p.id]) { set((sp: FSt) => ({ votes: { ...sp.votes, [p.id]: k } })); award(40, 'POLL VOTED', 'poll'); } }} className="fw" style={s('display:block;width:100%;text-align:left;position:relative;padding:12px 13px;background:var(--ground);overflow:hidden')}>
                 <span style={{ ...s('position:absolute;left:0;top:0;bottom:0;transition:width .6s cubic-bezier(.2,.8,.2,1)'), width: mine ? pct + '%' : '0%', background: on ? '#C8102E' : 'var(--sand)' }} />
-                <span style={s('position:relative;display:flex;align-items:center;gap:9px')}><span style={s("flex:1;font:700 13.5px/1.2 'Archivo';color:var(--ink)")}>{k}</span><span style={s("font:800 12px/1 'Archivo';color:var(--ink);font-variant-numeric:tabular-nums")}>{mine ? pct + '%' : ''}</span>{on && <span style={s("font:800 8.5px/1 'Archivo';letter-spacing:.1em;color:#fff;background:var(--panel);padding:4px 5px")}>YOURS</span>}</span>
+                <span style={s('position:relative;display:flex;align-items:center;gap:9px')}><span style={s("flex:1;font:700 13.5px/1.2 'Inter';color:var(--ink)")}>{k}</span><span style={s("font:800 12px/1 'Inter';color:var(--ink);font-variant-numeric:tabular-nums")}>{mine ? pct + '%' : ''}</span>{on && <span style={s("font:800 8.5px/1 'Inter';letter-spacing:.1em;color:#fff;background:var(--panel);padding:4px 5px;border-radius:999px")}>YOURS</span>}</span>
               </button>
             ); })}
           </div>
@@ -1865,16 +1796,16 @@ function Shop({ st, set, award }: any) {
     <div style={s('animation:bgFade .25s ease both')}>
       <div style={s('position:relative;height:190px;background:#C8102E')}><Slot id="shop-hero" label="Match shirt shot" /></div>
       <div style={s('padding:16px 16px 0')}>
-        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px")}>TONIGHT ONLY</span><span style={s("font:700 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>FREE COLLECTION AT GATE 4</span></div>
-        <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink);margin-top:11px")}>2026/27 home shirt</div>
-        <div style={s('display:flex;align-items:baseline;gap:10px;margin-top:8px')}><span style={s("font:800 20px/1 'Archivo';color:var(--ink)")}>349,00 zł</span><span style={s("font:500 12.5px/1 'Archivo';color:var(--label)")}>Match-day print included</span></div>
-        <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label);margin-top:18px")}>SIZE</div>
-        <div style={s('display:flex;gap:8px;margin-top:10px')}>{sizes.map((l) => { const on = st.size === l; return <button key={l} onClick={() => set({ size: l })} style={{ ...s("flex:1;height:48px;display:flex;align-items:center;justify-content:center;border-radius:11px;font:800 14px/1 'Archivo';letter-spacing:.01em;transition:transform .1s ease"), color: on ? '#fff' : 'var(--ink)', background: on ? '#0B1A2D' : 'var(--sand)', boxShadow: on ? '0 7px 16px -9px rgba(11,26,45,.65)' : 'inset 0 0 0 1.5px var(--hair)' }}>{l}</button>; })}</div>
-        <button data-cur="shopadd" onClick={() => { if (!shirtIn) { set((sp: FSt) => ({ basket: [...sp.basket, { name: 'Match shirt', price: 349 }], ordered: false })); award(10, 'SHIRT ADDED'); } }} style={{ ...s("display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:16px;padding:16px;border-radius:12px;font:800 13px/1 'Archivo';letter-spacing:.06em;color:#fff"), background: shirtIn ? '#C8102E' : '#0B1A2D' }}><Ms size={18} color="#fff">{shirtIn ? 'check' : 'add_shopping_cart'}</Ms>{shirtIn ? 'IN BASKET · SIZE ' + st.size : 'ADD SHIRT · SIZE ' + st.size}</button>
+        <div style={s('display:flex;align-items:center;gap:8px')}><span style={s("font:800 9px/1 'Inter';letter-spacing:.1em;color:#fff;background:#D6202A;padding:5px 6px;border-radius:999px")}>TONIGHT ONLY</span><span style={s("font:700 9.5px/1 'Inter';letter-spacing:.1em;color:var(--label)")}>FREE COLLECTION AT GATE 4</span></div>
+        <div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink);margin-top:11px")}>2026/27 home shirt</div>
+        <div style={s('display:flex;align-items:baseline;gap:10px;margin-top:8px')}><span style={s("font:800 20px/1 'Inter';color:var(--ink)")}>349,00 zł</span><span style={s("font:500 12.5px/1 'Inter';color:var(--label)")}>Match-day print included</span></div>
+        <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label);margin-top:18px")}>SIZE</div>
+        <div style={s('display:flex;gap:8px;margin-top:10px')}>{sizes.map((l) => { const on = st.size === l; return <button key={l} onClick={() => set({ size: l })} style={{ ...s("flex:1;height:48px;display:flex;align-items:center;justify-content:center;border-radius:11px;font:800 14px/1 'Inter';letter-spacing:.01em;transition:transform .1s ease"), color: on ? '#fff' : 'var(--ink)', background: on ? '#0B0C0E' : 'var(--sand)', boxShadow: on ? '0 7px 16px -9px rgba(11,12,14,.65)' : 'inset 0 0 0 1.5px var(--hair)' }}>{l}</button>; })}</div>
+        <button data-cur="shopadd" onClick={() => { if (!shirtIn) { set((sp: FSt) => ({ basket: [...sp.basket, { name: 'Match shirt', price: 349 }], ordered: false })); award(10, 'SHIRT ADDED'); } }} style={{ ...s("display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:16px;padding:16px;border-radius:12px;font:800 13px/1 'Inter';letter-spacing:.06em;color:#fff"), background: shirtIn ? '#C8102E' : '#0B0C0E' }}><Ms size={18} color="#fff">{shirtIn ? 'check' : 'add_shopping_cart'}</Ms>{shirtIn ? 'IN BASKET · SIZE ' + st.size : 'ADD SHIRT · SIZE ' + st.size}</button>
       </div>
-      <div style={s('padding:24px 16px 0')}><div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>ALSO IN THE DROP</div><div style={s('margin-top:10px')}>{merch.map((m, i) => <div key={m.name} style={{ ...s('display:flex;align-items:center;gap:13px;padding:13px 0'), borderTop: i === 0 ? 'none' : '1.5px solid var(--hair)' }}><span style={s('width:48px;height:48px;flex:none;border-radius:12px;background:var(--sand);display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#C8102E">{m.icon}</Ms></span><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:600 12.5px/1.3 'Archivo';color:var(--label);margin-top:4px")}>{money(m.price)}</span></span><button onClick={() => { set((sp: FSt) => ({ basket: [...sp.basket, { name: m.name, price: m.price }], ordered: false })); award(10, 'ADDED TO BASKET'); }} className="fp" style={s("font:800 11px/1 'Archivo';letter-spacing:.08em;color:var(--ink);background:var(--sand);padding:12px 17px;border-radius:100px;box-shadow:inset 0 0 0 1.5px var(--hair)")}>ADD</button></div>)}</div></div>
+      <div style={s('padding:24px 16px 0')}><div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>ALSO IN THE DROP</div><div style={s('margin-top:10px')}>{merch.map((m, i) => <div key={m.name} style={{ ...s('display:flex;align-items:center;gap:13px;padding:13px 0'), borderTop: i === 0 ? 'none' : '1.5px solid var(--hair)' }}><span style={s('width:48px;height:48px;flex:none;border-radius:12px;background:var(--sand);display:flex;align-items:center;justify-content:center')}><Ms size={22} color="#C8102E">{m.icon}</Ms></span><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Inter';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:600 12.5px/1.3 'Inter';color:var(--label);margin-top:4px")}>{money(m.price)}</span></span><button onClick={() => { set((sp: FSt) => ({ basket: [...sp.basket, { name: m.name, price: m.price }], ordered: false })); award(10, 'ADDED TO BASKET'); }} className="fp" style={s("font:800 11px/1 'Inter';letter-spacing:.08em;color:var(--ink);background:var(--sand);padding:12px 17px;border-radius:100px;box-shadow:inset 0 0 0 1.5px var(--hair)")}>ADD</button></div>)}</div></div>
       {st.basket.length > 0 && (
-        <div style={s('position:sticky;bottom:0;margin-top:18px;padding:13px 16px 16px;background:var(--panel);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Archivo';letter-spacing:.12em;color:#899EB7")}>{st.basket.length} ITEMS</div><div style={s("font:800 17px/1 'Archivo';color:var(--on-panel);margin-top:6px")}>{money(total)}</div></div><button data-cur="checkout" onClick={() => { if (!st.ordered) { set({ ordered: true }); award(30, 'ORDER CONFIRMED'); } }} style={s("display:flex;align-items:center;gap:8px;font:800 11.5px/1 'Archivo';letter-spacing:.06em;background:#C8102E;padding:15px 20px;border-radius:11px;color:#fff")}><Ms size={16} color="#fff">{st.ordered ? 'check_circle' : 'shopping_bag'}</Ms>{st.ordered ? 'ORDER CONFIRMED' : 'CHECKOUT'}</button></div>
+        <div style={s('position:sticky;bottom:0;margin-top:18px;padding:13px 16px 16px;background:var(--panel);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Inter';letter-spacing:.12em;color:#A3A8B3")}>{st.basket.length} ITEMS</div><div style={s("font:800 17px/1 'Inter';color:var(--on-panel);margin-top:6px")}>{money(total)}</div></div><button data-cur="checkout" onClick={() => { if (!st.ordered) { set({ ordered: true }); award(30, 'ORDER CONFIRMED'); } }} style={s("display:flex;align-items:center;gap:8px;font:800 11.5px/1 'Inter';letter-spacing:.06em;background:#C8102E;padding:15px 20px;border-radius:11px;color:#fff")}><Ms size={16} color="#fff">{st.ordered ? 'check_circle' : 'shopping_bag'}</Ms>{st.ordered ? 'ORDER CONFIRMED' : 'CHECKOUT'}</button></div>
       )}
     </div>
   );
@@ -1892,14 +1823,14 @@ function Food({ st, set, award, timers }: any) {
   };
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
-      <div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:6px 7px")}>DELIVER TO 112–J</span><span style={s("font:700 9.5px/1 'Archivo';letter-spacing:.1em;color:var(--label)")}>KIOSK 14 · 40M AWAY</span></div>
-      <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink);margin-top:12px")}>To your seat</div>
+      <div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:800 9px/1 'Inter';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:6px 7px;border-radius:999px")}>DELIVER TO 112–J</span><span style={s("font:700 9.5px/1 'Inter';letter-spacing:.1em;color:var(--label)")}>KIOSK 14 · 40M AWAY</span></div>
+      <div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink);margin-top:12px")}>To your seat</div>
       {st.foodPlaced && (
-        <div style={s('margin-top:14px;background:var(--panel);padding:16px')}><div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:#C8102E")}>ORDER PLACED · RUNNER ON THE WAY</div><div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:11px')}><span style={s("font:800 46px/.8 'Archivo Black';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.foodEta}</span><span style={s("font:600 11.5px/1 'Archivo';color:#899EB7;padding-bottom:5px")}>MIN AWAY</span></div><div style={s('height:6px;background:rgba(242,242,240,.18);margin-top:12px')}><span style={{ display: 'block', height: 6, width: ((6 - st.foodEta) / 6 * 100) + '%', background: '#C8102E', transition: 'width 1s linear' }} /></div><div style={s("font:500 12.5px/1.5 'Archivo';color:#899EB7;margin-top:12px")}>{summary || 'Order placed'} · paid with match wallet</div></div>
+        <div style={s('margin-top:14px;background:var(--panel);padding:16px')}><div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:#C8102E")}>ORDER PLACED · RUNNER ON THE WAY</div><div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:11px')}><span style={s("font:800 46px/.8 'Space Grotesk';color:var(--on-panel);font-variant-numeric:tabular-nums")}>{st.foodEta}</span><span style={s("font:600 11.5px/1 'Inter';color:#A3A8B3;padding-bottom:5px")}>MIN AWAY</span></div><div style={s('height:6px;background:rgba(242,243,245,.18);margin-top:12px')}><span style={{ display: 'block', height: 6, width: ((6 - st.foodEta) / 6 * 100) + '%', background: '#C8102E', transition: 'width 1s linear' }} /></div><div style={s("font:500 12.5px/1.5 'Inter';color:#A3A8B3;margin-top:12px")}>{summary || 'Order placed'} · paid with match wallet</div></div>
       )}
-      <div style={s('margin-top:16px')}>{menuDefs.map((m) => <div key={m.id} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Archivo';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:500 12px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{m.note} · {money(m.price)}</span></span><span style={s('display:flex;align-items:center;gap:8px')}><button onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: Math.max((sp.food[m.id] || 0) - 1, 0) } }))} className="fs" style={s("width:30px;height:30px;background:var(--sand);font:800 14px/1 'Archivo';color:var(--ink)")}>−</button><span style={s("font:800 15px/1 'Archivo';color:var(--ink);width:16px;text-align:center;font-variant-numeric:tabular-nums")}>{st.food[m.id] || 0}</span><button data-cur="foodadd" onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: (sp.food[m.id] || 0) + 1 } }))} className="fp" style={s("width:30px;height:30px;background:var(--panel);font:800 14px/1 'Archivo';color:var(--on-panel)")}>+</button></span></div>)}</div>
+      <div style={s('margin-top:16px')}>{menuDefs.map((m) => <div key={m.id} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 14px/1.2 'Inter';color:var(--ink)")}>{m.name}</span><span style={s("display:block;font:500 12px/1.3 'Inter';color:var(--label);margin-top:3px")}>{m.note} · {money(m.price)}</span></span><span style={s('display:flex;align-items:center;gap:8px')}><button onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: Math.max((sp.food[m.id] || 0) - 1, 0) } }))} className="fs" style={s("width:30px;height:30px;background:var(--sand);font:800 14px/1 'Inter';color:var(--ink)")}>−</button><span style={s("font:800 15px/1 'Inter';color:var(--ink);width:16px;text-align:center;font-variant-numeric:tabular-nums")}>{st.food[m.id] || 0}</span><button data-cur="foodadd" onClick={() => set((sp: FSt) => ({ food: { ...sp.food, [m.id]: (sp.food[m.id] || 0) + 1 } }))} className="fp" style={s("width:30px;height:30px;background:var(--panel);font:800 14px/1 'Inter';color:var(--on-panel)")}>+</button></span></div>)}</div>
       {count > 0 && (
-        <div style={s('position:sticky;bottom:0;margin-top:16px;padding:13px 0 4px;background:var(--ground);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Archivo';letter-spacing:.12em;color:var(--label)")}>{count} ITEMS</div><div style={s("font:800 17px/1 'Archivo';color:var(--ink);margin-top:5px")}>{money(total)}</div></div><button data-cur="fooddeliver" onClick={place} className="fp" style={s("font:800 11.5px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel);background:var(--panel);padding:14px 16px")}>{st.foodPlaced ? 'ADD TO ORDER' : 'DELIVER TO 112–J'}</button></div>
+        <div style={s('position:sticky;bottom:0;margin-top:16px;padding:13px 0 4px;background:var(--ground);display:flex;align-items:center;gap:12px')}><div style={s('flex:1')}><div style={s("font:800 9px/1 'Inter';letter-spacing:.12em;color:var(--label)")}>{count} ITEMS</div><div style={s("font:800 17px/1 'Inter';color:var(--ink);margin-top:5px")}>{money(total)}</div></div><button data-cur="fooddeliver" onClick={place} className="fp" style={s("font:800 11.5px/1 'Inter';letter-spacing:.08em;color:var(--on-panel);background:var(--panel);padding:14px 16px")}>{st.foodPlaced ? 'ADD TO ORDER' : 'DELIVER TO 112–J'}</button></div>
       )}
     </div>
   );
@@ -1908,9 +1839,9 @@ function Food({ st, set, award, timers }: any) {
 function Photos({ st, award, set }: any) {
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
-      <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Photo pool</div><div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>{(st.photos * 134).toLocaleString()} photos from all four stands. Drop yours in for 25 XP.</div></div><button onClick={() => { set((sp: FSt) => ({ photos: Math.min(sp.photos + 3, 18) })); award(25, 'PHOTO ADDED', 'photo'); }} className="fp" style={s("font:800 10.5px/1 'Archivo';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:12px 13px;flex:none")}>+ ADD</button></div>
+      <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink)")}>Photo pool</div><div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:6px")}>{(st.photos * 134).toLocaleString()} photos from all four stands. Drop yours in for 25 XP.</div></div><button onClick={() => { set((sp: FSt) => ({ photos: Math.min(sp.photos + 3, 18) })); award(25, 'PHOTO ADDED', 'photo'); }} className="fp" style={s("font:800 10.5px/1 'Inter';letter-spacing:.1em;color:var(--on-panel);background:var(--panel);padding:12px 13px;flex:none;border-radius:999px")}>+ ADD</button></div>
       <div style={s('display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:14px')}>{Array.from({ length: st.photos }, (_, i) => <div key={i} style={s('position:relative;aspect-ratio:1;background:var(--sand)')}><Slot id={'photo-' + i} label={i < 3 ? 'Terrace shot' : 'Fan photo'} /></div>)}</div>
-      <div style={s("font:500 11.5px/1.5 'Archivo';color:var(--label);margin-top:12px")}>Tap a tile to drop a real photo in. Anything you add is credited to your seat and enters tonight’s best-photo vote.</div>
+      <div style={s("font:500 11.5px/1.5 'Inter';color:var(--label);margin-top:12px")}>Tap a tile to drop a real photo in. Anything you add is credited to your seat and enters tonight’s best-photo vote.</div>
     </div>
   );
 }
@@ -1939,7 +1870,7 @@ const VIDEO = ['Instagram', 'TikTok', 'YouTube'];
 
 function Badge2({ plat }: { plat: string }) {
   const p = PLAT[plat];
-  return <span style={{ ...s("font:800 8.5px/1 'Archivo';letter-spacing:.06em;padding:4px 6px;border-radius:5px"), background: p.bg, color: p.fg }}>{p.short}</span>;
+  return <span style={{ ...s("font:800 8.5px/1 'Inter';letter-spacing:.06em;padding:4px 6px;border-radius:5px"), background: p.bg, color: p.fg }}>{p.short}</span>;
 }
 
 function Reactions() {
@@ -1952,36 +1883,36 @@ function Reactions() {
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
       <div style={s('display:flex;align-items:center;gap:9px')}>
-        <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Fan reactions</div>
-        <span style={s("font:800 9px/1 'Archivo';letter-spacing:.06em;color:#fff;background:#C8102E;padding:5px 7px;border-radius:100px")}>#POGŚLĄ</span>
+        <div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink)")}>Fan reactions</div>
+        <span style={s("font:800 9px/1 'Inter';letter-spacing:.06em;color:#fff;background:#C8102E;padding:5px 7px;border-radius:100px")}>#POGŚLĄ</span>
       </div>
-      <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>Reels, clips and posts pulled from across social by hashtag, Instagram, TikTok, YouTube, X and Threads, in one place.</div>
+      <div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:6px")}>Reels, clips and posts pulled from across social by hashtag, Instagram, TikTok, YouTube, X and Threads, in one place.</div>
 
       {/* platform filter */}
       <div style={s('display:flex;gap:7px;margin-top:14px;overflow-x:auto')}>
         {PLATS.map((p) => { const on = filt === p; return (
-          <button key={p} onClick={() => setFilt(p)} style={{ ...s("flex:none;font:800 10.5px/1 'Archivo';letter-spacing:.04em;padding:9px 12px;border-radius:100px"), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{p}</button>
+          <button key={p} onClick={() => setFilt(p)} style={{ ...s("flex:none;font:800 10.5px/1 'Inter';letter-spacing:.04em;padding:9px 12px;border-radius:100px"), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}>{p}</button>
         ); })}
       </div>
 
       {/* REELS / video + pictures */}
       {reels.length > 0 && (
         <div style={s('margin-top:18px')}>
-          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>REELS & CLIPS</div>
+          <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>REELS & CLIPS</div>
           <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px')}>
             {reels.map((r, i) => { const pl = playing === r.id; return (
               <div key={r.id} style={{ ...s('background:var(--sand);overflow:hidden'), animation: 'bgRise .28s cubic-bezier(.18,.9,.2,1) both', animationDelay: `${i * 40}ms` }}>
                 <button onClick={() => setPlaying(pl ? null : r.id)} style={s('display:block;width:100%;position:relative;height:212px')}>
                   <Slot id={r.slot} label="Reel" />
-                  <span style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,26,45,.18),rgba(11,26,45,0) 34%,rgba(11,26,45,.55))')} />
+                  <span style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,12,14,.18),rgba(11,12,14,0) 34%,rgba(11,12,14,.55))')} />
                   <span style={s('position:absolute;left:8px;top:8px')}><Badge2 plat={r.plat} /></span>
-                  <span style={s('position:absolute;right:8px;bottom:8px;font:800 8.5px/1 \'Archivo\';color:#fff;background:rgba(11,26,45,.6);padding:4px 5px')}>{pl ? '▮▮ 0:12' : r.dur}</span>
-                  <span style={s('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none')}><span style={s('width:46px;height:46px;border-radius:50%;background:rgba(11,26,45,.62);display:flex;align-items:center;justify-content:center')}>{pl ? <span style={s('display:flex;gap:4px')}><span style={s('width:4px;height:15px;background:#fff')} /><span style={s('width:4px;height:15px;background:#fff')} /></span> : <span style={s('width:0;height:0;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px')} />}</span></span>
+                  <span style={s('position:absolute;right:8px;bottom:8px;font:800 8.5px/1 \'Archivo\';color:#fff;background:rgba(11,12,14,.6);padding:4px 5px')}>{pl ? '▮▮ 0:12' : r.dur}</span>
+                  <span style={s('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none')}><span style={s('width:46px;height:46px;border-radius:50%;background:rgba(11,12,14,.62);display:flex;align-items:center;justify-content:center')}>{pl ? <span style={s('display:flex;gap:4px')}><span style={s('width:4px;height:15px;background:#fff')} /><span style={s('width:4px;height:15px;background:#fff')} /></span> : <span style={s('width:0;height:0;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px')} />}</span></span>
                 </button>
                 <div style={s('padding:10px 11px 11px')}>
-                  <div style={s("font:700 11px/1.25 'Archivo';color:var(--ink)")}>{r.handle}</div>
-                  <div style={s("font:500 11px/1.35 'Archivo';color:var(--body);margin-top:4px")}>{r.cap}</div>
-                  <button onClick={() => like(r.id)} style={{ ...s("display:flex;align-items:center;gap:5px;margin-top:9px;font:800 10.5px/1 'Archivo'"), color: liked[r.id] ? '#C8102E' : 'var(--label)' }}><span style={{ display: 'flex', animation: liked[r.id] ? 'bgPop .22s cubic-bezier(.23,1,.32,1)' : undefined }}><Ms size={13} color={liked[r.id] ? '#C8102E' : 'var(--label)'}>favorite</Ms></span>{kfmt(r.likes + (liked[r.id] ? 1 : 0))}</button>
+                  <div style={s("font:700 11px/1.25 'Inter';color:var(--ink)")}>{r.handle}</div>
+                  <div style={s("font:500 11px/1.35 'Inter';color:var(--body);margin-top:4px")}>{r.cap}</div>
+                  <button onClick={() => like(r.id)} style={{ ...s("display:flex;align-items:center;gap:5px;margin-top:9px;font:800 10.5px/1 'Inter'"), color: liked[r.id] ? '#C8102E' : 'var(--label)' }}><span style={{ display: 'flex', animation: liked[r.id] ? 'bgPop .22s cubic-bezier(.23,1,.32,1)' : undefined }}><Ms size={13} color={liked[r.id] ? '#C8102E' : 'var(--label)'}>favorite</Ms></span>{kfmt(r.likes + (liked[r.id] ? 1 : 0))}</button>
                 </div>
               </div>
             ); })}
@@ -1992,15 +1923,15 @@ function Reactions() {
       {/* POSTS / text from X + Threads */}
       {posts.length > 0 && (
         <div style={s('margin-top:22px')}>
-          <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>POSTS</div>
+          <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>POSTS</div>
           <div style={s('display:flex;flex-direction:column;gap:9px;margin-top:11px')}>
             {posts.map((p, i) => (
               <div key={p.id} style={{ ...s('background:var(--sand);padding:13px 14px'), animation: 'bgRise .28s cubic-bezier(.18,.9,.2,1) both', animationDelay: `${i * 40}ms` }}>
-                <div style={s('display:flex;align-items:center;gap:8px')}><Badge2 plat={p.plat} /><span style={s("font:700 12px/1 'Archivo';color:var(--ink)")}>{p.handle}</span><span style={s("font:500 10.5px/1 'Archivo';color:var(--label);margin-left:auto")}>{p.t}</span></div>
-                <div style={s("font:500 13.5px/1.45 'Archivo';color:var(--ink);margin-top:9px")}>{p.text}</div>
+                <div style={s('display:flex;align-items:center;gap:8px')}><Badge2 plat={p.plat} /><span style={s("font:700 12px/1 'Inter';color:var(--ink)")}>{p.handle}</span><span style={s("font:500 10.5px/1 'Inter';color:var(--label);margin-left:auto")}>{p.t}</span></div>
+                <div style={s("font:500 13.5px/1.45 'Inter';color:var(--ink);margin-top:9px")}>{p.text}</div>
                 <div style={s('display:flex;align-items:center;gap:16px;margin-top:11px')}>
-                  <button onClick={() => like(p.id)} style={{ ...s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Archivo'"), color: liked[p.id] ? '#C8102E' : 'var(--label)' }}><span style={{ display: 'flex', animation: liked[p.id] ? 'bgPop .22s cubic-bezier(.23,1,.32,1)' : undefined }}><Ms size={14} color={liked[p.id] ? '#C8102E' : 'var(--label)'}>favorite</Ms></span>{kfmt(p.likes + (liked[p.id] ? 1 : 0))}</button>
-                  <span style={s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Archivo';color:var(--label)")}><Ms size={14} color="var(--label)">repeat</Ms>{p.rt}</span>
+                  <button onClick={() => like(p.id)} style={{ ...s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Inter'"), color: liked[p.id] ? '#C8102E' : 'var(--label)' }}><span style={{ display: 'flex', animation: liked[p.id] ? 'bgPop .22s cubic-bezier(.23,1,.32,1)' : undefined }}><Ms size={14} color={liked[p.id] ? '#C8102E' : 'var(--label)'}>favorite</Ms></span>{kfmt(p.likes + (liked[p.id] ? 1 : 0))}</button>
+                  <span style={s("display:flex;align-items:center;gap:5px;font:800 10.5px/1 'Inter';color:var(--label)")}><Ms size={14} color="var(--label)">repeat</Ms>{p.rt}</span>
                 </div>
               </div>
             ))}
@@ -2008,7 +1939,7 @@ function Reactions() {
         </div>
       )}
 
-      <div style={s("font:500 10.5px/1.5 'Archivo';color:var(--label);margin-top:18px")}>Curated &amp; moderated from #POGŚLĄ before it appears here, approved clips play in-app via each platform’s embed.</div>
+      <div style={s("font:500 10.5px/1.5 'Inter';color:var(--label);margin-top:18px")}>Curated &amp; moderated from #POGŚLĄ before it appears here, approved clips play in-app via each platform’s embed.</div>
     </div>
   );
 }
@@ -2018,18 +1949,18 @@ function Reads({ st, set }: any) {
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
       {!open && (<>
-        <div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Reads</div>
-        <div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>Written tonight by people who watch both teams every week.</div>
-        <div style={s('margin-top:14px')}>{ARTICLES.map((a, i) => <button key={i} onClick={() => set({ read: i })} className="frow" style={s('display:flex;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('width:70px;height:70px;flex:none;position:relative;background:var(--sand)')}><Slot id={a.slot} label="Art" /></span><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:#C8102E")}>{a.kicker}</span><span style={s("display:block;font:700 14.5px/1.25 'Archivo';color:var(--ink);margin-top:6px")}>{a.title}</span><span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:var(--label);margin-top:5px")}>{a.meta}</span></span></button>)}</div>
+        <div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink)")}>Reads</div>
+        <div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:6px")}>Written tonight by people who watch both teams every week.</div>
+        <div style={s('margin-top:14px')}>{ARTICLES.map((a, i) => <button key={i} onClick={() => set({ read: i })} className="frow" style={s('display:flex;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><span style={s('width:70px;height:70px;flex:none;position:relative;background:var(--sand)')}><Slot id={a.slot} label="Art" /></span><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:800 8.5px/1 'Inter';letter-spacing:.12em;color:#C8102E")}>{a.kicker}</span><span style={s("display:block;font:700 14.5px/1.25 'Inter';color:var(--ink);margin-top:6px")}>{a.title}</span><span style={s("display:block;font:500 11.5px/1.3 'Inter';color:var(--label);margin-top:5px")}>{a.meta}</span></span></button>)}</div>
       </>)}
       {open && (
         <div style={s('animation:bgFade .25s ease both')}>
-          <button onClick={() => set({ read: null })} className="fh" style={s("font:800 10px/1 'Archivo';letter-spacing:.14em;color:var(--label)")}><Ms size={14} color="inherit" style={s('vertical-align:-2px')}>arrow_back</Ms> ALL READS</button>
-          <div style={s("font:800 8.5px/1 'Archivo';letter-spacing:.12em;color:#C8102E;margin-top:14px")}>{open.kicker}</div>
-          <div style={s("font:800 30px/.96 'Archivo Black';color:var(--ink);margin-top:9px")}>{open.title}</div>
-          <div style={s("font:500 11.5px/1 'Archivo';color:var(--label);margin-top:9px")}>{open.meta}</div>
+          <button onClick={() => set({ read: null })} className="fh" style={s("font:800 10px/1 'Inter';letter-spacing:.14em;color:var(--label)")}><Ms size={14} color="inherit" style={s('vertical-align:-2px')}>arrow_back</Ms> ALL READS</button>
+          <div style={s("font:800 8.5px/1 'Inter';letter-spacing:.12em;color:#C8102E;margin-top:14px")}>{open.kicker}</div>
+          <div style={s("font:800 30px/.96 'Space Grotesk';color:var(--ink);margin-top:9px")}>{open.title}</div>
+          <div style={s("font:500 11.5px/1 'Inter';color:var(--label);margin-top:9px")}>{open.meta}</div>
           <div style={s('position:relative;height:170px;background:var(--sand);margin-top:14px')}><Slot id={open.slot + '-hero'} label="Article image" /></div>
-          <div style={s('margin-top:14px;display:flex;flex-direction:column;gap:12px')}>{open.body.map((t, i) => <div key={i} style={s("font:400 15px/1.6 'Archivo';color:var(--ink)")}>{t}</div>)}</div>
+          <div style={s('margin-top:14px;display:flex;flex-direction:column;gap:12px')}>{open.body.map((t, i) => <div key={i} style={s("font:400 15px/1.6 'Inter';color:var(--ink)")}>{t}</div>)}</div>
         </div>
       )}
     </div>
@@ -2041,14 +1972,14 @@ function Seat({ st, set, go }: any) {
   const facts = [{ k: 'ENTRANCE', v: 'Gate 4, then stairs C' }, { k: 'NEAREST KIOSK', v: 'Kiosk 14, 40m, turn right' }, { k: 'TOILETS', v: 'Concourse south, 25m' }, { k: 'QUICKEST EXIT', v: 'Gate 4 to Ashton New Road' }];
   return (
     <div style={s('animation:bgFade .25s ease both;padding:16px 16px 28px')}>
-      <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'Archivo Black';color:var(--ink)")}>Block 112 · row J</div><div style={s("font:500 12.5px/1.5 'Archivo';color:var(--body);margin-top:6px")}>South stand, lower tier. Seat 14.</div></div><button onClick={() => set((sp: FSt) => ({ routeOn: !sp.routeOn }))} style={{ ...s("font:800 10.5px/1 'Archivo';letter-spacing:.1em;padding:12px 13px;flex:none"), color: st.routeOn ? '#fff' : '#0B1A2D', background: st.routeOn ? '#C8102E' : '#E4DACA' }}>{st.routeOn ? 'HIDE ROUTE' : 'SHOW ROUTE'}</button></div>
+      <div style={s('display:flex;align-items:flex-end;gap:10px')}><div style={s('flex:1')}><div style={s("font:800 28px/.94 'Space Grotesk';color:var(--ink)")}>Block 112 · row J</div><div style={s("font:500 12.5px/1.5 'Inter';color:var(--body);margin-top:6px")}>South stand, lower tier. Seat 14.</div></div><button onClick={() => set((sp: FSt) => ({ routeOn: !sp.routeOn }))} style={{ ...s("font:800 10.5px/1 'Inter';letter-spacing:.1em;padding:12px 13px;flex:none;border-radius:999px"), color: st.routeOn ? '#fff' : '#0B0C0E', background: st.routeOn ? '#C8102E' : '#E4DACA' }}>{st.routeOn ? 'HIDE ROUTE' : 'SHOW ROUTE'}</button></div>
       <div style={s('position:relative;margin-top:16px;height:280px;background:#141A22;padding:20px;display:flex;align-items:center;justify-content:center')}>
         <div style={s('position:relative;width:100%;height:100%;border:1.5px solid rgba(226,216,196,.4)')}><div style={s('position:absolute;left:0;right:0;top:50%;height:1.5px;background:rgba(226,216,196,.4)')} /><div style={s('position:absolute;left:50%;top:50%;width:60px;height:60px;border:1.5px solid rgba(226,216,196,.4);border-radius:50%;transform:translate(-50%,-50%)')} /></div>
-        <div style={s('position:absolute;inset:6px;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);gap:3px;pointer-events:none')}>{blockDefs.map(([area, label]) => <span key={label} style={{ ...s("display:flex;align-items:center;justify-content:center;font:800 7.5px/1 'Archivo';letter-spacing:.04em"), gridArea: area, background: label === '112' ? '#C8102E' : 'rgba(226,216,196,.14)', color: label === '112' ? '#fff' : '#899EB7' }}>{label}</span>)}</div>
+        <div style={s('position:absolute;inset:6px;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);gap:3px;pointer-events:none')}>{blockDefs.map(([area, label]) => <span key={label} style={{ ...s("display:flex;align-items:center;justify-content:center;font:800 7.5px/1 'Inter';letter-spacing:.04em"), gridArea: area, background: label === '112' ? '#C8102E' : 'rgba(226,216,196,.14)', color: label === '112' ? '#fff' : '#A3A8B3' }}>{label}</span>)}</div>
         {st.routeOn && (<><div style={s('position:absolute;left:22%;top:78%;width:52%;height:3px;background:repeating-linear-gradient(90deg,#C8102E 0 7px,transparent 7px 12px)')} /><div style={s('position:absolute;left:74%;top:52%;width:3px;height:28%;background:repeating-linear-gradient(0deg,#C8102E 0 7px,transparent 7px 12px)')} /></>)}
       </div>
-      <div style={s('margin-top:14px')}>{facts.map((f) => <div key={f.k} style={s('display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)')}><span style={s("font:800 9.5px/1 'Archivo';letter-spacing:.12em;color:var(--label);width:96px")}>{f.k}</span><span style={s("flex:1;font:600 13.5px/1.3 'Archivo';color:var(--ink)")}>{f.v}</span></div>)}</div>
-      <button onClick={go('food')} className="fp" style={s("display:block;width:100%;margin-top:16px;padding:15px;background:var(--panel);font:800 12.5px/1 'Archivo';letter-spacing:.08em;color:var(--on-panel)")}>ORDER TO THIS SEAT</button>
+      <div style={s('margin-top:14px')}>{facts.map((f) => <div key={f.k} style={s('display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--hair)')}><span style={s("font:800 9.5px/1 'Inter';letter-spacing:.12em;color:var(--label);width:96px")}>{f.k}</span><span style={s("flex:1;font:600 13.5px/1.3 'Inter';color:var(--ink)")}>{f.v}</span></div>)}</div>
+      <button onClick={go('food')} className="fp" style={s("display:block;width:100%;margin-top:16px;padding:15px;background:var(--panel);font:800 12.5px/1 'Inter';letter-spacing:.08em;color:var(--on-panel)")}>ORDER TO THIS SEAT</button>
     </div>
   );
 }
@@ -2063,23 +1994,23 @@ function Profile({ st, filled, set, go }: any) {
   ];
   const themeOpts = [{ k: 'auto', label: 'Auto', icon: 'brightness_auto' }, { k: 'light', label: 'Light', icon: 'light_mode' }, { k: 'dark', label: 'Dark', icon: 'dark_mode' }];
   const prefs = [{ k: 'goals', label: 'Goal alerts', icon: 'sports_soccer' }, { k: 'ht', label: 'Half-time summary', icon: 'schedule' }, { k: 'rewards', label: 'Reward updates', icon: 'redeem' }];
-  const L = (t: string) => <div style={s("font:800 9.5px/1 'Archivo';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
+  const L = (t: string) => <div style={s("font:800 9.5px/1 'Inter';letter-spacing:.18em;color:var(--label)")}>{t}</div>;
   return (
     <div style={s('animation:bgFade .25s ease both')}>
       <div style={s('background:var(--panel);padding:18px 16px 20px')}>
-        <div style={s('display:flex;align-items:center;gap:13px')}><span style={s("width:56px;height:56px;flex:none;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font:800 20px/1 'Archivo Black';color:#fff")}>AJ</span><div style={s('flex:1;min-width:0')}><div style={s("font:800 26px/.94 'Archivo Black';color:var(--on-panel)")}>Alex Jarrett</div><div style={s("font:600 11.5px/1 'Archivo';color:#899EB7;margin-top:7px")}>@alexj · member since 2016</div></div><span style={s("font:800 9px/1 'Archivo';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:6px 7px")}>TIER 2</span></div>
-        <div style={s('display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(242,242,240,.16)')}><Ms size={16} color="#C8102E">event_seat</Ms><span style={s("font:600 12px/1.4 'Archivo';color:var(--on-panel)")}>Season ticket · Block 112, Row J, Seat 14</span></div>
+        <div style={s('display:flex;align-items:center;gap:13px')}><span style={s("width:56px;height:56px;flex:none;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font:800 20px/1 'Space Grotesk';color:#fff")}>AJ</span><div style={s('flex:1;min-width:0')}><div style={s("font:800 26px/.94 'Space Grotesk';color:var(--on-panel)")}>Alex Jarrett</div><div style={s("font:600 11.5px/1 'Inter';color:#A3A8B3;margin-top:7px")}>@alexj · member since 2016</div></div><span style={s("font:800 9px/1 'Inter';letter-spacing:.1em;color:var(--ink);background:var(--sand);padding:6px 7px;border-radius:999px")}>TIER 2</span></div>
+        <div style={s('display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1.5px solid rgba(242,243,245,.16)')}><Ms size={16} color="#C8102E">event_seat</Ms><span style={s("font:600 12px/1.4 'Inter';color:var(--on-panel)")}>Season ticket · Block 112, Row J, Seat 14</span></div>
       </div>
       <div style={s('padding:18px 16px 0')}>
-        <div style={s('display:flex;align-items:baseline;justify-content:space-between')}>{L('MATCHDAY XP')}<span style={s("font:600 11px/1 'Archivo';color:var(--label)")}>{Math.max(2000 - st.xp, 0).toLocaleString()} to a seat upgrade</span></div>
-        <div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:10px')}><span style={s("font:800 40px/.82 'Archivo Black';color:var(--ink);font-variant-numeric:tabular-nums")}>{st.xp.toLocaleString()}</span><span style={s("font:600 11.5px/1 'Archivo';color:var(--label);padding-bottom:4px")}>/ 2,000 XP</span></div>
+        <div style={s('display:flex;align-items:baseline;justify-content:space-between')}>{L('MATCHDAY XP')}<span style={s("font:600 11px/1 'Inter';color:var(--label)")}>{Math.max(2000 - st.xp, 0).toLocaleString()} to a seat upgrade</span></div>
+        <div style={s('display:flex;align-items:flex-end;gap:8px;margin-top:10px')}><span style={s("font:800 40px/.82 'Space Grotesk';color:var(--ink);font-variant-numeric:tabular-nums")}>{st.xp.toLocaleString()}</span><span style={s("font:600 11.5px/1 'Inter';color:var(--label);padding-bottom:4px")}>/ 2,000 XP</span></div>
         <div style={s('display:flex;gap:2px;height:10px;margin-top:11px')}>{Array.from({ length: 20 }, (_, i) => <span key={i} style={{ flex: 1, background: i < filled ? 'var(--ink)' : 'var(--sand)', transition: 'background .4s ease' }} />)}</div>
-        <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px')}>{stats.map((p) => <div key={p.k} style={s('background:var(--sand);padding:13px')}><Ms size={19} color="var(--ink)">{p.icon}</Ms><div style={s("font:800 26px/.9 'Archivo Black';color:var(--ink);margin-top:9px;font-variant-numeric:tabular-nums")}>{p.v}</div><div style={s("font:800 8.5px/1.3 'Archivo';letter-spacing:.12em;color:var(--label);margin-top:6px")}>{p.k}</div></div>)}</div>
+        <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px')}>{stats.map((p) => <div key={p.k} style={s('background:var(--sand);padding:13px')}><Ms size={19} color="var(--ink)">{p.icon}</Ms><div style={s("font:800 26px/.9 'Space Grotesk';color:var(--ink);margin-top:9px;font-variant-numeric:tabular-nums")}>{p.v}</div><div style={s("font:800 8.5px/1.3 'Inter';letter-spacing:.12em;color:var(--label);margin-top:6px")}>{p.k}</div></div>)}</div>
       </div>
-      <div style={s('padding:20px 16px 0')}>{L('TONIGHT’S ACTIVITY')}<div style={s('margin-top:6px')}>{activity.map((a, i) => <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><Ms size={20} color={a.color}>{a.icon}</Ms><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Archivo';color:var(--ink)")}>{a.t}</span><span style={s("display:block;font:500 11.5px/1.3 'Archivo';color:var(--label);margin-top:3px")}>{a.d}</span></span><span style={{ ...s("font:800 10.5px/1 'Archivo';letter-spacing:.06em"), color: a.color }}>{a.v}</span></div>)}</div></div>
+      <div style={s('padding:20px 16px 0')}>{L('TONIGHT’S ACTIVITY')}<div style={s('margin-top:6px')}>{activity.map((a, i) => <div key={i} style={s('display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--hair)')}><Ms size={20} color={a.color}>{a.icon}</Ms><span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Inter';color:var(--ink)")}>{a.t}</span><span style={s("display:block;font:500 11.5px/1.3 'Inter';color:var(--label);margin-top:3px")}>{a.d}</span></span><span style={{ ...s("font:800 10.5px/1 'Inter';letter-spacing:.06em"), color: a.color }}>{a.v}</span></div>)}</div></div>
       <div style={s('padding:20px 16px 0')}>{L('YOUR PHOTOS')}<div style={s('display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:10px')}>{['profile-photo-1', 'profile-photo-2', 'profile-photo-3'].map((id) => <div key={id} style={s('position:relative;aspect-ratio:1;background:var(--sand)')}><Slot id={id} label="Your shot" /></div>)}</div></div>
-      <div style={s('padding:20px 16px 0')}>{L('APPEARANCE')}<div style={s('display:flex;gap:6px;margin-top:10px')}>{themeOpts.map((o) => { const on = st.theme === o.k; return <button key={o.k} onClick={() => set({ theme: o.k })} style={{ ...s('flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 0'), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}><Ms size={21} color="inherit">{o.icon}</Ms><span style={s("font:800 10px/1 'Archivo';letter-spacing:.1em;color:inherit")}>{o.label}</span></button>; })}</div><div style={s("font:500 11.5px/1.5 'Archivo';color:var(--label);margin-top:9px")}>Auto follows your phone’s appearance setting.</div></div>
-      <div style={s('padding:20px 16px 26px')}>{L('ALERTS')}<div style={s('margin-top:6px')}>{prefs.map((p) => { const on = st.prefs[p.k]; return <button key={p.k} onClick={() => set((sp: FSt) => ({ prefs: { ...sp.prefs, [p.k]: !sp.prefs[p.k] } }))} style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><Ms size={20} color="var(--ink)">{p.icon}</Ms><span style={s("flex:1;font:600 13.5px/1.2 'Archivo';color:var(--ink)")}>{p.label}</span><span style={{ ...s('width:42px;height:24px;flex:none;border-radius:100px;position:relative;transition:background .25s ease'), background: on ? '#C8102E' : 'var(--sand2)' }}><span style={{ ...s('position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .25s cubic-bezier(.2,.8,.2,1)'), left: on ? '21px' : '3px' }} /></span></button>; })}</div><button onClick={go('home')} className="fs" style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:18px;padding:15px;box-shadow:inset 0 0 0 1.5px var(--hair);font:800 12px/1 'Archivo';letter-spacing:.08em;color:var(--ink)")}><Ms size={16} color="var(--ink)">logout</Ms>SIGN OUT</button></div>
+      <div style={s('padding:20px 16px 0')}>{L('APPEARANCE')}<div style={s('display:flex;gap:6px;margin-top:10px')}>{themeOpts.map((o) => { const on = st.theme === o.k; return <button key={o.k} onClick={() => set({ theme: o.k })} style={{ ...s('flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 0'), background: on ? 'var(--panel)' : 'var(--sand)', color: on ? 'var(--on-panel)' : 'var(--ink)' }}><Ms size={21} color="inherit">{o.icon}</Ms><span style={s("font:800 10px/1 'Inter';letter-spacing:.1em;color:inherit")}>{o.label}</span></button>; })}</div><div style={s("font:500 11.5px/1.5 'Inter';color:var(--label);margin-top:9px")}>Auto follows your phone’s appearance setting.</div></div>
+      <div style={s('padding:20px 16px 26px')}>{L('ALERTS')}<div style={s('margin-top:6px')}>{prefs.map((p) => { const on = st.prefs[p.k]; return <button key={p.k} onClick={() => set((sp: FSt) => ({ prefs: { ...sp.prefs, [p.k]: !sp.prefs[p.k] } }))} style={s('display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 0;border-bottom:1.5px solid var(--hair)')}><Ms size={20} color="var(--ink)">{p.icon}</Ms><span style={s("flex:1;font:600 13.5px/1.2 'Inter';color:var(--ink)")}>{p.label}</span><span style={{ ...s('width:42px;height:24px;flex:none;border-radius:100px;position:relative;transition:background .25s ease'), background: on ? '#C8102E' : 'var(--sand2)' }}><span style={{ ...s('position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .25s cubic-bezier(.2,.8,.2,1)'), left: on ? '21px' : '3px' }} /></span></button>; })}</div><button onClick={go('home')} className="fs" style={s("display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:18px;padding:15px;box-shadow:inset 0 0 0 1.5px var(--hair);font:800 12px/1 'Inter';letter-spacing:.08em;color:var(--ink)")}><Ms size={16} color="var(--ink)">logout</Ms>SIGN OUT</button></div>
     </div>
   );
 }
@@ -2109,33 +2040,36 @@ function Iris({ st, pre, live, ht, set, ask, irisRef, go, closeIris }: any) {
   const fallback = 'That one isn’t in tonight’s briefing yet. I refresh at half-time and full-time, until then, the shot map and the win-probability model on the Match Intel page cover most of it.';
   const askFree = (q: string) => { const words = q.toLowerCase().split(/\W+/).filter((w) => w.length > 3); const hit = QA.find(([qq]) => words.some((w) => qq.toLowerCase().indexOf(w) > -1)); if (hit) ask(hit[0], hit[1], hit[2], hit[3]); else ask(q, fallback); };
   return (
-    <div style={{ ...s('position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(11,26,45,.45)'), animation: st.irisOut ? 'bgFadeOut .26s ease both' : undefined }}>
+    <div style={{ ...s('position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(11,12,14,.45)'), animation: st.irisOut ? 'bgFadeOut .26s ease both' : undefined }}>
       <button onClick={() => closeIris()} style={s('position:absolute;inset:0;cursor:default')} />
-      <div style={{ ...s('position:relative;height:82%;display:flex;flex-direction:column;background:var(--ground)'), animation: st.irisOut ? 'bgSheetOut .26s cubic-bezier(.32,.72,0,1) both' : 'bgSheet .32s cubic-bezier(.18,.9,.2,1) both' }}>
-        <div style={s('display:flex;align-items:center;gap:10px;padding:13px 15px;background:var(--panel)')}><span style={s('width:7px;height:7px;background:#C8102E;animation:bgDot 1.6s ease-in-out infinite')} /><div style={s('min-width:0')}><div style={s("font:800 21px/1 'Archivo Black';letter-spacing:.04em;color:var(--on-panel)")}>IRIS</div><div style={s("font:700 8.5px/1 'Archivo';letter-spacing:.14em;color:#899EB7;margin-top:5px")}>ANSWERS FROM TONIGHT’S BRIEFING</div></div><button onClick={go('intel')} className="fs" style={s("margin-left:auto;font:800 9px/1 'Archivo';letter-spacing:.12em;color:var(--ink);background:var(--sand);padding:7px 8px")}>FULL INTEL</button><button onClick={() => closeIris()} className="fh" style={s("font:800 14px/1 'Archivo';color:#899EB7;padding:4px 2px 4px 6px")}><Ms size={18} color="inherit">close</Ms></button></div>
+      <div style={{ ...s('position:relative;height:82%;display:flex;flex-direction:column;background:var(--ground);border-radius:20px 20px 0 0;overflow:hidden'), animation: st.irisOut ? 'bgSheetOut .26s cubic-bezier(.32,.72,0,1) both' : 'bgSheet .32s cubic-bezier(.18,.9,.2,1) both' }}>
+        <div style={s('display:flex;align-items:center;gap:11px;padding:16px 16px 14px;background:var(--sand);border-radius:20px 20px 0 0;box-shadow:0 1px 0 var(--hair)')}><span style={s('width:36px;height:36px;flex:none;border-radius:11px;background:var(--iris);display:flex;align-items:center;justify-content:center')}><Ms size={20} color="var(--iris-ink)">auto_awesome</Ms></span><div style={s('min-width:0')}><div style={s("font:600 19px/1 'Space Grotesk';color:var(--ink)")}>Ask IRIS</div><div style={s("font:400 12px/1 'Inter';color:var(--label);margin-top:5px")}>Answers from tonight’s briefing</div></div><button onClick={go('intel')} style={s("margin-left:auto;font:500 12px/1 'Inter';color:var(--ink);background:var(--sand3);box-shadow:inset 0 0 0 1px var(--hair);padding:9px 12px;border-radius:999px")}>Full intel</button><button onClick={() => closeIris()} aria-label="Close" style={s('width:34px;height:34px;flex:none;border-radius:50%;background:var(--sand3);display:flex;align-items:center;justify-content:center')}><Ms size={18} color="var(--label)">close</Ms></button></div>
         <div ref={irisRef} style={s('flex:1;overflow-y:auto;padding:15px 15px 8px;display:flex;flex-direction:column;gap:11px')}>
           {st.thread.map((m: any, i: number) => { const me = m.me; return (
             <div key={i} style={{ ...s('display:flex;animation:bgBubble .3s ease both'), justifyContent: me ? 'flex-end' : 'flex-start' }}>
               <div style={{ ...s('max-width:84%;padding:12px 13px'), background: me ? 'var(--panel)' : 'var(--sand)', borderRadius: me ? '14px 14px 3px 14px' : '3px 14px 14px 14px' }}>
-                <div style={{ ...s("font:800 8.5px/1 'Archivo';letter-spacing:.14em"), color: me ? '#899EB7' : 'var(--label)' }}>{me ? 'YOU' : 'IRIS'}</div>
-                <div style={{ ...s("font:500 13.5px/1.5 'Archivo';margin-top:6px"), color: me ? 'var(--on-panel)' : 'var(--ink)' }}>{m.text}</div>
-                {m.stat && <div style={s('display:flex;align-items:baseline;gap:8px;margin-top:10px;padding-top:9px;border-top:1.5px solid rgba(11,26,45,.14)')}><span style={s("font:800 25px/.9 'Archivo Black';color:#C8102E;font-variant-numeric:tabular-nums")}>{m.stat}</span><span style={s("font:700 8.5px/1.3 'Archivo';letter-spacing:.12em;color:var(--label)")}>{m.statLabel}</span></div>}
+                <div style={{ ...s("font:800 8.5px/1 'Inter';letter-spacing:.14em"), color: me ? '#A3A8B3' : 'var(--label)' }}>{me ? 'YOU' : 'IRIS'}</div>
+                <div style={{ ...s("font:500 13.5px/1.5 'Inter';margin-top:6px"), color: me ? 'var(--on-panel)' : 'var(--ink)' }}>{m.text}</div>
+                {m.stat && <div style={s('display:flex;align-items:baseline;gap:8px;margin-top:10px;padding-top:9px;border-top:1.5px solid rgba(11,12,14,.14)')}><span style={s("font:800 25px/.9 'Space Grotesk';color:#C8102E;font-variant-numeric:tabular-nums")}>{m.stat}</span><span style={s("font:700 8.5px/1.3 'Inter';letter-spacing:.12em;color:var(--label)")}>{m.statLabel}</span></div>}
               </div>
             </div>
           ); })}
           {st.irisTyping && <div style={s('display:flex;gap:5px;padding:4px 2px')}><span style={s('width:6px;height:6px;background:#C8102E;animation:bgDot 1.2s ease-in-out infinite')} /><span style={s('width:6px;height:6px;background:#C8102E;animation:bgDot 1.2s .2s ease-in-out infinite')} /><span style={s('width:6px;height:6px;background:#C8102E;animation:bgDot 1.2s .4s ease-in-out infinite')} /></div>}
         </div>
-        <div style={s('padding:9px 11px 0;display:flex;gap:6px;overflow-x:auto')}>{QA.map(([q, a, stat, statLabel]) => <button key={q} onClick={() => ask(q, a, stat, statLabel)} className="fs" style={s("flex:none;font:700 11px/1 'Archivo';color:var(--ink);padding:10px 12px;background:var(--sand);white-space:nowrap")}>{q}</button>)}</div>
-        <div style={s('padding:9px 11px 15px;display:flex;gap:8px;align-items:center')}><div style={s('flex:1;padding:12px 14px;background:var(--sand);border-radius:100px')}><input value={st.irisDraft} onChange={(e: any) => set({ irisDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter' && st.irisDraft.trim()) askFree(st.irisDraft); }} placeholder="Ask about tonight’s match…" style={s("width:100%;font:500 13.5px/1.2 'Archivo';color:var(--ink)")} /></div><button onClick={() => { if (st.irisDraft.trim()) askFree(st.irisDraft); }} style={s("width:44px;height:44px;flex:none;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 16px/1 'Archivo';color:var(--on-panel)")}>↑</button></div>
+        <div style={s('padding:9px 11px 0;display:flex;gap:6px;overflow-x:auto')}>{QA.map(([q, a, stat, statLabel]) => <button key={q} onClick={() => ask(q, a, stat, statLabel)} style={s("flex:none;font:500 13px/1 'Inter';color:var(--ink);padding:11px 14px;background:var(--sand);box-shadow:inset 0 0 0 1px var(--hair);border-radius:999px;white-space:nowrap")}>{q}</button>)}</div>
+        <div style={s('padding:9px 11px 15px;display:flex;gap:8px;align-items:center')}><div style={s('flex:1;padding:12px 14px;background:var(--sand);border-radius:100px')}><input value={st.irisDraft} onChange={(e: any) => set({ irisDraft: e.target.value })} onKeyDown={(e: any) => { if (e.key === 'Enter' && st.irisDraft.trim()) askFree(st.irisDraft); }} placeholder="Ask about tonight’s match…" style={s("width:100%;font:500 13.5px/1.2 'Inter';color:var(--ink)")} /></div><button onClick={() => { if (st.irisDraft.trim()) askFree(st.irisDraft); }} style={s("width:44px;height:44px;flex:none;background:var(--panel);border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 16px/1 'Inter';color:var(--on-panel)")}>↑</button></div>
       </div>
     </div>
   );
 }
 
 const FAN_CSS = `
-:root{--ground:#F6F6F5;--sand:#EEEEEA;--sand2:#D5D5D2;--sand3:#E4E4E2;--ink:#0B1A2D;--body:#32455D;--label:#5D7189;--panel:#0B1A2D;--panel-hover:#15283F;--chrome:#081422;--on-panel:#F2F2F0;--hair:rgba(11,26,45,.12);--desk:#D5D5D2}
-:root[data-theme="dark"]{--ground:#0F161E;--sand:#1A2431;--sand2:#2A394B;--sand3:#1F2B39;--ink:#F2F2F0;--body:#C4C4BF;--label:#7E94B0;--panel:#1E2E42;--panel-hover:#273A52;--chrome:#0E141C;--on-panel:#F2F2F0;--hair:rgba(208,208,204,.12);--desk:#080B0F}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ground:#0F161E;--sand:#1A2431;--sand2:#2A394B;--sand3:#1F2B39;--ink:#F2F2F0;--body:#C4C4BF;--label:#7E94B0;--panel:#1E2E42;--panel-hover:#273A52;--chrome:#0E141C;--on-panel:#F2F2F0;--hair:rgba(208,208,204,.12);--desk:#080B0F}}
+:root{--ground:#F4F5F7;--sand:#FFFFFF;--sand2:#E3E6EB;--sand3:#EEF0F3;--ink:#0B0C0E;--body:#3B4048;--label:#6B717C;--panel:#15171B;--panel-hover:#1D2026;--chrome:#0B0C0E;--on-panel:#F2F3F5;--hair:#E3E6EB;--desk:#DADDE2;--iris:#7FD4FF;--iris-ink:#06202E}
+:root[data-theme="dark"]{--ground:#0B0C0E;--sand:#15171B;--sand2:#2A2E36;--sand3:#1D2026;--ink:#F2F3F5;--body:#C5CAD3;--label:#A3A8B3;--panel:#15171B;--panel-hover:#1D2026;--chrome:#111317;--on-panel:#F2F3F5;--hair:#2A2E36;--desk:#050607;--iris:#7FD4FF;--iris-ink:#06202E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ground:#0B0C0E;--sand:#15171B;--sand2:#2A2E36;--sand3:#1D2026;--ink:#F2F3F5;--body:#C5CAD3;--label:#A3A8B3;--panel:#15171B;--panel-hover:#1D2026;--chrome:#111317;--on-panel:#F2F3F5;--hair:#2A2E36;--desk:#050607;--iris:#7FD4FF;--iris-ink:#06202E}}
+.fs,.frow{border-radius:14px;box-shadow:none !important;outline:1px solid var(--hair);outline-offset:-1px}
+.fp,.fq,.fw{border-radius:999px}
+[data-fanscroll] *{-webkit-font-smoothing:antialiased}
 .ms{font-family:'Material Symbols Rounded';font-weight:400;line-height:1;display:inline-block;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased}
 @keyframes bgRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes bgFade{from{opacity:0}to{opacity:1}}
@@ -2162,7 +2096,7 @@ const FAN_CSS = `
 .fp:hover{background:var(--panel-hover) !important}
 .fh:hover{color:var(--on-panel) !important}
 .fh2:hover{background:var(--panel-hover) !important}
-.fq:hover{background:rgba(242,242,240,.14) !important}
+.fq:hover{background:rgba(242,243,245,.14) !important}
 .fw:hover{background:#fff !important}
 .frow:hover{background:var(--sand3) !important}
 .frow > .ms{transition:transform .13s cubic-bezier(.2,.7,.3,1)}
