@@ -316,7 +316,7 @@ function Dashboard({ st, setState, say }: Props) {
         <div className="m-col" style={s('display:flex;align-items:flex-end;gap:30px')}>
           <div style={s('flex:1;min-width:0')}>
             <div style={s("font:600 11px/1 'Archivo';letter-spacing:.16em;color:#826E99")}>VOLTFORD ATHLETIC · CLUB WORKSPACE</div>
-            <h1 className="m-h1" style={s("font:700 40px/1.02 'Archivo';letter-spacing:-.025em;margin:14px 0 0")}>Your immersive panels</h1>
+            <h1 className="m-h1" style={s("font:700 40px/1.02 'Archivo';letter-spacing:-.025em;margin:14px 0 0")}>Your Connect panels</h1>
             <p style={s("font:400 15px/1.5 'Archivo';color:#513E66;margin:10px 0 0;max-width:520px")}>{st.panels.length} panels across {new Set(st.panels.map((x) => x.sport)).size} competitions, league, cups, women’s and tour. Author each one once, then drive it live on matchday.</p>
           </div>
           <button data-cur="create" className="ah-ink-btn" onClick={() => setState({ screen: 'wizard', step: 0 })} style={s("display:flex;align-items:center;gap:9px;padding:15px 20px;border-radius:14px;background:#1B0B2D;font:600 13.5px/1 'Archivo';color:#F5F5F2;box-shadow:0 8px 20px -10px rgba(27,11,45,.5)")}>
