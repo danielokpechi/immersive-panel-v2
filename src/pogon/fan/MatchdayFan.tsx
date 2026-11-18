@@ -639,9 +639,9 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
                 <div style={s('flex:1;min-width:0;display:flex;justify-content:center')}>
                   {inactive
                     ? <span style={s("display:flex;align-items:center;gap:8px;font:600 15px/1 'Space Grotesk';color:#F2F3F5")}><Badge club="home" size={24} bare />Pogoń Szczecin</span>
-                    : <span style={s('display:flex;align-items:center;gap:7px;padding:5px 12px 5px 7px;border-radius:999px;background:rgba(255,255,255,.1)')}>
+                    : <span style={s('display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:999px;background:rgba(255,255,255,.1);white-space:nowrap')}>
                         <Badge club="home" size={22} bare />
-                        <span style={s("font:600 17px/1 'Space Grotesk';color:#F2F3F5;font-variant-numeric:tabular-nums")}>{st.hs}<span style={s('opacity:.45;padding:0 5px')}>–</span>{st.as}</span>
+                        <span style={s("font:600 17px/1 'Space Grotesk';color:#F2F3F5;font-variant-numeric:tabular-nums;white-space:nowrap")}>{st.hs}<span style={s('opacity:.45;padding:0 4px')}>–</span>{st.as}</span>
                         <Badge club="away" size={22} bare />
                         <span style={{ ...s("display:flex;align-items:center;gap:5px;margin-left:3px;padding:5px 8px;border-radius:999px;font:600 11px/1 'Inter';color:#fff;font-variant-numeric:tabular-nums"), background: live ? '#E32A2D' : 'rgba(255,255,255,.14)' }}>{live && <span style={s('width:6px;height:6px;border-radius:50%;background:#fff;animation:bgBlink 1.6s steps(1,end) infinite')} />}{statusLabel}</span>
                       </span>}

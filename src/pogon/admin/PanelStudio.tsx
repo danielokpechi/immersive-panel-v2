@@ -90,7 +90,7 @@ const PRESETS = [
   { abbr: 'KRY', name: 'Krygier home', blurb: 'Full home template: seat map, to-seat ordering, terrace chat.', c1: '#C8102E', c2: '#FFC709', crestBg: '#C8102E', crestFg: '#fff' },
   { abbr: 'AWY', name: 'Away day', blurb: 'Second-screen template for travelling and at-home members.', c1: '#1B324F', c2: '#C8102E', crestBg: '#1B324F', crestFg: '#fff' },
   { abbr: 'TWA', name: 'Twardowskiego', blurb: "Women's template with its own squad feed and family stand.", c1: '#C8102E', c2: '#FFC709', crestBg: '#C8102E', crestFg: '#fff' },
-  { abbr: 'NEU', name: 'Neutral venue', blurb: 'Cup finals and semis: travel, no ordering, venue plan.', c1: '#0B1A2D', c2: '#C8102E', crestBg: '#0B1A2D', crestFg: '#F5F5F2' },
+  { abbr: 'NEU', name: 'Neutral venue', blurb: 'Cup finals and semis: travel, no ordering, venue plan.', c1: '#0B0C0E', c2: '#C8102E', crestBg: '#0B0C0E', crestFg: '#F4F5F7' },
 ];
 const STEP_DEFS = [
   { label: 'Experience', title: 'How will fans watch?', blurb: 'This sets the live states available to the panel and how fans get in.', hint: 'Pick one to continue' },
@@ -217,20 +217,23 @@ export function PanelStudio({ start = 'dash' }: { start?: string }) {
 
   // The operator console renders in dark mode under autoplay/embed (to sit on
   // the dark corporate site). Colours are mapped by role in s() and ring().
-  setAdmDark(autoplay);
+  const [conTheme, setConTheme] = useState<string>(() => { try { return localStorage.getItem('pogon-console-theme') || 'dark'; } catch { return 'dark'; } });
+  const conDark = autoplay || conTheme === 'dark';
+  setAdmDark(conDark);
   return (
-    <div className={autoplay ? undefined : 'vs-r'} style={dk({ minHeight: '100vh', background: autoplay ? '#0F161E' : '#F5F5F2', color: autoplay ? '#F2F2EF' : '#0B1A2D', fontFamily: 'Archivo,-apple-system,system-ui,sans-serif' })}>
+    <div className={(autoplay ? '' : 'vs-r') + (conDark ? ' adm-dark' : '')} style={dk({ minHeight: '100vh', background: '#F4F5F7', color: '#0B0C0E', fontFamily: 'Inter,-apple-system,system-ui,sans-serif' })}>
       <style>{ADMIN_CSS}</style>
       {cursor.node}
+      {!autoplay && <button onClick={() => { const n = conDark ? 'light' : 'dark'; setConTheme(n); try { localStorage.setItem('pogon-console-theme', n); } catch { /* private mode */ } }} aria-label="Console light or dark" title="Console light / dark" style={dk({ ...s('position:fixed;left:18px;bottom:18px;z-index:70;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#FFFFFF;box-shadow:inset 0 0 0 1px rgba(11,12,14,.12),0 8px 22px -10px rgba(0,0,0,.5)') })}><Ms size={19} color={ctx('#0B0C0E')}>{conDark ? 'light_mode' : 'dark_mode'}</Ms></button>}
       {st.screen === 'dash' && <Dashboard {...{ st, setState, say, broadcast }} />}
       {st.screen === 'wizard' && <Wizard {...{ st, setState, say }} />}
       {st.screen === 'builder' && <Builder {...{ st, setState, say }} />}
       {st.screen === 'stats' && <Stats {...{ st, setState, say }} />}
       {st.screen === 'control' && <Control {...{ st, setState, say, broadcast }} />}
       {st.toast && (
-        <div className="m-toast" style={s('position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:13px;background:#0B1A2D;box-shadow:0 14px 34px -12px rgba(11,26,45,.7);animation:stRise .25s ease both')}>
+        <div className="m-toast" style={s('position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:13px;background:#0B0C0E;box-shadow:0 14px 34px -12px rgba(11,12,14,.7);animation:stRise .25s ease both')}>
           <Ms color={ctx('#C8102E')}>{st.toastIcon}</Ms>
-          <span style={s("font:600 13px/1 'Archivo';color:#F5F5F2")}>{st.toast}</span>
+          <span style={s("font:600 13px/1 'Inter';color:#F4F5F7")}>{st.toast}</span>
         </div>
       )}
     </div>
@@ -251,27 +254,27 @@ function Phone({ st, wizard }: { st: St; wizard: boolean }) {
   const stack = (sess[idx] || { stack: [] }).stack;
   const phase = (sess[idx] || {}).phase || 'IDLE';
   return (
-    <div style={s('width:100%;border-radius:18px;overflow:hidden;background:#F5F5F2;box-shadow:inset 0 0 0 1px rgba(11,26,45,.1)')}>
+    <div style={s('width:100%;border-radius:18px;overflow:hidden;background:#F4F5F7;box-shadow:inset 0 0 0 1px rgba(11,12,14,.1)')}>
       <div style={dk({ ...s('padding:14px 14px 16px'), background: primary })}>
         <div style={s('display:flex;align-items:center;gap:8px')}>
-          <span style={dk({ ...s("width:24px;height:24px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font:700 8px/1 'Archivo'"), color: primary })}>POG</span>
-          <span style={s("font:700 10.5px/1 'Archivo';color:#fff;letter-spacing:.02em")}>{club || 'Panel'}</span>
-          <span style={s("margin-left:auto;font:600 8px/1 'Archivo';letter-spacing:.1em;color:#fff;background:rgba(255,255,255,.24);padding:5px 6px;border-radius:5px")}>{String(phase).toUpperCase()}</span>
+          <span style={dk({ ...s("width:24px;height:24px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font:700 8px/1 'Inter'"), color: primary })}>POG</span>
+          <span style={s("font:700 10.5px/1 'Inter';color:#fff;letter-spacing:.02em")}>{club || 'Panel'}</span>
+          <span style={s("margin-left:auto;font:600 8px/1 'Inter';letter-spacing:.1em;color:#fff;background:rgba(255,255,255,.24);padding:5px 6px;border-radius:5px")}>{String(phase).toUpperCase()}</span>
         </div>
-        <div style={s("font:800 22px/.94 'Archivo Black';color:#fff;margin-top:12px")}>{name}</div>
+        <div style={s("font:800 22px/.94 'Space Grotesk';color:#fff;margin-top:12px")}>{name}</div>
       </div>
       <div style={s('padding:12px 12px 14px;display:flex;flex-direction:column;gap:7px')}>
-        <div style={s("font:600 8.5px/1 'Archivo';letter-spacing:.14em;color:#6E675A")}>MODULE STACK</div>
+        <div style={s("font:600 8.5px/1 'Inter';letter-spacing:.14em;color:#6E675A")}>MODULE STACK</div>
         {stack.length ? stack.map((id, i) => (
           <div key={id + i} style={s('display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;background:#fff')}>
-            <span style={s("width:16px;font:600 8.5px/1 'Archivo';color:#6D819A")}>{i + 1}</span>
-            <span style={s("flex:1;font:600 10.5px/1 'Archivo';color:#0B1A2D")}>{modOf(id).name}</span>
+            <span style={s("width:16px;font:600 8.5px/1 'Inter';color:#6B717C")}>{i + 1}</span>
+            <span style={s("flex:1;font:600 10.5px/1 'Inter';color:#0B0C0E")}>{modOf(id).name}</span>
             <span style={dk({ ...s('width:6px;height:6px;border-radius:50%'), background: accent })} />
           </div>
-        )) : <div style={s("padding:14px 10px;border-radius:9px;background:#fff;font:400 10px/1.4 'Archivo';color:#6D819A")}>No modules selected yet.</div>}
-        <div style={s('margin-top:4px;padding:9px 10px;border-radius:9px;background:#0B1A2D;display:flex;align-items:center;gap:7px')}>
+        )) : <div style={s("padding:14px 10px;border-radius:9px;background:#fff;font:400 10px/1.4 'Inter';color:#6B717C")}>No modules selected yet.</div>}
+        <div style={s('margin-top:4px;padding:9px 10px;border-radius:9px;background:#0B0C0E;display:flex;align-items:center;gap:7px')}>
           <span style={dk({ ...s('width:5px;height:5px;border-radius:50%'), background: accent })} />
-          <span style={s("font:600 9px/1 'Archivo';letter-spacing:.08em;color:#F5F5F2")}>matchday.pogonszczecin.pl</span>
+          <span style={s("font:600 9px/1 'Inter';letter-spacing:.08em;color:#F4F5F7")}>matchday.pogonszczecin.pl</span>
         </div>
       </div>
     </div>
@@ -280,7 +283,7 @@ function Phone({ st, wizard }: { st: St; wizard: boolean }) {
 
 // ── shared header back button ──
 const Back = ({ onClick }: { onClick: () => void }) => (
-  <button className="ah-ink" onClick={onClick} style={s("display:flex;align-items:center;gap:8px;font:600 12.5px/1 'Archivo';color:#3D5067")}>
+  <button className="ah-ink" onClick={onClick} style={s("display:flex;align-items:center;gap:8px;font:600 12.5px/1 'Inter';color:#3B4048")}>
     <Ms color="inherit">arrow_back</Ms>Studio
   </button>
 );
@@ -288,27 +291,27 @@ const Back = ({ onClick }: { onClick: () => void }) => (
 // ════════════ DASHBOARD ════════════
 function Dashboard({ st, setState, say }: Props) {
   const kpis = [
-    { label: 'TOTAL PANELS', v: String(st.panels.length), unit: 'authored', icon: 'dashboard', color: '#0B1A2D' },
+    { label: 'TOTAL PANELS', v: String(st.panels.length), unit: 'authored', icon: 'dashboard', color: '#0B0C0E' },
     { label: 'LIVE NOW', v: String(st.panels.filter((x) => x.live).length), unit: 'broadcasting', icon: 'sensors', color: '#C0473C' },
     { label: 'COMPETITIONS', v: String(new Set(st.panels.map((x) => x.sport)).size), unit: 'covered', icon: 'emoji_events', color: '#C8102E' },
   ];
   return (
     <div>
-      <header className="m-hdr" style={s('display:flex;align-items:center;gap:18px;padding:20px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,26,45,.08)')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:18px;padding:20px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,12,14,.08)')}>
         <div className="m-brand" style={s('display:flex;align-items:center;gap:13px')}>
-          <span style={s('width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(11,26,45,.08)')}><img src={media.clubBadge} alt="Pogoń" style={dk({ width: 30, height: 30, objectFit: 'contain' })} /></span>
+          <span style={s('width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(11,12,14,.08)')}><img src={media.clubBadge} alt="Pogoń" style={dk({ width: 30, height: 30, objectFit: 'contain' })} /></span>
           <div className="m-brand">
-            <div style={s("font:700 15.5px/1 'Archivo';letter-spacing:-.01em")}>Pogoń Szczecin · Matchday Studio</div>
-            <div style={s("font:500 11.5px/1 'Archivo';color:#6D819A;margin-top:5px")}>Club workspace · running on BoltOS</div>
+            <div style={s("font:700 15.5px/1 'Inter';letter-spacing:-.01em")}>Pogoń Szczecin · Matchday Studio</div>
+            <div style={s("font:500 11.5px/1 'Inter';color:#6B717C;margin-top:5px")}>Club workspace · running on BoltOS</div>
           </div>
         </div>
         <div style={s('display:flex;align-items:center;gap:10px;margin-left:auto')}>
-          <button onClick={() => { setState({ panels: clone(PANELS), sessions: clone(SESSIONS), log: [], cur: 0, liveIdx: 2, clock: 38 * 60 + 12 }); say('Demo data restored', 'restart_alt'); }} className="ah m-iconbtn" style={s("display:flex;align-items:center;gap:7px;padding:9px 13px;border-radius:10px;font:600 12.5px/1 'Archivo';color:#3D5067;box-shadow:inset 0 0 0 1px rgba(11,26,45,.12)")}>
-            <Ms size={16} color={ctx('#3D5067')}>restart_alt</Ms><span className="m-hide">Reset demo</span>
+          <button onClick={() => { setState({ panels: clone(PANELS), sessions: clone(SESSIONS), log: [], cur: 0, liveIdx: 2, clock: 38 * 60 + 12 }); say('Demo data restored', 'restart_alt'); }} className="ah m-iconbtn" style={s("display:flex;align-items:center;gap:7px;padding:9px 13px;border-radius:10px;font:600 12.5px/1 'Inter';color:#3B4048;box-shadow:inset 0 0 0 1px rgba(11,12,14,.12)")}>
+            <Ms size={16} color={ctx('#3B4048')}>restart_alt</Ms><span className="m-hide">Reset demo</span>
           </button>
-          <div className="m-chip" style={s('display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:100px;background:#F1F1EE')}>
-            <span style={s("width:30px;height:30px;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font:700 11px/1 'Archivo';color:#fff")}>JJ</span>
-            <div className="m-hide"><div style={s('font:600 12.5px/1')}>Johan Jamal</div><div style={s('font:500 10.5px/1;color:#6D819A;margin-top:4px')}>Studio admin</div></div>
+          <div className="m-chip" style={s('display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:100px;background:#EEF0F3')}>
+            <span style={s("width:30px;height:30px;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font:700 11px/1 'Inter';color:#fff")}>JJ</span>
+            <div className="m-hide"><div style={s('font:600 12.5px/1')}>Johan Jamal</div><div style={s('font:500 10.5px/1;color:#6B717C;margin-top:4px')}>Studio admin</div></div>
           </div>
         </div>
       </header>
@@ -316,19 +319,19 @@ function Dashboard({ st, setState, say }: Props) {
       <section className="m-px" style={s('padding:40px 44px 0;animation:stRise .4s ease both')}>
         <div className="m-col" style={s('display:flex;align-items:flex-end;gap:30px')}>
           <div style={s('flex:1;min-width:0')}>
-            <div style={s("font:600 11px/1 'Archivo';letter-spacing:.16em;color:#6D819A")}>POGOŃ SZCZECIN · CLUB WORKSPACE</div>
-            <h1 className="m-h1" style={s("font:700 40px/1.02 'Archivo';letter-spacing:-.025em;margin:14px 0 0")}>Your Connect panels</h1>
-            <p style={s("font:400 15px/1.5 'Archivo';color:#3D5067;margin:10px 0 0;max-width:520px")}>{st.panels.length} panels across {new Set(st.panels.map((x) => x.sport)).size} competitions, league, cups, women’s and tour. Author each one once, then drive it live on matchday.</p>
+            <div style={s("font:600 11px/1 'Inter';letter-spacing:.16em;color:#6B717C")}>POGOŃ SZCZECIN · CLUB WORKSPACE</div>
+            <h1 className="m-h1" style={s("font:600 40px/1.02 'Space Grotesk';letter-spacing:-.025em;margin:14px 0 0")}>Your Connect panels</h1>
+            <p style={s("font:400 15px/1.5 'Inter';color:#3B4048;margin:10px 0 0;max-width:520px")}>{st.panels.length} panels across {new Set(st.panels.map((x) => x.sport)).size} competitions, league, cups, women’s and tour. Author each one once, then drive it live on matchday.</p>
           </div>
-          <button data-cur="create" className="ah-ink-btn" onClick={() => setState({ screen: 'wizard', step: 0 })} style={s("display:flex;align-items:center;gap:9px;padding:15px 20px;border-radius:14px;background:#0B1A2D;font:600 13.5px/1 'Archivo';color:#F5F5F2;box-shadow:0 8px 20px -10px rgba(11,26,45,.5)")}>
-            <Ms size={19} color={ctx('#F5F5F2')}>add</Ms>Create new panel
+          <button data-cur="create" className="ah-ink-btn" onClick={() => setState({ screen: 'wizard', step: 0 })} style={s("display:flex;align-items:center;gap:9px;padding:15px 20px;border-radius:14px;background:#0B0C0E;font:600 13.5px/1 'Inter';color:#F4F5F7;box-shadow:0 8px 20px -10px rgba(11,12,14,.5)")}>
+            <Ms size={19} color={ctx('#F4F5F7')}>add</Ms>Create new panel
           </button>
         </div>
         <div className="m-kpis" style={s('display:flex;gap:20px;margin-top:24px')}>
           {kpis.map((k) => (
-            <div key={k.label} style={s('flex:1;padding:18px 20px;background:#FFFFFF;border-radius:16px;box-shadow:0 1px 2px rgba(11,26,45,.05)')}>
-              <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color={k.color}>{k.icon}</Ms><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#6D819A")}>{k.label}</span></div>
-              <div style={s('display:flex;align-items:baseline;gap:9px;margin-top:14px')}><span style={s("font:800 34px/.9 'Archivo Black';letter-spacing:.01em")}>{k.v}</span><span style={s("font:500 12px/1 'Archivo';color:#6D819A")}>{k.unit}</span></div>
+            <div key={k.label} style={s('flex:1;padding:18px 20px;background:#FFFFFF;border-radius:16px;box-shadow:0 1px 2px rgba(11,12,14,.05)')}>
+              <div style={s('display:flex;align-items:center;gap:8px')}><Ms size={17} color={k.color}>{k.icon}</Ms><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#6B717C")}>{k.label}</span></div>
+              <div style={s('display:flex;align-items:baseline;gap:9px;margin-top:14px')}><span style={s("font:800 34px/.9 'Space Grotesk';letter-spacing:.01em")}>{k.v}</span><span style={s("font:500 12px/1 'Inter';color:#6B717C")}>{k.unit}</span></div>
             </div>
           ))}
         </div>
@@ -336,44 +339,44 @@ function Dashboard({ st, setState, say }: Props) {
 
       <section className="m-px" style={s('padding:34px 44px 20px')}>
         <div style={s('display:flex;align-items:center;gap:10px')}>
-          <span style={s("font:600 11px/1 'Archivo';letter-spacing:.16em;color:#6D819A")}>ALL PANELS</span>
-          <span style={s('flex:1;height:1px;background:rgba(11,26,45,.08)')} />
+          <span style={s("font:600 11px/1 'Inter';letter-spacing:.16em;color:#6B717C")}>ALL PANELS</span>
+          <span style={s('flex:1;height:1px;background:rgba(11,12,14,.08)')} />
         </div>
         <div className="m-g3" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px')}>
           {st.panels.map((x, i) => {
-            const statusColor = x.live ? '#C0473C' : '#6D819A';
+            const statusColor = x.live ? '#C0473C' : '#6B717C';
             const tags = x.mods.slice(0, 5).map((id) => modOf(id).name).concat(x.mods.length > 5 ? [`+${x.mods.length - 5} more`] : []);
             return (
-              <div key={x.id} style={{ ...s('background:#FFFFFF;border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(11,26,45,.05);animation:stRise .4s ease both'), borderTop: `3px solid ${statusColor}` }}>
+              <div key={x.id} style={{ ...s('background:#FFFFFF;border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(11,12,14,.05);animation:stRise .4s ease both'), borderTop: `3px solid ${statusColor}` }}>
                 <div style={{ ...s('position:relative;height:124px;display:flex;align-items:flex-end;padding:16px'), background: `linear-gradient(135deg,${x.primary} 0%,${x.primary}CC 55%,${x.accent} 140%)` }}>
-                  <span style={s("font:800 26px/.9 'Archivo Black';letter-spacing:.01em;color:#fff")}>{x.club}</span>
+                  <span style={s("font:800 26px/.9 'Space Grotesk';letter-spacing:.01em;color:#fff")}>{x.club}</span>
                   <span style={s('position:absolute;right:14px;top:14px;display:flex;gap:7px')}>
-                    <span style={{ ...s("display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:8px;font:600 9.5px/1 'Archivo';letter-spacing:.1em"), background: 'rgba(255,255,255,.94)', color: '#0B1A2D' }}><Ms size={13} color="#0B1A2D">{x.venueIcon}</Ms>{x.venue}</span>
-                    <button className="ah-del" onClick={() => { setState((s2) => ({ panels: s2.panels.filter((_, j) => j !== i), cur: 0 })); say('Panel deleted', 'delete'); }} style={{ ...s('width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center'), background: 'rgba(255,255,255,.94)' }}><Ms size={15} color="#0B1A2D">delete</Ms></button>
+                    <span style={{ ...s("display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:8px;font:600 9.5px/1 'Inter';letter-spacing:.1em"), background: 'rgba(255,255,255,.94)', color: '#0B0C0E' }}><Ms size={13} color="#0B0C0E">{x.venueIcon}</Ms>{x.venue}</span>
+                    <button className="ah-del" onClick={() => { setState((s2) => ({ panels: s2.panels.filter((_, j) => j !== i), cur: 0 })); say('Panel deleted', 'delete'); }} style={{ ...s('width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center'), background: 'rgba(255,255,255,.94)' }}><Ms size={15} color="#0B0C0E">delete</Ms></button>
                   </span>
                 </div>
                 <div style={s('padding:17px 18px 18px')}>
                   <div style={s('display:flex;align-items:center;gap:9px')}>
-                    <span style={s("font:700 16.5px/1.15 'Archivo';letter-spacing:-.012em;flex:1;min-width:0")}>{x.title}</span>
-                    <span style={s("font:600 9.5px/1 'Archivo';letter-spacing:.1em;color:#3D5067;padding:6px 8px;border-radius:7px;background:#F1F1EE;white-space:nowrap")}>{x.experience}</span>
+                    <span style={s("font:700 16.5px/1.15 'Inter';letter-spacing:-.012em;flex:1;min-width:0")}>{x.title}</span>
+                    <span style={s("font:600 9.5px/1 'Inter';letter-spacing:.1em;color:#3B4048;padding:6px 8px;border-radius:7px;background:#EEF0F3;white-space:nowrap")}>{x.experience}</span>
                   </div>
-                  <div style={s("font:400 13px/1.45 'Archivo';color:#3D5067;margin-top:8px")}>{x.desc}</div>
-                  <div style={dk({ ...s('display:flex;align-items:center;gap:8px;margin-top:14px;padding:10px 12px;border-radius:11px'), background: x.live ? 'rgba(192,71,60,.08)' : 'rgba(11,26,45,.05)' })}>
+                  <div style={s("font:400 13px/1.45 'Inter';color:#3B4048;margin-top:8px")}>{x.desc}</div>
+                  <div style={dk({ ...s('display:flex;align-items:center;gap:8px;margin-top:14px;padding:10px 12px;border-radius:11px'), background: x.live ? 'rgba(192,71,60,.08)' : 'rgba(11,12,14,.05)' })}>
                     <span style={dk({ ...s('width:8px;height:8px;border-radius:50%'), background: statusColor, animation: x.live ? 'stPulse 2.4s ease-out infinite' : 'none' })} />
-                    <span style={dk({ ...s("font:600 11.5px/1 'Archivo'"), color: statusColor })}>{x.live ? `Live · ${x.fans.toFixed(1)}k fans · ${x.mods.length} modules` : `Draft · ${x.mods.length} modules configured`}</span>
+                    <span style={dk({ ...s("font:600 11.5px/1 'Inter'"), color: statusColor })}>{x.live ? `Live · ${x.fans.toFixed(1)}k fans · ${x.mods.length} modules` : `Draft · ${x.mods.length} modules configured`}</span>
                   </div>
                   <div style={s('display:flex;flex-wrap:wrap;gap:5px;margin-top:14px')}>
-                    {tags.map((t, j) => <span key={j} style={s("font:500 11px/1 'Archivo';color:#3D5067;padding:6px 8px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(11,26,45,.1)")}>{t}</span>)}
+                    {tags.map((t, j) => <span key={j} style={s("font:500 11px/1 'Inter';color:#3B4048;padding:6px 8px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(11,12,14,.1)")}>{t}</span>)}
                   </div>
-                  <div style={s("display:flex;align-items:center;gap:8px;margin-top:15px;padding-top:13px;border-top:1px solid rgba(11,26,45,.08);font:500 11px/1 'Archivo';color:#6D819A")}>
-                    <Ms size={14} color={ctx('#6D819A')}>schedule</Ms>{x.updated}
+                  <div style={s("display:flex;align-items:center;gap:8px;margin-top:15px;padding-top:13px;border-top:1px solid rgba(11,12,14,.08);font:500 11px/1 'Inter';color:#6B717C")}>
+                    <Ms size={14} color={ctx('#6B717C')}>schedule</Ms>{x.updated}
                     <span style={s('margin-left:auto;font-variant-numeric:tabular-nums')}>{x.id}</span>
                   </div>
                   <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px')}>
-                    <button className="ah-ink-btn" onClick={() => setState({ screen: 'control', cur: i })} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;background:#0B1A2D;font:600 12px/1 'Archivo';color:#F5F5F2")}><Ms size={16} color={ctx('#F5F5F2')}>{x.live ? 'settings_input_antenna' : 'rocket_launch'}</Ms>{x.live ? 'Control room' : 'Go live'}</button>
-                    <button className="ah" onClick={() => { openFan(x.id); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;font:600 12px/1 'Archivo';color:#0B1A2D;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14)")}><Ms size={16} color={ctx('#0B1A2D')}>smartphone</Ms>Fan view</button>
-                    <button className="ah" onClick={() => setState({ screen: 'builder', cur: i })} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;font:600 12px/1 'Archivo';color:#0B1A2D;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14)")}><Ms size={16} color={ctx('#0B1A2D')}>tune</Ms>Settings</button>
-                    <button className="ah" onClick={() => setState({ screen: 'stats', cur: i })} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;font:600 12px/1 'Archivo';color:#0B1A2D;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14)")}><Ms size={16} color={ctx('#0B1A2D')}>insights</Ms>Stats</button>
+                    <button className="ah-ink-btn" onClick={() => setState({ screen: 'control', cur: i })} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;background:#0B0C0E;font:600 12px/1 'Inter';color:#F4F5F7")}><Ms size={16} color={ctx('#F4F5F7')}>{x.live ? 'settings_input_antenna' : 'rocket_launch'}</Ms>{x.live ? 'Control room' : 'Go live'}</button>
+                    <button className="ah" onClick={() => { openFan(x.id); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;font:600 12px/1 'Inter';color:#0B0C0E;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14)")}><Ms size={16} color={ctx('#0B0C0E')}>smartphone</Ms>Fan view</button>
+                    <button className="ah" onClick={() => setState({ screen: 'builder', cur: i })} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;font:600 12px/1 'Inter';color:#0B0C0E;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14)")}><Ms size={16} color={ctx('#0B0C0E')}>tune</Ms>Settings</button>
+                    <button className="ah" onClick={() => setState({ screen: 'stats', cur: i })} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:11px;font:600 12px/1 'Inter';color:#0B0C0E;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14)")}><Ms size={16} color={ctx('#0B0C0E')}>insights</Ms>Stats</button>
                   </div>
                 </div>
               </div>
@@ -382,9 +385,9 @@ function Dashboard({ st, setState, say }: Props) {
         </div>
       </section>
 
-      <footer className="m-foot" style={s("display:flex;align-items:center;gap:14px;padding:28px 44px 34px;margin-top:20px;border-top:1px solid rgba(11,26,45,.08);font:500 11.5px/1 'Archivo';color:#6D819A")}>
+      <footer className="m-foot" style={s("display:flex;align-items:center;gap:14px;padding:28px 44px 34px;margin-top:20px;border-top:1px solid rgba(11,12,14,.08);font:500 11.5px/1 'Inter';color:#6B717C")}>
         <span>© 2026 Pogoń Szczecin S.A. · BoltOS Studio licence</span><span className="m-hide">·</span><span>Panels served from matchday.pogonszczecin.pl</span>
-        <a href="#support" className="m-ml0" style={s('margin-left:auto;font-weight:600;color:#3D5067')}>studio-support@pogonszczecin.pl</a>
+        <a href="#support" className="m-ml0" style={s('margin-left:auto;font-weight:600;color:#3B4048')}>studio-support@pogonszczecin.pl</a>
       </footer>
     </div>
   );
@@ -414,11 +417,11 @@ function Wizard({ st, setState, say }: Props) {
   ];
   return (
     <div style={s('animation:stFade .3s ease both')}>
-      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:16px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,26,45,.08)')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:16px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,12,14,.08)')}>
         <Back onClick={() => setState({ screen: 'dash' })} />
-        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(11,26,45,.12)')} />
-        <span style={s("font:700 14px/1 'Archivo';letter-spacing:-.01em")}>Create a new panel</span>
-        <span style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#6D819A;padding:6px 9px;border-radius:8px;background:#F1F1EE;margin-left:auto")}>STEP {st.step + 1} OF 5</span>
+        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(11,12,14,.12)')} />
+        <span style={s("font:700 14px/1 'Inter';letter-spacing:-.01em")}>Create a new panel</span>
+        <span style={s("font:600 10px/1 'Inter';letter-spacing:.12em;color:#6B717C;padding:6px 9px;border-radius:8px;background:#EEF0F3;margin-left:auto")}>STEP {st.step + 1} OF 5</span>
       </header>
       <div className="m-col m-body" style={s('display:flex;gap:40px;padding:32px 44px 48px')}>
         <div style={s('flex:1;min-width:0')}>
@@ -428,26 +431,26 @@ function Wizard({ st, setState, say }: Props) {
               return (
                 <div key={i} style={s('display:flex;align-items:center;gap:11px;flex:1')}>
                   <button onClick={() => setState({ step: i })} style={s('display:flex;align-items:center;gap:10px')}>
-                    <span style={dk({ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:600 12px/1 'Archivo'"), background: done ? '#C8102E' : cur ? '#0B1A2D' : '#FFFFFF', color: cur ? '#F5F5F2' : '#6D819A', boxShadow: i > st.step ? 'inset 0 0 0 1px rgba(11,26,45,.16)' : 'none' })}>
+                    <span style={dk({ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:600 12px/1 'Inter'"), background: done ? '#C8102E' : cur ? '#0B0C0E' : '#FFFFFF', color: cur ? '#F4F5F7' : '#6B717C', boxShadow: i > st.step ? 'inset 0 0 0 1px rgba(11,12,14,.16)' : 'none' })}>
                       {done ? <Ms size={16} color="#fff">check</Ms> : cur ? i + 1 : i + 1}
                     </span>
-                    <span data-lbl style={dk({ ...s("font:600 12.5px/1 'Archivo';white-space:nowrap"), color: cur ? '#0B1A2D' : '#6D819A' })}>{step.label}</span>
+                    <span data-lbl style={dk({ ...s("font:600 12.5px/1 'Inter';white-space:nowrap"), color: cur ? '#0B0C0E' : '#6B717C' })}>{step.label}</span>
                   </button>
-                  {i < 4 && <span style={s('flex:1;height:1px;background:rgba(11,26,45,.14);margin:0 6px')} />}
+                  {i < 4 && <span style={s('flex:1;height:1px;background:rgba(11,12,14,.14);margin:0 6px')} />}
                 </div>
               );
             })}
           </div>
 
-          <div className="m-card" style={s('margin-top:30px;padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,26,45,.05);min-height:520px')}>
-            <h2 className="m-big" style={s("font:700 26px/1.1 'Archivo';letter-spacing:-.022em;margin:0")}>{def.title}</h2>
-            <p style={s("font:400 14px/1.5 'Archivo';color:#3D5067;margin:9px 0 0;max-width:560px")}>{def.blurb}</p>
+          <div className="m-card" style={s('margin-top:30px;padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,12,14,.05);min-height:520px')}>
+            <h2 className="m-big" style={s("font:600 26px/1.1 'Space Grotesk';letter-spacing:-.022em;margin:0")}>{def.title}</h2>
+            <p style={s("font:400 14px/1.5 'Inter';color:#3B4048;margin:9px 0 0;max-width:560px")}>{def.blurb}</p>
 
             {st.step === 0 && (
               <div className="m-g1" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px')}>
                 {[{ id: 'STREAM', name: 'Online Stream', icon: 'live_tv', blurb: 'Second screen alongside a broadcast.' }, { id: 'VOD', name: 'VOD (On-Demand)', icon: 'ondemand_video', blurb: 'Replays the authored session flow.' }, { id: 'IN-PERSON', name: 'In-Person Event', icon: 'stadium', blurb: 'QR at the ground, seat-aware modules.' }].map((e) => {
                   const on = d.experience === e.id;
-                  return <button key={e.id} data-cur={'exp-' + e.id} className="ah" onClick={() => setDraft({ experience: e.id })} style={dk({ ...s('padding:20px;border-radius:16px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}><Ms size={26} color={ctx('#0B1A2D')}>{e.icon}</Ms><div style={s("font:700 15px/1.2 'Archivo';color:#0B1A2D;margin-top:16px")}>{e.name}</div><div style={s("font:400 12.5px/1.45 'Archivo';color:#3D5067;margin-top:6px")}>{e.blurb}</div></button>;
+                  return <button key={e.id} data-cur={'exp-' + e.id} className="ah" onClick={() => setDraft({ experience: e.id })} style={dk({ ...s('padding:20px;border-radius:16px'), background: on ? '#EEF0F3' : '#FFFFFF', boxShadow: ring(on) })}><Ms size={26} color={ctx('#0B0C0E')}>{e.icon}</Ms><div style={s("font:700 15px/1.2 'Inter';color:#0B0C0E;margin-top:16px")}>{e.name}</div><div style={s("font:400 12.5px/1.45 'Inter';color:#3B4048;margin-top:6px")}>{e.blurb}</div></button>;
                 })}
               </div>
             )}
@@ -455,19 +458,19 @@ function Wizard({ st, setState, say }: Props) {
             {st.step === 1 && (
               <>
                 <div className="m-g2" style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-top:26px')}>
-                  {SPORTS.map((sp) => { const on = d.sport === sp.id; return <button key={sp.id} data-cur={'sport-' + sp.id} className="ah" onClick={() => setDraft({ sport: sp.id })} style={dk({ ...s('padding:16px 14px;border-radius:14px;text-align:center'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}><Ms size={23} color={ctx('#0B1A2D')}>{sp.icon}</Ms><div style={s("font:600 12.5px/1.2 'Archivo';color:#0B1A2D;margin-top:11px")}>{sp.name}</div><div style={s("font:500 10px/1.2 'Archivo';color:#6D819A;margin-top:5px")}>{sp.states}</div></button>; })}
+                  {SPORTS.map((sp) => { const on = d.sport === sp.id; return <button key={sp.id} data-cur={'sport-' + sp.id} className="ah" onClick={() => setDraft({ sport: sp.id })} style={dk({ ...s('padding:16px 14px;border-radius:14px;text-align:center'), background: on ? '#EEF0F3' : '#FFFFFF', boxShadow: ring(on) })}><Ms size={23} color={ctx('#0B0C0E')}>{sp.icon}</Ms><div style={s("font:600 12.5px/1.2 'Inter';color:#0B0C0E;margin-top:11px")}>{sp.name}</div><div style={s("font:500 10px/1.2 'Inter';color:#6B717C;margin-top:5px")}>{sp.states}</div></button>; })}
                 </div>
-                <div style={s('display:flex;align-items:flex-start;gap:11px;margin-top:22px;padding:15px 17px;border-radius:14px;background:#F1F1EE')}><Ms color={ctx('#C8102E')}>info</Ms><div style={s("font:400 12.5px/1.5 'Archivo';color:#3D5067")}>Every football competition brings Idle · Pre · Live · Break · Post, plus goal, VAR, substitution, card and man-of-the-match triggers. Cup ties add an aggregate line; tour panels add time-zone handling.</div></div>
+                <div style={s('display:flex;align-items:flex-start;gap:11px;margin-top:22px;padding:15px 17px;border-radius:14px;background:#EEF0F3')}><Ms color={ctx('#C8102E')}>info</Ms><div style={s("font:400 12.5px/1.5 'Inter';color:#3B4048")}>Every football competition brings Idle · Pre · Live · Break · Post, plus goal, VAR, substitution, card and man-of-the-match triggers. Cup ties add an aggregate line; tour panels add time-zone handling.</div></div>
               </>
             )}
 
             {st.step === 2 && (
               <div className="m-g1" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px')}>
                 {PRESETS.map((t, i) => { const on = d.preset === i; return (
-                  <button key={i} data-cur={'tmpl-' + i} className="ah" onClick={() => setDraft({ preset: i, primary: t.c1, accent: t.c2 })} style={dk({ ...s('padding:18px;border-radius:16px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}>
-                    <div style={s('display:flex;align-items:center;gap:11px')}><span style={dk({ ...s("width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 10.5px/1 'Archivo'"), background: t.crestBg, color: t.crestFg })}>{t.abbr}</span><span style={s("font:700 14px/1.15 'Archivo';color:#0B1A2D;flex:1;min-width:0")}>{t.name}</span></div>
+                  <button key={i} data-cur={'tmpl-' + i} className="ah" onClick={() => setDraft({ preset: i, primary: t.c1, accent: t.c2 })} style={dk({ ...s('padding:18px;border-radius:16px'), background: on ? '#EEF0F3' : '#FFFFFF', boxShadow: ring(on) })}>
+                    <div style={s('display:flex;align-items:center;gap:11px')}><span style={dk({ ...s("width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 10.5px/1 'Inter'"), background: t.crestBg, color: t.crestFg })}>{t.abbr}</span><span style={s("font:700 14px/1.15 'Inter';color:#0B0C0E;flex:1;min-width:0")}>{t.name}</span></div>
                     <div style={s('display:flex;gap:5px;margin-top:15px')}><span style={dk({ ...s('flex:1;height:8px;border-radius:4px'), background: t.c1 })} /><span style={dk({ ...s('flex:1;height:8px;border-radius:4px'), background: t.c2 })} /></div>
-                    <div style={s("font:400 12px/1.45 'Archivo';color:#3D5067;margin-top:12px")}>{t.blurb}</div>
+                    <div style={s("font:400 12px/1.45 'Inter';color:#3B4048;margin-top:12px")}>{t.blurb}</div>
                   </button>
                 ); })}
               </div>
@@ -476,13 +479,13 @@ function Wizard({ st, setState, say }: Props) {
             {st.step === 3 && (
               <>
                 <div style={s('display:flex;align-items:center;gap:7px;margin-top:24px;flex-wrap:wrap')}>
-                  {d.sessions.map((x, i) => { const on = d.editIdx === i; return <button key={i} onClick={() => setDraft({ editIdx: i })} style={dk({ ...s('display:flex;align-items:center;gap:8px;padding:11px 13px;border-radius:12px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}><span style={dk({ ...s('width:7px;height:7px;border-radius:50%'), background: PHASE_COLOR[x.phase] || '#6D819A' })} /><span style={s("font:600 12.5px/1 'Archivo';color:#0B1A2D")}>{x.name}</span><span style={dk({ ...s("font:600 10px/1 'Archivo'"), color: on ? '#0B1A2D' : '#6D819A' })}>{x.stack.length}</span></button>; })}
-                  <button className="ah" onClick={() => setDraft({ sessions: [...d.sessions, { name: 'New state', phase: 'Live', stack: [] }], editIdx: d.sessions.length })} style={s("display:flex;align-items:center;gap:6px;padding:11px 13px;border-radius:12px;font:600 12px/1 'Archivo';color:#3D5067;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14)")}><Ms size={15} color="inherit">add</Ms>Add state</button>
+                  {d.sessions.map((x, i) => { const on = d.editIdx === i; return <button key={i} onClick={() => setDraft({ editIdx: i })} style={dk({ ...s('display:flex;align-items:center;gap:8px;padding:11px 13px;border-radius:12px'), background: on ? '#EEF0F3' : '#FFFFFF', boxShadow: ring(on) })}><span style={dk({ ...s('width:7px;height:7px;border-radius:50%'), background: PHASE_COLOR[x.phase] || '#6B717C' })} /><span style={s("font:600 12.5px/1 'Inter';color:#0B0C0E")}>{x.name}</span><span style={dk({ ...s("font:600 10px/1 'Inter'"), color: on ? '#0B0C0E' : '#6B717C' })}>{x.stack.length}</span></button>; })}
+                  <button className="ah" onClick={() => setDraft({ sessions: [...d.sessions, { name: 'New state', phase: 'Live', stack: [] }], editIdx: d.sessions.length })} style={s("display:flex;align-items:center;gap:6px;padding:11px 13px;border-radius:12px;font:600 12px/1 'Inter';color:#3B4048;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14)")}><Ms size={15} color="inherit">add</Ms>Add state</button>
                 </div>
                 <div className="m-col" style={s('display:flex;gap:20px;margin-top:18px')}>
-                  <div style={s('flex:1;min-width:0;padding:18px;border-radius:14px;background:#F1F1EE')}>
-                    <div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.13em;color:#6D819A")}>ON SCREEN IN “{editState.name}”</span><span style={s("font:500 11px/1 'Archivo';color:#6D819A;margin-left:auto")}>Top to bottom</span></div>
-                    {editState.stack.length === 0 && <div style={s("margin-top:12px;padding:16px;border-radius:12px;background:#FFFFFF;font:400 12.5px/1.5 'Archivo';color:#6D819A")}>Nothing in this state yet, add blocks from the library on the right.</div>}
+                  <div style={s('flex:1;min-width:0;padding:18px;border-radius:14px;background:#EEF0F3')}>
+                    <div style={s('display:flex;align-items:center;gap:9px')}><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.13em;color:#6B717C")}>ON SCREEN IN “{editState.name}”</span><span style={s("font:500 11px/1 'Inter';color:#6B717C;margin-left:auto")}>Top to bottom</span></div>
+                    {editState.stack.length === 0 && <div style={s("margin-top:12px;padding:16px;border-radius:12px;background:#FFFFFF;font:400 12.5px/1.5 'Inter';color:#6B717C")}>Nothing in this state yet, add blocks from the library on the right.</div>}
                     <div style={s('display:flex;flex-direction:column;gap:7px;margin-top:12px')}>
                       {editState.stack.map((id, j) => {
                         const m = modOf(id);
@@ -490,59 +493,59 @@ function Wizard({ st, setState, say }: Props) {
                         return (
                           <div key={id + j} style={s('display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;background:#FFFFFF')}>
                             <div style={s('display:flex;flex-direction:column;gap:2px')}>
-                              <button className="ah2" onClick={() => move(-1)} style={s('width:22px;height:16px;border-radius:5px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#3D5067')}>keyboard_arrow_up</Ms></button>
-                              <button className="ah2" onClick={() => move(1)} style={s('width:22px;height:16px;border-radius:5px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#3D5067')}>keyboard_arrow_down</Ms></button>
+                              <button className="ah2" onClick={() => move(-1)} style={s('width:22px;height:16px;border-radius:5px;background:#EEF0F3;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#3B4048')}>keyboard_arrow_up</Ms></button>
+                              <button className="ah2" onClick={() => move(1)} style={s('width:22px;height:16px;border-radius:5px;background:#EEF0F3;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#3B4048')}>keyboard_arrow_down</Ms></button>
                             </div>
-                            <span style={s("width:18px;font:700 11.5px/1 'Archivo';color:#6D819A;font-variant-numeric:tabular-nums")}>{j + 1}</span>
-                            <Ms color={ctx('#0B1A2D')}>{m.icon}</Ms>
-                            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 13px/1.2 'Archivo';color:#0B1A2D")}>{m.name}</span><span style={s("display:block;font:400 11px/1.3 'Archivo';color:#6D819A;margin-top:4px")}>{m.blurb}</span></span>
-                            <button className="ah-del" onClick={() => setDraft({ sessions: mutSess(d.sessions, d.editIdx, (arr) => arr.splice(j, 1)) })} style={s('width:28px;height:28px;border-radius:9px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={15} color={ctx('#C0473C')}>close</Ms></button>
+                            <span style={s("width:18px;font:700 11.5px/1 'Inter';color:#6B717C;font-variant-numeric:tabular-nums")}>{j + 1}</span>
+                            <Ms color={ctx('#0B0C0E')}>{m.icon}</Ms>
+                            <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 13px/1.2 'Inter';color:#0B0C0E")}>{m.name}</span><span style={s("display:block;font:400 11px/1.3 'Inter';color:#6B717C;margin-top:4px")}>{m.blurb}</span></span>
+                            <button className="ah-del" onClick={() => setDraft({ sessions: mutSess(d.sessions, d.editIdx, (arr) => arr.splice(j, 1)) })} style={s('width:28px;height:28px;border-radius:9px;background:#EEF0F3;display:flex;align-items:center;justify-content:center')}><Ms size={15} color={ctx('#C0473C')}>close</Ms></button>
                           </div>
                         );
                       })}
                     </div>
                   </div>
-                  <div className="m-full" style={s('width:290px;flex:none;padding:18px;border-radius:16px;background:#FFFFFF;box-shadow:inset 0 0 0 1px rgba(11,26,45,.08)')}>
-                    <div style={s("font:600 10.5px/1 'Archivo';letter-spacing:.13em;color:#6D819A")}>BLOCK LIBRARY</div>
+                  <div className="m-full" style={s('width:290px;flex:none;padding:18px;border-radius:16px;background:#FFFFFF;box-shadow:inset 0 0 0 1px rgba(11,12,14,.08)')}>
+                    <div style={s("font:600 10.5px/1 'Inter';letter-spacing:.13em;color:#6B717C")}>BLOCK LIBRARY</div>
                     <div style={s('display:flex;flex-direction:column;gap:6px;margin-top:12px')}>
                       {MODULES.map((m) => { const on = editState.stack.indexOf(m.id) > -1; return (
-                        <button key={m.id} data-cur={'mod-' + m.id} className="ah" onClick={() => setDraft({ sessions: mutSess(d.sessions, d.editIdx, (arr) => { const k = arr.indexOf(m.id); if (k > -1) arr.splice(k, 1); else arr.push(m.id); }) })} style={dk({ ...s('display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:11px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}>
-                          <Ms color={on ? ctx('#0B1A2D') : ctx('#6D819A')}>{m.icon}</Ms>
-                          <span style={s("flex:1;min-width:0;font:600 12.5px/1 'Archivo';color:#0B1A2D")}>{m.name}</span>
-                          <Ms size={17} color={on ? '#C8102E' : '#6D819A'}>{on ? 'check_circle' : 'add_circle'}</Ms>
+                        <button key={m.id} data-cur={'mod-' + m.id} className="ah" onClick={() => setDraft({ sessions: mutSess(d.sessions, d.editIdx, (arr) => { const k = arr.indexOf(m.id); if (k > -1) arr.splice(k, 1); else arr.push(m.id); }) })} style={dk({ ...s('display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:11px'), background: on ? '#EEF0F3' : '#FFFFFF', boxShadow: ring(on) })}>
+                          <Ms color={on ? ctx('#0B0C0E') : ctx('#6B717C')}>{m.icon}</Ms>
+                          <span style={s("flex:1;min-width:0;font:600 12.5px/1 'Inter';color:#0B0C0E")}>{m.name}</span>
+                          <Ms size={17} color={on ? '#C8102E' : '#6B717C'}>{on ? 'check_circle' : 'add_circle'}</Ms>
                         </button>
                       ); })}
                     </div>
-                    <div style={s("font:400 11.5px/1.5 'Archivo';color:#6D819A;margin-top:13px")}>Adding a block puts it at the bottom of this state. A block can appear in as many states as you like.</div>
+                    <div style={s("font:400 11.5px/1.5 'Inter';color:#6B717C;margin-top:13px")}>Adding a block puts it at the bottom of this state. A block can appear in as many states as you like.</div>
                   </div>
                 </div>
-                <div style={s("font:400 12.5px/1.5 'Archivo';color:#6D819A;margin-top:16px")}>{d.sessions.length} states · {([] as string[]).concat(...d.sessions.map((x) => x.stack)).filter((v, i, a) => a.indexOf(v) === i).length} distinct blocks in play · every state and stack stays editable in the builder, and modules can be toggled live from the control room mid-match.</div>
+                <div style={s("font:400 12.5px/1.5 'Inter';color:#6B717C;margin-top:16px")}>{d.sessions.length} states · {([] as string[]).concat(...d.sessions.map((x) => x.stack)).filter((v, i, a) => a.indexOf(v) === i).length} distinct blocks in play · every state and stack stays editable in the builder, and modules can be toggled live from the control room mid-match.</div>
               </>
             )}
 
             {st.step === 4 && (
               <div className="m-g1" style={s('display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px')}>
-                <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Archivo';letter-spacing:.12em;color:#6D819A")}>PANEL NAME</div><input data-cur="name" value={d.name} onChange={(e) => setDraft({ name: e.target.value })} placeholder="The Krygier Matchday Companion" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#F1F1EE;font:600 15px/1.2 'Archivo';color:#0B1A2D")} /></div>
-                <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Archivo';letter-spacing:.12em;color:#6D819A")}>DESCRIPTION</div><input data-cur="desc" value={d.desc} onChange={(e) => setDraft({ desc: e.target.value })} placeholder="What fans get when they scan the QR" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#F1F1EE;font:400 14px/1.2 'Archivo';color:#0B1A2D")} /></div>
-                <div><div style={s("font:600 11px/1 'Archivo';letter-spacing:.12em;color:#6D819A")}>PRIMARY COLOUR</div><div style={s('display:flex;gap:8px;margin-top:9px')}>{PRIMARIES.map((hex, i) => <button key={hex} data-cur={'primary-' + i} onClick={() => setDraft({ primary: hex })} style={dk({ ...s('flex:1;height:46px;border-radius:12px'), background: hex, boxShadow: ring(d.primary === hex) })} />)}</div><div style={s("font:500 11.5px/1 'Archivo';color:#6D819A;margin-top:9px;font-variant-numeric:tabular-nums")}>{d.primary}</div></div>
-                <div><div style={s("font:600 11px/1 'Archivo';letter-spacing:.12em;color:#6D819A")}>ACCENT COLOUR</div><div style={s('display:flex;gap:8px;margin-top:9px')}>{ACCENTS.map((hex) => <button key={hex} onClick={() => setDraft({ accent: hex })} style={dk({ ...s('flex:1;height:46px;border-radius:12px'), background: hex, boxShadow: ring(d.accent === hex) })} />)}</div><div style={s("font:500 11.5px/1 'Archivo';color:#6D819A;margin-top:9px;font-variant-numeric:tabular-nums")}>{d.accent}</div></div>
+                <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Inter';letter-spacing:.12em;color:#6B717C")}>PANEL NAME</div><input data-cur="name" value={d.name} onChange={(e) => setDraft({ name: e.target.value })} placeholder="The Krygier Matchday Companion" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#EEF0F3;font:600 15px/1.2 'Inter';color:#0B0C0E")} /></div>
+                <div style={s('grid-column:span 2')}><div style={s("font:600 11px/1 'Inter';letter-spacing:.12em;color:#6B717C")}>DESCRIPTION</div><input data-cur="desc" value={d.desc} onChange={(e) => setDraft({ desc: e.target.value })} placeholder="What fans get when they scan the QR" style={s("width:100%;margin-top:9px;padding:15px 16px;border-radius:13px;background:#EEF0F3;font:400 14px/1.2 'Inter';color:#0B0C0E")} /></div>
+                <div><div style={s("font:600 11px/1 'Inter';letter-spacing:.12em;color:#6B717C")}>PRIMARY COLOUR</div><div style={s('display:flex;gap:8px;margin-top:9px')}>{PRIMARIES.map((hex, i) => <button key={hex} data-cur={'primary-' + i} onClick={() => setDraft({ primary: hex })} style={dk({ ...s('flex:1;height:46px;border-radius:12px'), background: hex, boxShadow: ring(d.primary === hex) })} />)}</div><div style={s("font:500 11.5px/1 'Inter';color:#6B717C;margin-top:9px;font-variant-numeric:tabular-nums")}>{d.primary}</div></div>
+                <div><div style={s("font:600 11px/1 'Inter';letter-spacing:.12em;color:#6B717C")}>ACCENT COLOUR</div><div style={s('display:flex;gap:8px;margin-top:9px')}>{ACCENTS.map((hex) => <button key={hex} onClick={() => setDraft({ accent: hex })} style={dk({ ...s('flex:1;height:46px;border-radius:12px'), background: hex, boxShadow: ring(d.accent === hex) })} />)}</div><div style={s("font:500 11.5px/1 'Inter';color:#6B717C;margin-top:9px;font-variant-numeric:tabular-nums")}>{d.accent}</div></div>
               </div>
             )}
 
-            <div style={s('display:flex;align-items:center;gap:10px;margin-top:34px;padding-top:22px;border-top:1px solid rgba(11,26,45,.08)')}>
-              <button className="ah" onClick={() => (st.step > 0 ? setState({ step: st.step - 1 }) : setState({ screen: 'dash' }))} style={s("display:flex;align-items:center;gap:8px;padding:13px 17px;border-radius:12px;font:600 13px/1 'Archivo';color:#3D5067;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14)")}><Ms size={17} color="inherit">arrow_back</Ms>Back</button>
-              <span className="m-hide" style={s("font:500 12px/1 'Archivo';color:#6D819A;margin-left:6px")}>{def.hint}</span>
-              <button data-cur="next" className="ah-ink-btn" onClick={nextStep} style={s("display:flex;align-items:center;gap:8px;padding:13px 19px;border-radius:12px;background:#0B1A2D;font:600 13px/1 'Archivo';color:#F5F5F2;margin-left:auto")}>{st.step === 4 ? 'Build sessions' : 'Next'}<Ms size={17} color={ctx('#F5F5F2')}>arrow_forward</Ms></button>
+            <div style={s('display:flex;align-items:center;gap:10px;margin-top:34px;padding-top:22px;border-top:1px solid rgba(11,12,14,.08)')}>
+              <button className="ah" onClick={() => (st.step > 0 ? setState({ step: st.step - 1 }) : setState({ screen: 'dash' }))} style={s("display:flex;align-items:center;gap:8px;padding:13px 17px;border-radius:12px;font:600 13px/1 'Inter';color:#3B4048;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14)")}><Ms size={17} color="inherit">arrow_back</Ms>Back</button>
+              <span className="m-hide" style={s("font:500 12px/1 'Inter';color:#6B717C;margin-left:6px")}>{def.hint}</span>
+              <button data-cur="next" className="ah-ink-btn" onClick={nextStep} style={s("display:flex;align-items:center;gap:8px;padding:13px 19px;border-radius:12px;background:#0B0C0E;font:600 13px/1 'Inter';color:#F4F5F7;margin-left:auto")}>{st.step === 4 ? 'Build sessions' : 'Next'}<Ms size={17} color={ctx('#F4F5F7')}>arrow_forward</Ms></button>
             </div>
           </div>
         </div>
 
         <aside className="m-full" style={s('width:330px;flex:none')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#C8102E')} /><span style={s("font:600 11px/1 'Archivo';letter-spacing:.14em;color:#6D819A")}>LIVE PREVIEW</span></div>
-          <div style={s('margin-top:14px;padding:14px;background:#FFFFFF;border-radius:26px;box-shadow:0 1px 2px rgba(11,26,45,.05)')}><Phone st={st} wizard /></div>
-          <div style={s('margin-top:14px;padding:15px 17px;background:#F1F1EE;border-radius:14px')}>
-            <div style={s("font:600 10.5px/1 'Archivo';letter-spacing:.12em;color:#6D819A")}>CONFIGURATION</div>
-            <div style={s('margin-top:11px')}>{summary.map((row) => <div key={row.k} style={s('display:flex;align-items:baseline;gap:10px;padding:7px 0')}><span style={s("font:500 11.5px/1.3 'Archivo';color:#6D819A;width:86px")}>{row.k}</span><span style={s("flex:1;font:600 12.5px/1.3 'Archivo';color:#0B1A2D")}>{row.v}</span></div>)}</div>
+          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#C8102E')} /><span style={s("font:600 11px/1 'Inter';letter-spacing:.14em;color:#6B717C")}>LIVE PREVIEW</span></div>
+          <div style={s('margin-top:14px;padding:14px;background:#FFFFFF;border-radius:26px;box-shadow:0 1px 2px rgba(11,12,14,.05)')}><Phone st={st} wizard /></div>
+          <div style={s('margin-top:14px;padding:15px 17px;background:#EEF0F3;border-radius:14px')}>
+            <div style={s("font:600 10.5px/1 'Inter';letter-spacing:.12em;color:#6B717C")}>CONFIGURATION</div>
+            <div style={s('margin-top:11px')}>{summary.map((row) => <div key={row.k} style={s('display:flex;align-items:baseline;gap:10px;padding:7px 0')}><span style={s("font:500 11.5px/1.3 'Inter';color:#6B717C;width:86px")}>{row.k}</span><span style={s("flex:1;font:600 12.5px/1.3 'Inter';color:#0B0C0E")}>{row.v}</span></div>)}</div>
           </div>
         </aside>
       </div>
@@ -564,16 +567,16 @@ function Builder({ st, setState, say }: Props) {
   const setSess = (fn: (ss: AdminSession[]) => void) => setState((s2) => { const n = clone(s2.sessions); fn(n); return { sessions: n }; });
   return (
     <div style={s('animation:stFade .3s ease both')}>
-      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:14px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,26,45,.08);position:sticky;top:0;z-index:20')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:14px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,12,14,.08);position:sticky;top:0;z-index:20')}>
         <Back onClick={() => setState({ screen: 'dash' })} />
-        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(11,26,45,.12)')} />
+        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(11,12,14,.12)')} />
         <div className="m-brand" style={s('display:flex;align-items:center;gap:11px')}>
-          <span style={dk({ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 9.5px/1 'Archivo';color:#fff"), background: p.primary })}>{p.abbr}</span>
-          <div><div style={s("font:700 13.5px/1 'Archivo';letter-spacing:-.01em")}>{p.title}</div><div style={s("font:500 11px/1 'Archivo';color:#6D819A;margin-top:5px")}>{sportOf(p.sport).name} · {p.experience === 'IN-PERSON' ? 'In-person' : p.experience === 'VOD' ? 'VOD' : 'Stream'}</div></div>
+          <span style={dk({ ...s("width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 9.5px/1 'Inter';color:#fff"), background: p.primary })}>{p.abbr}</span>
+          <div><div style={s("font:700 13.5px/1 'Inter';letter-spacing:-.01em")}>{p.title}</div><div style={s("font:500 11px/1 'Inter';color:#6B717C;margin-top:5px")}>{sportOf(p.sport).name} · {p.experience === 'IN-PERSON' ? 'In-person' : p.experience === 'VOD' ? 'VOD' : 'Stream'}</div></div>
         </div>
         <div className="m-actions" style={s('display:flex;align-items:center;gap:9px;margin-left:auto')}>
-          <button className="ah" onClick={() => say('Draft saved', 'save')} style={s("display:flex;align-items:center;gap:7px;padding:11px 15px;border-radius:11px;font:600 12.5px/1 'Archivo';color:#0B1A2D;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14)")}><Ms size={16} color={ctx('#0B1A2D')}>save</Ms>Save draft</button>
-          <button data-cur="golive" className="ah-ink-btn" onClick={() => { setPanel((pl) => { pl.live = true; pl.fans = 0.4; pl.updated = 'Updated just now'; }); setState({ screen: 'control', sync: 'connecting' }); say('Panel deployed, control room open', 'rocket_launch'); window.setTimeout(() => setState({ sync: 'live' }), 1400); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#0B1A2D;font:600 12.5px/1 'Archivo';color:#F5F5F2")}>Save &amp; go live<Ms size={16} color={ctx('#F5F5F2')}>arrow_forward</Ms></button>
+          <button className="ah" onClick={() => say('Draft saved', 'save')} style={s("display:flex;align-items:center;gap:7px;padding:11px 15px;border-radius:11px;font:600 12.5px/1 'Inter';color:#0B0C0E;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14)")}><Ms size={16} color={ctx('#0B0C0E')}>save</Ms>Save draft</button>
+          <button data-cur="golive" className="ah-ink-btn" onClick={() => { setPanel((pl) => { pl.live = true; pl.fans = 0.4; pl.updated = 'Updated just now'; }); setState({ screen: 'control', sync: 'connecting' }); say('Panel deployed, control room open', 'rocket_launch'); window.setTimeout(() => setState({ sync: 'live' }), 1400); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#0B0C0E;font:600 12.5px/1 'Inter';color:#F4F5F7")}>Save &amp; go live<Ms size={16} color={ctx('#F4F5F7')}>arrow_forward</Ms></button>
         </div>
       </header>
 
@@ -582,20 +585,20 @@ function Builder({ st, setState, say }: Props) {
           <Card>
             <TitleRow icon="description">Panel details</TitleRow>
             <div className="m-g1" style={s('display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px')}>
-              <div><Label>NAME</Label><input value={p.title} onChange={(e) => setPanel((pl) => { pl.title = e.target.value; })} style={s("width:100%;margin-top:8px;padding:13px 14px;border-radius:12px;background:#F1F1EE;font:600 14px/1.2 'Archivo'")} /></div>
-              <div><Label>IMAGE PACK</Label><div style={s('display:flex;gap:7px;margin-top:8px')}>{PACKS.map((k) => { const on = st.pack === k; return <button key={k} onClick={() => setState({ pack: k })} style={dk({ ...s("flex:1;padding:13px 10px;border-radius:12px;font:600 11.5px/1 'Archivo';text-align:center"), background: on ? '#0B1A2D' : '#F1F1EE', color: on ? '#F5F5F2' : '#3D5067', boxShadow: on ? 'none' : 'inset 0 0 0 1px rgba(11,26,45,.1)' })}>{k}</button>; })}</div></div>
-              <div style={s('grid-column:span 2')}><Label>DESCRIPTION</Label><input value={p.desc} onChange={(e) => setPanel((pl) => { pl.desc = e.target.value; })} style={s("width:100%;margin-top:8px;padding:13px 14px;border-radius:12px;background:#F1F1EE;font:400 13.5px/1.2 'Archivo'")} /></div>
+              <div><Label>NAME</Label><input value={p.title} onChange={(e) => setPanel((pl) => { pl.title = e.target.value; })} style={s("width:100%;margin-top:8px;padding:13px 14px;border-radius:12px;background:#EEF0F3;font:600 14px/1.2 'Inter'")} /></div>
+              <div><Label>IMAGE PACK</Label><div style={s('display:flex;gap:7px;margin-top:8px')}>{PACKS.map((k) => { const on = st.pack === k; return <button key={k} onClick={() => setState({ pack: k })} style={dk({ ...s("flex:1;padding:13px 10px;border-radius:12px;font:600 11.5px/1 'Inter';text-align:center"), background: on ? '#0B0C0E' : '#EEF0F3', color: on ? '#F4F5F7' : '#3B4048', boxShadow: on ? 'none' : 'inset 0 0 0 1px rgba(11,12,14,.1)' })}>{k}</button>; })}</div></div>
+              <div style={s('grid-column:span 2')}><Label>DESCRIPTION</Label><input value={p.desc} onChange={(e) => setPanel((pl) => { pl.desc = e.target.value; })} style={s("width:100%;margin-top:8px;padding:13px 14px;border-radius:12px;background:#EEF0F3;font:400 13.5px/1.2 'Inter'")} /></div>
               <SwatchRow label="PRIMARY" value={p.primary} swatches={PRIMARIES} onPick={(hex) => setPanel((pl) => { pl.primary = hex; })} />
               <SwatchRow label="ACCENT" value={p.accent} swatches={ACCENTS} onPick={(hex) => setPanel((pl) => { pl.accent = hex; })} />
             </div>
           </Card>
 
           <Card>
-            <div className="m-wrap" style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#0B1A2D')}>widgets</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Module library</span><span style={s("font:500 11.5px/1 'Archivo';color:#6D819A;margin-left:auto")}>{enabled.length} of {MODULES.length} modules enabled</span></div>
+            <div className="m-wrap" style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#0B0C0E')}>widgets</Ms><span style={s("font:700 16px/1 'Inter';letter-spacing:-.012em")}>Module library</span><span style={s("font:500 11.5px/1 'Inter';color:#6B717C;margin-left:auto")}>{enabled.length} of {MODULES.length} modules enabled</span></div>
             <div style={s('display:flex;flex-wrap:wrap;gap:8px;margin-top:18px')}>
               {MODULES.map((m) => { const on = p.mods.indexOf(m.id) > -1; return (
-                <button key={m.id} data-cur={'bmod-' + m.id} className="ah" onClick={() => setPanel((pl) => { const j = pl.mods.indexOf(m.id); if (j > -1) pl.mods.splice(j, 1); else pl.mods.push(m.id); })} style={dk({ ...s('display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: ring(on) })}>
-                  <Ms size={17} color={on ? '#0B1A2D' : '#6D819A'}>{m.icon}</Ms><span style={s("font:600 12.5px/1 'Archivo';color:#0B1A2D")}>{m.name}</span><Ms size={16} color={on ? '#C8102E' : '#6D819A'}>{on ? 'check_circle' : 'add_circle'}</Ms>
+                <button key={m.id} data-cur={'bmod-' + m.id} className="ah" onClick={() => setPanel((pl) => { const j = pl.mods.indexOf(m.id); if (j > -1) pl.mods.splice(j, 1); else pl.mods.push(m.id); })} style={dk({ ...s('display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px'), background: on ? '#EEF0F3' : '#FFFFFF', boxShadow: ring(on) })}>
+                  <Ms size={17} color={on ? '#0B0C0E' : '#6B717C'}>{m.icon}</Ms><span style={s("font:600 12.5px/1 'Inter';color:#0B0C0E")}>{m.name}</span><Ms size={16} color={on ? '#C8102E' : '#6B717C'}>{on ? 'check_circle' : 'add_circle'}</Ms>
                 </button>
               ); })}
             </div>
@@ -603,48 +606,48 @@ function Builder({ st, setState, say }: Props) {
 
           <Card>
             <div style={s('display:flex;align-items:center;gap:10px')}>
-              <Ms size={19} color={ctx('#0B1A2D')}>list_alt</Ms>
-              <div style={s('flex:1;min-width:0')}><div style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Sessions</div><div style={s("font:400 12.5px/1.4 'Archivo';color:#6D819A;margin-top:6px")}>The ordered flow a fan moves through as the operator advances the match.</div></div>
-              <button className="ah2" onClick={() => setSess((n) => { n.push({ name: 'New session', phase: 'Live', stack: [] }); })} style={s("display:flex;align-items:center;gap:7px;padding:11px 14px;border-radius:11px;background:#F1F1EE;font:600 12.5px/1 'Archivo';color:#0B1A2D")}><Ms size={16} color={ctx('#0B1A2D')}>add</Ms>Add session</button>
+              <Ms size={19} color={ctx('#0B0C0E')}>list_alt</Ms>
+              <div style={s('flex:1;min-width:0')}><div style={s("font:700 16px/1 'Inter';letter-spacing:-.012em")}>Sessions</div><div style={s("font:400 12.5px/1.4 'Inter';color:#6B717C;margin-top:6px")}>The ordered flow a fan moves through as the operator advances the match.</div></div>
+              <button className="ah2" onClick={() => setSess((n) => { n.push({ name: 'New session', phase: 'Live', stack: [] }); })} style={s("display:flex;align-items:center;gap:7px;padding:11px 14px;border-radius:11px;background:#EEF0F3;font:600 12.5px/1 'Inter';color:#0B0C0E")}><Ms size={16} color={ctx('#0B0C0E')}>add</Ms>Add session</button>
             </div>
             <div style={s('display:flex;flex-direction:column;gap:12px;margin-top:20px')}>
               {sess.map((se, i) => {
                 const avail = enabled.filter((id) => se.stack.indexOf(id) < 0);
                 return (
-                  <div key={i} style={{ ...s('border-radius:14px;background:#F1F1EE;padding:16px 17px'), boxShadow: `inset 0 0 0 1px ${i === st.previewIdx ? '#0B1A2D' : 'rgba(11,26,45,.08)'}` }}>
+                  <div key={i} style={{ ...s('border-radius:14px;background:#EEF0F3;padding:16px 17px'), boxShadow: `inset 0 0 0 1px ${i === st.previewIdx ? '#0B0C0E' : 'rgba(11,12,14,.08)'}` }}>
                     <div className="m-wrap" style={s('display:flex;align-items:center;gap:11px')}>
                       <div style={s('display:flex;flex-direction:column;gap:2px')}>
-                        <button className="ah2" onClick={() => setSess((n) => { if (i > 0)[n[i - 1], n[i]] = [n[i], n[i - 1]]; })} style={s('width:22px;height:17px;border-radius:6px;background:#FFFFFF;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#3D5067')}>keyboard_arrow_up</Ms></button>
-                        <button className="ah2" onClick={() => setSess((n) => { if (i < n.length - 1)[n[i + 1], n[i]] = [n[i], n[i + 1]]; })} style={s('width:22px;height:17px;border-radius:6px;background:#FFFFFF;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#3D5067')}>keyboard_arrow_down</Ms></button>
+                        <button className="ah2" onClick={() => setSess((n) => { if (i > 0)[n[i - 1], n[i]] = [n[i], n[i - 1]]; })} style={s('width:22px;height:17px;border-radius:6px;background:#FFFFFF;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#3B4048')}>keyboard_arrow_up</Ms></button>
+                        <button className="ah2" onClick={() => setSess((n) => { if (i < n.length - 1)[n[i + 1], n[i]] = [n[i], n[i + 1]]; })} style={s('width:22px;height:17px;border-radius:6px;background:#FFFFFF;display:flex;align-items:center;justify-content:center')}><Ms size={13} color={ctx('#3B4048')}>keyboard_arrow_down</Ms></button>
                       </div>
-                      <span style={s("width:26px;height:26px;flex:none;border-radius:8px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font:700 12px/1 'Archivo';color:#3D5067;font-variant-numeric:tabular-nums")}>{i + 1}</span>
-                      <input value={se.name} onChange={(e) => setSess((n) => { n[i].name = e.target.value; })} style={s("flex:1;min-width:0;padding:10px 12px;border-radius:10px;background:#FFFFFF;font:600 13.5px/1.2 'Archivo'")} />
+                      <span style={s("width:26px;height:26px;flex:none;border-radius:8px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font:700 12px/1 'Inter';color:#3B4048;font-variant-numeric:tabular-nums")}>{i + 1}</span>
+                      <input value={se.name} onChange={(e) => setSess((n) => { n[i].name = e.target.value; })} style={s("flex:1;min-width:0;padding:10px 12px;border-radius:10px;background:#FFFFFF;font:600 13.5px/1.2 'Inter'")} />
                       <div className="m-phases" style={s('display:flex;gap:4px;padding:3px;border-radius:10px;background:#FFFFFF')}>
-                        {PHASES.map((ph) => { const on = se.phase === ph; return <button key={ph} onClick={() => setSess((n) => { n[i].phase = ph; })} style={dk({ ...s("padding:7px 9px;border-radius:8px;font:600 10.5px/1 'Archivo'"), background: on ? PHASE_COLOR[ph] : 'transparent', color: on ? '#FFFFFF' : '#6D819A' })}>{ph}</button>; })}
+                        {PHASES.map((ph) => { const on = se.phase === ph; return <button key={ph} onClick={() => setSess((n) => { n[i].phase = ph; })} style={dk({ ...s("padding:7px 9px;border-radius:8px;font:600 10.5px/1 'Inter'"), background: on ? PHASE_COLOR[ph] : 'transparent', color: on ? '#FFFFFF' : '#6B717C' })}>{ph}</button>; })}
                       </div>
-                      <button onClick={() => setSess((n) => n.forEach((y, k) => { y.def = k === i; }))} style={dk({ ...s("display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:10px;font:600 10.5px/1 'Archivo';white-space:nowrap"), background: se.def ? '#0B1A2D' : '#FFFFFF', color: se.def ? '#F5F5F2' : '#6D819A' })}><Ms size={14} color={se.def ? '#F5F5F2' : '#6D819A'}>{se.def ? 'star' : 'star_outline'}</Ms>Default</button>
+                      <button onClick={() => setSess((n) => n.forEach((y, k) => { y.def = k === i; }))} style={dk({ ...s("display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:10px;font:600 10.5px/1 'Inter';white-space:nowrap"), background: se.def ? '#0B0C0E' : '#FFFFFF', color: se.def ? '#F4F5F7' : '#6B717C' })}><Ms size={14} color={se.def ? '#F4F5F7' : '#6B717C'}>{se.def ? 'star' : 'star_outline'}</Ms>Default</button>
                       <button className="ah-del" onClick={() => setState((s2) => ({ sessions: s2.sessions.filter((_, j) => j !== i) }))} style={s('width:32px;height:32px;flex:none;border-radius:10px;background:#FFFFFF;display:flex;align-items:center;justify-content:center')}><Ms size={16} color={ctx('#C0473C')}>delete</Ms></button>
                     </div>
-                    <div style={s('margin-top:14px;padding-top:14px;border-top:1px dashed rgba(11,26,45,.14)')}>
-                      <div style={s("font:600 10px/1 'Archivo';letter-spacing:.14em;color:#6D819A")}>MODULE STACK · TOP TO BOTTOM ON SCREEN</div>
-                      {se.stack.length === 0 && <div style={s("font:400 12.5px/1.5 'Archivo';color:#6D819A;margin-top:10px;padding:13px 14px;border-radius:11px;background:#FFFFFF")}>No modules yet, add them below; they stack top-to-bottom on screen.</div>}
+                    <div style={s('margin-top:14px;padding-top:14px;border-top:1px dashed rgba(11,12,14,.14)')}>
+                      <div style={s("font:600 10px/1 'Inter';letter-spacing:.14em;color:#6B717C")}>MODULE STACK · TOP TO BOTTOM ON SCREEN</div>
+                      {se.stack.length === 0 && <div style={s("font:400 12.5px/1.5 'Inter';color:#6B717C;margin-top:10px;padding:13px 14px;border-radius:11px;background:#FFFFFF")}>No modules yet, add them below; they stack top-to-bottom on screen.</div>}
                       <div style={s('display:flex;flex-direction:column;gap:6px;margin-top:10px')}>
                         {se.stack.map((id, j) => { const m = modOf(id); return (
                           <div key={id + j} style={s('display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:11px;background:#FFFFFF')}>
                             <div style={s('display:flex;flex-direction:column;gap:2px')}>
-                              <button className="ah2" onClick={() => setSess((n) => { const a = n[i].stack; if (j > 0)[a[j - 1], a[j]] = [a[j], a[j - 1]]; })} style={s('width:20px;height:15px;border-radius:5px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={12} color={ctx('#3D5067')}>keyboard_arrow_up</Ms></button>
-                              <button className="ah2" onClick={() => setSess((n) => { const a = n[i].stack; if (j < a.length - 1)[a[j + 1], a[j]] = [a[j], a[j + 1]]; })} style={s('width:20px;height:15px;border-radius:5px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={12} color={ctx('#3D5067')}>keyboard_arrow_down</Ms></button>
+                              <button className="ah2" onClick={() => setSess((n) => { const a = n[i].stack; if (j > 0)[a[j - 1], a[j]] = [a[j], a[j - 1]]; })} style={s('width:20px;height:15px;border-radius:5px;background:#EEF0F3;display:flex;align-items:center;justify-content:center')}><Ms size={12} color={ctx('#3B4048')}>keyboard_arrow_up</Ms></button>
+                              <button className="ah2" onClick={() => setSess((n) => { const a = n[i].stack; if (j < a.length - 1)[a[j + 1], a[j]] = [a[j], a[j + 1]]; })} style={s('width:20px;height:15px;border-radius:5px;background:#EEF0F3;display:flex;align-items:center;justify-content:center')}><Ms size={12} color={ctx('#3B4048')}>keyboard_arrow_down</Ms></button>
                             </div>
-                            <span style={s("font:600 11px/1 'Archivo';color:#6D819A;width:16px;font-variant-numeric:tabular-nums")}>{j + 1}</span>
-                            <Ms size={17} color={ctx('#0B1A2D')}>{m.icon}</Ms><span style={s("flex:1;font:600 13px/1.2 'Archivo'")}>{m.name}</span><span className="m-hide" style={s("font:400 11.5px/1.2 'Archivo';color:#6D819A")}>{m.blurb}</span>
-                            <button className="ah-del" onClick={() => setSess((n) => { n[i].stack.splice(j, 1); })} style={s('width:26px;height:26px;border-radius:8px;background:#F1F1EE;display:flex;align-items:center;justify-content:center')}><Ms size={15} color={ctx('#C0473C')}>close</Ms></button>
+                            <span style={s("font:600 11px/1 'Inter';color:#6B717C;width:16px;font-variant-numeric:tabular-nums")}>{j + 1}</span>
+                            <Ms size={17} color={ctx('#0B0C0E')}>{m.icon}</Ms><span style={s("flex:1;font:600 13px/1.2 'Inter'")}>{m.name}</span><span className="m-hide" style={s("font:400 11.5px/1.2 'Inter';color:#6B717C")}>{m.blurb}</span>
+                            <button className="ah-del" onClick={() => setSess((n) => { n[i].stack.splice(j, 1); })} style={s('width:26px;height:26px;border-radius:8px;background:#EEF0F3;display:flex;align-items:center;justify-content:center')}><Ms size={15} color={ctx('#C0473C')}>close</Ms></button>
                           </div>
                         ); })}
                       </div>
                       {avail.length > 0 && (
                         <div style={s('display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:11px')}>
-                          <span style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#6D819A;margin-right:3px")}>ADD MODULE</span>
-                          {avail.map((id) => <button key={id} className="ah-ink" onClick={() => setSess((n) => { n[i].stack.push(id); })} style={s("display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:9px;background:#FFFFFF;font:600 11.5px/1 'Archivo';color:#3D5067;box-shadow:inset 0 0 0 1px rgba(11,26,45,.1)")}><Ms size={14} color="inherit">add</Ms>{modOf(id).name}</button>)}
+                          <span style={s("font:600 10px/1 'Inter';letter-spacing:.12em;color:#6B717C;margin-right:3px")}>ADD MODULE</span>
+                          {avail.map((id) => <button key={id} className="ah-ink" onClick={() => setSess((n) => { n[i].stack.push(id); })} style={s("display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:9px;background:#FFFFFF;font:600 11.5px/1 'Inter';color:#3B4048;box-shadow:inset 0 0 0 1px rgba(11,12,14,.1)")}><Ms size={14} color="inherit">add</Ms>{modOf(id).name}</button>)}
                         </div>
                       )}
                     </div>
@@ -656,9 +659,9 @@ function Builder({ st, setState, say }: Props) {
         </div>
 
         <aside className="m-full" style={s('width:330px;flex:none;position:sticky;top:96px;align-self:flex-start')}>
-          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#C8102E')} /><span style={s("font:600 11px/1 'Archivo';letter-spacing:.14em;color:#6D819A")}>FAN PREVIEW · {(sess[st.previewIdx] || {}).name || '–'}</span></div>
-          <div style={s('margin-top:14px;padding:14px;background:#FFFFFF;border-radius:26px;box-shadow:0 1px 2px rgba(11,26,45,.05)')}><Phone st={st} wizard={false} /></div>
-          <div style={s('display:flex;gap:7px;margin-top:12px')}>{sess.slice(0, 5).map((se, i) => { const on = st.previewIdx === i; return <button key={i} onClick={() => setState({ previewIdx: i })} style={dk({ ...s("flex:1;padding:9px 0;border-radius:10px;font:600 10.5px/1 'Archivo';text-align:center"), background: on ? '#0B1A2D' : '#FFFFFF', color: on ? '#F5F5F2' : '#3D5067' })}>{se.name.split(' ')[0]}</button>; })}</div>
+          <div style={s('display:flex;align-items:center;gap:8px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#C8102E')} /><span style={s("font:600 11px/1 'Inter';letter-spacing:.14em;color:#6B717C")}>FAN PREVIEW · {(sess[st.previewIdx] || {}).name || '–'}</span></div>
+          <div style={s('margin-top:14px;padding:14px;background:#FFFFFF;border-radius:26px;box-shadow:0 1px 2px rgba(11,12,14,.05)')}><Phone st={st} wizard={false} /></div>
+          <div style={s('display:flex;gap:7px;margin-top:12px')}>{sess.slice(0, 5).map((se, i) => { const on = st.previewIdx === i; return <button key={i} onClick={() => setState({ previewIdx: i })} style={dk({ ...s("flex:1;padding:9px 0;border-radius:10px;font:600 10.5px/1 'Inter';text-align:center"), background: on ? '#0B0C0E' : '#FFFFFF', color: on ? '#F4F5F7' : '#3B4048' })}>{se.name.split(' ')[0]}</button>; })}</div>
         </aside>
       </div>
     </div>
@@ -674,36 +677,36 @@ function Stats({ st, setState }: Props) {
     { label: 'AVG. SESSION', v: '42m', icon: 'timer', delta: '+6m', deltaIcon: 'trending_up', deltaColor: '#C8102E' },
     { label: 'XP AWARDED', v: '1.9M', icon: 'redeem', delta: '−4%', deltaIcon: 'trending_down', deltaColor: '#C0473C' },
   ];
-  const engagement = p.mods.map((id, i) => ({ ...modOf(id), pct: ([92, 78, 71, 64, 58, 49, 41, 33, 27, 22, 18, 14][i] || 12) + '%', color: i === 0 ? '#0B1A2D' : i < 3 ? '#C8102E' : '#C4C4C0' }));
+  const engagement = p.mods.map((id, i) => ({ ...modOf(id), pct: ([92, 78, 71, 64, 58, 49, 41, 33, 27, 22, 18, 14][i] || 12) + '%', color: i === 0 ? '#0B0C0E' : i < 3 ? '#C8102E' : '#C5CAD3' }));
   return (
     <div style={s('animation:stFade .3s ease both')}>
-      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:14px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,26,45,.08)')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:14px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,12,14,.08)')}>
         <Back onClick={() => setState({ screen: 'dash' })} />
-        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(11,26,45,.12)')} />
-        <span className="m-row2" style={s("font:700 14px/1.25 'Archivo';letter-spacing:-.01em")}>{p.title} · stats</span>
-        <button className="ah-ink-btn" onClick={() => setState({ screen: 'control' })} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#0B1A2D;font:600 12.5px/1 'Archivo';color:#F5F5F2;margin-left:auto")}>Launch panel<Ms size={16} color={ctx('#F5F5F2')}>arrow_forward</Ms></button>
+        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(11,12,14,.12)')} />
+        <span className="m-row2" style={s("font:700 14px/1.25 'Inter';letter-spacing:-.01em")}>{p.title} · stats</span>
+        <button className="ah-ink-btn" onClick={() => setState({ screen: 'control' })} style={s("display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;background:#0B0C0E;font:600 12.5px/1 'Inter';color:#F4F5F7;margin-left:auto")}>Launch panel<Ms size={16} color={ctx('#F4F5F7')}>arrow_forward</Ms></button>
       </header>
       <div className="m-body" style={s('padding:34px 44px 52px')}>
         <div className="m-col" style={s('display:flex;align-items:flex-end;gap:20px')}>
-          <div style={s('flex:1')}><h1 className="m-h1" style={s("font:700 32px/1.05 'Archivo';letter-spacing:-.022em;margin:0")}>Last event performance</h1><p style={s("font:400 14px/1.5 'Archivo';color:#3D5067;margin:9px 0 0")}>Round 15 v Śląsk Wrocław · 20 November · compared with the previous home fixture.</p></div>
-          <div style={s('display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:11px;background:#FFFFFF;box-shadow:0 1px 2px rgba(11,26,45,.05)')}><Ms size={16} color={ctx('#C8102E')}>check_circle</Ms><span style={s("font:600 12px/1 'Archivo';color:#3D5067")}>Panel deployed · 4h 12m of live time</span></div>
+          <div style={s('flex:1')}><h1 className="m-h1" style={s("font:600 32px/1.05 'Space Grotesk';letter-spacing:-.022em;margin:0")}>Last event performance</h1><p style={s("font:400 14px/1.5 'Inter';color:#3B4048;margin:9px 0 0")}>Round 15 v Śląsk Wrocław · 20 November · compared with the previous home fixture.</p></div>
+          <div style={s('display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:11px;background:#FFFFFF;box-shadow:0 1px 2px rgba(11,12,14,.05)')}><Ms size={16} color={ctx('#C8102E')}>check_circle</Ms><span style={s("font:600 12px/1 'Inter';color:#3B4048")}>Panel deployed · 4h 12m of live time</span></div>
         </div>
         <div className="m-g2" style={s('display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:24px')}>
           {kpis.map((k) => (
-            <div key={k.label} className="m-card" style={s('padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,26,45,.05);animation:stRise .4s ease both')}>
-              <div style={s('display:flex;align-items:center;gap:9px')}><Ms color={ctx('#6D819A')}>{k.icon}</Ms><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.13em;color:#6D819A")}>{k.label}</span></div>
-              <div className="m-big" style={s("font:800 40px/.92 'Archivo Black';margin-top:16px;letter-spacing:.01em")}>{k.v}</div>
-              <div style={s('display:flex;align-items:center;gap:6px;margin-top:12px')}><Ms size={15} color={k.deltaColor}>{k.deltaIcon}</Ms><span style={dk({ ...s("font:600 12px/1 'Archivo'"), color: k.deltaColor })}>{k.delta}</span><span style={s("font:400 11.5px/1 'Archivo';color:#6D819A")}>vs last event</span></div>
+            <div key={k.label} className="m-card" style={s('padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,12,14,.05);animation:stRise .4s ease both')}>
+              <div style={s('display:flex;align-items:center;gap:9px')}><Ms color={ctx('#6B717C')}>{k.icon}</Ms><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.13em;color:#6B717C")}>{k.label}</span></div>
+              <div className="m-big" style={s("font:800 40px/.92 'Space Grotesk';margin-top:16px;letter-spacing:.01em")}>{k.v}</div>
+              <div style={s('display:flex;align-items:center;gap:6px;margin-top:12px')}><Ms size={15} color={k.deltaColor}>{k.deltaIcon}</Ms><span style={dk({ ...s("font:600 12px/1 'Inter'"), color: k.deltaColor })}>{k.delta}</span><span style={s("font:400 11.5px/1 'Inter';color:#6B717C")}>vs last event</span></div>
             </div>
           ))}
         </div>
-        <div className="m-card" style={s('margin-top:26px;padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,26,45,.05)')}>
-          <div className="m-wrap" style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#0B1A2D')}>bar_chart</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>Module engagement</span><span className="m-ml0" style={s("font:400 12px/1.4 'Archivo';color:#6D819A;margin-left:auto")}>Share of connected fans who opened each module</span></div>
+        <div className="m-card" style={s('margin-top:26px;padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,12,14,.05)')}>
+          <div className="m-wrap" style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#0B0C0E')}>bar_chart</Ms><span style={s("font:700 16px/1 'Inter';letter-spacing:-.012em")}>Module engagement</span><span className="m-ml0" style={s("font:400 12px/1.4 'Inter';color:#6B717C;margin-left:auto")}>Share of connected fans who opened each module</span></div>
           <div style={s('margin-top:22px;display:flex;flex-direction:column;gap:16px')}>
             {engagement.map((e) => (
               <div key={e.id}>
-                <div style={s('display:flex;align-items:center;gap:9px')}><Ms size={17} color={ctx('#3D5067')}>{e.icon}</Ms><span style={s("font:600 13px/1 'Archivo';flex:1")}>{e.name}</span><span style={s("font:700 13px/1 'Archivo';font-variant-numeric:tabular-nums")}>{e.pct}</span></div>
-                <div style={s('height:10px;border-radius:6px;background:#F1F1EE;margin-top:9px;overflow:hidden')}><span style={dk({ ...s('display:block;height:10px;border-radius:6px;transition:width .8s cubic-bezier(.2,.8,.2,1)'), width: e.pct, background: e.color })} /></div>
+                <div style={s('display:flex;align-items:center;gap:9px')}><Ms size={17} color={ctx('#3B4048')}>{e.icon}</Ms><span style={s("font:600 13px/1 'Inter';flex:1")}>{e.name}</span><span style={s("font:700 13px/1 'Inter';font-variant-numeric:tabular-nums")}>{e.pct}</span></div>
+                <div style={s('height:10px;border-radius:6px;background:#EEF0F3;margin-top:9px;overflow:hidden')}><span style={dk({ ...s('display:block;height:10px;border-radius:6px;transition:width .8s cubic-bezier(.2,.8,.2,1)'), width: e.pct, background: e.color })} /></div>
               </div>
             ))}
           </div>
@@ -718,9 +721,9 @@ function Control({ st, setState, say, broadcast }: Props) {
   const p = st.panels[st.cur] || st.panels[0];
   const sess = st.sessions;
   const cur = sess[st.liveIdx] || sess[0] || { name: 'Idle', phase: 'Idle', stack: [] };
-  const stripe = PHASE_COLOR[cur.phase] || '#6D819A';
+  const stripe = PHASE_COLOR[cur.phase] || '#6B717C';
   const syncMap: Record<string, { label: string; dot: string; anim: string; note: string }> = {
-    local: { label: 'LOCAL ONLY', dot: '#6D819A', anim: 'none', note: 'Nothing is broadcasting yet, fans on the link will see the default session.' },
+    local: { label: 'LOCAL ONLY', dot: '#6B717C', anim: 'none', note: 'Nothing is broadcasting yet, fans on the link will see the default session.' },
     connecting: { label: 'CONNECTING', dot: '#C8102E', anim: 'stBlink 1s steps(1,end) infinite', note: 'Handshaking with the realtime relay. Controls stay staged until sync completes.' },
     live: { label: 'LIVE SYNC ACTIVE', dot: '#C8102E', anim: 'stPulse 2.4s ease-out infinite', note: 'Every session jump, trigger and countdown change reaches all connected devices in under 400ms.' },
     down: { label: 'SYNC UNAVAILABLE', dot: '#C0473C', anim: 'stBlink .8s steps(1,end) infinite', note: 'Relay unreachable, actions are queued locally and will flush when the connection returns.' },
@@ -743,6 +746,7 @@ function Control({ st, setState, say, broadcast }: Props) {
   // state message so phones that join later pick it up from the relay's replay too.
   const [fanTheme, setFanTheme] = useState<string>(() => { try { return localStorage.getItem('pogon-fan-theme') || 'dark'; } catch { return 'dark'; } });
   const fanThemeRef = useRef(fanTheme); fanThemeRef.current = fanTheme;
+  const monitorTheme = useRef(fanTheme); // fixed at mount so the monitor iframe never reloads; later changes arrive over the bus
   const send = (msg: { cmd: string; ms?: string; kind?: string; route?: string; action?: string; crewId?: string; player?: string; duration?: number; type?: string; theme?: string }) => chanRef.current?.post(msg.cmd === 'state' ? { ...msg, theme: fanThemeRef.current } : msg);
   const pickFanTheme = (k: string) => { setFanTheme(k); fanThemeRef.current = k; try { localStorage.setItem('pogon-fan-theme', k); } catch { /* private mode */ } chanRef.current?.post({ cmd: 'state', ms: phaseToMs((sess[st.liveIdx] || {}).phase), theme: k }); say(`Fans switched to ${k === 'auto' ? 'their phone setting' : k + ' mode'}`, k === 'light' ? 'light_mode' : k === 'dark' ? 'dark_mode' : 'contrast'); };
 
@@ -752,11 +756,11 @@ function Control({ st, setState, say, broadcast }: Props) {
   useEffect(() => {
     const url = fanHref(p.id);
     setShareUrl(url);
-    QRCode.toDataURL(url, { margin: 0, width: 252, color: { dark: '#0B1A2D', light: '#F5F5F2' } }).then(setQr, () => setQr(''));
+    QRCode.toDataURL(url, { margin: 0, width: 252, color: { dark: '#0B0C0E', light: '#F4F5F7' } }).then(setQr, () => setQr(''));
   }, [p.id]);
   // Print-ready PNG: dark on white with a quiet zone, larger than the on-screen preview.
   const downloadQr = () => {
-    QRCode.toDataURL(shareUrl, { margin: 4, width: 1024, color: { dark: '#0B1A2D', light: '#FFFFFF' } }).then((href) => {
+    QRCode.toDataURL(shareUrl, { margin: 4, width: 1024, color: { dark: '#0B0C0E', light: '#FFFFFF' } }).then((href) => {
       const a = document.createElement('a');
       a.href = href;
       a.download = `fan-panel-qr-${p.id.toLowerCase()}.png`;
@@ -767,41 +771,41 @@ function Control({ st, setState, say, broadcast }: Props) {
 
   return (
     <div style={s('animation:stFade .3s ease both')}>
-      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:16px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,26,45,.08);position:sticky;top:0;z-index:20')}>
+      <header className="m-hdr" style={s('display:flex;align-items:center;gap:16px;padding:16px 44px;background:#FFFFFF;border-bottom:1px solid rgba(11,12,14,.08);position:sticky;top:0;z-index:20')}>
         <Back onClick={() => setState({ screen: 'dash' })} />
-        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(11,26,45,.12)')} />
-        <div className="m-row2" style={s('display:flex;align-items:center;gap:10px')}><span style={s('width:8px;height:8px;flex:none;border-radius:50%;background:#C0473C;animation:stPulse 2s ease-out infinite')} /><span style={s("font:700 14px/1.25 'Archivo';letter-spacing:-.01em")}>Control Room · {p.title}</span></div>
-        <span style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#F5F5F2;background:#0B1A2D;padding:7px 10px;border-radius:8px")}>{p.live ? 'DEPLOYED' : 'DRAFT'}</span>
-        <button className="ah" onClick={() => { openFan(p.id); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 15px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#0B1A2D;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14);margin-left:auto")}><Ms size={16} color="inherit">open_in_new</Ms>Open fan view</button>
+        <span className="m-sep" style={s('width:1px;height:22px;background:rgba(11,12,14,.12)')} />
+        <div className="m-row2" style={s('display:flex;align-items:center;gap:10px')}><span style={s('width:8px;height:8px;flex:none;border-radius:50%;background:#C0473C;animation:stPulse 2s ease-out infinite')} /><span style={s("font:700 14px/1.25 'Inter';letter-spacing:-.01em")}>Control Room · {p.title}</span></div>
+        <span style={s("font:600 10px/1 'Inter';letter-spacing:.12em;color:#F4F5F7;background:#0B0C0E;padding:7px 10px;border-radius:8px")}>{p.live ? 'DEPLOYED' : 'DRAFT'}</span>
+        <button className="ah" onClick={() => { openFan(p.id); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;gap:8px;padding:11px 15px;border-radius:12px;font:600 12.5px/1 'Inter';color:#0B0C0E;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14);margin-left:auto")}><Ms size={16} color="inherit">open_in_new</Ms>Open fan view</button>
       </header>
 
       <div className="m-body" style={s('padding:24px 44px 48px;display:flex;flex-direction:column;gap:20px')}>
-        <div style={s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,26,45,.05);overflow:hidden')}>
+        <div style={s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,12,14,.05);overflow:hidden')}>
           <button className="ah" onClick={() => setState({ shareOpen: !st.shareOpen })} style={s('display:flex;align-items:center;gap:14px;width:100%;padding:20px 24px')}>
-            <Ms size={19} color={ctx('#0B1A2D')}>qr_code_2</Ms><span style={s("font:700 14px/1 'Archivo';white-space:nowrap")}>Deploy &amp; share</span>
-            <span style={s('display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:9px;background:#F1F1EE')}><span style={dk({ ...s('width:7px;height:7px;border-radius:50%'), background: sync.dot, animation: sync.anim })} /><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.08em;color:#0B1A2D;white-space:nowrap")}>{sync.label}</span></span>
-            <span className="m-hide" style={s("font:500 12px/1 'Archivo';color:#3D5067;margin-left:auto")}>{st.shareOpen ? 'Collapse to focus on live controls' : 'QR, fan link and connection'}</span>
-            <Ms size={20} color={ctx('#3D5067')}>{st.shareOpen ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</Ms>
+            <Ms size={19} color={ctx('#0B0C0E')}>qr_code_2</Ms><span style={s("font:700 14px/1 'Inter';white-space:nowrap")}>Deploy &amp; share</span>
+            <span style={s('display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:9px;background:#EEF0F3')}><span style={dk({ ...s('width:7px;height:7px;border-radius:50%'), background: sync.dot, animation: sync.anim })} /><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.08em;color:#0B0C0E;white-space:nowrap")}>{sync.label}</span></span>
+            <span className="m-hide" style={s("font:500 12px/1 'Inter';color:#3B4048;margin-left:auto")}>{st.shareOpen ? 'Collapse to focus on live controls' : 'QR, fan link and connection'}</span>
+            <Ms size={20} color={ctx('#3B4048')}>{st.shareOpen ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</Ms>
           </button>
           {st.shareOpen && (
             <div className="m-col" style={s('display:flex;gap:24px;padding:0 24px 24px;animation:stFade .25s ease both')}>
               <div style={s('width:150px;flex:none;display:flex;flex-direction:column;gap:10px')}>
-                <div style={s('padding:12px;border-radius:14px;background:#F1F1EE')}>
+                <div style={s('padding:12px;border-radius:14px;background:#EEF0F3')}>
                   {qr && <img src={qr} alt="QR code for the fan panel link" width={126} height={126} style={{ display: 'block', borderRadius: 4 }} />}
                 </div>
-                <button className="ah" disabled={!shareUrl} onClick={downloadQr} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border-radius:11px;font:600 12px/1 'Archivo';color:#0B1A2D;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14)")}><Ms size={16} color="inherit">download</Ms>Download QR</button>
+                <button className="ah" disabled={!shareUrl} onClick={downloadQr} style={s("display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border-radius:11px;font:600 12px/1 'Inter';color:#0B0C0E;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14)")}><Ms size={16} color="inherit">download</Ms>Download QR</button>
               </div>
               <div style={s('flex:1;min-width:0')}>
-                <span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>FAN PANEL LINK</span>
-                <div style={s('display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:12px;background:#F1F1EE')}>
-                  <Ms size={16} color={ctx('#3D5067')}>link</Ms><span style={s("flex:1;min-width:0;font:500 13px/1.3 'Archivo';color:#0B1A2D;overflow-wrap:anywhere")}>{shareUrl}</span>
-                  <button onClick={() => { navigator.clipboard?.writeText(shareUrl).catch(() => {}); setState({ copied: true }); say('Fan link copied', 'content_copy'); window.setTimeout(() => setState({ copied: false }), 1600); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;font:600 11.5px/1 'Archivo'"), background: st.copied ? '#0B1A2D' : '#FFFFFF', color: st.copied ? '#F5F5F2' : '#0B1A2D' })}><Ms size={15} color="inherit">{st.copied ? 'check' : 'content_copy'}</Ms>{st.copied ? 'Copied' : 'Copy'}</button>
+                <span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>FAN PANEL LINK</span>
+                <div style={s('display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:12px;background:#EEF0F3')}>
+                  <Ms size={16} color={ctx('#3B4048')}>link</Ms><span style={s("flex:1;min-width:0;font:500 13px/1.3 'Inter';color:#0B0C0E;overflow-wrap:anywhere")}>{shareUrl}</span>
+                  <button onClick={() => { navigator.clipboard?.writeText(shareUrl).catch(() => {}); setState({ copied: true }); say('Fan link copied', 'content_copy'); window.setTimeout(() => setState({ copied: false }), 1600); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;font:600 11.5px/1 'Inter'"), background: st.copied ? '#0B0C0E' : '#FFFFFF', color: st.copied ? '#F4F5F7' : '#0B0C0E' })}><Ms size={15} color="inherit">{st.copied ? 'check' : 'content_copy'}</Ms>{st.copied ? 'Copied' : 'Copy'}</button>
                 </div>
                 <div className="m-wrap" style={s('display:flex;gap:12px;margin-top:16px')}>
-                  <button className="ah-ink-btn" onClick={() => { openFan(p.id); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#0B1A2D;font:600 12.5px/1 'Archivo';color:#F5F5F2")}><Ms size={16} color={ctx('#F5F5F2')}>smartphone</Ms>Open fan view</button>
-                  <button className="ah" onClick={() => { openFan(p.id); say('Opened a staged fan session', 'visibility'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#0B1A2D;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14)")}><Ms size={16} color="inherit">visibility</Ms>Preview as a fan</button>
+                  <button className="ah-ink-btn" onClick={() => { openFan(p.id); say('Fan view opened in a new tab', 'smartphone'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#0B0C0E;font:600 12.5px/1 'Inter';color:#F4F5F7")}><Ms size={16} color={ctx('#F4F5F7')}>smartphone</Ms>Open fan view</button>
+                  <button className="ah" onClick={() => { openFan(p.id); say('Opened a staged fan session', 'visibility'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Inter';color:#0B0C0E;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14)")}><Ms size={16} color="inherit">visibility</Ms>Preview as a fan</button>
                 </div>
-                <div style={s("font:400 12.5px/1.5 'Archivo';color:#3D5067;margin-top:16px;max-width:560px")}>{sync.note}</div>
+                <div style={s("font:400 12.5px/1.5 'Inter';color:#3B4048;margin-top:16px;max-width:560px")}>{sync.note}</div>
               </div>
             </div>
           )}
@@ -809,75 +813,75 @@ function Control({ st, setState, say, broadcast }: Props) {
 
         <div className="m-col" style={s('display:flex;gap:20px;align-items:flex-start')}>
           <div style={s('flex:1;min-width:0;display:flex;flex-direction:column;gap:20px')}>
-            <div className="m-card" style={{ ...s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,26,45,.05);padding:24px'), borderLeft: `4px solid ${stripe}` }}>
-              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#C0473C;animation:stPulse 2s ease-out infinite')} /><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>ON AIR</span><button className="ah-ink" onClick={() => say('Live header popped out', 'open_in_full')} style={s("display:flex;align-items:center;gap:7px;font:600 11.5px/1 'Archivo';color:#3D5067;margin-left:auto")}><Ms size={15} color="inherit">open_in_full</Ms>Pop out</button></div>
+            <div className="m-card" style={{ ...s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,12,14,.05);padding:24px'), borderLeft: `4px solid ${stripe}` }}>
+              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s('width:9px;height:9px;border-radius:50%;background:#C0473C;animation:stPulse 2s ease-out infinite')} /><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>ON AIR</span><button className="ah-ink" onClick={() => say('Live header popped out', 'open_in_full')} style={s("display:flex;align-items:center;gap:7px;font:600 11.5px/1 'Inter';color:#3B4048;margin-left:auto")}><Ms size={15} color="inherit">open_in_full</Ms>Pop out</button></div>
               <div className="m-wrap" style={s('display:flex;align-items:flex-end;gap:20px;margin-top:16px')}>
                 <div style={s('flex:1;min-width:0')}>
-                  <div className="m-big" style={s("font:800 38px/.94 'Archivo Black';letter-spacing:.01em")}>{cur.name}</div>
-                  <div style={s('display:flex;align-items:center;gap:12px;margin-top:12px')}><span style={s('display:flex;align-items:center;gap:7px;background:#F1F1EE;padding:7px 10px;border-radius:8px')}><span style={dk({ ...s('width:6px;height:6px;border-radius:50%'), background: stripe })} /><span style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#0B1A2D")}>{String(cur.phase).toUpperCase()}</span></span><span style={s("font:500 12px/1 'Archivo';color:#3D5067")}>{cur.stack.length} blocks on screen</span></div>
+                  <div className="m-big" style={s("font:800 38px/.94 'Space Grotesk';letter-spacing:.01em")}>{cur.name}</div>
+                  <div style={s('display:flex;align-items:center;gap:12px;margin-top:12px')}><span style={s('display:flex;align-items:center;gap:7px;background:#EEF0F3;padding:7px 10px;border-radius:8px')}><span style={dk({ ...s('width:6px;height:6px;border-radius:50%'), background: stripe })} /><span style={s("font:600 10px/1 'Inter';letter-spacing:.12em;color:#0B0C0E")}>{String(cur.phase).toUpperCase()}</span></span><span style={s("font:500 12px/1 'Inter';color:#3B4048")}>{cur.stack.length} blocks on screen</span></div>
                 </div>
-                <div style={s('text-align:right')}><div className="m-big" style={s("font:800 44px/.9 'Archivo Black';font-variant-numeric:tabular-nums")}>{fmt(st.clock)}</div><div style={s("font:600 10px/1 'Archivo';letter-spacing:.12em;color:#3D5067;margin-top:12px")}>{st.playing ? 'MATCH CLOCK · RUNNING' : 'MATCH CLOCK · HELD'}</div></div>
+                <div style={s('text-align:right')}><div className="m-big" style={s("font:800 44px/.9 'Space Grotesk';font-variant-numeric:tabular-nums")}>{fmt(st.clock)}</div><div style={s("font:600 10px/1 'Inter';letter-spacing:.12em;color:#3B4048;margin-top:12px")}>{st.playing ? 'MATCH CLOCK · RUNNING' : 'MATCH CLOCK · HELD'}</div></div>
               </div>
             </div>
 
             <Card>
-              <span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>MODE</span>
+              <span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>MODE</span>
               <div className="m-wrap" style={s('display:flex;align-items:center;gap:12px;margin-top:16px')}>
-                <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE')}>{[{ k: 'auto', name: 'Auto', icon: 'autoplay' }, { k: 'manual', name: 'Manual', icon: 'sports_esports' }].map((m) => { const on = st.mode === m.k; return <button key={m.k} data-cur={'mode-' + m.k} onClick={() => { setState({ mode: m.k }); say(`${m.name} mode`, m.icon); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:10px 15px;border-radius:9px;font:600 12px/1 'Archivo'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#0B1A2D' : '#3D5067' })}><Ms size={16} color="inherit">{m.icon}</Ms>{m.name}</button>; })}</div>
-                <button onClick={() => { setState({ playing: !st.playing }); say(st.playing ? 'Clock held' : 'Clock running', st.playing ? 'pause' : 'play_arrow'); }} style={dk({ ...s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Archivo'"), background: st.playing ? '#FFFFFF' : '#0B1A2D', color: st.playing ? '#0B1A2D' : '#F5F5F2', boxShadow: st.playing ? 'inset 0 0 0 1px rgba(11,26,45,.14)' : 'none' })}><Ms size={17} color="inherit">{st.playing ? 'pause' : 'play_arrow'}</Ms>{st.playing ? 'Pause' : 'Play'}</button>
-                <button className="ah" onClick={() => { setState({ clock: 0, liveIdx: 0, log: [] }); say('Panel restarted for all devices', 'restart_alt'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Archivo';color:#0B1A2D;box-shadow:inset 0 0 0 1px rgba(11,26,45,.14)")}><Ms size={17} color="inherit">restart_alt</Ms>Restart</button>
-                <div className="m-ml0" style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE;margin-left:auto')}>{['1×', '2×', '5×', '10×'].map((x) => { const on = st.speed === x; return <button key={x} onClick={() => setState({ speed: x })} style={dk({ ...s("padding:9px 12px;border-radius:9px;font:600 11.5px/1 'Archivo';font-variant-numeric:tabular-nums"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#0B1A2D' : '#3D5067' })}>{x}</button>; })}</div>
+                <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#EEF0F3')}>{[{ k: 'auto', name: 'Auto', icon: 'autoplay' }, { k: 'manual', name: 'Manual', icon: 'sports_esports' }].map((m) => { const on = st.mode === m.k; return <button key={m.k} data-cur={'mode-' + m.k} onClick={() => { setState({ mode: m.k }); say(`${m.name} mode`, m.icon); }} style={dk({ ...s("display:flex;align-items:center;gap:7px;padding:10px 15px;border-radius:9px;font:600 12px/1 'Inter'"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#0B0C0E' : '#3B4048' })}><Ms size={16} color="inherit">{m.icon}</Ms>{m.name}</button>; })}</div>
+                <button onClick={() => { setState({ playing: !st.playing }); say(st.playing ? 'Clock held' : 'Clock running', st.playing ? 'pause' : 'play_arrow'); }} style={dk({ ...s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Inter'"), background: st.playing ? '#FFFFFF' : '#0B0C0E', color: st.playing ? '#0B0C0E' : '#F4F5F7', boxShadow: st.playing ? 'inset 0 0 0 1px rgba(11,12,14,.14)' : 'none' })}><Ms size={17} color="inherit">{st.playing ? 'pause' : 'play_arrow'}</Ms>{st.playing ? 'Pause' : 'Play'}</button>
+                <button className="ah" onClick={() => { setState({ clock: 0, liveIdx: 0, log: [] }); say('Panel restarted for all devices', 'restart_alt'); }} style={s("display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;font:600 12.5px/1 'Inter';color:#0B0C0E;box-shadow:inset 0 0 0 1px rgba(11,12,14,.14)")}><Ms size={17} color="inherit">restart_alt</Ms>Restart</button>
+                <div className="m-ml0" style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#EEF0F3;margin-left:auto')}>{['1×', '2×', '5×', '10×'].map((x) => { const on = st.speed === x; return <button key={x} onClick={() => setState({ speed: x })} style={dk({ ...s("padding:9px 12px;border-radius:9px;font:600 11.5px/1 'Inter';font-variant-numeric:tabular-nums"), background: on ? '#FFFFFF' : 'transparent', color: on ? '#0B0C0E' : '#3B4048' })}>{x}</button>; })}</div>
               </div>
-              <div style={s("font:400 12px/1.5 'Archivo';color:#3D5067;margin-top:16px")}>{st.mode === 'manual' ? 'Manual: nothing advances unless you advance it. Safest during a live match.' : 'Auto: sessions advance on the match clock, you can still fire events and override.'}</div>
+              <div style={s("font:400 12px/1.5 'Inter';color:#3B4048;margin-top:16px")}>{st.mode === 'manual' ? 'Manual: nothing advances unless you advance it. Safest during a live match.' : 'Auto: sessions advance on the match clock, you can still fire events and override.'}</div>
             </Card>
 
             <Card>
               <div className="m-col" style={s('display:flex;align-items:center;gap:16px')}>
                 <div style={s('flex:1;min-width:0')}>
-                  <div style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>FAN DISPLAY</div>
-                  <div style={s("font:400 12px/1.5 'Archivo';color:#3D5067;margin-top:8px")}>The look every phone uses. Dark is the default; Auto follows each fan’s phone setting.</div>
+                  <div style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>FAN DISPLAY</div>
+                  <div style={s("font:400 12px/1.5 'Inter';color:#3B4048;margin-top:8px")}>The look every phone uses. Dark is the default; Auto follows each fan’s phone setting.</div>
                 </div>
-                <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#F1F1EE')}>{[{ k: 'dark', name: 'Dark', icon: 'dark_mode' }, { k: 'light', name: 'Light', icon: 'light_mode' }, { k: 'auto', name: 'Auto', icon: 'contrast' }].map((o) => { const on = fanTheme === o.k; return (
-                  <button key={o.k} onClick={() => pickFanTheme(o.k)} style={dk({ ...s("display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:9px;font:600 12.5px/1 'Archivo'"), background: on ? '#0B1A2D' : 'transparent', color: on ? '#F5F5F2' : '#3D5067' })}><Ms size={15} color={on ? '#F5F5F2' : ctx('#3D5067')}>{o.icon}</Ms>{o.name}</button>
+                <div style={s('display:flex;gap:4px;padding:4px;border-radius:12px;background:#EEF0F3')}>{[{ k: 'dark', name: 'Dark', icon: 'dark_mode' }, { k: 'light', name: 'Light', icon: 'light_mode' }, { k: 'auto', name: 'Auto', icon: 'contrast' }].map((o) => { const on = fanTheme === o.k; return (
+                  <button key={o.k} onClick={() => pickFanTheme(o.k)} style={dk({ ...s("display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:9px;font:600 12.5px/1 'Inter'"), background: on ? '#0B0C0E' : 'transparent', color: on ? '#F4F5F7' : '#3B4048' })}><Ms size={15} color={on ? '#F4F5F7' : ctx('#3B4048')}>{o.icon}</Ms>{o.name}</button>
                 ); })}</div>
               </div>
             </Card>
 
             <Card>
-              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>SESSIONS</span><span className="m-hide" style={s("font:500 11.5px/1 'Archivo';color:#3D5067;margin-left:auto")}>Jump to any state, every fan device follows</span></div>
+              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>SESSIONS</span><span className="m-hide" style={s("font:500 11.5px/1 'Inter';color:#3B4048;margin-left:auto")}>Jump to any state, every fan device follows</span></div>
               <div className="m-g2" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
                 {sess.map((se, i) => { const on = i === st.liveIdx; return (
-                  <button key={i} className="ah" onClick={() => { setState({ liveIdx: i }); send({ cmd: 'state', ms: phaseToMs(se.phase) }); say(`Fans moved to “${se.name}”`, 'swap_horiz'); }} style={dk({ ...s('display:flex;align-items:center;gap:10px;padding:14px;border-radius:12px'), background: on ? '#F1F1EE' : '#FFFFFF', boxShadow: on ? 'inset 0 0 0 2px #0B1A2D' : 'inset 0 0 0 1px rgba(11,26,45,.12)' })}>
-                    <span style={dk({ ...s("width:22px;height:22px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;font:700 10.5px/1 'Archivo'"), background: on ? '#0B1A2D' : '#E9E9E4', color: on ? '#F5F5F2' : '#3D5067' })}>{i + 1}</span>
-                    <span style={s("flex:1;min-width:0;font:600 12.5px/1 'Archivo';color:#0B1A2D")}>{se.name}</span>
-                    <span style={dk({ ...s('width:7px;height:7px;border-radius:50%'), background: PHASE_COLOR[se.phase] || '#6D819A' })} />
+                  <button key={i} className="ah" onClick={() => { setState({ liveIdx: i }); send({ cmd: 'state', ms: phaseToMs(se.phase) }); say(`Fans moved to “${se.name}”`, 'swap_horiz'); }} style={dk({ ...s('display:flex;align-items:center;gap:10px;padding:14px;border-radius:12px'), background: on ? '#EEF0F3' : '#FFFFFF', boxShadow: on ? 'inset 0 0 0 2px #0B0C0E' : 'inset 0 0 0 1px rgba(11,12,14,.12)' })}>
+                    <span style={dk({ ...s("width:22px;height:22px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;font:700 10.5px/1 'Inter'"), background: on ? '#0B0C0E' : '#E3E6EB', color: on ? '#F4F5F7' : '#3B4048' })}>{i + 1}</span>
+                    <span style={s("flex:1;min-width:0;font:600 12.5px/1 'Inter';color:#0B0C0E")}>{se.name}</span>
+                    <span style={dk({ ...s('width:7px;height:7px;border-radius:50%'), background: PHASE_COLOR[se.phase] || '#6B717C' })} />
                   </button>
                 ); })}
               </div>
-              <button data-cur="advance" className="ah-ink-btn" onClick={() => { const n = Math.min(st.liveIdx + 1, sess.length - 1); setState({ liveIdx: n }); send({ cmd: 'state', ms: phaseToMs((sess[n] || {}).phase) }); say(`Advanced to “${(sess[n] || {}).name}”`, 'arrow_forward'); }} style={s("display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:16px;padding:16px;border-radius:12px;background:#0B1A2D;font:700 13.5px/1 'Archivo';color:#F5F5F2")}>Advance to next session<Ms size={18} color={ctx('#F5F5F2')}>arrow_forward</Ms></button>
+              <button data-cur="advance" className="ah-ink-btn" onClick={() => { const n = Math.min(st.liveIdx + 1, sess.length - 1); setState({ liveIdx: n }); send({ cmd: 'state', ms: phaseToMs((sess[n] || {}).phase) }); say(`Advanced to “${(sess[n] || {}).name}”`, 'arrow_forward'); }} style={s("display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:16px;padding:16px;border-radius:12px;background:#0B0C0E;font:700 13.5px/1 'Inter';color:#F4F5F7")}>Advance to next session<Ms size={18} color={ctx('#F4F5F7')}>arrow_forward</Ms></button>
             </Card>
 
             <Card>
-              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>KICKOFF COUNTDOWN</span><span style={s("font:800 34px/.9 'Archivo Black';margin-left:auto;font-variant-numeric:tabular-nums")}>{st.countdown > 0 ? fmt(st.countdown) : '–'}</span></div>
+              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>KICKOFF COUNTDOWN</span><span style={s("font:800 34px/.9 'Space Grotesk';margin-left:auto;font-variant-numeric:tabular-nums")}>{st.countdown > 0 ? fmt(st.countdown) : '–'}</span></div>
               <div style={s('display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px')}>
-                {[{ n: '0:30', v: 30 }, { n: '2:00', v: 120 }, { n: '5:00', v: 300 }, { n: '15:00', v: 900 }, { n: 'Clear', v: 0 }].map((c) => { const on = st.countdown === c.v && c.v > 0; return <button key={c.n} data-cur={'cd-' + c.v} onClick={() => { setState({ countdown: c.v }); say(c.v ? `Countdown set to ${c.n}` : 'Countdown cleared', 'timer'); }} style={dk({ ...s("padding:13px 0;border-radius:12px;font:600 12px/1 'Archivo';text-align:center;font-variant-numeric:tabular-nums"), background: on ? '#0B1A2D' : '#F1F1EE', color: on ? '#F5F5F2' : '#0B1A2D', boxShadow: on ? 'none' : 'inset 0 0 0 1px rgba(11,26,45,.1)' })}>{c.n}</button>; })}
+                {[{ n: '0:30', v: 30 }, { n: '2:00', v: 120 }, { n: '5:00', v: 300 }, { n: '15:00', v: 900 }, { n: 'Clear', v: 0 }].map((c) => { const on = st.countdown === c.v && c.v > 0; return <button key={c.n} data-cur={'cd-' + c.v} onClick={() => { setState({ countdown: c.v }); say(c.v ? `Countdown set to ${c.n}` : 'Countdown cleared', 'timer'); }} style={dk({ ...s("padding:13px 0;border-radius:12px;font:600 12px/1 'Inter';text-align:center;font-variant-numeric:tabular-nums"), background: on ? '#0B0C0E' : '#EEF0F3', color: on ? '#F4F5F7' : '#0B0C0E', boxShadow: on ? 'none' : 'inset 0 0 0 1px rgba(11,12,14,.1)' })}>{c.n}</button>; })}
               </div>
             </Card>
 
             <Card>
-              <div className="m-wrap" style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>TRIGGER EVENT</span><span style={s("display:flex;align-items:center;gap:7px;margin-left:auto;font:600 11.5px/1 'Archivo';color:#C0473C")}><Ms size={15} color={ctx('#C0473C')}>bolt</Ms>Fires instantly to {st.devices.toLocaleString()} devices</span></div>
+              <div className="m-wrap" style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>TRIGGER EVENT</span><span style={s("display:flex;align-items:center;gap:7px;margin-left:auto;font:600 11.5px/1 'Inter';color:#C0473C")}><Ms size={15} color={ctx('#C0473C')}>bolt</Ms>Fires instantly to {st.devices.toLocaleString()} devices</span></div>
               <div className="m-g3" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
                 {TRIGGERS.map((t) => (
-                  <button key={t.id} data-cur={'trig-' + t.id} className="ah2" onClick={() => { broadcast?.(t); const k = trigToKind[t.id]; if (k) send({ cmd: 'event', kind: k }); }} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#F1F1EE;box-shadow:inset 0 0 0 1px rgba(11,26,45,.08)')}>
+                  <button key={t.id} data-cur={'trig-' + t.id} className="ah2" onClick={() => { broadcast?.(t); const k = trigToKind[t.id]; if (k) send({ cmd: 'event', kind: k }); }} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#EEF0F3;box-shadow:inset 0 0 0 1px rgba(11,12,14,.08)')}>
                     <Ms size={21} color={t.color}>{t.icon}</Ms>
-                    <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Archivo';color:#0B1A2D")}>{t.name}</span><span style={s("display:block;font:400 11px/1.3 'Archivo';color:#3D5067;margin-top:5px")}>{t.blurb}</span></span>
+                    <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Inter';color:#0B0C0E")}>{t.name}</span><span style={s("display:block;font:400 11px/1.3 'Inter';color:#3B4048;margin-top:5px")}>{t.blurb}</span></span>
                   </button>
                 ))}
               </div>
             </Card>
 
             <Card>
-              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>CREWS &amp; GAMES</span><span className="m-hide" style={s("font:500 11.5px/1 'Archivo';color:#3D5067;margin-left:auto")}>Between the whistles &amp; dead time</span></div>
+              <div style={s('display:flex;align-items:center;gap:12px')}><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>CREWS &amp; GAMES</span><span className="m-hide" style={s("font:500 11.5px/1 'Inter';color:#3B4048;margin-left:auto")}>Between the whistles &amp; dead time</span></div>
               <div className="m-g3" style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
                 {[
                   { id: 'crews', name: 'Open Crews', blurb: 'Switch fans to the Crews home', icon: 'groups', color: '#C8102E', act: () => { send({ cmd: 'state', ms: 'inactive' }); say('Fans switched to Crews', 'groups'); } },
@@ -886,9 +890,9 @@ function Control({ st, setState, say, broadcast }: Props) {
                   { id: 'dropin-end', name: 'End drop-in', blurb: 'Close the player window on all devices', icon: 'stop_circle', color: '#C0473C', act: () => { send({ cmd: 'dropin', action: 'end' }); say('Drop-in ended', 'stop_circle'); } },
                   { id: 'player-post', name: 'Player post', blurb: 'Grosicki posts a photo to Granatowo-Bordowi', icon: 'photo_camera', color: '#C8102E', act: () => { send({ cmd: 'player-post', crewId: 'msb', player: 'Kamil Grosicki', type: 'image' }); say('Grosicki posted to the Crew', 'photo_camera'); } },
                 ].map((t) => (
-                  <button key={t.id} data-cur={'crew-' + t.id} className="ah2" onClick={t.act} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#F1F1EE;box-shadow:inset 0 0 0 1px rgba(11,26,45,.08)')}>
+                  <button key={t.id} data-cur={'crew-' + t.id} className="ah2" onClick={t.act} style={s('display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;background:#EEF0F3;box-shadow:inset 0 0 0 1px rgba(11,12,14,.08)')}>
                     <Ms size={21} color={t.color}>{t.icon}</Ms>
-                    <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Archivo';color:#0B1A2D")}>{t.name}</span><span style={s("display:block;font:400 11px/1.3 'Archivo';color:#3D5067;margin-top:5px")}>{t.blurb}</span></span>
+                    <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:700 13px/1.2 'Inter';color:#0B0C0E")}>{t.name}</span><span style={s("display:block;font:400 11px/1.3 'Inter';color:#3B4048;margin-top:5px")}>{t.blurb}</span></span>
                   </button>
                 ))}
               </div>
@@ -896,25 +900,25 @@ function Control({ st, setState, say, broadcast }: Props) {
           </div>
 
           <aside className="m-full" style={s('width:376px;flex:none;position:sticky;top:96px')}>
-            <div className="m-card" style={s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,26,45,.05);padding:24px')}>
-              <div style={s('display:flex;align-items:center;gap:10px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#C0473C;animation:stBlink 1.6s steps(1,end) infinite')} /><span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>LIVE MONITOR</span><span style={s("font:500 11px/1 'Archivo';color:#3D5067;margin-left:auto")}>True fan view</span></div>
-              <div style={s('margin-top:16px;padding:10px;background:#100E0A;border-radius:20px')}>
-                <iframe title="Live fan monitor" src={fanUrl(p.id) + '?embed=1&theme=dark'} style={dk({ width: '100%', height: 660, border: 0, borderRadius: 12, background: '#100E0A', display: 'block' })} />
+            <div className="m-card" style={s('background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,12,14,.05);padding:24px')}>
+              <div style={s('display:flex;align-items:center;gap:10px')}><span style={s('width:7px;height:7px;border-radius:50%;background:#C0473C;animation:stBlink 1.6s steps(1,end) infinite')} /><span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>LIVE MONITOR</span><span style={s("font:500 11px/1 'Inter';color:#3B4048;margin-left:auto")}>True fan view</span></div>
+              <div style={s('margin-top:16px;padding:8px;background:#000000;border-radius:22px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)')}>
+                <iframe title="Live fan monitor" src={fanUrl(p.id) + '?embed=1&theme=' + monitorTheme.current} style={{ width: '100%', height: 660, border: 0, borderRadius: 16, background: '#000000', display: 'block' }} />
               </div>
               <div style={s('display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px')}>
-                <div style={s('padding:12px;border-radius:12px;background:#F1F1EE')}><div style={s("font:600 9.5px/1 'Archivo';letter-spacing:.12em;color:#3D5067")}>CONNECTED</div><div style={s("font:800 24px/.9 'Archivo Black';margin-top:10px;font-variant-numeric:tabular-nums")}>{st.devices.toLocaleString()}</div></div>
-                <div style={s('padding:12px;border-radius:12px;background:#F1F1EE')}><div style={s("font:600 9.5px/1 'Archivo';letter-spacing:.12em;color:#3D5067")}>MSG / MIN</div><div style={s("font:800 24px/.9 'Archivo Black';margin-top:10px;font-variant-numeric:tabular-nums")}>{380 + (st.tick % 40)}</div></div>
-                <div style={s('padding:12px;border-radius:12px;background:#F1F1EE')}><div style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:6px;height:6px;border-radius:50%;background:#C8102E')} /><span style={s("font:600 9.5px/1 'Archivo';letter-spacing:.12em;color:#3D5067")}>STAGED</span></div><div style={s("font:800 24px/.9 'Archivo Black';margin-top:10px;font-variant-numeric:tabular-nums;color:#0B1A2D")}>{st.staged}</div></div>
+                <div style={s('padding:12px;border-radius:12px;background:#EEF0F3')}><div style={s("font:600 9.5px/1 'Inter';letter-spacing:.12em;color:#3B4048")}>CONNECTED</div><div style={s("font:800 24px/.9 'Space Grotesk';margin-top:10px;font-variant-numeric:tabular-nums")}>{st.devices.toLocaleString()}</div></div>
+                <div style={s('padding:12px;border-radius:12px;background:#EEF0F3')}><div style={s("font:600 9.5px/1 'Inter';letter-spacing:.12em;color:#3B4048")}>MSG / MIN</div><div style={s("font:800 24px/.9 'Space Grotesk';margin-top:10px;font-variant-numeric:tabular-nums")}>{380 + (st.tick % 40)}</div></div>
+                <div style={s('padding:12px;border-radius:12px;background:#EEF0F3')}><div style={s('display:flex;align-items:center;gap:6px')}><span style={s('width:6px;height:6px;border-radius:50%;background:#C8102E')} /><span style={s("font:600 9.5px/1 'Inter';letter-spacing:.12em;color:#3B4048")}>STAGED</span></div><div style={s("font:800 24px/.9 'Space Grotesk';margin-top:10px;font-variant-numeric:tabular-nums;color:#0B0C0E")}>{st.staged}</div></div>
               </div>
-              <div style={s('margin-top:20px;padding-top:16px;border-top:1px solid rgba(11,26,45,.08)')}>
-                <span style={s("font:600 10.5px/1 'Archivo';letter-spacing:.14em;color:#3D5067")}>BROADCAST LOG</span>
+              <div style={s('margin-top:20px;padding-top:16px;border-top:1px solid rgba(11,12,14,.08)')}>
+                <span style={s("font:600 10.5px/1 'Inter';letter-spacing:.14em;color:#3B4048")}>BROADCAST LOG</span>
                 <div style={s('display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:230px;overflow-y:auto')}>
-                  {st.log.length === 0 && <div style={s("font:400 11.5px/1.5 'Archivo';color:#6D819A;padding:4px 0")}>Nothing pushed yet, fire an event to broadcast it to every device.</div>}
+                  {st.log.length === 0 && <div style={s("font:400 11.5px/1.5 'Inter';color:#6B717C;padding:4px 0")}>Nothing pushed yet, fire an event to broadcast it to every device.</div>}
                   {st.log.map((l) => (
-                    <div key={l.id} style={s('display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;background:#F1F1EE;animation:stSlide .25s ease both')}>
+                    <div key={l.id} style={s('display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;background:#EEF0F3;animation:stSlide .25s ease both')}>
                       <Ms size={16} color={l.color}>{l.icon}</Ms>
-                      <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 12px/1.2 'Archivo';color:#0B1A2D")}>{l.name}</span><span style={s("display:block;font:400 10.5px/1.2 'Archivo';color:#3D5067;margin-top:5px")}>{l.detail}</span></span>
-                      <span style={s("font:500 10.5px/1 'Archivo';color:#3D5067;font-variant-numeric:tabular-nums")}>{l.t}</span>
+                      <span style={s('flex:1;min-width:0')}><span style={s("display:block;font:600 12px/1.2 'Inter';color:#0B0C0E")}>{l.name}</span><span style={s("display:block;font:400 10.5px/1.2 'Inter';color:#3B4048;margin-top:5px")}>{l.detail}</span></span>
+                      <span style={s("font:500 10.5px/1 'Inter';color:#3B4048;font-variant-numeric:tabular-nums")}>{l.t}</span>
                     </div>
                   ))}
                 </div>
@@ -928,14 +932,14 @@ function Control({ st, setState, say, broadcast }: Props) {
 }
 
 // ── small shared pieces ──
-const Card = ({ children }: { children: ReactNode }) => <div className="m-card" style={s('padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,26,45,.05)')}>{children}</div>;
-const TitleRow = ({ icon, children }: { icon: string; children: ReactNode }) => <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#0B1A2D')}>{icon}</Ms><span style={s("font:700 16px/1 'Archivo';letter-spacing:-.012em")}>{children}</span></div>;
-const Label = ({ children }: { children: ReactNode }) => <div style={s("font:600 10.5px/1 'Archivo';letter-spacing:.12em;color:#6D819A")}>{children}</div>;
+const Card = ({ children }: { children: ReactNode }) => <div className="m-card" style={s('padding:24px;background:#FFFFFF;border-radius:18px;box-shadow:0 1px 2px rgba(11,12,14,.05)')}>{children}</div>;
+const TitleRow = ({ icon, children }: { icon: string; children: ReactNode }) => <div style={s('display:flex;align-items:center;gap:10px')}><Ms size={19} color={ctx('#0B0C0E')}>{icon}</Ms><span style={s("font:700 16px/1 'Inter';letter-spacing:-.012em")}>{children}</span></div>;
+const Label = ({ children }: { children: ReactNode }) => <div style={s("font:600 10.5px/1 'Inter';letter-spacing:.12em;color:#6B717C")}>{children}</div>;
 function SwatchRow({ label, value, swatches, onPick }: { label: string; value: string; swatches: string[]; onPick: (hex: string) => void }) {
   return (
     <div><Label>{label}</Label>
-      <div style={s('display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;border-radius:12px;background:#F1F1EE')}>
-        <span style={dk({ ...s('width:26px;height:26px;border-radius:8px'), background: value })} /><span style={s("font:600 12.5px/1 'Archivo';font-variant-numeric:tabular-nums")}>{value}</span>
+      <div style={s('display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;border-radius:12px;background:#EEF0F3')}>
+        <span style={dk({ ...s('width:26px;height:26px;border-radius:8px'), background: value })} /><span style={s("font:600 12.5px/1 'Inter';font-variant-numeric:tabular-nums")}>{value}</span>
         <div style={s('display:flex;gap:5px;margin-left:auto')}>{swatches.map((hex) => <button key={hex} onClick={() => onPick(hex)} style={dk({ ...s('width:22px;height:22px;border-radius:7px'), background: hex, boxShadow: ring(value === hex) })} />)}</div>
       </div>
     </div>
@@ -949,11 +953,17 @@ const ADMIN_CSS = `
 @keyframes stBlink{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes stSlide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
 .ms{font-family:'Material Symbols Rounded';font-weight:300;font-style:normal;line-height:1;display:inline-block;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased}
-.ah:hover{background:#F1F1EE !important}
-.ah2:hover{background:#E9E9E4 !important}
-.ah-ink:hover{color:#0B1A2D !important}
-.ah-ink-btn:hover{background:#15283F !important}
+.ah:hover{background:#EEF0F3 !important}
+.ah2:hover{background:#E3E6EB !important}
+.ah-ink:hover{color:#0B0C0E !important}
+.ah-ink-btn:hover{background:#1D2026 !important}
 .ah-del:hover{background:#F6DCD8 !important}
+.adm-dark .ah:hover{background:#1D2026 !important}
+.adm-dark .ah2:hover{background:#2A2E36 !important}
+.adm-dark .ah-ink:hover{color:#F2F3F5 !important}
+.adm-dark .ah-ink-btn:hover{background:#A50D26 !important}
+.adm-dark .ah-del:hover{background:#3a2422 !important}
+.adm-dark ::placeholder{color:#6B717C}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
 /* Responsive layer. The screens are authored as desktop inline styles, so these
    hooks override them with !important. Scoped to .vs-r, which is only set
