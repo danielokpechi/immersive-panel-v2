@@ -628,8 +628,8 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
             ); })()}
 
             {/* header: Sepang-style floating bar (IRIS tile · score pill · status · theme · you) */}
-            <div style={{ ...s('position:sticky;top:0;z-index:40;transition:background .25s ease,box-shadow .25s ease'), ...(isHome && !scrolled ? { background: 'linear-gradient(rgba(11,12,14,.55),transparent)', marginBottom: -64 } : { background: 'rgba(11,12,14,.82)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 1px 0 rgba(255,255,255,.07)' }) }}>
-              <div style={s('display:flex;align-items:center;gap:8px;height:64px;padding:0 14px')}>
+            <div style={{ ...s('position:sticky;top:0;z-index:40;transition:background .25s ease,box-shadow .25s ease'), ...(isHome && !scrolled ? { background: 'linear-gradient(rgba(11,12,14,.55),transparent)', marginBottom: -78 } : { background: 'rgba(11,12,14,.82)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 1px 0 rgba(255,255,255,.07)' }) }}>
+              <div style={s('display:flex;align-items:center;gap:8px;height:64px;padding:0 16px;margin-top:max(14px, env(safe-area-inset-top))')}>
                 {isSub
                   ? <button data-cur="fanback" onClick={goBack} aria-label="Back" style={s('width:40px;height:40px;flex:none;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#F2F3F5">arrow_back</Ms></button>
                   : <button onClick={() => set({ iris: true })} aria-label="Ask IRIS" style={s('width:40px;height:40px;flex:none;border-radius:12px;background:var(--iris);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center')}><Ms size={21} color="var(--iris-ink)">auto_awesome</Ms></button>}
@@ -814,7 +814,7 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
           <div style={s('position:relative;overflow:hidden;background:#0B0C0E')}>
             <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 10%')} />
             <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,12,14,.5) 0%,rgba(11,12,14,.12) 28%,rgba(11,12,14,.72) 62%,#0B0C0E 100%)')} />
-            <div style={s('position:relative;padding:84px 16px 24px;text-align:center')}>
+            <div style={s('position:relative;padding:108px 16px 26px;text-align:center')}>
               <div style={s('display:flex;align-items:center;justify-content:center;gap:18px')}><Badge club="home" size={60} /><span style={s("font:500 15px/1 'Space Grotesk';color:#C5CAD3")}>v</span><Badge club="away" size={60} /></div>
               <div style={s("font:600 30px/1.05 'Space Grotesk';color:#fff;margin-top:16px;letter-spacing:-.01em")}>Pogoń v Śląsk Wrocław</div>
               <div style={s("font:400 13px/1.4 'Inter';color:#C5CAD3;margin-top:7px")}>Round 15 · PKO BP Ekstraklasa · Stadion Miejski im. F. Krygiera</div>
@@ -880,7 +880,7 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
           <div style={s('position:relative;overflow:hidden;background:#0B0C0E')}>
             <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 10%')} />
             <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,12,14,.5) 0%,rgba(11,12,14,.12) 28%,rgba(11,12,14,.72) 62%,#0B0C0E 100%)')} />
-            <div style={s('position:relative;padding:150px 16px 20px')}>
+            <div style={s('position:relative;padding:176px 16px 22px')}>
               <div style={s('display:flex;align-items:center;gap:10px')}>
                 {ht
                   ? <span style={s("font:600 12px/1 'Inter';color:#0B0C0E;background:#3CC46E;padding:7px 11px;border-radius:999px")}>Half-time</span>
@@ -941,7 +941,7 @@ function Home({ st, pre, live, ht, ft, inactive, isCommunityLead, showCommunityB
           <div style={s('position:relative;overflow:hidden;background:#0B0C0E')}>
             <img src={media.crowd} alt="" style={s('position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%')} />
             <div style={s('position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,12,14,.5) 0%,rgba(11,12,14,.12) 28%,rgba(11,12,14,.72) 62%,#0B0C0E 100%)')} />
-            <div style={s('position:relative;padding:150px 16px 20px')}>
+            <div style={s('position:relative;padding:176px 16px 22px')}>
               <span style={s("display:inline-flex;align-items:center;gap:6px;font:600 12px/1 'Inter';color:#0B0C0E;background:#fff;padding:7px 11px;border-radius:999px")}><Ms size={14} color="#0B0C0E">flag</Ms>Full-time</span>
               <div style={s("font:600 40px/1.02 'Space Grotesk';color:#fff;margin-top:12px;letter-spacing:-.01em")}>Pogoń 2–1 Śląsk</div>
               <div style={s("font:400 13.5px/1.45 'Inter';color:#C5CAD3;margin-top:6px")}>Grosicki 23’ · Pozo 71’ · Camões 58’</div>
