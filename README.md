@@ -1,4 +1,4 @@
-# Immersive Panel — v2 (Matchday Companion)
+# BoltOS Connect — v2 (Matchday Companion)
 
 A deployable matchday fan experience + club-side operator studio, built for
 Manchester City (flagship fixture: City v Real Madrid, Champions League semi).

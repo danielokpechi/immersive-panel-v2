@@ -4,7 +4,7 @@ import '../styles/tokens.css';
 import '../styles/app.css';
 
 export const metadata: Metadata = {
-  title: 'Matchday · Immersive Panel',
+  title: 'Matchday · BoltOS Connect',
 };
 
 export const viewport: Viewport = {
