@@ -603,15 +603,9 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
 
         {/* PHONE */}
         <div style={phoneStyle}>
-          {/* status bar */}
-          <div style={s("position:absolute;top:0;left:0;right:0;height:46px;z-index:50;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 4px;font:700 12.5px/1 'Archivo';color:var(--on-panel);background:var(--panel)")}>
-            <span>20:44</span>
-            <div style={s('display:flex;align-items:center;gap:5px')}><span style={s('width:15px;height:8px;border:1.4px solid #F2F2F0;border-radius:2px;display:inline-block')} /><span style={s("font:700 10px/1 'Archivo';letter-spacing:.06em")}>5G</span></div>
-          </div>
-
           {autoplay && <AutoChip interacting={autoplayState.interacting} />}
           {cursor.node}
-          <div data-fanscroll style={s('position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:46px;padding-bottom:56px')}>
+          <div data-fanscroll style={s('position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(20px + env(safe-area-inset-bottom))')}>
             {/* event lower-third */}
             {st.event && (() => { const e = st.event!; const color = EV[e.kind]?.color || '#C8102E'; const isCard = e.kind === 'YELLOW' || e.kind === 'RED CARD'; const hasIcon = !!EV[e.kind]?.icon; return (
               <div style={s('position:sticky;top:0;z-index:45;overflow:hidden')}>
@@ -705,7 +699,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
 
           {/* FLASH SALE, pops on a goal, dismissible */}
           {st.flash && (
-            <div style={{ ...s('position:absolute;top:122px;left:10px;right:10px;z-index:48'), animation: st.flashOut ? 'bgFlashOut .18s cubic-bezier(.23,1,.32,1) both' : 'bgRise .32s cubic-bezier(.18,.9,.2,1) both' }}>
+            <div style={{ ...s('position:absolute;top:76px;left:10px;right:10px;z-index:48'), animation: st.flashOut ? 'bgFlashOut .18s cubic-bezier(.23,1,.32,1) both' : 'bgRise .32s cubic-bezier(.18,.9,.2,1) both' }}>
               <div style={s('display:flex;align-items:center;gap:11px;padding:11px 11px 11px 13px;background:var(--panel);border-radius:2px;box-shadow:0 14px 34px -8px rgba(11,26,45,.55)')}>
                 <span style={s('width:36px;height:36px;flex:none;border-radius:2px;background:#C8102E;display:flex;align-items:center;justify-content:center')}><Ms size={20} color="#fff">local_offer</Ms></span>
                 <button onClick={() => { set({ route: 'shop' }); closeFlash(); }} style={s('flex:1;min-width:0;text-align:left')}>
@@ -720,7 +714,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
 
           {/* IRIS */}
           {!st.iris && (
-            <button data-cur="iris" onClick={() => set({ iris: true })} className="fh2" style={s('position:absolute;right:0;bottom:96px;z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px')}>
+            <button data-cur="iris" onClick={() => set({ iris: true })} className="fh2" style={s('position:absolute;right:0;bottom:calc(40px + env(safe-area-inset-bottom));z-index:46;display:flex;align-items:center;gap:8px;padding:11px 13px 11px 12px;background:var(--panel);border-radius:3px 0 0 3px')}>
               <span style={s('width:7px;height:7px;background:#C8102E;animation:bgDot 1.6s ease-in-out infinite')} />
               <span style={s("font:800 10.5px/1 'Archivo';letter-spacing:.16em;color:var(--on-panel)")}>ASK IRIS</span>
             </button>
@@ -731,7 +725,7 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
           {showCrewsIntro && <CrewsIntro dismiss={dismissCrewsIntro} />}
 
           {st.toast && (
-            <div style={s('position:absolute;left:0;right:0;bottom:64px;z-index:55;display:flex;justify-content:center;pointer-events:none')}>
+            <div style={s('position:absolute;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom));z-index:55;display:flex;justify-content:center;pointer-events:none')}>
               <div style={s('display:flex;align-items:center;gap:9px;padding:11px 15px;background:var(--panel);animation:bgToast 2.4s ease both')}>
                 <span style={s("font:800 17px/1 'Archivo Black';color:#C8102E")}>{st.toastXp}</span>
                 <span style={s("font:700 11.5px/1 'Archivo';letter-spacing:.06em;color:var(--on-panel)")}>{st.toast}</span>
@@ -739,9 +733,6 @@ export function MatchdayFan({ id = 'demo' }: { id?: string }) {
             </div>
           )}
 
-          <div style={s('position:absolute;bottom:0;left:0;right:0;height:52px;z-index:40;display:flex;align-items:center;justify-content:center;padding:0 20px 12px;background:linear-gradient(transparent,var(--ground) 44%)')}>
-            <div style={s("display:flex;align-items:center;gap:8px;padding:9px 15px;background:var(--sand);border-radius:100px;font:600 11.5px/1 'Archivo';color:var(--body)")}><Ms size={13} color="var(--label)">lock</Ms>matchday.pogonszczecin.pl</div>
-          </div>
         </div>
       </div>
     </div>
